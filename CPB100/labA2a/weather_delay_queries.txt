@@ -1,0 +1,119 @@
+# some delayed departures from LGA
+SELECT
+  airline,
+  date,
+  departure_delay,
+FROM
+  [bigquery-samples:airline_ontime_data.flights]
+WHERE
+  departure_delay > 0
+  AND departure_airport = 'LGA'
+LIMIT
+  100
+
+
+# Departures by airline from LGA on 2008-05-13
+SELECT
+  airline,
+  COUNT(departure_delay),
+FROM
+  [bigquery-samples:airline_ontime_data.flights]
+WHERE
+  departure_airport = 'LGA'
+  AND date = '2008-05-13'
+GROUP BY
+  airline
+ORDER BY airline
+
+
+# Delayed departures by airline from LGA on 2008-05-13
+SELECT
+  airline,
+  COUNT(departure_delay),
+FROM
+  [bigquery-samples:airline_ontime_data.flights]
+WHERE
+  departure_delay > 0 AND
+  departure_airport = 'LGA'
+  AND date = '2008-05-13'
+GROUP BY
+  airline
+ORDER BY airline
+
+
+# Departures and delayed departures by airline from LGA on 2008-05-13
+SELECT
+  f.airline,
+  COUNT(f.departure_delay) AS total_flights,
+  SUM(IF(f.departure_delay > 0, 1, 0)) AS num_delayed
+FROM
+  [bigquery-samples:airline_ontime_data.flights] AS f
+WHERE
+  f.departure_airport = 'LGA' AND f.date = '2008-05-13'
+GROUP BY
+  f.airline
+
+# Rain days at LGA
+SELECT
+  CONCAT(STRING(year), '-', LPAD(STRING(month), 2, '0'), '-', LPAD(STRING(day), 2, '0')) AS rainday
+FROM
+  [bigquery-samples:weather_geo.gsod]
+WHERE
+  station_number = 725030
+  AND total_precipitation > 0
+
+
+# Departures and delayed departures by airline from LGA on days that it rained
+SELECT
+  f.airline,
+  COUNT(f.departure_delay) AS total_flights,
+  SUM(IF(f.departure_delay > 0, 1, 0)) AS num_delayed
+FROM
+  [bigquery-samples:airline_ontime_data.flights] AS f
+JOIN (
+  SELECT
+    CONCAT(STRING(year), '-', LPAD(STRING(month), 2, '0'), '-', LPAD(STRING(day), 2, '0')) AS rainday
+  FROM
+    [bigquery-samples:weather_geo.gsod]
+  WHERE
+    station_number = 725030
+    AND total_precipitation > 0 ) AS w
+ON
+  f.date = w.rainday
+WHERE
+  f.departure_airport = 'LGA'
+GROUP BY
+  f.airline
+
+# fraction of flights delayed by airline on days that it rained
+SELECT
+  f.airline,
+  num_delayed,
+  total_flights,
+  num_delayed / total_flights AS frac_delayed
+FROM (
+  SELECT
+    f.airline,
+    COUNT(f.departure_delay) AS total_flights,
+    SUM(IF(f.departure_delay > 0, 1, 0)) AS num_delayed
+  FROM
+    [bigquery-samples:airline_ontime_data.flights] AS f
+  JOIN (
+    SELECT
+      CONCAT(STRING(year), '-', LPAD(STRING(month), 2, '0'), '-', LPAD(STRING(day), 2, '0')) AS rainday
+    FROM
+      [bigquery-samples:weather_geo.gsod]
+    WHERE
+      station_number = 725030
+      AND total_precipitation > 0 ) AS w
+  ON
+    f.date = w.rainday
+  WHERE
+    f.departure_airport = 'LGA'
+  GROUP BY
+    f.airline
+  ORDER BY
+    f.airline )
+ORDER BY
+  frac_delayed ASC
+
