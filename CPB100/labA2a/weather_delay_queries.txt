@@ -12,7 +12,7 @@ LIMIT
   100
 
 
-# Departures by airline from LGA on 2008-05-13
+# Total departures by airline from LGA on 2008-05-13
 SELECT
   airline,
   COUNT(departure_delay),
