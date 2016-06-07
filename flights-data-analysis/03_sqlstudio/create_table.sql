@@ -20,15 +20,15 @@ create table flights (
   CRS_DEP_TIME integer,
   DEP_TIME integer,
   DEP_DELAY float,
-  TAXI_OUT integer,
+  TAXI_OUT float,
   WHEELS_OFF integer,
   WHEELS_ON integer,
-  TAXI_IN integer,
+  TAXI_IN float,
   CRS_ARR_TIME integer,
   ARR_TIME integer,
   ARR_DELAY float,
   CANCELLED float,
-  CANCELLATION_CODE float,
+  CANCELLATION_CODE varchar(16),
   DIVERTED float,
   DISTANCE float
 );
