@@ -1,0 +1,22 @@
+SELECT
+  SUM(DEP_DELAY < 14
+    AND arr_delay < 15) AS correct_nocancel,
+  SUM(DEP_DELAY < 14
+    AND arr_delay >= 15) AS wrong_nocancel,
+  SUM(DEP_DELAY >= 14
+    AND arr_delay < 15) AS wrong_cancel,
+  SUM(DEP_DELAY >= 14
+    AND arr_delay >= 15) AS correct_cancel,
+FROM (
+  SELECT
+    DEP_DELAY,
+    ARR_DELAY,
+  FROM
+    [cloud-training-demos:bts.flights] f
+  JOIN
+    [cloud-training-demos:bts.trainday] t
+  ON
+    f.FL_DATE = t.FL_DATE
+  WHERE
+    t.is_train_day = 'False'
+    AND f.DISTANCE < 300)
