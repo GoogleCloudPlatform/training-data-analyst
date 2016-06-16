@@ -1,7 +1,8 @@
 from pyspark.mllib.classification import LogisticRegressionWithLBFGS
 from pyspark.mllib.regression import LabeledPoint
-from pyspark import SparkContext
 
+# these two lines bring in a variable 'sc' to imitate the PySpark shell
+from pyspark import SparkContext
 sc = SparkContext('local', 'logistic')
 
 # read in list of training days
@@ -16,8 +17,8 @@ traindays = set(traindays.collect()) # for fast searching
 #allfields = sc.textFile('gs://cloud-training-demos/flights/201501.csv') \
 allfields = sc.textFile('gs://cloud-training-demos/flights/2015*.csv') \
            .map(lambda line : line.split(',')) \
-           .filter(lambda fields: fields[0] in traindays ) \
-           .filter(lambda fields: fields[23] != 'Yes' and fields[22] != '')
+           .filter(lambda fields: fields[0] in traindays and \
+                                  fields[22] != '')
 
 # these are the fields we'll use in the regression
 # format is LabeledPoint(label, [x1, x2, ...]) 
@@ -34,12 +35,8 @@ flights = allfields.map(lambda fields: LabeledPoint(\
 lrmodel = LogisticRegressionWithLBFGS.train(flights, intercept=True)
 print lrmodel.weights,lrmodel.intercept
 
-# how good is the fit?
-labelpred = flights.map(lambda p: (p.label, lrmodel.predict(p.features)))
-def compute_error(labelpred):
-    total = labelpred.count()
-    wrong = labelpred.filter(lambda (label, pred): label != pred).count()
-    return float(wrong)/total
-print compute_error(labelpred)
+lrmodel.setThreshold(0.7) # cancel if prob-of-ontime < 0.7
+
+#print lrmodel.predict([36.0,12.0,594.0])
 
 lrmodel.save(sc, 'gs://cloud-training-demos/flights/sparkoutput/model')
