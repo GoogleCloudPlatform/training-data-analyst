@@ -42,9 +42,9 @@ import com.google.cloud.dataflow.sdk.values.PCollection;
  * @author vlakshmanan
  *
  */
-public class CreateTrainingDataset {
+public class MaxDelayedByAirport {
 
-	private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset.class);
+	private static final Logger LOG = LoggerFactory.getLogger(MaxDelayedByAirport.class);
 
 	public static interface MyOptions extends PipelineOptions {
 		@Description("Path of the file to read from")
