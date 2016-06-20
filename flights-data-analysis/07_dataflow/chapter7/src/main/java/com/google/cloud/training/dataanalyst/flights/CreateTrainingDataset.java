@@ -39,7 +39,7 @@ import com.google.cloud.dataflow.sdk.values.PCollectionView;
 /**
  * A dataflow pipeline to create the training dataset to predict whether a
  * flight will be delayed by 15 or more minutes. The key thing that this
- * pipeline does is to add the average taxiout delay for this airport at this
+ * pipeline does is to add the average delays for the from & to airports at this
  * hour to the set of training features.
  * 
  * @author vlakshmanan
@@ -61,34 +61,46 @@ public class CreateTrainingDataset {
 		String getTraindaysPath();
 
 		void setTraindaysPath(String s);
+
+		@Description("Path of the output directory")
+		@Default.String("/tmp/flights/chapter07")
+		String getOutput();
+
+		void setOutput(String s);
 	}
 
 	@SuppressWarnings("serial")
 	public static class Flight implements Serializable {
 		String date;
 		String fromAirport;
-		int hour;
+		String toAirport;
+		int depHour;
+		int arrHour;
 		double departureDelay;
 		double taxiOutTime;
 		double distance;
 		double arrivalDelay;
 		double averageDepartureDelay;
+		double averageArrivalDelay;
 
-		public Flight newCopyWithAverage(double averageDepartureDelay) {
+		public Flight newCopy() {
 			Flight f = new Flight();
 			f.date = this.date;
 			f.fromAirport = this.fromAirport;
-			f.hour = this.hour;
+			f.toAirport = this.toAirport;
+			f.depHour = this.depHour;
+			f.arrHour = this.arrHour;
 			f.departureDelay = this.departureDelay;
 			f.taxiOutTime = this.taxiOutTime;
 			f.distance = this.distance;
 			f.arrivalDelay = this.arrivalDelay;
-			f.averageDepartureDelay = averageDepartureDelay;
+			f.averageDepartureDelay = this.averageDepartureDelay;
+			f.averageArrivalDelay = this.averageArrivalDelay;
 			return f;
 		}
-		
+
 		public double[] getInputFeatures() {
-			return new double[] { departureDelay, taxiOutTime, distance, averageDepartureDelay };
+			return new double[] { departureDelay, taxiOutTime, distance, averageDepartureDelay, averageArrivalDelay };
 		}
 
 		public String toTrainingCsv() {
@@ -131,11 +143,25 @@ public class CreateTrainingDataset {
 					Flight f = new Flight();
 					f.date = fields[0];
 					f.fromAirport = fields[8];
-					f.hour = Integer.parseInt(fields[13].substring(1, 5)) / 100;
+					f.toAirport = fields[12];
+					f.depHour = Integer.parseInt(fields[13]) / 100; // 2358 ->
+																	// 23
+					f.arrHour = Integer.parseInt(fields[21]) / 100; // 2358 ->
+																	// 23
 					f.departureDelay = Double.parseDouble(fields[15]);
 					f.taxiOutTime = Double.parseDouble(fields[16]);
 					f.distance = Double.parseDouble(fields[26]);
 					f.arrivalDelay = Double.parseDouble(fields[22]);
+					f.averageDepartureDelay = f.averageArrivalDelay = Double.NaN;
+
+					// int arrivalTime = Integer.parseInt(fields[21]); // e.g.
+					// 2358
+					// int hour = arrivalTime / 100;
+					// int minutes = arrivalTime % 100;
+					// Instant t = Instant.parse(f.date).plus((hour*60 +
+					// minutes)*60*1000L);
+					// c.outputWithTimestamp(f, t);
+
 					c.output(f);
 				}
 			} catch (Exception e) {
@@ -158,49 +184,60 @@ public class CreateTrainingDataset {
 				.apply("SelectFields", ParDo.withSideInputs(traindays).of(new SelectFields(traindays)));
 
 		// group by from-airport and hour; compute mean taxiout delay
-		PCollection<KV<String, Double>> delayByAirport = flights //
-				.apply("GroupByFromAirportAndHour", ParDo.of(new DoFn<Flight, KV<String, Double>>() {
+		// group by to-airport, date+hour; compute "current" arrival delay
+		PCollection<KV<String, Double>> avgDelay = flights //
+				.apply("GroupByAirportAndHour", ParDo.of(new DoFn<Flight, KV<String, Double>>() {
 					@Override
 					public void processElement(ProcessContext c) throws Exception {
 						Flight f = c.element();
-						String key = f.fromAirport + ":" + f.hour;
+						String key = f.fromAirport + ":" + f.depHour;
 						c.output(KV.of(key, f.departureDelay + f.taxiOutTime));
+
+						key = f.toAirport + ":" + f.arrHour + " on " + f.date;
+						c.output(KV.of(key, f.arrivalDelay));
 					}
 				})) // (fromAirport + hour) -> (dep-delay + taxiout time)
 				.apply(Mean.<String, Double> perKey()); // average delay
-														// for key
 
 		// write out, just to check
-		delayByAirport.apply(ParDo.of(new DoFn<KV<String, Double>, String>() {
+		avgDelay.apply(ParDo.of(new DoFn<KV<String, Double>, String>() {
 			@Override
 			public void processElement(ProcessContext c) throws Exception {
-				c.output(c.element().getKey() + "   " + c.element().getValue());
+				c.output(c.element().getKey() + " ->  " + c.element().getValue());
 			}
-		})).apply(TextIO.Write.named("WriteResult").to("/tmp/flights/depdelay").withSuffix(".txt"));
+		})).apply(TextIO.Write.to(options.getOutput() + "/delay").withSuffix(".txt"));
 
-		// add average departure delay to each flight
-		PCollectionView<Map<String, Double>> delayLookup = delayByAirport.apply(View.asMap());
-		flights = flights.apply("AddAvgDepDelay", ParDo.withSideInputs(delayLookup).of(new DoFn<Flight, Flight>() {
+		// add average departure to each flight
+		PCollectionView<Map<String, Double>> avgDelayLookup = avgDelay.apply(View.asMap());
+		flights = flights.apply("AddAvgDelay", ParDo.withSideInputs(avgDelayLookup).of(new DoFn<Flight, Flight>() {
 
 			@Override
 			public void processElement(ProcessContext c) throws Exception {
-				Flight f = c.element();
-				String key = f.fromAirport + ":" + f.hour;
-				
-				double averageDepartureDelay = c.sideInput(delayLookup).get(key);
-				c.output(f.newCopyWithAverage(averageDepartureDelay));
+				Flight f = c.element().newCopy();
+
+				// get typical departure delay at from airport
+				String key = f.fromAirport + ":" + f.depHour;
+				Double depDelay = c.sideInput(avgDelayLookup).get(key);
+				f.averageDepartureDelay = (depDelay != null) ? depDelay : 0;
+
+				// get "current" arrival delay that is known at departure time!
+				key = f.toAirport + ":" + (f.depHour - 1) + " on " + f.date;
+				Double arrDelay = c.sideInput(avgDelayLookup).get(key);
+				f.averageArrivalDelay = (arrDelay != null) ? arrDelay : 0;
+
+				c.output(f);
 			}
 
 		}));
 
 		// write out training data
-		flights.apply(ParDo.of(new DoFn<Flight, String>() {
+		flights.apply("ToCsv", ParDo.of(new DoFn<Flight, String>() {
 			@Override
 			public void processElement(ProcessContext c) throws Exception {
 				Flight f = c.element();
 				c.output(f.toTrainingCsv());
 			}
-		})).apply(TextIO.Write.named("WriteResult").to("/tmp/flights/depdelay").withSuffix(".csv"));
+		})).apply(TextIO.Write.named("WriteResult").to(options.getOutput() + "/train").withSuffix(".csv"));
 
 		// run the pipeline
 		p.run();
@@ -216,7 +253,6 @@ public class CreateTrainingDataset {
 						String line = c.element();
 						String[] fields = line.split(",");
 						if (fields.length > 1 && "True".equals(fields[1])) {
-							LOG.info("train: " + fields[0]);
 							c.output(KV.of(fields[0], ""));
 						}
 					}
