@@ -17,6 +17,7 @@
 package com.google.cloud.training.dataanalyst.flights;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,17 +28,19 @@ import com.google.cloud.dataflow.sdk.options.Default;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
-import com.google.cloud.dataflow.sdk.transforms.Combine;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
-import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
+import com.google.cloud.dataflow.sdk.transforms.Mean;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
-import com.google.cloud.dataflow.sdk.transforms.SerializableFunction;
+import com.google.cloud.dataflow.sdk.transforms.View;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
+import com.google.cloud.dataflow.sdk.values.PCollectionView;
 
 /**
  * A dataflow pipeline to create the training dataset to predict whether a
- * flight will be delayed by 15 or more minutes.
+ * flight will be delayed by 15 or more minutes. The key thing that this
+ * pipeline does is to add the average taxiout delay for this airport at this
+ * hour to the set of training features.
  * 
  * @author vlakshmanan
  *
@@ -52,27 +55,34 @@ public class CreateTrainingDataset {
 		String getInput();
 
 		void setInput(String s);
+
+		@Description("Path of the trainday.csv file")
+		@Default.String("gs://cloud-training-demos/flights/trainday.csv")
+		String getTraindaysPath();
+
+		void setTraindaysPath(String s);
 	}
 
 	@SuppressWarnings("serial")
 	public static class Flight implements Serializable {
 		String date;
 		String fromAirport;
+		int hour;
 		double departureDelay;
 		double taxiOutTime;
 		double distance;
 		double arrivalDelay;
-
-		@Override
-		public String toString() {
-			return "Flight [date=" + date + ", fromAirport=" + fromAirport + ", departureDelay=" + departureDelay
-					+ ", taxiOutTime=" + taxiOutTime + ", distance=" + distance + ", arrivalDelay=" + arrivalDelay
-					+ "]";
-		}
 	}
 
 	@SuppressWarnings("serial")
 	public static class SelectFields extends DoFn<String, Flight> {
+		final PCollectionView<Map<String, String>> traindays;
+
+		public SelectFields(PCollectionView<Map<String, String>> traindays) {
+			super();
+			this.traindays = traindays;
+		}
+
 		@Override
 		public void processElement(ProcessContext c) {
 			String line = c.element();
@@ -81,15 +91,21 @@ public class CreateTrainingDataset {
 				if (fields[22].length() == 0) {
 					return; // delayed/canceled
 				}
-				// get values
-				Flight f = new Flight();
-				f.date = fields[0];
-				f.fromAirport = fields[8];
-				f.departureDelay = Double.parseDouble(fields[15]);
-				f.taxiOutTime = Double.parseDouble(fields[16]);
-				f.distance = Double.parseDouble(fields[26]);
-				f.arrivalDelay = Double.parseDouble(fields[22]);
-				c.output(f);
+
+				boolean isTrainDay = c.sideInput(traindays).containsKey(fields[0]);
+
+				if (isTrainDay) {
+					// get values only for train days
+					Flight f = new Flight();
+					f.date = fields[0];
+					f.fromAirport = fields[8];
+					f.hour = Integer.parseInt(fields[13].substring(1, 5)) / 100;
+					f.departureDelay = Double.parseDouble(fields[15]);
+					f.taxiOutTime = Double.parseDouble(fields[16]);
+					f.distance = Double.parseDouble(fields[26]);
+					f.arrivalDelay = Double.parseDouble(fields[22]);
+					c.output(f);
+				}
 			} catch (Exception e) {
 				LOG.warn("Malformed line {" + line + "} skipped", e);
 			}
@@ -97,47 +113,60 @@ public class CreateTrainingDataset {
 	}
 
 	@SuppressWarnings("serial")
-	public static class MaxDelayed implements SerializableFunction<Iterable<Flight>, Flight> {
-
-		@Override
-		public Flight apply(Iterable<Flight> flights) {
-			Flight maxF = null;
-			for (Flight f : flights) {
-				if (maxF == null || f.arrivalDelay > maxF.arrivalDelay) {
-					maxF = f;
-				}
-			}
-			return maxF;
-		}
-
-	}
-
-	@SuppressWarnings("serial")
 	public static void main(String[] args) {
 		MyOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(MyOptions.class);
 		Pipeline p = Pipeline.create(options);
 
-		p.apply(TextIO.Read.named("ReadLines").from(options.getInput())) // read
-				.apply(ParDo.of(new SelectFields())) // split on commas
-				.apply(ParDo.of(new DoFn<Flight, KV<String, Flight>>() {
+		// read traindays.csv into memory for use as a side-input
+		PCollectionView<Map<String, String>> traindays = getTrainDays(p, options.getTraindaysPath());
+
+		// read the data file, filtering by traindays
+		PCollection<Flight> flights = p //
+				.apply(TextIO.Read.from(options.getInput())) // read
+				.apply("SelectFields", ParDo.withSideInputs(traindays).of(new SelectFields(traindays)));
+
+		// group by from-airport and hour; compute mean taxiout delay
+		PCollection<KV<String, Double>> delayByAirport = flights //
+				.apply("GroupByFromAirportAndHour", ParDo.of(new DoFn<Flight, KV<String, Double>>() {
 					@Override
 					public void processElement(ProcessContext c) throws Exception {
 						Flight f = c.element();
-						c.output(KV.of(f.fromAirport, f));
+						String key = f.fromAirport + ":" + f.hour;
+						c.output(KV.of(key, f.departureDelay + f.taxiOutTime));
 					}
-				})) // fromAirport -> flight
-				.apply(GroupByKey.create()) // group by fromAirport
-				.apply(Combine.groupedValues(new MaxDelayed())) // max-delayed-flight
-																// by
-																// from-airport
-				.apply(ParDo.of(new DoFn<KV<String, Flight>, String>() {
-					@Override
-					public void processElement(ProcessContext c) throws Exception {
-						Flight f = c.element().getValue();
-						c.output(f.toString());
-					}
-				})) // write out max-delayed-flight
-				.apply(TextIO.Write.named("WriteResult").to("/tmp/output.txt"));
+				})) // (fromAirport + hour) -> (dep-delay + taxiout time)
+				.apply(Mean.<String, Double> perKey()); // average delay
+														// for key
+
+		// write out, just to check
+		delayByAirport.apply(ParDo.of(new DoFn<KV<String, Double>, String>() {
+			@Override
+			public void processElement(ProcessContext c) throws Exception {
+				c.output(c.element().getKey() + "   " + c.element().getValue());
+			}
+		})).apply(TextIO.Write.named("WriteResult").to("/tmp/output").withSuffix(".txt"));
+
+		// run the pipeline
 		p.run();
 	}
+
+	@SuppressWarnings("serial")
+	private static PCollectionView<Map<String, String>> getTrainDays(Pipeline p, String traindaysPath) {
+		PCollection<KV<String, String>> days = p //
+				.apply(TextIO.Read.from(traindaysPath)) // read
+				.apply("ReadTrainDays", ParDo.of(new DoFn<String, KV<String, String>>() {
+					@Override
+					public void processElement(ProcessContext c) throws Exception {
+						String line = c.element();
+						String[] fields = line.split(",");
+						if (fields.length > 1 && "True".equals(fields[1])) {
+							LOG.info("train: " + fields[0]);
+							c.output(KV.of(fields[0], ""));
+						}
+					}
+				}));
+
+		return days.apply(View.asMap());
+	}
+
 }

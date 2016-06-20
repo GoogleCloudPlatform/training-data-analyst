@@ -33,7 +33,6 @@ import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.SerializableFunction;
 import com.google.cloud.dataflow.sdk.values.KV;
-import com.google.cloud.dataflow.sdk.values.PCollection;
 
 /**
  * A dataflow pipeline to create the training dataset to predict whether a
@@ -137,7 +136,7 @@ public class MaxDelayedByAirport {
 						c.output(f.toString());
 					}
 				})) // write out max-delayed-flight
-				.apply(TextIO.Write.named("WriteResult").to("/tmp/output.txt"));
+				.apply(TextIO.Write.named("WriteResult").to("/tmp/output"));
 		p.run();
 	}
 }
