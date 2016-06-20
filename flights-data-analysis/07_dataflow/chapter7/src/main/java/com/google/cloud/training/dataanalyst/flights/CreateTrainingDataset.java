@@ -72,6 +72,38 @@ public class CreateTrainingDataset {
 		double taxiOutTime;
 		double distance;
 		double arrivalDelay;
+		double averageDepartureDelay;
+
+		public Flight newCopyWithAverage(double averageDepartureDelay) {
+			Flight f = new Flight();
+			f.date = this.date;
+			f.fromAirport = this.fromAirport;
+			f.hour = this.hour;
+			f.departureDelay = this.departureDelay;
+			f.taxiOutTime = this.taxiOutTime;
+			f.distance = this.distance;
+			f.arrivalDelay = this.arrivalDelay;
+			f.averageDepartureDelay = averageDepartureDelay;
+			return f;
+		}
+		
+		public double[] getInputFeatures() {
+			return new double[] { departureDelay, taxiOutTime, distance, averageDepartureDelay };
+		}
+
+		public String toTrainingCsv() {
+			double[] features = this.getInputFeatures();
+			boolean ontime = this.arrivalDelay < 15;
+			StringBuilder sb = new StringBuilder();
+			sb.append(ontime ? 1.0 : 0.0);
+			sb.append(",");
+			for (int i = 0; i < features.length; ++i) {
+				sb.append(features[i]);
+				sb.append(",");
+			}
+			sb.deleteCharAt(sb.length() - 1); // last comma
+			return sb.toString();
+		}
 	}
 
 	@SuppressWarnings("serial")
@@ -144,7 +176,31 @@ public class CreateTrainingDataset {
 			public void processElement(ProcessContext c) throws Exception {
 				c.output(c.element().getKey() + "   " + c.element().getValue());
 			}
-		})).apply(TextIO.Write.named("WriteResult").to("/tmp/output").withSuffix(".txt"));
+		})).apply(TextIO.Write.named("WriteResult").to("/tmp/flights/depdelay").withSuffix(".txt"));
+
+		// add average departure delay to each flight
+		PCollectionView<Map<String, Double>> delayLookup = delayByAirport.apply(View.asMap());
+		flights = flights.apply("AddAvgDepDelay", ParDo.withSideInputs(delayLookup).of(new DoFn<Flight, Flight>() {
+
+			@Override
+			public void processElement(ProcessContext c) throws Exception {
+				Flight f = c.element();
+				String key = f.fromAirport + ":" + f.hour;
+				
+				double averageDepartureDelay = c.sideInput(delayLookup).get(key);
+				c.output(f.newCopyWithAverage(averageDepartureDelay));
+			}
+
+		}));
+
+		// write out training data
+		flights.apply(ParDo.of(new DoFn<Flight, String>() {
+			@Override
+			public void processElement(ProcessContext c) throws Exception {
+				Flight f = c.element();
+				c.output(f.toTrainingCsv());
+			}
+		})).apply(TextIO.Write.named("WriteResult").to("/tmp/flights/depdelay").withSuffix(".csv"));
 
 		// run the pipeline
 		p.run();
