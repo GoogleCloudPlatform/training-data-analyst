@@ -4,4 +4,5 @@
   -DgroupId=com.google.cloud.training.dataanalyst.flights \
   -DartifactId=chapter7 \
   -Dversion="[1.0.0,2.0.0]" \
-  -DinteractiveMode=false
+  -DinteractiveMode=false \
+   

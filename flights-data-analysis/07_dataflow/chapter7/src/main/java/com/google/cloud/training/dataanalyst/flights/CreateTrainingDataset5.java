@@ -44,11 +44,11 @@ import com.google.cloud.dataflow.sdk.values.PCollectionView;
  * @author vlakshmanan
  *
  */
-public class CreateTrainingDataset {
+public class CreateTrainingDataset5 {
 	@SuppressWarnings("serial")
 	public static class ParseFlights extends DoFn<String, Flight> {
 		private final PCollectionView<Map<String, String>> traindays;
-
+		
 		public ParseFlights(PCollectionView<Map<String, String>> traindays) {
 			super();
 			this.traindays = traindays;
@@ -62,16 +62,16 @@ public class CreateTrainingDataset {
 				if (fields[22].length() == 0) {
 					return; // delayed/canceled
 				}
-
+								
 				Flight f = new Flight();
 				f.date = fields[0];
-
+				
 				boolean isTrainDay = c.sideInput(traindays).containsKey(f.date);
 				if (!isTrainDay) {
 					LOG.debug("Ignoring " + f.date + " as it is not a trainday");
 					return;
 				}
-
+				
 				f.fromAirport = fields[8];
 				f.toAirport = fields[12];
 				f.depHour = Integer.parseInt(fields[13]) / 100; // 2358 -> 23
@@ -89,8 +89,8 @@ public class CreateTrainingDataset {
 
 	}
 
-	private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset.class);
-
+	private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset5.class);
+	
 	public static interface MyOptions extends PipelineOptions {
 		@Description("Path of the file to read from")
 		@Default.String("/Users/vlakshmanan/data/flights/small.csv")
@@ -133,9 +133,6 @@ public class CreateTrainingDataset {
 						String key = f.fromAirport + ":" + f.depHour;
 						double value = f.departureDelay + f.taxiOutTime;
 						c.output(KV.of(key, value));
-						key = "arr_" + f.toAirport + ":" + f.date + ":" + f.arrHour;
-						value = f.arrivalDelay;
-						c.output(KV.of(key, value));
 					}
 
 				})) //
@@ -145,29 +142,10 @@ public class CreateTrainingDataset {
 			@Override
 			public void processElement(ProcessContext c) throws Exception {
 				KV<String, Double> kv = c.element();
-				if (!kv.getKey().startsWith("arr_")){
-					c.output(kv.getKey() + "," + kv.getValue());
-				}
+				c.output(kv.getKey() + "," + kv.getValue());
 			}
 		})) //
-				.apply("WriteDelays", TextIO.Write.to(options.getOutput() + "delays").withSuffix(".csv"));
-
-		PCollectionView<Map<String, Double>> avgDelay = delays.apply(View.asMap());
-		flights = flights.apply("AddDelayInfo", ParDo.withSideInputs(avgDelay).of(new DoFn<Flight, Flight>() {
-
-			@Override
-			public void processElement(ProcessContext c) throws Exception {
-				Flight f = c.element().newCopy();
-				String key = f.fromAirport + ":" + f.depHour;
-				Double delay = c.sideInput(avgDelay).get(key);
-				f.averageDepartureDelay = (delay == null)? 0 : delay;
-				key = "arr_" + f.toAirport + ":" + f.date + ":" + (f.depHour-1);
-				delay = c.sideInput(avgDelay).get(key);
-				f.averageArrivalDelay = (delay == null)? 0 : delay;
-				c.output(f);
-			}
-
-		}));
+				.apply("WriteDelays", TextIO.Write.to(options.getOutput() + "delays5").withSuffix(".csv"));
 
 		flights.apply("ToCsv", ParDo.of(new DoFn<Flight, String>() {
 			@Override
@@ -176,7 +154,7 @@ public class CreateTrainingDataset {
 				c.output(f.toTrainingCsv());
 			}
 		})) //
-				.apply("WriteFlights", TextIO.Write.to(options.getOutput() + "flights").withSuffix(".csv"));
+				.apply("WriteFlights", TextIO.Write.to(options.getOutput() + "flights5").withSuffix(".csv"));
 
 		p.run();
 	}
