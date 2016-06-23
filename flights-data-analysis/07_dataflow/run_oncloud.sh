@@ -3,5 +3,5 @@
       -Dexec.args="--project=cloud-training-demos \
       --stagingLocation=gs://cloud-training-demos/staging/ \
       --input=gs://cloud-training-demos/flights/2015*.csv \
-      --output=gs://cloud-training-demos/flights/chapter07 \
+      --output=gs://cloud-training-demos/flights/chapter07/ \
       --runner=BlockingDataflowPipelineRunner"
