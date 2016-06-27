@@ -1,21 +1,42 @@
 #!/usr/bin/env python
 
-from apiclient import discovery
-from oauth2client.client import GoogleCredentials
-from gcloud import storage
 import tensorflow as tf
 import pandas as pd
 import numpy as np
+import subprocess
 import os
 
-#bucket = client.get_bucket('cloud-training-demos')
-#infiles = bucket.list_blobs(prefix='/flights/chapter07/')
+LOCAL_TRAIN_DIR = '/Users/vlakshmanan/data/flights/'
+BUCKET = 'cloud-training-demos'
+GS_TRAIN_DIR = '/flights/chapter07/'
+BATCH_SIZE = 10000
+NUM_THREADS = 3
+NUM_EPOCHS = 100
 
+def download_trainfiles():
+  ls = ['gsutil', 'ls', 'gs://' + BUCKET + GS_TRAIN_DIR + 'flights-*.csv']
+  infiles = subprocess.check_output(ls).split()
+  localfiles = []
+  for gsfile in infiles:
+      fname = os.path.basename(gsfile)
+      localfile = os.path.join(LOCAL_TRAIN_DIR, fname)
+      localfiles.append(localfile)
+      if os.path.exists(localfile):
+         print 'Reusing {0}'.format(localfile)
+      else:
+         cp = ['gsutil', 'cp', gsfile, localfile]
+         subprocess.check_call(cp)
+ 
+  # find out how many patterns there in total (mine have no headers) 
+  wcout = subprocess.check_output(['wc', '-l'] + localfiles)
+  npatterns = int(wcout.split()[-2])
+  print "Training dataset has {0} patterns in {1} files".format(npatterns, len(infiles))
+  return npatterns
 
 # build the graph to read the training data
 def get_training_data():
   # set up queue
-  infiles = ['/Users/vlakshmanan/data/flights/flights-00001-of-00012.csv', '/Users/vlakshmanan/data/flights/flights-00002-of-00012.csv']
+  infiles = tf.train.match_filenames_once(LOCAL_TRAIN_DIR + 'flights-*.csv') 
   filename_queue = tf.train.string_input_producer(infiles, num_epochs=None)
   # read one example
   reader = tf.TextLineReader(skip_header_lines=0)
@@ -26,7 +47,7 @@ def get_training_data():
   labels   = tf.pack([label])
 
   # batch it
-  f, l = tf.train.batch([features, labels], batch_size=10000, num_threads=3)
+  f, l = tf.train.batch([features, labels], batch_size=BATCH_SIZE, num_threads=NUM_THREADS)
   return f, l
 
 # build the neural network graph
@@ -45,7 +66,8 @@ def get_nn():
   return model, saver, feature_data, target_data
 
 ############ 'main' starts here ##############
-numbatches = 300
+npatterns = download_trainfiles()
+numbatches = (NUM_EPOCHS * npatterns)/BATCH_SIZE
 modelfile = '/tmp/trained_model'
 with tf.Session() as sess:
   # create the computation graph
@@ -72,6 +94,7 @@ with tf.Session() as sess:
        if nbatch%10 == 0:
            # Q: does this make training_step skip this data?
            print "batchno={0} cost={1}".format(nbatch, sess.run(cost, feed_dict = {feature_data: features_feed, target_data: labels_feed}))
+  
   except tf.errors.OutOfRangeError as e:
      print "Ran out of inputs (?!)"
   finally:
