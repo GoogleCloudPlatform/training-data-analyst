@@ -102,4 +102,6 @@ with tf.Session() as sess:
   coord.join(threads)
   filename = saver.save(sess, modelfile, global_step=numbatches)
   print 'Model written to {0}'.format(filename)
-
+  gsfilename = 'gs://' + BUCKET + GS_TRAIN_DIR + 'trained_model.tf'
+  subprocess.check_call(['gsutil', 'cp', filename, gsfilename])
+  print 'Model also saved in {0}'.format(gsfilename)
