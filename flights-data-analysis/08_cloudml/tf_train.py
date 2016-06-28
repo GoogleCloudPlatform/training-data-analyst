@@ -6,14 +6,17 @@ import numpy as np
 import subprocess
 import os
 
-LOCAL_TRAIN_DIR = '/Users/vlakshmanan/data/flights/'
+LOCAL_TRAIN_DIR = os.environ['HOME'] + '/data/flights/'
 BUCKET = 'cloud-training-demos'
 GS_TRAIN_DIR = '/flights/chapter07/'
 BATCH_SIZE = 10000
-NUM_THREADS = 3
+NUM_THREADS = 5
 NUM_EPOCHS = 100
 
 def download_trainfiles():
+  if not os.path.exists(LOCAL_TRAIN_DIR):
+     os.makedirs(LOCAL_TRAIN_DIR)
+
   ls = ['gsutil', 'ls', 'gs://' + BUCKET + GS_TRAIN_DIR + 'flights-*.csv']
   infiles = subprocess.check_output(ls).split()
   localfiles = []
@@ -93,7 +96,7 @@ with tf.Session() as sess:
        nbatch = nbatch + 1
        if nbatch%10 == 0:
            # Q: does this make training_step skip this data?
-           print "batchno={0} cost={1}".format(nbatch, sess.run(cost, feed_dict = {feature_data: features_feed, target_data: labels_feed}))
+           print "batchno={0}/{1} ({2}=epoch) cost={3}".format(nbatch, numbatches, npatterns/BATCH_SIZE, sess.run(cost, feed_dict = {feature_data: features_feed, target_data: labels_feed}))
   
   except tf.errors.OutOfRangeError as e:
      print "Ran out of inputs (?!)"
