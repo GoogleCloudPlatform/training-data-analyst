@@ -69,42 +69,43 @@ def get_nn():
   return model, saver, feature_data, target_data
 
 ############ 'main' starts here ##############
-npatterns = download_trainfiles()
-numbatches = (NUM_EPOCHS * npatterns)/BATCH_SIZE
-modelfile = '/tmp/trained_model'
-with tf.Session() as sess:
-  # create the computation graph
-  features, labels = get_training_data()
-  model, saver, feature_data, target_data = get_nn()
-  cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(model, target_data))
-  optimizer = tf.train.AdamOptimizer(learning_rate=0.0001)
-  training_step = optimizer.minimize(cost)
+if __name__ == '__main__':
+  npatterns = download_trainfiles()
+  numbatches = (NUM_EPOCHS * npatterns)/BATCH_SIZE
+  modelfile = '/tmp/trained_model'
+  with tf.Session() as sess:
+    # create the computation graph
+    features, labels = get_training_data()
+    model, saver, feature_data, target_data = get_nn()
+    cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(model, target_data))
+    optimizer = tf.train.AdamOptimizer(learning_rate=0.0001)
+    training_step = optimizer.minimize(cost)
  
-  tf.initialize_all_variables().run()
+    tf.initialize_all_variables().run()
 
-  tf.get_default_graph().finalize()  #prevent changing graph
+    tf.get_default_graph().finalize()  #prevent changing graph
 
-  # start the training
-  coord = tf.train.Coordinator()
-  threads = tf.train.start_queue_runners(coord=coord)
+    # start the training
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(coord=coord)
 
-  try: 
-    nbatch = 0
-    while nbatch < numbatches:
-       features_feed, labels_feed = sess.run([features, labels])
-       result = sess.run(training_step, feed_dict = {feature_data: features_feed, target_data: labels_feed})
-       nbatch = nbatch + 1
-       if nbatch%10 == 0:
+    try: 
+      nbatch = 0
+      while nbatch < numbatches:
+        features_feed, labels_feed = sess.run([features, labels])
+        result = sess.run(training_step, feed_dict = {feature_data: features_feed, target_data: labels_feed})
+        nbatch = nbatch + 1
+        if nbatch%10 == 0:
            # Q: does this make training_step skip this data?
            print "batchno={0}/{1} ({2}=epoch) cost={3}".format(nbatch, numbatches, npatterns/BATCH_SIZE, sess.run(cost, feed_dict = {feature_data: features_feed, target_data: labels_feed}))
   
-  except tf.errors.OutOfRangeError as e:
-     print "Ran out of inputs (?!)"
-  finally:
-     coord.request_stop()
-  coord.join(threads)
-  filename = saver.save(sess, modelfile, global_step=numbatches)
-  print 'Model written to {0}'.format(filename)
-  gsfilename = 'gs://' + BUCKET + GS_TRAIN_DIR + 'trained_model.tf'
-  subprocess.check_call(['gsutil', 'cp', filename, gsfilename])
-  print 'Model also saved in {0}'.format(gsfilename)
+    except tf.errors.OutOfRangeError as e:
+      print "Ran out of inputs (?!)"
+    finally:
+      coord.request_stop()
+    coord.join(threads)
+    filename = saver.save(sess, modelfile, global_step=numbatches)
+    print 'Model written to {0}'.format(filename)
+    gsfilename = 'gs://' + BUCKET + GS_TRAIN_DIR + 'trained_model.tf'
+    subprocess.check_call(['gsutil', 'cp', filename, gsfilename])
+    print 'Model also saved in {0}'.format(gsfilename)
