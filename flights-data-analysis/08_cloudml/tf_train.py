@@ -10,8 +10,8 @@ LOCAL_TRAIN_DIR = os.environ['HOME'] + '/data/flights/'
 BUCKET = 'cloud-training-demos'
 GS_TRAIN_DIR = '/flights/chapter07/'
 BATCH_SIZE = 10000
-NUM_THREADS = 5
-NUM_EPOCHS = 100
+NUM_THREADS = 16
+NUM_EPOCHS = 10
 
 def download_trainfiles():
   if not os.path.exists(LOCAL_TRAIN_DIR):
