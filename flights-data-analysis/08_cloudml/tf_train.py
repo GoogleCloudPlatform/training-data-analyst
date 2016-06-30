@@ -9,6 +9,7 @@ import os
 LOCAL_TRAIN_DIR = os.environ['HOME'] + '/data/flights/'
 BUCKET = 'cloud-training-demos'
 GS_TRAIN_DIR = '/flights/chapter07/'
+GS_MODEL_OUTPUT = 'gs://' + BUCKET + GS_TRAIN_DIR + 'trained_model.tf'
 BATCH_SIZE = 10000
 NUM_THREADS = 16
 NUM_EPOCHS = 10
@@ -106,6 +107,5 @@ if __name__ == '__main__':
     coord.join(threads)
     filename = saver.save(sess, modelfile, global_step=numbatches)
     print 'Model written to {0}'.format(filename)
-    gsfilename = 'gs://' + BUCKET + GS_TRAIN_DIR + 'trained_model.tf'
-    subprocess.check_call(['gsutil', 'cp', filename, gsfilename])
-    print 'Model also saved in {0}'.format(gsfilename)
+    subprocess.check_call(['gsutil', 'cp', filename, GS_MODEL_OUTPUT])
+    print 'Model also saved in {0}'.format(GS_MODEL_OUTPUT)
