@@ -30,7 +30,7 @@ if __name__ == '__main__':
     saver.restore(sess, localfilename)
 
     # evaluation graph
-    features, labels = train.get_training_ph(prefix='testflights')
+    features, labels = train.get_training_data(prefix='testflights')
     pred_bool = tf.greater(model, PROB_THRESH*tf.identity(model)) # threshold output of model
     truth_bool = tf.greater(target_ph, 0.5*tf.identity(target_ph))
     cost = tf.reduce_sum(tf.to_int32(tf.logical_xor(pred_bool, truth_bool))) # number wrong

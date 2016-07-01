@@ -38,7 +38,7 @@ def download_trainfiles(prefix='flights'):
   return npatterns
 
 # build the graph to read the training data
-def get_training_ph(prefix='flights'):
+def get_training_data(prefix='flights'):
   # set up queue
   infiles = tf.train.match_filenames_once(LOCAL_TRAIN_DIR + prefix + '-*.csv') 
   filename_queue = tf.train.string_input_producer(infiles, num_epochs=None)
@@ -76,7 +76,7 @@ if __name__ == '__main__':
   modelfile = '/tmp/trained_model'
   with tf.Session() as sess:
     # create the computation graph
-    features, labels = get_training_ph()
+    features, labels = get_training_data()
     model, saver, feature_ph, target_ph = get_nn()
     cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(model, target_ph))
     optimizer = tf.train.AdamOptimizer(learning_rate=0.0001)
