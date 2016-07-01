@@ -14,7 +14,7 @@ PROB_THRESH = 0.7 # ontime > 0.7 for us to not cancel meeting
 ############ 'main' starts here ##############
 if __name__ == '__main__':
   # get the patterns we need to evaluate on
-  npatterns = train.download_trainfiles()
+  npatterns = train.download_trainfiles(prefix='testflights')
   numbatches = npatterns/train.BATCH_SIZE  # slightly fewer ...
   if (numbatches*train.BATCH_SIZE != npatterns):
     print "WARNING: {0} patterns ignored due to roundoff".format(npatterns%train.BATCH_SIZE)
@@ -22,7 +22,7 @@ if __name__ == '__main__':
   
   with tf.Session() as sess:
     # create the computation graph
-    model, saver, feature_data, target_data = train.get_nn()
+    model, saver, feature_ph, target_ph = train.get_nn()
 
     # tf_train.py wrote this out; use it to get graph populated
     localfilename = '/tmp/trained_model.tf'
@@ -30,9 +30,9 @@ if __name__ == '__main__':
     saver.restore(sess, localfilename)
 
     # evaluation graph
-    features, labels = train.get_training_data()
+    features, labels = train.get_training_ph(prefix='testflights')
     pred_bool = tf.greater(model, PROB_THRESH*tf.identity(model)) # threshold output of model
-    truth_bool = tf.greater(target_data, 0.5*tf.identity(target_data))
+    truth_bool = tf.greater(target_ph, 0.5*tf.identity(target_ph))
     cost = tf.reduce_sum(tf.to_int32(tf.logical_xor(pred_bool, truth_bool))) # number wrong
  
     tf.initialize_all_variables().run()
@@ -47,7 +47,7 @@ if __name__ == '__main__':
       nbatch = 0
       while nbatch < numbatches:
         features_feed, labels_feed = sess.run([features, labels])
-        batchcost = cost.eval(feed_dict = {feature_data: features_feed, target_data: labels_feed})
+        batchcost = cost.eval(feed_dict = {feature_ph: features_feed, target_ph: labels_feed})
         totalcost = totalcost + batchcost
         nbatch = nbatch + 1
         if nbatch%100 == 0:

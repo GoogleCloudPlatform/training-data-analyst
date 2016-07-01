@@ -14,11 +14,11 @@ BATCH_SIZE = 10000
 NUM_THREADS = 16
 NUM_EPOCHS = 10
 
-def download_trainfiles():
+def download_trainfiles(prefix='flights'):
   if not os.path.exists(LOCAL_TRAIN_DIR):
      os.makedirs(LOCAL_TRAIN_DIR)
 
-  ls = ['gsutil', 'ls', 'gs://' + BUCKET + GS_TRAIN_DIR + 'flights-*.csv']
+  ls = ['gsutil', 'ls', 'gs://' + BUCKET + GS_TRAIN_DIR + prefix + '-*.csv']
   infiles = subprocess.check_output(ls).split()
   localfiles = []
   for gsfile in infiles:
@@ -34,13 +34,13 @@ def download_trainfiles():
   # find out how many patterns there in total (mine have no headers) 
   wcout = subprocess.check_output(['wc', '-l'] + localfiles)
   npatterns = int(wcout.split()[-2])
-  print "Training dataset has {0} patterns in {1} files".format(npatterns, len(infiles))
+  print "{2}-*.csv dataset has {0} patterns in {1} files".format(npatterns, len(infiles), prefix)
   return npatterns
 
 # build the graph to read the training data
-def get_training_data():
+def get_training_ph(prefix='flights'):
   # set up queue
-  infiles = tf.train.match_filenames_once(LOCAL_TRAIN_DIR + 'flights-*.csv') 
+  infiles = tf.train.match_filenames_once(LOCAL_TRAIN_DIR + prefix + '-*.csv') 
   filename_queue = tf.train.string_input_producer(infiles, num_epochs=None)
   # read one example
   reader = tf.TextLineReader(skip_header_lines=0)
@@ -59,15 +59,15 @@ def get_nn():
   npredictors = 5
   nhidden = 7
   noutputs = 1
-  feature_data = tf.placeholder("float", [None, npredictors])
-  target_data = tf.placeholder("float", [None, noutputs])
+  feature_ph = tf.placeholder("float", [None, npredictors])
+  target_ph = tf.placeholder("float", [None, noutputs])
   weights1 = tf.Variable(tf.truncated_normal([npredictors, nhidden], stddev=0.01))
   weights2 = tf.Variable(tf.truncated_normal([nhidden, noutputs], stddev=0.01))
   biases1 = tf.Variable(tf.ones([nhidden]))
   biases2 = tf.Variable(tf.ones([noutputs]))
-  model = tf.sigmoid(tf.matmul(tf.nn.relu(tf.matmul(feature_data, weights1) + biases1), weights2) + biases2)
+  model = tf.sigmoid(tf.matmul(tf.nn.relu(tf.matmul(feature_ph, weights1) + biases1), weights2) + biases2)
   saver = tf.train.Saver({'weights1' : weights1, 'biases1' : biases1, 'weights2' : weights2, 'biases2' : biases2})
-  return model, saver, feature_data, target_data
+  return model, saver, feature_ph, target_ph
 
 ############ 'main' starts here ##############
 if __name__ == '__main__':
@@ -76,9 +76,9 @@ if __name__ == '__main__':
   modelfile = '/tmp/trained_model'
   with tf.Session() as sess:
     # create the computation graph
-    features, labels = get_training_data()
-    model, saver, feature_data, target_data = get_nn()
-    cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(model, target_data))
+    features, labels = get_training_ph()
+    model, saver, feature_ph, target_ph = get_nn()
+    cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(model, target_ph))
     optimizer = tf.train.AdamOptimizer(learning_rate=0.0001)
     training_step = optimizer.minimize(cost)
  
@@ -94,11 +94,11 @@ if __name__ == '__main__':
       nbatch = 0
       while nbatch < numbatches:
         features_feed, labels_feed = sess.run([features, labels])
-        result = sess.run(training_step, feed_dict = {feature_data: features_feed, target_data: labels_feed})
+        result = sess.run(training_step, feed_dict = {feature_ph: features_feed, target_ph: labels_feed})
         nbatch = nbatch + 1
         if nbatch%10 == 0:
            # Q: does this make training_step skip this data?
-           print "batchno={0}/{1} ({2}=epoch) cost={3}".format(nbatch, numbatches, npatterns/BATCH_SIZE, sess.run(cost, feed_dict = {feature_data: features_feed, target_data: labels_feed}))
+           print "batchno={0}/{1} ({2}=epoch) cost={3}".format(nbatch, numbatches, npatterns/BATCH_SIZE, sess.run(cost, feed_dict = {feature_ph: features_feed, target_ph: labels_feed}))
   
     except tf.errors.OutOfRangeError as e:
       print "Ran out of inputs (?!)"
