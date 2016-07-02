@@ -22,7 +22,7 @@ if __name__ == '__main__':
   
   with tf.Session() as sess:
     # create the computation graph
-    model, saver, feature_ph, target_ph = train.get_nn()
+    model, saver, feature_ph, target_ph, keep_prob_ph = train.get_nn()
 
     # tf_train.py wrote this out; use it to get graph populated
     localfilename = '/tmp/trained_model.tf'
@@ -47,7 +47,7 @@ if __name__ == '__main__':
       nbatch = 0
       while nbatch < numbatches:
         features_feed, labels_feed = sess.run([features, labels])
-        batchcost = cost.eval(feed_dict = {feature_ph: features_feed, target_ph: labels_feed})
+        batchcost = cost.eval(feed_dict = {feature_ph: features_feed, target_ph: labels_feed, keep_prob_ph: 1.0})
         totalcost = totalcost + batchcost
         nbatch = nbatch + 1
         if nbatch%100 == 0:
