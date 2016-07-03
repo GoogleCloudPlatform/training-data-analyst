@@ -12,7 +12,7 @@ GS_TRAIN_DIR = '/flights/chapter07/'
 GS_MODEL_OUTPUT = 'gs://' + BUCKET + GS_TRAIN_DIR + 'trained_model.tf'
 BATCH_SIZE = 10000
 NUM_THREADS = 16
-NUM_EPOCHS = 10
+NUM_EPOCHS = 100
 
 def download_trainfiles(prefix='flights'):
   if not os.path.exists(LOCAL_TRAIN_DIR):

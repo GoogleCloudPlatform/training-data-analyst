@@ -1,2 +1,2 @@
 #!/bin/bash
-python -u tf_train.py &> train.log
+nohup python -u tf_train.py &> train.log  &
