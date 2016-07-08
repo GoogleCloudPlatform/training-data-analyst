@@ -1,0 +1,11 @@
+SELECT
+  SUM(DISTANCE < 300),
+  SUM(DISTANCE > 300
+    AND DISTANCE < 500),
+  SUM(DISTANCE > 500
+    AND DISTANCE < 800),
+  SUM(DISTANCE > 800
+    AND DISTANCE < 1200),
+  SUM(DISTANCE > 1200)
+FROM
+  [cloud-training-demos:bts.flights]
