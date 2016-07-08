@@ -36,6 +36,7 @@ public class Flight {
 	double arrivalDelay;
 	double averageDepartureDelay;
 	double averageArrivalDelay;
+	String line;
 
 	public double[] getInputFeatures() {
 		return new double[] { departureDelay, taxiOutTime, distance, averageDepartureDelay, averageArrivalDelay };
@@ -68,6 +69,7 @@ public class Flight {
         f.arrivalDelay = this.arrivalDelay;
         f.averageDepartureDelay = this.averageDepartureDelay;
         f.averageArrivalDelay = this.averageArrivalDelay;
+        f.line = this.line;
         return f;
 	}
 }
