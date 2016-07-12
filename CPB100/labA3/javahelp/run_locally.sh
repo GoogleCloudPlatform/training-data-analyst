@@ -8,4 +8,5 @@ fi
 
 MAIN=com.google.cloud.training.dataanalyst.javahelp.$1
 
-~/apache-maven-3.3.9/bin/mvn compile -e exec:java -Dexec.mainClass=$MAIN
+export PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin/:$PATH
+mvn compile -e exec:java -Dexec.mainClass=$MAIN

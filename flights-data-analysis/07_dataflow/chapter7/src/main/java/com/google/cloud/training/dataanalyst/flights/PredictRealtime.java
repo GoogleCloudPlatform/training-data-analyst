@@ -35,6 +35,7 @@ import org.bytedeco.javacpp.tensorflow.StringVector;
 import org.bytedeco.javacpp.tensorflow.Tensor;
 import org.bytedeco.javacpp.tensorflow.TensorShape;
 import org.bytedeco.javacpp.tensorflow.TensorVector;
+import org.bytedeco.javacpp.helper.tensorflow.StringArray;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
@@ -234,9 +235,8 @@ public class PredictRealtime {
 	private static Tensor createTensorFromString(String data) {
 		System.out.println("Reading model from " + data);
 		Tensor fn = new Tensor(tensorflow.DT_STRING, new TensorShape(1));
-		// StringArray a = fn.createStringArray();
-		ByteBuffer buffer = fn.createBuffer(); // FIXME
-		buffer.put(data.getBytes());
+		StringArray a = fn.createStringArray();
+		a.position(0).put(data);
 		return fn;
 	}
 
