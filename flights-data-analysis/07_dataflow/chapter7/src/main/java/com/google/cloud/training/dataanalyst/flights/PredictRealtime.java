@@ -19,9 +19,11 @@ package com.google.cloud.training.dataanalyst.flights;
 import static org.bytedeco.javacpp.tensorflow.Const;
 import static org.bytedeco.javacpp.tensorflow.Variable;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.Map;
+import java.util.Scanner;
 
 import org.bytedeco.javacpp.tensorflow;
 import org.bytedeco.javacpp.tensorflow.GraphDef;
@@ -153,12 +155,11 @@ public class PredictRealtime {
 		if (!s.ok()) {
 			throw new RuntimeException(s.error_message().getString());
 		}
+		
+		// restore
 		Tensor fn = createTensorFromString(options.getModelfile());
-		// StringTensorPairVector inputs, StringVector output_tensornames,
-		// StringVector target_node_names, TensorVector outputs
-		s = session.Run(new StringTensorPairVector(new String[] { "save/Const:0" }, new Tensor[] { fn }),
-				new StringVector(),
-				new StringVector("save/restore_all"), new TensorVector());
+		s = session.Run(new StringTensorPairVector(new String[]{"save/Const:0"}, new Tensor[]{fn}),
+				new StringVector(), new StringVector("save/restore_all"), new TensorVector());
 		if (!s.ok()) {
 			throw new RuntimeException(s.error_message().getString());
 		}
@@ -241,8 +242,8 @@ public class PredictRealtime {
 	}
 
 	private static GraphDef createTensorFlowModel() {
-		GraphDefBuilder b = new GraphDefBuilder();
-
+		GraphDefBuilder b = new GraphDefBuilder();	
+		
 		// Java version of the Python graph
 		int npredictors = 5;
 		int[] nhidden = { 50, 10 };
