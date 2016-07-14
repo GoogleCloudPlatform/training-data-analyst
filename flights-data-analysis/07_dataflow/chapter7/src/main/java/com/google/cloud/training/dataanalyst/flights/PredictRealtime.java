@@ -20,12 +20,16 @@ import static org.bytedeco.javacpp.tensorflow.Const;
 import static org.bytedeco.javacpp.tensorflow.Variable;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 import org.bytedeco.javacpp.tensorflow;
+import org.bytedeco.javacpp.tensorflow.Env;
 import org.bytedeco.javacpp.tensorflow.GraphDef;
 import org.bytedeco.javacpp.tensorflow.GraphDefBuilder;
 import org.bytedeco.javacpp.tensorflow.Node;
@@ -135,12 +139,19 @@ public class PredictRealtime {
 
 		void setDelayPath(String s);
 
-		@Description("Path of tensorflow model")
+		@Description("Path of tensorflow trained file")
 		@Default.String(// "gs://cloud-training-demos/flights/chapter07/trained_model.tf")
 		"/Users/vlakshmanan/code/training-data-analyst/flights-data-analysis/09_realtime/trained_model.tf")
 		String getModelfile();
 
 		void setModelfile(String s);
+		
+		@Description("Path of tensorflow graph")
+		@Default.String(// "gs://cloud-training-demos/flights/chapter07/trained_model.proto")
+		"/Users/vlakshmanan/code/training-data-analyst/flights-data-analysis/09_realtime/trained_model.proto")
+		String getGraphfile();
+
+		void setGraphfile(String s);
 	}
 
 	@SuppressWarnings("serial")
@@ -150,7 +161,9 @@ public class PredictRealtime {
 
 		// read tensorflow modelfile ...
 		final Session session = new Session(new SessionOptions());
-		GraphDef def = createTensorFlowModel();
+		//GraphDef def = createTensorFlowModel();
+		GraphDef def = new GraphDef();
+		tensorflow.ReadBinaryProto(Env.Default(), options.getGraphfile(), def);
 		Status s = session.Create(def);
 		if (!s.ok()) {
 			throw new RuntimeException(s.error_message().getString());
@@ -165,18 +178,23 @@ public class PredictRealtime {
 		}
 		
 		// try to predict some value
-		Tensor inputs = new Tensor(tensorflow.DT_FLOAT, new TensorShape(1,5));
+		Tensor inputs = new Tensor(tensorflow.DT_FLOAT, new TensorShape(2,5));
 		FloatBuffer x = inputs.createBuffer();
-		x.put(new float[]{-6.0f,22.0f,383.0f,27.781754111198122f,-6.5f});
+		x.put(new float[]{-6.0f,22.0f,383.0f,27.781754111198122f,-6.5f}); // true val = 1
+		x.put(new float[]{66.0f,22.0f,2422.0f,45.72160947712418f,0.4f}); // true val = 0
+		Tensor nodropoff = new Tensor(tensorflow.DT_FLOAT, new TensorShape(2,1));
+		((FloatBuffer)nodropoff.createBuffer()).put(new float[]{1.0f, 1.0f});
 		TensorVector outputs = new TensorVector();
 		outputs.resize(0);
-		s = session.Run(new StringTensorPairVector(new String[] {"feature_ph"}, new Tensor[] {inputs}),
-                new StringVector("model"), new StringVector(), outputs);
+		s = session.Run(new StringTensorPairVector(new String[] {"Placeholder", "Placeholder_2"}, new Tensor[] {inputs, nodropoff}),
+                new StringVector("Sigmoid"), new StringVector(), outputs);
 		if (!s.ok()) {
 			throw new RuntimeException(s.error_message().getString());
 		}
-		System.out.println(outputs.size());
-		System.out.println("Read model file ...");
+		FloatBuffer output = outputs.get(0).createBuffer();
+		for (int k=0; k < output.limit(); ++k){
+			System.out.println("prediction=" + output.get(k));
+		}
 		System.exit(0);
 		
 		// read delays-*.csv into memory for use as a side-input
@@ -241,7 +259,7 @@ public class PredictRealtime {
 		return fn;
 	}
 
-	private static GraphDef createTensorFlowModel() {
+	private static GraphDef createTensorFlowModel() {		
 		GraphDefBuilder b = new GraphDefBuilder();	
 		
 		// Java version of the Python graph
@@ -266,9 +284,10 @@ public class PredictRealtime {
 		Node[] weights = new Node[numnodes.length - 1];
 		Node[] biases = new Node[numnodes.length - 1];
 		for (int i = 0; i < numnodes.length - 1; ++i) {
-			// no need to initialize these to random variables ...
+			// 
 			weights[i] = Variable(new TensorShape(numnodes[i], numnodes[i + 1]), tensorflow.DT_FLOAT,
 					b.opts().WithName("weight_" + i));
+			
 			biases[i] = Variable(new TensorShape(numnodes[i + 1]), tensorflow.DT_FLOAT, b.opts().WithName("bias_" + i));
 			;
 		}
@@ -313,6 +332,22 @@ public class PredictRealtime {
 			throw new RuntimeException(s.error_message().getString());
 		}
 		return def;
+	}
+
+	private static float[] readFile(String wtsFile) {
+		try (Scanner s = new Scanner(new File(wtsFile))) {
+			List<Float> f = new ArrayList<>();
+			while (s.hasNext()) {
+				f.add(s.nextFloat());
+			}
+			float[] result = new float[f.size()];
+			for (int i=0; i < result.length; ++i) {
+				result[i] = f.get(i);
+			}
+			return result;
+		} catch (FileNotFoundException e) {
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 	public static Instant toInstant(String date, String hourmin) {

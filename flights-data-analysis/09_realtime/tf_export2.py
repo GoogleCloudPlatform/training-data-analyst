@@ -53,3 +53,7 @@ for (weight, bias) in zip(weights, biases):
      for wt in w1:
        print wt
      print b1
+
+# write text file of graph
+tf.train.write_graph(sess.graph_def, '.', 'trained_model.txt', as_text=True)
+

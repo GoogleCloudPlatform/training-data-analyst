@@ -13,10 +13,5 @@ sess = tf.Session()
 model, saver, feature_ph, target_ph, keep_prob_ph = train.get_nn()
 localfilename = 'trained_model.tf'
 saver.restore(sess, localfilename)
-# parameters for C++: http://stackoverflow.com/questions/37508771/how-to-save-and-restore-a-tensorflow-graph-and-its-state-in-c
-saver_def = saver.as_saver_def()
-print saver_def.filename_tensor_name
-print saver_def.restore_op_name
-print saver_def.save_tensor_name
-# write weights and biases
-print model
+tf.train.write_graph(sess.graph_def, '.', 'trained_model.proto', as_text=False)
+tf.train.write_graph(sess.graph_def, '.', 'trained_model.txt', as_text=True)
