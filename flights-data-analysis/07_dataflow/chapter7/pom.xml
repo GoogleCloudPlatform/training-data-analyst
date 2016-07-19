@@ -44,13 +44,7 @@
 		<dependency>
 			<groupId>org.bytedeco.javacpp-presets</groupId>
 			<artifactId>tensorflow</artifactId>
-			<version>0.9.0-1.2.2</version>
-		</dependency>
-		
-		<dependency>
-    		<groupId>org.bytedeco</groupId>
-    		<artifactId>javacpp</artifactId>
-    		<version>1.2.2</version>
+			<version>0.9.0-1.2</version>
 		</dependency>
 
 		<!-- slf4j API frontend binding with JUL backend -->

@@ -38,12 +38,12 @@ public class Flight {
 	double averageArrivalDelay;
 	String line;
 
-	public double[] getInputFeatures() {
-		return new double[] { departureDelay, taxiOutTime, distance, averageDepartureDelay, averageArrivalDelay };
+	public float[] getInputFeatures() {
+		return new float[] { (float)departureDelay, (float)taxiOutTime, (float)distance, (float)averageDepartureDelay, (float)averageArrivalDelay };
 	}
 
 	public String toTrainingCsv() {
-		double[] features = this.getInputFeatures();
+		float[] features = this.getInputFeatures();
 		boolean ontime = this.arrivalDelay < 15;
 		StringBuilder sb = new StringBuilder();
 		sb.append(ontime ? 1.0 : 0.0);

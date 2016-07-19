@@ -16,47 +16,27 @@
 
 package com.google.cloud.training.dataanalyst.flights;
 
-import static org.bytedeco.javacpp.tensorflow.Const;
-import static org.bytedeco.javacpp.tensorflow.Variable;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 
-import org.bytedeco.javacpp.tensorflow;
-import org.bytedeco.javacpp.tensorflow.Env;
-import org.bytedeco.javacpp.tensorflow.GraphDef;
-import org.bytedeco.javacpp.tensorflow.GraphDefBuilder;
-import org.bytedeco.javacpp.tensorflow.Node;
-import org.bytedeco.javacpp.tensorflow.Session;
-import org.bytedeco.javacpp.tensorflow.SessionOptions;
-import org.bytedeco.javacpp.tensorflow.Status;
-import org.bytedeco.javacpp.tensorflow.StringTensorPairVector;
-import org.bytedeco.javacpp.tensorflow.StringVector;
-import org.bytedeco.javacpp.tensorflow.Tensor;
-import org.bytedeco.javacpp.tensorflow.TensorShape;
-import org.bytedeco.javacpp.tensorflow.TensorVector;
-import org.bytedeco.javacpp.helper.tensorflow.StringArray;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.cloud.dataflow.sdk.Pipeline;
+import com.google.cloud.dataflow.sdk.io.PubsubIO;
 import com.google.cloud.dataflow.sdk.io.TextIO;
+import com.google.cloud.dataflow.sdk.options.DataflowPipelineOptions;
 import com.google.cloud.dataflow.sdk.options.Default;
 import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
+import com.google.cloud.dataflow.sdk.runners.DataflowPipelineRunner;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.Mean;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.View;
+import com.google.cloud.dataflow.sdk.transforms.windowing.SlidingWindows;
+import com.google.cloud.dataflow.sdk.transforms.windowing.Window;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.PCollectionView;
@@ -69,14 +49,17 @@ import com.google.cloud.dataflow.sdk.values.PCollectionView;
  *
  */
 public class PredictRealtime {
+	
 	@SuppressWarnings("serial")
 	public static class ParseFlights extends DoFn<String, Flight> {
 		public static final int INVALID_HOUR = -1000;
 		private final PCollectionView<Map<String, Double>> delays;
-
-		public ParseFlights(PCollectionView<Map<String, Double>> delays) {
+		private final boolean streaming;
+		
+		public ParseFlights(PCollectionView<Map<String, Double>> delays, boolean streaming) {
 			super();
 			this.delays = delays;
+			this.streaming = streaming;
 		}
 
 		@Override
@@ -102,14 +85,18 @@ public class PredictRealtime {
 				Double d = c.sideInput(delays).get(f.fromAirport + ":" + f.depHour);
 				f.averageDepartureDelay = (d == null) ? 0 : d;
 				f.averageArrivalDelay = Double.NaN;
-				// without arrival time: for prediction
-				c.outputWithTimestamp(f, toInstant(fields[0], fields[13]));
-
-				// with arrival time: for computing avg arrival delay
-				f.arrHour = Integer.parseInt(fields[21]) / 100;
-				f.arrivalDelay = Double.parseDouble(fields[22]);
-				c.outputWithTimestamp(f, toInstant(fields[0], fields[21]));
-
+				
+				if (!streaming || fields[21].length() == 0) {
+					// without arrival time: for prediction
+					c.outputWithTimestamp(f, toInstant(fields[0], fields[13]));
+				}
+				
+				if (!streaming || fields[21].length() > 0) {
+					// with arrival time: for computing avg arrival delay
+					f.arrHour = Integer.parseInt(fields[21]) / 100;
+					f.arrivalDelay = Double.parseDouble(fields[22]);
+					c.outputWithTimestamp(f, toInstant(fields[0], fields[21]));
+				}
 			} catch (Exception e) {
 				LOG.warn("Malformed line {" + line + "} skipped", e);
 			}
@@ -119,7 +106,7 @@ public class PredictRealtime {
 
 	private static final Logger LOG = LoggerFactory.getLogger(PredictRealtime.class);
 
-	public static interface MyOptions extends PipelineOptions {
+	public static interface MyOptions extends DataflowPipelineOptions {
 		@Description("Path of the file to read from")
 		@Default.String("/Users/vlakshmanan/data/flights/small.csv")
 		String getInput();
@@ -133,22 +120,22 @@ public class PredictRealtime {
 		void setOutput(String s);
 
 		@Description("Path of delay files")
-		@Default.String("/Users/vlakshmanan/data/flights/")
-		// @Default.String("gs://cloud-training-demos/flights/chapter07/")
+		@Default.String("gs://cloud-training-demos/flights/chapter07/")
+		// @Default.String("/Users/vlakshmanan/data/flights/")
 		String getDelayPath();
 
 		void setDelayPath(String s);
 
 		@Description("Path of tensorflow trained file")
-		@Default.String(// "gs://cloud-training-demos/flights/chapter07/trained_model.tf")
-		"/Users/vlakshmanan/code/training-data-analyst/flights-data-analysis/09_realtime/trained_model.tf")
+		@Default.String("gs://cloud-training-demos/flights/chapter07/trained_model.tf")
+		// "/Users/vlakshmanan/code/training-data-analyst/flights-data-analysis/09_realtime/trained_model.tf")
 		String getModelfile();
 
 		void setModelfile(String s);
-		
+
 		@Description("Path of tensorflow graph")
-		@Default.String(// "gs://cloud-training-demos/flights/chapter07/trained_model.proto")
-		"/Users/vlakshmanan/code/training-data-analyst/flights-data-analysis/09_realtime/trained_model.proto")
+		@Default.String("gs://cloud-training-demos/flights/chapter07/trained_model.proto")
+		// "/Users/vlakshmanan/code/training-data-analyst/flights-data-analysis/09_realtime/trained_model.proto")
 		String getGraphfile();
 
 		void setGraphfile(String s);
@@ -156,53 +143,35 @@ public class PredictRealtime {
 
 	@SuppressWarnings("serial")
 	public static void main(String[] args) {
+		// create pipeline from options
 		MyOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(MyOptions.class);
+		boolean streaming = options.getInput().contains("/topics/");
+		if (streaming) {
+			LOG.info("Creating real-time pipeline that reads from Pub/Sub I/O");
+			options.setStreaming(true);
+			options.setRunner(DataflowPipelineRunner.class);
+		}
 		Pipeline p = Pipeline.create(options);
 
-		// read tensorflow modelfile ...
-		final Session session = new Session(new SessionOptions());
-		//GraphDef def = createTensorFlowModel();
-		GraphDef def = new GraphDef();
-		tensorflow.ReadBinaryProto(Env.Default(), options.getGraphfile(), def);
-		Status s = session.Create(def);
-		if (!s.ok()) {
-			throw new RuntimeException(s.error_message().getString());
-		}
-		
-		// restore
-		Tensor fn = createTensorFromString(options.getModelfile());
-		s = session.Run(new StringTensorPairVector(new String[]{"save/Const:0"}, new Tensor[]{fn}),
-				new StringVector(), new StringVector("save/restore_all"), new TensorVector());
-		if (!s.ok()) {
-			throw new RuntimeException(s.error_message().getString());
-		}
-		
-		// try to predict some value
-		Tensor inputs = new Tensor(tensorflow.DT_FLOAT, new TensorShape(2,5));
-		FloatBuffer x = inputs.createBuffer();
-		x.put(new float[]{-6.0f,22.0f,383.0f,27.781754111198122f,-6.5f}); // true val = 1
-		x.put(new float[]{66.0f,22.0f,2422.0f,45.72160947712418f,0.4f}); // true val = 0
-		Tensor nodropoff = new Tensor(tensorflow.DT_FLOAT, new TensorShape(2,1));
-		((FloatBuffer)nodropoff.createBuffer()).put(new float[]{1.0f, 1.0f});
-		TensorVector outputs = new TensorVector();
-		outputs.resize(0);
-		s = session.Run(new StringTensorPairVector(new String[] {"Placeholder", "Placeholder_2"}, new Tensor[] {inputs, nodropoff}),
-                new StringVector("Sigmoid"), new StringVector(), outputs);
-		if (!s.ok()) {
-			throw new RuntimeException(s.error_message().getString());
-		}
-		FloatBuffer output = outputs.get(0).createBuffer();
-		for (int k=0; k < output.limit(); ++k){
-			System.out.println("prediction=" + output.get(k));
-		}
-		System.exit(0);
-		
 		// read delays-*.csv into memory for use as a side-input
 		PCollectionView<Map<String, Double>> delays = getAverageDelays(p, options.getDelayPath());
 
-		PCollection<Flight> flights = p //
-				.apply("ReadLines", TextIO.Read.from(options.getInput())) //
-				.apply("ParseFlights", ParDo.withSideInputs(delays).of(new ParseFlights(delays))) //
+		// read flights, either batch or in 1-hr windows every minute
+		PCollection<String> lines;
+		if (streaming) {
+			// real-time for pub-sub
+			lines = p.apply("ReadLines", PubsubIO.Read.topic(options.getInput())) //
+					.apply("window",
+							Window.into(SlidingWindows//
+									.of(Duration.standardMinutes(60))//
+									.every(Duration.standardMinutes(1))));
+		} else {
+			// batch, from text
+			lines = p.apply("ReadLines", TextIO.Read.from(options.getInput()));
+		}
+
+		PCollection<Flight> flights = lines.apply("ParseFlights",
+				ParDo.withSideInputs(delays).of(new ParseFlights(delays, streaming))) //
 		;
 
 		PCollectionView<Map<String, Double>> arrDelay = flights
@@ -221,9 +190,13 @@ public class PredictRealtime {
 				})) //
 				.apply(Mean.perKey()) //
 				.apply(View.asMap());
-
+		
+		PCollection<String> pred =
 		flights.apply("Predict", ParDo.withSideInputs(arrDelay).of(new DoFn<Flight, String>() {
 
+			// FIXME: distribute predictions to different machines
+			transient TensorflowModel tfModel = new TensorflowModel(options.getModelfile(), options.getGraphfile());
+			
 			@Override
 			public void processElement(ProcessContext c) throws Exception {
 				Flight f = c.element();
@@ -235,119 +208,22 @@ public class PredictRealtime {
 					Double delay = c.sideInput(arrDelay).get(key);
 					f.averageArrivalDelay = (delay == null) ? 0 : delay;
 
-					// form inputs to TensorFlow model
-					double[] inputs = f.getInputFeatures();
-
-					// compute it
-					boolean ontime = true;
+					// predict
+					boolean ontime = tfModel.predict(f.getInputFeatures()) > 0.5;
 
 					// output
 					c.output(f.line + "," + ontime);
 				}
 			}
-		})) //
-				.apply("WriteFlights", TextIO.Write.to(options.getOutput() + "flights").withSuffix(".csv"));
-
-		p.run();
-	}
-
-	private static Tensor createTensorFromString(String data) {
-		System.out.println("Reading model from " + data);
-		Tensor fn = new Tensor(tensorflow.DT_STRING, new TensorShape(1));
-		StringArray a = fn.createStringArray();
-		a.position(0).put(data);
-		return fn;
-	}
-
-	private static GraphDef createTensorFlowModel() {		
-		GraphDefBuilder b = new GraphDefBuilder();	
+		}));
 		
-		// Java version of the Python graph
-		int npredictors = 5;
-		int[] nhidden = { 50, 10 };
-		int noutputs = 1;
-
-		// number of nodes in each layer
-		int[] numnodes = new int[2 + nhidden.length];
-		numnodes[0] = npredictors;
-		for (int i = 0; i < nhidden.length; ++i) {
-			numnodes[i + 1] = nhidden[i];
+		if (streaming) {
+			pred.apply("WriteFlights", PubsubIO.Write.topic(options.getOutput()));
+		} else {
+			pred.apply("WriteFlights", TextIO.Write.to(options.getOutput() + "flights").withSuffix(".csv"));
 		}
-		numnodes[numnodes.length - 1] = noutputs;
-
-		// input and output placeholders
-		Node feature_ph = Const(new float[] { 0f }, new TensorShape(0, npredictors), b.opts().WithName("feature_ph"));
-		// Node target_ph = Const(new float[] {0f}, new TensorShape(-1,
-		// noutputs), b.opts().WithName("target_ph"));
-
-		// weights and biases. weights for each input; bias for each output
-		Node[] weights = new Node[numnodes.length - 1];
-		Node[] biases = new Node[numnodes.length - 1];
-		for (int i = 0; i < numnodes.length - 1; ++i) {
-			// 
-			weights[i] = Variable(new TensorShape(numnodes[i], numnodes[i + 1]), tensorflow.DT_FLOAT,
-					b.opts().WithName("weight_" + i));
-			
-			biases[i] = Variable(new TensorShape(numnodes[i + 1]), tensorflow.DT_FLOAT, b.opts().WithName("bias_" + i));
-			;
-		}
-
-		// matrix multiplication at each layer
-		// activation function = tanh for input, relu for each hidden layer,
-		// sigmoid for output layer
-		Node model = tensorflow.Tanh( // model = tf.tanh(tf.matmul(feature_ph,
-										// weights[0]) + biases[0])
-				tensorflow.Add(//
-						tensorflow.MatMul(feature_ph, weights[0], b.opts()), biases[0], b.opts()),
-				b.opts());
-		for (int layer = 1; layer < weights.length - 1; ++layer) {
-			// ignore drop-out in prediction
-			model = tensorflow
-					.Relu(//
-							tensorflow.Add(//
-									tensorflow.MatMul(model, weights[layer], b.opts()), biases[layer], b.opts()),
-							b.opts());// tf.nn.relu(tf.matmul(model,
-										// weights[layer]) + biases[layer]
-		}
-		model = tensorflow.Sigmoid( // model = tf.sigmoid(tf.matmul(model,
-									// weights[-1]) + biases[-1])
-				tensorflow.Add( //
-						tensorflow.MatMul(model, weights[weights.length - 1], b.opts()), biases[biases.length - 1],
-						b.opts()),
-				b.opts().WithName("model"));
-
-		// for saving and restoring
-		Node[] allvars = new Node[weights.length + biases.length];
-		for (int i = 0; i < weights.length; ++i) {
-			allvars[i] = weights[i];
-		}
-		for (int i = 0; i < biases.length; ++i) {
-			allvars[weights.length + i] = biases[i];
-		}
-
-		// graph def
-		GraphDef def = new GraphDef();
-		Status s = b.ToGraphDef(def);
-		if (!s.ok()) {
-			throw new RuntimeException(s.error_message().getString());
-		}
-		return def;
-	}
-
-	private static float[] readFile(String wtsFile) {
-		try (Scanner s = new Scanner(new File(wtsFile))) {
-			List<Float> f = new ArrayList<>();
-			while (s.hasNext()) {
-				f.add(s.nextFloat());
-			}
-			float[] result = new float[f.size()];
-			for (int i=0; i < result.length; ++i) {
-				result[i] = f.get(i);
-			}
-			return result;
-		} catch (FileNotFoundException e) {
-			throw new IllegalArgumentException(e);
-		}
+		
+		p.run();
 	}
 
 	public static Instant toInstant(String date, String hourmin) {
