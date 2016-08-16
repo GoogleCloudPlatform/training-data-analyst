@@ -198,6 +198,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -218,6 +226,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
     }
   }
 }
@@ -289,6 +305,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_1"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -309,6 +333,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_1"
+      }
     }
   }
 }
@@ -576,6 +608,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients/sub_grad/Reshape"
+      }
+    }
+  }
 }
 node {
   name: "gradients/sub_grad/tuple/control_dependency_1"
@@ -586,6 +626,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients/sub_grad/Reshape_1"
+      }
     }
   }
 }
@@ -718,6 +766,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients/mul_grad/Reshape"
+      }
+    }
+  }
 }
 node {
   name: "gradients/mul_grad/tuple/control_dependency_1"
@@ -728,6 +784,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients/mul_grad/Reshape_1"
+      }
     }
   }
 }
@@ -836,6 +900,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients/add_grad/Reshape"
+      }
+    }
+  }
 }
 node {
   name: "gradients/add_grad/tuple/control_dependency_1"
@@ -846,6 +918,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients/add_grad/Reshape_1"
+      }
     }
   }
 }
@@ -914,6 +994,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients/MatMul_grad/MatMul"
+      }
+    }
+  }
 }
 node {
   name: "gradients/MatMul_grad/tuple/control_dependency_1"
@@ -926,10 +1014,26 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients/MatMul_grad/MatMul_1"
+      }
+    }
+  }
 }
 node {
   name: "beta1_power/initial_value"
   op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
   attr {
     key: "dtype"
     value {
@@ -951,6 +1055,14 @@ node {
 node {
   name: "beta1_power"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -989,6 +1101,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -1011,10 +1131,26 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
 }
 node {
   name: "beta2_power/initial_value"
   op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
   attr {
     key: "dtype"
     value {
@@ -1036,6 +1172,14 @@ node {
 node {
   name: "beta2_power"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -1074,6 +1218,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -1094,6 +1246,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
     }
   }
 }
@@ -1127,6 +1287,14 @@ node {
 node {
   name: "Variable/Adam"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -1171,6 +1339,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -1191,6 +1367,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
     }
   }
 }
@@ -1224,6 +1408,14 @@ node {
 node {
   name: "Variable/Adam_1"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -1268,6 +1460,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -1288,6 +1488,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
     }
   }
 }
@@ -1318,6 +1526,14 @@ node {
 node {
   name: "Variable_1/Adam"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_1"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -1359,6 +1575,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_1"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -1379,6 +1603,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_1"
+      }
     }
   }
 }
@@ -1409,6 +1641,14 @@ node {
 node {
   name: "Variable_1/Adam_1"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_1"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -1450,6 +1690,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_1"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -1470,6 +1718,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_1"
+      }
     }
   }
 }
@@ -1577,6 +1833,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: false
@@ -1603,6 +1867,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_1"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: false
@@ -1622,6 +1894,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
 }
 node {
   name: "Adam/Assign"
@@ -1632,6 +1912,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
     }
   }
   attr {
@@ -1660,6 +1948,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
+    }
+  }
 }
 node {
   name: "Adam/Assign_1"
@@ -1670,6 +1966,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
     }
   }
   attr {
@@ -1805,6 +2109,14 @@ node {
       type: DT_STRING
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@save/Const"
+      }
+    }
+  }
 }
 node {
   name: "save/restore_slice/tensor_name"
@@ -1876,6 +2188,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_1"
+      }
     }
   }
   attr {
@@ -1961,6 +2281,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable"
+      }
     }
   }
   attr {
@@ -2182,6 +2510,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -2202,6 +2538,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
     }
   }
 }
@@ -2371,6 +2715,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -2391,6 +2743,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
     }
   }
 }
@@ -2462,6 +2822,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -2482,6 +2850,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
     }
   }
 }
@@ -2553,6 +2929,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -2573,6 +2957,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
     }
   }
 }
@@ -2887,6 +3279,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/sub_1_grad/Reshape"
+      }
+    }
+  }
 }
 node {
   name: "gradients_1/sub_1_grad/tuple/control_dependency_1"
@@ -2897,6 +3297,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/sub_1_grad/Reshape_1"
+      }
     }
   }
 }
@@ -3029,6 +3437,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/mul_1_grad/Reshape"
+      }
+    }
+  }
 }
 node {
   name: "gradients_1/mul_1_grad/tuple/control_dependency_1"
@@ -3039,6 +3455,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/mul_1_grad/Reshape_1"
+      }
     }
   }
 }
@@ -3147,6 +3571,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/add_2_grad/Reshape"
+      }
+    }
+  }
 }
 node {
   name: "gradients_1/add_2_grad/tuple/control_dependency_1"
@@ -3157,6 +3589,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/add_2_grad/Reshape_1"
+      }
     }
   }
 }
@@ -3225,6 +3665,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/MatMul_2_grad/MatMul"
+      }
+    }
+  }
 }
 node {
   name: "gradients_1/MatMul_2_grad/tuple/control_dependency_1"
@@ -3235,6 +3683,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/MatMul_2_grad/MatMul_1"
+      }
     }
   }
 }
@@ -3355,6 +3811,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/add_1_grad/Reshape"
+      }
+    }
+  }
 }
 node {
   name: "gradients_1/add_1_grad/tuple/control_dependency_1"
@@ -3365,6 +3829,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/add_1_grad/Reshape_1"
+      }
     }
   }
 }
@@ -3433,6 +3905,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/MatMul_1_grad/MatMul"
+      }
+    }
+  }
 }
 node {
   name: "gradients_1/MatMul_1_grad/tuple/control_dependency_1"
@@ -3445,10 +3925,26 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@gradients_1/MatMul_1_grad/MatMul_1"
+      }
+    }
+  }
 }
 node {
   name: "beta1_power_1/initial_value"
   op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
   attr {
     key: "dtype"
     value {
@@ -3470,6 +3966,14 @@ node {
 node {
   name: "beta1_power_1"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -3508,6 +4012,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -3530,10 +4042,26 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
 }
 node {
   name: "beta2_power_1/initial_value"
   op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
   attr {
     key: "dtype"
     value {
@@ -3555,6 +4083,14 @@ node {
 node {
   name: "beta2_power_1"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -3593,6 +4129,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -3613,6 +4157,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
     }
   }
 }
@@ -3646,6 +4198,14 @@ node {
 node {
   name: "Variable_2/Adam"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -3690,6 +4250,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -3710,6 +4278,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
     }
   }
 }
@@ -3743,6 +4319,14 @@ node {
 node {
   name: "Variable_2/Adam_1"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -3787,6 +4371,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -3807,6 +4399,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
     }
   }
 }
@@ -3840,6 +4440,14 @@ node {
 node {
   name: "Variable_3/Adam"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -3884,6 +4492,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -3904,6 +4520,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
     }
   }
 }
@@ -3937,6 +4561,14 @@ node {
 node {
   name: "Variable_3/Adam_1"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -3981,6 +4613,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -4001,6 +4641,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
     }
   }
 }
@@ -4031,6 +4679,14 @@ node {
 node {
   name: "Variable_4/Adam"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -4072,6 +4728,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -4092,6 +4756,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
     }
   }
 }
@@ -4122,6 +4794,14 @@ node {
 node {
   name: "Variable_4/Adam_1"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -4163,6 +4843,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -4183,6 +4871,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
     }
   }
 }
@@ -4213,6 +4909,14 @@ node {
 node {
   name: "Variable_5/Adam"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -4254,6 +4958,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -4274,6 +4986,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
     }
   }
 }
@@ -4304,6 +5024,14 @@ node {
 node {
   name: "Variable_5/Adam_1"
   op: "Variable"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
+    }
+  }
   attr {
     key: "container"
     value {
@@ -4345,6 +5073,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -4365,6 +5101,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
     }
   }
 }
@@ -4472,6 +5216,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: false
@@ -4495,6 +5247,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
     }
   }
   attr {
@@ -4524,6 +5284,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: false
@@ -4550,6 +5318,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: false
@@ -4571,6 +5347,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
 }
 node {
   name: "Adam_1/Assign"
@@ -4581,6 +5365,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
     }
   }
   attr {
@@ -4611,6 +5403,14 @@ node {
       type: DT_FLOAT
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
 }
 node {
   name: "Adam_1/Assign_1"
@@ -4621,6 +5421,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
     }
   }
   attr {
@@ -4780,6 +5588,14 @@ node {
       type: DT_STRING
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@save_1/Const"
+      }
+    }
+  }
 }
 node {
   name: "save_1/restore_slice/tensor_name"
@@ -4851,6 +5667,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
     }
   }
   attr {
@@ -4939,6 +5763,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -5024,6 +5856,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -5106,6 +5946,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
     }
   }
   attr {
@@ -5237,6 +6085,14 @@ node {
       type: DT_STRING
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@save_2/Const"
+      }
+    }
+  }
 }
 node {
   name: "save_2/restore_slice/tensor_name"
@@ -5308,6 +6164,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
     }
   }
   attr {
@@ -5396,6 +6260,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -5481,6 +6353,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -5563,6 +6443,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
     }
   }
   attr {
@@ -5827,6 +6715,14 @@ node {
       type: DT_STRING
     }
   }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@save_3/Const"
+      }
+    }
+  }
 }
 node {
   name: "save_3/restore_slice/tensor_name"
@@ -5898,6 +6794,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_4"
+      }
     }
   }
   attr {
@@ -5986,6 +6890,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_5"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -6068,6 +6980,14 @@ node {
     key: "T"
     value {
       type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_2"
+      }
     }
   }
   attr {
@@ -6156,6 +7076,14 @@ node {
     }
   }
   attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@Variable_3"
+      }
+    }
+  }
+  attr {
     key: "use_locking"
     value {
       b: true
@@ -6175,463 +7103,6 @@ node {
   input: "^save_3/Assign_1"
   input: "^save_3/Assign_2"
   input: "^save_3/Assign_3"
-}
-node {
-  name: "save_4/Const"
-  op: "Const"
-  attr {
-    key: "dtype"
-    value {
-      type: DT_STRING
-    }
-  }
-  attr {
-    key: "value"
-    value {
-      tensor {
-        dtype: DT_STRING
-        tensor_shape {
-        }
-        string_val: "model"
-      }
-    }
-  }
-}
-node {
-  name: "save_4/save/tensor_names"
-  op: "Const"
-  attr {
-    key: "dtype"
-    value {
-      type: DT_STRING
-    }
-  }
-  attr {
-    key: "value"
-    value {
-      tensor {
-        dtype: DT_STRING
-        tensor_shape {
-          dim {
-            size: 4
-          }
-        }
-        string_val: "biases1"
-        string_val: "biases2"
-        string_val: "weights1"
-        string_val: "weights2"
-      }
-    }
-  }
-}
-node {
-  name: "save_4/save/shapes_and_slices"
-  op: "Const"
-  attr {
-    key: "dtype"
-    value {
-      type: DT_STRING
-    }
-  }
-  attr {
-    key: "value"
-    value {
-      tensor {
-        dtype: DT_STRING
-        tensor_shape {
-          dim {
-            size: 4
-          }
-        }
-        string_val: ""
-        string_val: ""
-        string_val: ""
-        string_val: ""
-      }
-    }
-  }
-}
-node {
-  name: "save_4/save"
-  op: "SaveSlices"
-  input: "save_4/Const"
-  input: "save_4/save/tensor_names"
-  input: "save_4/save/shapes_and_slices"
-  input: "Variable_4"
-  input: "Variable_5"
-  input: "Variable_2"
-  input: "Variable_3"
-  attr {
-    key: "T"
-    value {
-      list {
-        type: DT_FLOAT
-        type: DT_FLOAT
-        type: DT_FLOAT
-        type: DT_FLOAT
-      }
-    }
-  }
-}
-node {
-  name: "save_4/control_dependency"
-  op: "Identity"
-  input: "save_4/Const"
-  input: "^save_4/save"
-  attr {
-    key: "T"
-    value {
-      type: DT_STRING
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice/tensor_name"
-  op: "Const"
-  attr {
-    key: "dtype"
-    value {
-      type: DT_STRING
-    }
-  }
-  attr {
-    key: "value"
-    value {
-      tensor {
-        dtype: DT_STRING
-        tensor_shape {
-        }
-        string_val: "biases1"
-      }
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice/shape_and_slice"
-  op: "Const"
-  attr {
-    key: "dtype"
-    value {
-      type: DT_STRING
-    }
-  }
-  attr {
-    key: "value"
-    value {
-      tensor {
-        dtype: DT_STRING
-        tensor_shape {
-        }
-        string_val: ""
-      }
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice"
-  op: "RestoreSlice"
-  input: "save_4/Const"
-  input: "save_4/restore_slice/tensor_name"
-  input: "save_4/restore_slice/shape_and_slice"
-  attr {
-    key: "dt"
-    value {
-      type: DT_FLOAT
-    }
-  }
-  attr {
-    key: "preferred_shard"
-    value {
-      i: -1
-    }
-  }
-}
-node {
-  name: "save_4/Assign"
-  op: "Assign"
-  input: "Variable_4"
-  input: "save_4/restore_slice"
-  attr {
-    key: "T"
-    value {
-      type: DT_FLOAT
-    }
-  }
-  attr {
-    key: "use_locking"
-    value {
-      b: true
-    }
-  }
-  attr {
-    key: "validate_shape"
-    value {
-      b: true
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice_1/tensor_name"
-  op: "Const"
-  attr {
-    key: "dtype"
-    value {
-      type: DT_STRING
-    }
-  }
-  attr {
-    key: "value"
-    value {
-      tensor {
-        dtype: DT_STRING
-        tensor_shape {
-        }
-        string_val: "biases2"
-      }
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice_1/shape_and_slice"
-  op: "Const"
-  attr {
-    key: "dtype"
-    value {
-      type: DT_STRING
-    }
-  }
-  attr {
-    key: "value"
-    value {
-      tensor {
-        dtype: DT_STRING
-        tensor_shape {
-        }
-        string_val: ""
-      }
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice_1"
-  op: "RestoreSlice"
-  input: "save_4/Const"
-  input: "save_4/restore_slice_1/tensor_name"
-  input: "save_4/restore_slice_1/shape_and_slice"
-  attr {
-    key: "dt"
-    value {
-      type: DT_FLOAT
-    }
-  }
-  attr {
-    key: "preferred_shard"
-    value {
-      i: -1
-    }
-  }
-}
-node {
-  name: "save_4/Assign_1"
-  op: "Assign"
-  input: "Variable_5"
-  input: "save_4/restore_slice_1"
-  attr {
-    key: "T"
-    value {
-      type: DT_FLOAT
-    }
-  }
-  attr {
-    key: "use_locking"
-    value {
-      b: true
-    }
-  }
-  attr {
-    key: "validate_shape"
-    value {
-      b: true
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice_2/tensor_name"
-  op: "Const"
-  attr {
-    key: "dtype"
-    value {
-      type: DT_STRING
-    }
-  }
-  attr {
-    key: "value"
-    value {
-      tensor {
-        dtype: DT_STRING
-        tensor_shape {
-        }
-        string_val: "weights1"
-      }
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice_2/shape_and_slice"
-  op: "Const"
-  attr {
-    key: "dtype"
-    value {
-      type: DT_STRING
-    }
-  }
-  attr {
-    key: "value"
-    value {
-      tensor {
-        dtype: DT_STRING
-        tensor_shape {
-        }
-        string_val: ""
-      }
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice_2"
-  op: "RestoreSlice"
-  input: "save_4/Const"
-  input: "save_4/restore_slice_2/tensor_name"
-  input: "save_4/restore_slice_2/shape_and_slice"
-  attr {
-    key: "dt"
-    value {
-      type: DT_FLOAT
-    }
-  }
-  attr {
-    key: "preferred_shard"
-    value {
-      i: -1
-    }
-  }
-}
-node {
-  name: "save_4/Assign_2"
-  op: "Assign"
-  input: "Variable_2"
-  input: "save_4/restore_slice_2"
-  attr {
-    key: "T"
-    value {
-      type: DT_FLOAT
-    }
-  }
-  attr {
-    key: "use_locking"
-    value {
-      b: true
-    }
-  }
-  attr {
-    key: "validate_shape"
-    value {
-      b: true
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice_3/tensor_name"
-  op: "Const"
-  attr {
-    key: "dtype"
-    value {
-      type: DT_STRING
-    }
-  }
-  attr {
-    key: "value"
-    value {
-      tensor {
-        dtype: DT_STRING
-        tensor_shape {
-        }
-        string_val: "weights2"
-      }
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice_3/shape_and_slice"
-  op: "Const"
-  attr {
-    key: "dtype"
-    value {
-      type: DT_STRING
-    }
-  }
-  attr {
-    key: "value"
-    value {
-      tensor {
-        dtype: DT_STRING
-        tensor_shape {
-        }
-        string_val: ""
-      }
-    }
-  }
-}
-node {
-  name: "save_4/restore_slice_3"
-  op: "RestoreSlice"
-  input: "save_4/Const"
-  input: "save_4/restore_slice_3/tensor_name"
-  input: "save_4/restore_slice_3/shape_and_slice"
-  attr {
-    key: "dt"
-    value {
-      type: DT_FLOAT
-    }
-  }
-  attr {
-    key: "preferred_shard"
-    value {
-      i: -1
-    }
-  }
-}
-node {
-  name: "save_4/Assign_3"
-  op: "Assign"
-  input: "Variable_3"
-  input: "save_4/restore_slice_3"
-  attr {
-    key: "T"
-    value {
-      type: DT_FLOAT
-    }
-  }
-  attr {
-    key: "use_locking"
-    value {
-      b: true
-    }
-  }
-  attr {
-    key: "validate_shape"
-    value {
-      b: true
-    }
-  }
-}
-node {
-  name: "save_4/restore_all"
-  op: "NoOp"
-  input: "^save_4/Assign"
-  input: "^save_4/Assign_1"
-  input: "^save_4/Assign_2"
-  input: "^save_4/Assign_3"
 }
 versions {
   producer: 9
