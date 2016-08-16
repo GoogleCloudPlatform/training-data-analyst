@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [ "$#" -ne 1 ]; then
-    echo "Usage ./start_vm.sh browser-ip-address"
-    echo "           You can get the IP address presented by your browser by visiting http://ipecho.net/"
+    echo "Usage ./create_vm.sh browser-ip-address"
+    echo "           You can get the IP address presented by your browser by doing a Google Search for 'what's my IP?'"
     exit
 fi
 
@@ -17,4 +17,5 @@ gcloud compute firewall-rules create datalab8081 \
 gcloud compute instances create datalabvm \
    --image-family=container-vm --image-project=google-containers \
    --zone us-central1-a --machine-type n1-standard-1 \
-   --tags datalab8081
+   --tags datalab8081 \
+   --scopes cloud-platform
