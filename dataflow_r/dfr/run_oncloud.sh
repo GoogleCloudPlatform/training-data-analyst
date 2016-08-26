@@ -16,6 +16,8 @@ export PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin/:$PATH
 mvn compile -e exec:java \
  -Dexec.mainClass=$MAIN \
       -Dexec.args="--project=$PROJECT \
+      --input=gs://cloud-training-demos/dataflow_r/numbers.csv.gz \
+      --outputPrefix=gs://cloud-training-demos/dataflow_r/output \
       --stagingLocation=gs://$BUCKET/staging/ \
       --tempLocation=gs://$BUCKET/staging/ \
       --runner=BlockingDataflowPipelineRunner"
