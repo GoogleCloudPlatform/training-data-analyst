@@ -72,33 +72,18 @@ def create_inputs(metadata, input_data=None):
             tf.squeeze(parsed['fare_amount']), # squeeze is needed incase batch_size=1
             None)  # no key ... tf.identity(parsed['key']))
 
-def _create_layer(inputs, input_size, output_size):
-  with tf.name_scope('layer'):
-    initial_weights = tf.truncated_normal([input_size, output_size],
-                                          stddev = 1.0 / math.sqrt(input_size))
-    weights = tf.Variable(initial_weights, name = 'weights')
-
-    initial_biases = tf.zeros([ output_size ])
-    biases = tf.Variable(initial_biases, name = 'biases')
-
-    xw = tf.matmul(inputs, weights)
-
-    return tf.nn.bias_add(xw, biases)
-
 def inference(inputs, metadata, hyperparams):
   input_size = metadata.features['attrs']['size']
   output_size = metadata.features['fare_amount']['size']
 
-  hidden_layer1 = tf.nn.relu(_create_layer(inputs, input_size,
-                                           hyperparams['hidden_layer1_size']))
-  hidden_layer2 = tf.nn.relu(_create_layer(hidden_layer1,
-                                           hyperparams['hidden_layer1_size'],
-                                           hyperparams['hidden_layer2_size']))
-  hidden_layer3 = tf.nn.relu(_create_layer(hidden_layer2,
-                                           hyperparams['hidden_layer2_size'],
-                                           hyperparams['hidden_layer3_size']))
-  output = _create_layer(hidden_layer3, hyperparams['hidden_layer3_size'],
-                         output_size)
+  h = [hyperparams['hidden_layer1_size'],
+       hyperparams['hidden_layer2_size'],
+       hyperparams['hidden_layer3_size']]
+  hidden = tf.contrib.layers.stack(inputs,
+                                   tf.contrib.layers.fully_connected, 
+                                   h, activation_fn=tf.nn.relu,
+                                   biases_initializer=tf.ones)
+  output = tf.contrib.layers.fully_connected(hidden, output_size, activation_fn=None)
   return output
 
 
