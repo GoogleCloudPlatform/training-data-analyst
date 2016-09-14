@@ -239,7 +239,7 @@ def export_model(args, sess, training_saver, trial_id):
                          json.dumps({"examples": placeholder.name}))
     tf.add_to_collection("outputs",
                          json.dumps({"score": output.name}))
-    #tf.add_to_collection("keys", json.dumps({"key": keys.name}))
+    tf.add_to_collection("keys", json.dumps({"key": keys.name}))
 
     model_dir = os.path.join(output_path, EXPORT_SUBDIRECTORY)
 

@@ -59,6 +59,9 @@ def _print_shape(t, name):
   else:
      print name, ' = ', t.get_shape().as_list()
 
+def _create_fakekey(input_data):
+   batchsize = tf.shape(input_data)[0]
+   return tf.ones([batchsize], dtype=tf.float32)
 
 # TaxiFeatures is a dictionary; pull Tensors from the dictionary, and create features
 def create_inputs(metadata, input_data=None):
@@ -68,9 +71,10 @@ def create_inputs(metadata, input_data=None):
     parsed = features.FeatureMetadata.parse_features(metadata, input_data)
     inputs = parsed['attrs']   
     _print_shape(inputs, 'inputs')
+    
     return (input_data, inputs,
             tf.squeeze(parsed['fare_amount']), # squeeze is needed incase batch_size=1
-            None)  # no key ... tf.identity(parsed['key']))
+            _create_fakekey(input_data))  # no key ... tf.identity(parsed['key']))
 
 def inference(inputs, metadata, hyperparams):
   input_size = metadata.features['attrs']['size']
