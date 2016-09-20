@@ -17,7 +17,7 @@ mvn compile -e exec:java \
  -Dexec.mainClass=$MAIN \
       -Dexec.args="--project=$PROJECT \
       --input=gs://cloud-training-demos/dataflow_r/numbers.csv.gz \
-      --outputPrefix=gs://cloud-training-demos/dataflow_r/output \
-      --stagingLocation=gs://$BUCKET/staging/ \
-      --tempLocation=gs://$BUCKET/staging/ \
+      --outputPrefix=gs://$BUCKET/dataflow_r/output \
+      --stagingLocation=gs://$BUCKET/dataflow_r/staging/ \
+      --tempLocation=gs://$BUCKET/dataflow_r/staging/ \
       --runner=BlockingDataflowPipelineRunner"
