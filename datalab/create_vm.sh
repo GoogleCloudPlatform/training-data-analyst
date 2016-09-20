@@ -2,7 +2,7 @@
 
 if [ "$#" -ne 1 ]; then
     echo "Usage ./create_vm.sh browser-ip-address"
-    echo "           You can get the IP address presented by your browser by doing a Google Search for 'what's my IP?'"
+    echo "           You can get the IP address presented by your browser by browsing to http://ip4.me/"
     exit
 fi
 
