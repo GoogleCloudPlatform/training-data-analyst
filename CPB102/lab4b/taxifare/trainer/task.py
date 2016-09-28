@@ -14,13 +14,9 @@
 """Example implementation of code to run on the Cloud ML service.
 """
 import argparse
-import itertools
 import json
 import logging
 import os
-import random
-import subprocess
-import sys
 import time
 
 import taxifare
@@ -28,20 +24,6 @@ import tensorflow as tf
 from tensorflow.contrib.metrics.python.ops import metric_ops
 
 import google.cloud.ml.features as features
-import google.cloud.ml.util as cloudml_util
-
-EXPORT_SUBDIRECTORY = 'model'
-HYPERPARAMS = {
-  'batch_size': 64,
-  'learning_rate': 0.003,
-}
-EVAL_SET_SIZE = 2767
-EVAL_INTERVAL_SECS = 15
-
-
-def print_to_console(msg):
-  print msg
-  sys.stdout.flush()
 
 
 def main():
@@ -50,71 +32,87 @@ def main():
   task = config.get('task', None)
   job = config.get('job', None)
   trial_id = task.get('trial', '')
-  logging.info("start trial %s.", trial_id)
 
   parser = argparse.ArgumentParser()
-  parser.add_argument("--train_data_paths", type=str, action='append')
-  parser.add_argument("--eval_data_paths", type=str, action='append')
-  parser.add_argument("--metadata_path", type=str)
-  parser.add_argument("--output_path", type=str)
-  parser.add_argument("--max_steps", type=int, default=2000)
-  parser.add_argument("--hidden1", type=int, default=64)
-  parser.add_argument("--hidden2", type=int, default=8)
-  parser.add_argument("--hidden3", type=int, default=4)
-  parser.add_argument("--nbuckets", type=int, default=5)
-  args = parser.parse_args()
+  parser.add_argument('--train_data_paths', type=str)
+  parser.add_argument('--eval_data_paths', type=str)
+  parser.add_argument('--metadata_path', type=str)
+  parser.add_argument('--output_path', type=str)
+  parser.add_argument('--max_steps', type=int, default=2000)
+  parser.add_argument('--number_buckets', type=int, default=5)
+  parser.add_argument('--hidden_layer1_size', type=int, default=256)
 
-  dispatch(args, cluster, task, job, trial_id)
+  args = parser.parse_args()
+  HYPERPARAMS['hidden_layer1_size'] = args.hidden_layer1_size
+  HYPERPARAMS['hidden_layer2_size'] = args.hidden_layer1_size / 2
+  HYPERPARAMS['hidden_layer3_size'] = args.hidden_layer1_size / 4
+  HYPERPARAMS['number_buckets'] = args.number_buckets
+  
+  args.output_path = os.path.join(args.output_path, trial_id)
+  logging.info("start trial %s outputs in %s", trial_id, args.output_path)
+
+  dispatch(args, cluster, task, job)
+
+EXPORT_SUBDIRECTORY = 'model'
+HYPERPARAMS = {
+  'batch_size': 128,
+  'learning_rate': 0.01,
+  'hidden_layer1_size': 300,
+  'hidden_layer2_size': 200,
+  'hidden_layer3_size': 100,
+  'number_buckets': 5
+}
+EVAL_SET_SIZE = 2767
+EVAL_INTERVAL_SECS = 30
 
 
 def start_server(cluster, task):
   # Create and start a server.
   return tf.train.Server(cluster,
-                         protocol="grpc",
+                         protocol='grpc',
                          job_name=task['type'],
                          task_index=task['index'])
 
 
-def dispatch(args, cluster, task, job, trial_id):
+def dispatch(args, cluster, task, job):
   if not cluster:
     # Run locally.
-    run_training(args, target="", is_chief=True, device_fn="", trial_id=trial_id)
+    run_training(args, target='', is_chief=True, device_fn='')
     return
 
-  if task['type'] == "ps":
+  if task['type'] == 'ps':
     server = start_server(cluster, task)
     server.join()
-  elif task['type'] == "worker":
+  elif task['type'] == 'worker':
     server = start_server(cluster, task)
     is_chief = False
     device_fn = tf.train.replica_device_setter(
-        ps_device="/job:ps",
-        worker_device="/job:worker/task:%d" % task['index'],
+        ps_device='/job:ps',
+        worker_device='/job:worker/task:%d' % task['index'],
         cluster=cluster)
-    run_training(args, server.target, is_chief, device_fn, trial_id)
-  elif task['type'] == "master":
+    run_training(args, server.target, is_chief, device_fn)
+  elif task['type'] == 'master':
     server = start_server(cluster, task)
     is_chief = (task['index'] == 0)
     device_fn = tf.train.replica_device_setter(
-        ps_device="/job:ps",
-        worker_device="/job:master/task:%d" % task['index'],
+        ps_device='/job:ps',
+        worker_device='/job:master/task:%d' % task['index'],
         cluster=cluster)
-    run_training(args, server.target, is_chief, device_fn, trial_id)
+    run_training(args, server.target, is_chief, device_fn)
   else:
-    raise ValueError("invalid job_type %s" % task['type'])
+    raise ValueError('invalid job_type %s' % task['type'])
 
 
-def run_training(args, target, is_chief, device_fn, trial_id):
-  """Train taxifare for a number of steps."""
-  output_path = os.path.join(args.output_path, trial_id)
+def run_training(args, target, is_chief, device_fn):
+  """Train Census for a number of steps."""
   # Get the sets of examples and targets for training, validation, and
-  # test on taxifare.
+  # test on Census.
   training_data = args.train_data_paths
 
   if is_chief:
     # A generator over accuracies. Each call to next(accuracies) forces an
     # evaluation of the model.
-    accuracies = evaluate(args, trial_id)
+    accuracies = evaluate(args)
 
   # Tell TensorFlow that the model will be built into the default Graph.
   with tf.Graph().as_default() as graph:
@@ -126,20 +124,12 @@ def run_training(args, target, is_chief, device_fn, trial_id):
       _, train_examples = taxifare.read_examples(
           training_data, HYPERPARAMS['batch_size'], shuffle=False)
 
-      # hyperparams
-      hyperparams = {
-        'hidden_layer1_size': args.hidden1,
-        'hidden_layer2_size': args.hidden2,
-        'hidden_layer3_size': args.hidden3,
-        'number_buckets':     args.nbuckets
-      }
-
       # Generate placeholders for the examples.
       placeholder, inputs, targets, _ = (
-          taxifare.create_inputs(metadata, train_examples, hyperparams))
+          taxifare.create_inputs(metadata, train_examples, HYPERPARAMS))
 
       # Build a Graph that computes predictions from the inference model.
-      output = taxifare.inference(inputs, metadata, hyperparams)
+      output = taxifare.inference(inputs, metadata, HYPERPARAMS)
 
       # Add to the Graph the Ops for loss calculation.
       loss = taxifare.loss(output, targets)
@@ -159,11 +149,11 @@ def run_training(args, target, is_chief, device_fn, trial_id):
 
       # Instantiate a SummaryWriter to output summaries and the Graph.
       summary_writer = tf.train.SummaryWriter(os.path.join(
-          output_path, 'summaries'), graph)
+          args.output_path, 'summaries'), graph)
 
       # Create a "supervisor", which oversees the training process.
       sv = tf.train.Supervisor(is_chief=is_chief,
-                               logdir=os.path.join(output_path, 'logdir'),
+                               logdir=os.path.join(args.output_path, 'logdir'),
                                init_op=init_op,
                                saver=saver,
                                summary_op=None,
@@ -172,7 +162,7 @@ def run_training(args, target, is_chief, device_fn, trial_id):
 
       # The supervisor takes care of session initialization, restoring from
       # a checkpoint, and closing when done or an error occurs.
-      print_to_console("Starting the loop.")
+      logging.info('Starting the loop.')
       with sv.managed_session(target) as sess:
         start_time = time.time()
         last_save = start_time
@@ -194,14 +184,13 @@ def run_training(args, target, is_chief, device_fn, trial_id):
             last_save = time.time()
             saver.save(sess, sv.save_path, global_step)
             accuracy = next(accuracies)
-            logging.info("Eval, step %d: error = %0.3f", step, accuracy)
-            print_to_console("Eval, step %d: error = %0.3f" % (step, accuracy))
+            logging.info('Eval, step %d: accuracy = %0.3f', step, accuracy)
 
           # Write the summaries and log an overview fairly often.
-          if step % 200 == 0 and is_chief:
-            logging.info("Step %d: loss = %.2f (%.3f sec)",
-                         step, loss_value, duration)
-            print_to_console("Step %d: loss = %.2f (%.3f sec)" % (step, loss_value, duration))
+          if step % 100 == 0 and is_chief:
+            # Log status.
+            logging.info('Step %d: loss = %.2f (%.3f sec)', step, loss_value,
+                         duration)
 
             # Update the events file.
             summary_str = sess.run(summary_op)
@@ -212,59 +201,52 @@ def run_training(args, target, is_chief, device_fn, trial_id):
           # Force a save at the end of our loop.
           sv.saver.save(sess, sv.save_path, global_step=global_step,
                         write_meta_graph=False)
-          accuracy_value = next(accuracies)
-          logging.info("Final error after %d steps = %0.3f", step, accuracy_value)
-          print_to_console("Final error after %d steps = %0.3f" % (step, accuracy_value))
+
+          logging.info('Final accuracy after %d steps = %0.3f', step,
+                 next(accuracies))
 
           # Save the model for inference
-          export_model(args, sess, sv.saver, trial_id)
+          export_model(args, sess, sv.saver)
 
       # Ask for all the services to stop.
       sv.stop()
-      print_to_console("Done training.")
+      logging.info('Done training.')
 
 
-def export_model(args, sess, training_saver, trial_id):
-  output_path = os.path.join(args.output_path, trial_id)
+def export_model(args, sess, training_saver):
   with tf.Graph().as_default() as inference_graph:
     metadata = features.FeatureMetadata.get_metadata(args.metadata_path)
-    hyperparams = {
-      'hidden_layer1_size': args.hidden1,
-      'hidden_layer2_size': args.hidden2,
-      'hidden_layer3_size': args.hidden3,
-      'number_buckets':     args.nbuckets
-    }
-    placeholder, inputs, _, keys = taxifare.create_inputs(metadata, None, hyperparams)
-    output = taxifare.inference(inputs, metadata, hyperparams)
+    placeholder, inputs, _, keys = taxifare.create_inputs(metadata, None, HYPERPARAMS)
+    output = taxifare.inference(inputs, metadata, HYPERPARAMS)
 
     inference_saver = tf.train.Saver()
 
     # Mark the inputs and the outputs
-    tf.add_to_collection("inputs",
-                         json.dumps({"examples": placeholder.name}))
-    tf.add_to_collection("outputs",
-                         json.dumps({"score": output.name}))
-    tf.add_to_collection("keys", json.dumps({"key": keys.name}))
+    tf.add_to_collection('inputs',
+                         json.dumps({'examples': placeholder.name}))
+    tf.add_to_collection('outputs',
+                         json.dumps({'key': keys.name,
+                                     'score': output.name}))
 
-    model_dir = os.path.join(output_path, EXPORT_SUBDIRECTORY)
+    model_dir = os.path.join(args.output_path, EXPORT_SUBDIRECTORY)
 
     # We need to save the variables from the training session, but we need
     # to serialize the serving graph.
 
     # Serialize the graph (MetaGraphDef)
     inference_saver.export_meta_graph(
-        filename=os.path.join(model_dir, "export.meta"))
+        filename=os.path.join(model_dir, 'export.meta'))
 
     # Save the variables. Don't write the MetaGraphDef, because that is
     # actually the training graph.
     training_saver.save(sess,
-                        os.path.join(model_dir, "export"),
+                        os.path.join(model_dir, 'export'),
                         write_meta_graph=False)
 
 
-def evaluate(args, trial_id):
+def evaluate(args):
   """Run one round of evaluation, yielding accuracy."""
-  output_path = os.path.join(args.output_path, trial_id)
+
   eval_data = args.eval_data_paths
 
   with tf.Graph().as_default() as g:
@@ -272,46 +254,41 @@ def evaluate(args, trial_id):
 
     _, examples = taxifare.read_examples(
         eval_data, HYPERPARAMS['batch_size'],
-        shuffle=False)
-
-    # hyperparams
-    hyperparams = {
-        'hidden_layer1_size': args.hidden1,
-        'hidden_layer2_size': args.hidden2,
-        'hidden_layer3_size': args.hidden3,
-        'number_buckets':     args.nbuckets
-    }
+        shuffle=False, num_epochs=1)
 
     # Generate placeholders for the examples.
     placeholder, inputs, targets, _ = (
-        taxifare.create_inputs(metadata, examples, hyperparams))
+        taxifare.create_inputs(metadata, examples, HYPERPARAMS))
 
     # Build a Graph that computes predictions from the inference model.
-    output = taxifare.inference(inputs, metadata, hyperparams)
+    output = taxifare.inference(inputs, metadata, HYPERPARAMS)
 
     # Add to the Graph the Ops for loss calculation.
     loss = taxifare.loss(output, targets)
 
     # Add the Op to compute accuracy.
-    error, eval_op = metric_ops.streaming_mean_relative_error(
-        output, targets, tf.ones(HYPERPARAMS['batch_size']))
+    accuracy_op, eval_op = metric_ops.streaming_mean_relative_error(
+        output, targets, targets)
 
     # The global step is useful for summaries.
     with tf.name_scope('train'):
-      global_step = tf.Variable(0, name="global_step", trainable=False)
+      global_step = tf.Variable(0, name='global_step', trainable=False)
 
-    summary = tf.scalar_summary("error", error)
+    summary = tf.scalar_summary('accuracy', accuracy_op)
+
+    rmse_op, eval_op2 = metric_ops.streaming_root_mean_squared_error(output, targets)
+    summary2 = tf.scalar_summary('training/hptuning/metric', rmse_op)
+
     saver = tf.train.Saver()
 
   # Setting num_eval_batches isn't strictly necessary, as the file reader does
   # at most one epoch.
   num_eval_batches = float(EVAL_SET_SIZE) // HYPERPARAMS['batch_size']
   summary_writer = tf.train.SummaryWriter(os.path.join(
-      output_path, 'eval'))
-
+      args.output_path, 'eval'))
   sv = tf.train.Supervisor(graph=g,
-                           logdir=os.path.join(output_path, 'eval'),
-                           summary_op=summary,
+                           logdir=os.path.join(args.output_path, 'eval'),
+                           summary_op=summary2,
                            summary_writer=summary_writer,
                            global_step=None,
                            saver=saver)
@@ -319,16 +296,16 @@ def evaluate(args, trial_id):
   step = 0
   while step < args.max_steps:
     last_checkpoint = tf.train.latest_checkpoint(os.path.join(
-        output_path, 'logdir'))
-    with sv.managed_session(master="",
+        args.output_path, 'logdir'))
+    with sv.managed_session(master='',
                             start_standard_services=False) as session:
       sv.start_queue_runners(session)
       sv.saver.restore(session, last_checkpoint)
       accuracy = tf_evaluation(session,
                                max_num_evals=num_eval_batches,
                                eval_op=eval_op,
-                               final_op=error,
-                               summary_op=summary,
+                               final_op=accuracy_op,
+                               summary_ops=[summary, summary2],
                                summary_writer=summary_writer,
                                global_step=global_step)
 
@@ -340,7 +317,7 @@ def tf_evaluation(sess,
                   max_num_evals=1000,
                   eval_op=None,
                   final_op=None,
-                  summary_op=None,
+                  summary_ops=None,
                   summary_writer=None,
                   global_step=None):
   """Performs a single evaluation run.
@@ -377,16 +354,19 @@ def tf_evaluation(sess,
       # hitting it in this sample.
       pass
 
-  if summary_op is not None:
+  if summary_ops is not None:
     if global_step is None:
-      raise ValueError("must specify global step")
+      raise ValueError('must specify global step')
 
     global_step = tf.train.global_step(sess, global_step)
-    summary = sess.run(summary_op)
-    summary_writer.add_summary(summary, global_step)
+    for op in summary_ops:
+       summary = sess.run(op)
+       summary_writer.add_summary(summary, global_step)
     summary_writer.flush()
 
   return final_op_value
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+  logging.basicConfig(level=logging.INFO)
   main()
+
