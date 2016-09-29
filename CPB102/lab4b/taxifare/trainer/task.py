@@ -274,10 +274,13 @@ def evaluate(args):
     with tf.name_scope('train'):
       global_step = tf.Variable(0, name='global_step', trainable=False)
 
-    summary = tf.scalar_summary('accuracy', accuracy_op)
-
+    tf.scalar_summary('accuracy', accuracy_op)
+    
     rmse_op, eval_op2 = metric_ops.streaming_root_mean_squared_error(output, targets)
-    summary2 = tf.scalar_summary('training/hptuning/metric', rmse_op)
+    tf.scalar_summary('training/hptuning/metric', rmse_op)
+
+    eval_op = tf.group(eval_op, eval_op2) # make sure both ops are evaluated
+    summary = tf.merge_all_summaries() # make sure all scalar summaries are produced
 
     saver = tf.train.Saver()
 
@@ -288,7 +291,7 @@ def evaluate(args):
       args.output_path, 'eval'))
   sv = tf.train.Supervisor(graph=g,
                            logdir=os.path.join(args.output_path, 'eval'),
-                           summary_op=summary2,
+                           summary_op=summary,
                            summary_writer=summary_writer,
                            global_step=None,
                            saver=saver)
@@ -305,7 +308,7 @@ def evaluate(args):
                                max_num_evals=num_eval_batches,
                                eval_op=eval_op,
                                final_op=accuracy_op,
-                               summary_ops=[summary, summary2],
+                               summary_op=summary,
                                summary_writer=summary_writer,
                                global_step=global_step)
 
@@ -317,7 +320,7 @@ def tf_evaluation(sess,
                   max_num_evals=1000,
                   eval_op=None,
                   final_op=None,
-                  summary_ops=None,
+                  summary_op=None,
                   summary_writer=None,
                   global_step=None):
   """Performs a single evaluation run.
@@ -354,14 +357,13 @@ def tf_evaluation(sess,
       # hitting it in this sample.
       pass
 
-  if summary_ops is not None:
+  if summary_op is not None:
     if global_step is None:
       raise ValueError('must specify global step')
 
     global_step = tf.train.global_step(sess, global_step)
-    for op in summary_ops:
-       summary = sess.run(op)
-       summary_writer.add_summary(summary, global_step)
+    summary = sess.run(summary_op)
+    summary_writer.add_summary(summary, global_step)
     summary_writer.flush()
 
   return final_op_value
