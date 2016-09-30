@@ -5,8 +5,7 @@ metadata:
 spec:
   containers:
     - name: datalab
-      image: gcr.io/cloud-datalab/datalab:local
-      command: ['/datalab/run.sh']
+      image: gcr.io/cloud-training-demos/datalab-cloudtraining
       imagePullPolicy: Always
       ports:
         - containerPort: 8080
