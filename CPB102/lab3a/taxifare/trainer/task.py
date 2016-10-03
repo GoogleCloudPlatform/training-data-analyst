@@ -171,8 +171,8 @@ def run_training(args, target, is_chief, device_fn):
           if is_chief and time.time() - last_save > EVAL_INTERVAL_SECS:
             last_save = time.time()
             saver.save(sess, sv.save_path, global_step)
-            accuracy = next(accuracies)
-            logging.info('Eval, step %d: accuracy = %0.3f', step, accuracy)
+            rmse = next(accuracies)
+            logging.info('Eval, step %d: rmse = %0.3f', step, rmse)
 
           # Write the summaries and log an overview fairly often.
           if step % 100 == 0 and is_chief:
@@ -190,7 +190,7 @@ def run_training(args, target, is_chief, device_fn):
           sv.saver.save(sess, sv.save_path, global_step=global_step,
                         write_meta_graph=False)
 
-          logging.info('Final accuracy after %d steps = %0.3f', step,
+          logging.info('Final rmse after %d steps = %0.3f', step,
                  next(accuracies))
 
           # Save the model for inference
@@ -233,7 +233,7 @@ def export_model(args, sess, training_saver):
 
 
 def evaluate(args):
-  """Run one round of evaluation, yielding accuracy."""
+  """Run one round of evaluation, yielding rmse."""
 
   eval_data = args.eval_data_paths
 
@@ -254,15 +254,15 @@ def evaluate(args):
     # Add to the Graph the Ops for loss calculation.
     loss = taxifare.loss(output, targets)
 
-    # Add the Op to compute accuracy.
-    accuracy_op, eval_op = metric_ops.streaming_mean_relative_error(
-        output, targets, targets)
+    # Add the Op to compute rmse.
+    rmse_op, eval_op = metric_ops.streaming_root_mean_squared_error(
+        output, targets)
 
     # The global step is useful for summaries.
     with tf.name_scope('train'):
       global_step = tf.Variable(0, name='global_step', trainable=False)
 
-    summary = tf.scalar_summary('accuracy', accuracy_op)
+    summary = tf.scalar_summary('rmse', rmse_op)
     saver = tf.train.Saver()
 
   # Setting num_eval_batches isn't strictly necessary, as the file reader does
@@ -285,16 +285,16 @@ def evaluate(args):
                             start_standard_services=False) as session:
       sv.start_queue_runners(session)
       sv.saver.restore(session, last_checkpoint)
-      accuracy = tf_evaluation(session,
+      rmse = tf_evaluation(session,
                                max_num_evals=num_eval_batches,
                                eval_op=eval_op,
-                               final_op=accuracy_op,
+                               final_op=rmse_op,
                                summary_op=summary,
                                summary_writer=summary_writer,
                                global_step=global_step)
 
       step = tf.train.global_step(session, global_step)
-      yield accuracy
+      yield rmse
 
 
 def tf_evaluation(sess,
