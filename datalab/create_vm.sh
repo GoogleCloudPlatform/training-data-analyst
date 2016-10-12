@@ -1,11 +1,10 @@
 #!/bin/bash
-#gsutil cp gs://cloud-datalab/datalab-server-no-websockets.yaml  datalab.yaml
 
-# Remove "_" from USER because "_" can not be used for instance name
-INSTANCE_NAME=${USER//_/}
+. instance_details.sh
+echo "Creating instance name=$INSTANCE_NAME in zone=$ZONE of type=$MACHINE_TYPE"
 
-gcloud compute instances create datalabvm-${INSTANCE_NAME} \
+gcloud compute instances create $INSTANCE_NAME \
    --image-family=container-vm --image-project=google-containers \
-   --zone us-central1-a --machine-type n1-standard-1 \
+   --zone $ZONE --machine-type $MACHINE_TYPE \
    --metadata "google-container-manifest=$(cat datalab.yaml)" \
    --scopes cloud-platform
