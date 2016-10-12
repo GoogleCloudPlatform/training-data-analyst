@@ -41,8 +41,12 @@ def main():
   parser.add_argument('--max_steps', type=int, default=2000)
   parser.add_argument('--number_buckets', type=int, default=5)
   parser.add_argument('--hidden_layer1_size', type=int, default=256)
+  parser.add_argument('--batch_size', type=int, default=128)
+  parser.add_argument('--learning_rate', type=double, default=0.01)
 
   args = parser.parse_args()
+  HYPERPARAMS['batch_size'] = args.batch_size
+  HYPERPARAMS['learning_rate'] = args.learning_rate
   HYPERPARAMS['hidden_layer1_size'] = args.hidden_layer1_size
   HYPERPARAMS['hidden_layer2_size'] = args.hidden_layer1_size / 2
   HYPERPARAMS['hidden_layer3_size'] = args.hidden_layer1_size / 4
@@ -55,8 +59,8 @@ def main():
 
 EXPORT_SUBDIRECTORY = 'model'
 HYPERPARAMS = {
-  'batch_size': 1024,
-  'learning_rate': 0.001,
+  'batch_size': 128,
+  'learning_rate': 0.01,
   'hidden_layer1_size': 300,
   'hidden_layer2_size': 200,
   'hidden_layer3_size': 100,
