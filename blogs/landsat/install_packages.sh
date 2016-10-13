@@ -5,3 +5,4 @@ pip install gdal==1.10.0 --global-option=build_ext --global-option="-I/usr/inclu
 
 
 pip install google-cloud-dataflow
+pip install numpy
