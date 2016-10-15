@@ -6,6 +6,7 @@ import os
 import os.path
 import subprocess
 import struct
+import tempfile
 
 class LandsatReader():
    def __init__(self, gsdir, band, destdir):
@@ -30,9 +31,9 @@ def computeNdvi(gs_baseurl, outdir):
   with LandsatReader(gs_baseurl, 'B3', '.') as red_ds, \
      LandsatReader(gs_baseurl, 'B4', '.') as nir_ds :
 
-     outfilename = os.path.join(outdir, '{0}_ndvi.TIF'.format(os.path.basename(gs_baseurl)) )
+     tmpfilename = os.path.join(tempfile.gettempdir(), '{0}_ndvi.TIF'.format(os.path.basename(gs_baseurl)) )
      driver = gdal.GetDriverByName('GTiff')
-     outds = driver.Create(outfilename, red_ds.RasterXSize, red_ds.RasterYSize, 1, gdal.GDT_Float32)
+     outds = driver.Create(tmpfilename, red_ds.RasterXSize, red_ds.RasterYSize, 1, gdal.GDT_Float32)
      outds.SetGeoTransform(red_ds.GetGeoTransform())
      outds.SetProjection(red_ds.GetProjection())
 
@@ -50,8 +51,12 @@ def computeNdvi(gs_baseurl, outdir):
              ndvi[i] = ndvi_num/ndvi_denom if ndvi_denom != 0 else 0
          outline = struct.pack(packformat, *ndvi)
      outds.GetRasterBand(1).WriteRaster(0, line, red.XSize, 1, outline, buf_xsize=red.XSize, buf_ysize=1, buf_type=gdal.GDT_Float32)
-     del outline 
+     del outline
+     outds = None # close
+
+     outfilename = os.path.join(outdir, '{0}_ndvi.TIF'.format(os.path.basename(gs_baseurl)) )
+     ret = subprocess.check_call(['gsutil', 'mv', tmpfilename, outfilename])
      print 'Wrote {0} ...'.format(outfilename)
 
 if __name__ == '__main__':
-   computeNdvi('gs://gcp-public-data-landsat/LC08/PRE/001/002/LC80010022016230LGN00', '.')
+   computeNdvi('gs://gcp-public-data-landsat/LC08/PRE/001/002/LC80010022016230LGN00', 'gs://cloud-training-demos/landsat/')

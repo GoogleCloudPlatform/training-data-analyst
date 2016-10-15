@@ -30,10 +30,11 @@ class SceneInfo:
       return (self.DATE_ACQUIRED - date).days
 
 
-def filterScenes(line, lat, lon, date):
+def filterScenes(line, lat, lon):
    scene = SceneInfo(line)
-   if scene.contains(lat, lon) and np.abs(scene.timeDiff(date)) < 4:
-      yield scene
+   if scene.contains(lat, lon) and scene.DATE_ACQUIRED.day > 10 and scene.DATE_ACQUIRED.day < 20:
+      yrmon = '{0}-{1}'.format(scene.DATE_ACQUIRED.year, scene.DATE_ACQUIRED.month)
+      yield (yrmon, scene)
 
 def clearest(scenes):
    if scenes:
@@ -43,26 +44,25 @@ def clearest(scenes):
 
 if __name__ == '__main__':
    p = beam.Pipeline('DirectPipelineRunner')    # DataflowPipelineRunner
-   index_file = 'gs://gcp-public-data-landsat/index.csv.gz'
+   index_file = '2015index.txt.gz' #'gs://gcp-public-data-landsat/index.csv.gz'
    output_file = 'output.txt'
 
    # Madagascar
    lat =  -19
    lon =   47
-   date = datetime.datetime(2016, 7, 15)
 
    # Read the index file and find the best look
    scenes = (p
       | 'read_index' >> beam.Read(beam.io.TextFileSource(index_file))
-      | 'filter_scenes' >> beam.FlatMap(lambda line: filterScenes(line, lat, lon, date) )
-      | 'least_cloudy' >> beam.CombineGlobally(clearest)
+      | 'filter_scenes' >> beam.FlatMap(lambda line: filterScenes(line, lat, lon) )
+      | 'least_cloudy' >> beam.CombinePerKey(clearest)
    )
 
    # write out info about scene
-   scenes | beam.Map(lambda scene: scene.__dict__) | 'scene_info' >> beam.io.textio.WriteToText(output_file)
+   scenes | beam.Map(lambda (yrmon, scene): scene.__dict__) | 'scene_info' >> beam.io.textio.WriteToText(output_file)
 
    # compute ndvi on scene
-   scenes | 'compute_ndvi' >> beam.Map(lambda scene: ndvi.computeNdvi(scene.BASE_URL, '.'))
+   scenes | 'compute_ndvi' >> beam.Map(lambda (yrmon, scene): ndvi.computeNdvi(scene.BASE_URL, 'gs://cloud-training-demos/landsat/'))
 
    p.run()
 
