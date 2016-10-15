@@ -2,12 +2,15 @@
 
 import apache_beam as beam
 import numpy as np
+import datetime
 import ndvi
 
 class SceneInfo:
    def __init__ (self, line):
-      self.SCENE_ID, self.SPACECRAFT_ID, self.SENSOR_ID, self.DATE_ACQUIRED, self.COLLECTION_NUMBER, self.COLLECTION_CATEGORY,self.DATA_TYPE, self.WRS_PATH, self.WRS_ROW, self.CLOUD_COVER, self.NORTH_LAT, self.SOUTH_LAT, self.WEST_LON, self.EAST_LON, self.TOTAL_SIZE, self.BASE_URL = line.split(',')
       try:
+        self.SCENE_ID, self.SPACECRAFT_ID, self.SENSOR_ID, self.DATE_ACQUIRED, self.COLLECTION_NUMBER, self.COLLECTION_CATEGORY,self.DATA_TYPE, self.WRS_PATH, self.WRS_ROW, self.CLOUD_COVER, self.NORTH_LAT, self.SOUTH_LAT, self.WEST_LON, self.EAST_LON, self.TOTAL_SIZE, self.BASE_URL = line.split(',')
+
+        self.DATE_ACQUIRED = datetime.datetime.strptime(self.DATE_ACQUIRED, '%Y-%m-%d')
         self.NORTH_LAT = float(self.NORTH_LAT)
         self.SOUTH_LAT = float(self.SOUTH_LAT)
         self.WEST_LON = float(self.WEST_LON)
@@ -23,35 +26,43 @@ class SceneInfo:
       return np.sqrt(np.square(lat - (self.SOUTH_LAT + self.NORTH_LAT)/2) + 
                      np.square(lon - (self.WEST_LON + self.EAST_LON)/2))
 
+   def timeDiff(self, date):
+      return (self.DATE_ACQUIRED - date).days
 
-def filterScenes(line, lat, lon):
+
+def filterScenes(line, lat, lon, date):
    scene = SceneInfo(line)
-   if scene.contains(lat, lon):
-      #closeness = scene.distanceFrom(lat, lon)  # in deg (typically around 2)
-      #cloudy = 0.01*scene.CLOUD_COVER  # 0-1
-      #yield cloudy, scene
-      yield scene.__dict__
+   if scene.contains(lat, lon) and np.abs(scene.timeDiff(date)) < 4:
+      yield scene
 
+def clearest(scenes):
+   if scenes:
+      return min(scenes, key=lambda s: s.CLOUD_COVER)
+   else:
+      return None
 
 if __name__ == '__main__':
-   p = beam.Pipeline('DirectPipelineRunner')
-   index_file = 'smindex.txt'  # gs://gcp-public-data-landsat/index.csv.gz
+   p = beam.Pipeline('DirectPipelineRunner')    # DataflowPipelineRunner
+   index_file = 'gs://gcp-public-data-landsat/index.csv.gz'
    output_file = 'output.txt'
 
    # Madagascar
    lat =  -19
    lon =   47
+   date = datetime.datetime(2016, 7, 15)
 
-   # 80.30033,77.80218,-17.92835,-3.38792
-   lat = 78.0
-   lon = -10.0
-
-   # Read a file containing names, add a greeting to each name, and write to a file.
-   (p
+   # Read the index file and find the best look
+   scenes = (p
       | 'read_index' >> beam.Read(beam.io.TextFileSource(index_file))
-      | 'filter_scenes' >> beam.FlatMap(lambda line: filterScenes(line, lat, lon) )
-      | 'write' >> beam.io.textio.WriteToText(output_file)
+      | 'filter_scenes' >> beam.FlatMap(lambda line: filterScenes(line, lat, lon, date) )
+      | 'least_cloudy' >> beam.CombineGlobally(clearest)
    )
+
+   # write out info about scene
+   scenes | beam.Map(lambda scene: scene.__dict__) | 'scene_info' >> beam.io.textio.WriteToText(output_file)
+
+   # compute ndvi on scene
+   scenes | 'compute_ndvi' >> beam.Map(lambda scene: ndvi.computeNdvi(scene.BASE_URL, '.'))
 
    p.run()
 
