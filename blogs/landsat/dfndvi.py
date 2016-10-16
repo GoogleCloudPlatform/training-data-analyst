@@ -2,8 +2,10 @@
 
 import apache_beam as beam
 import numpy as np
+import argparse
 import datetime
 import ndvi
+import sys
 
 class SceneInfo:
    def __init__ (self, line):
@@ -43,9 +45,16 @@ def clearest(scenes):
       return None
 
 if __name__ == '__main__':
-   p = beam.Pipeline('DirectPipelineRunner')    # DataflowPipelineRunner
-   index_file = '2015index.txt.gz' #'gs://gcp-public-data-landsat/index.csv.gz'
-   output_file = 'output.txt'
+   parser = argparse.ArgumentParser(description='Compute monthly NDVI')
+   parser.add_argument('--index_file', default='2015index.txt.gz', help='default=2015index.txt.gz  Use gs://gcp-public-data-landsat/index.csv.gz to process full dataset')
+   parser.add_argument('--output_file', default='output.txt', help='default=output.txt Supply a location on GCS when running on cloud')
+   parser.add_argument('--output_dir', required=True, help='Where should the ndvi images be stored? Supply a GCS location when running on cloud')
+   known_args, pipeline_args = parser.parse_known_args(sys.argv)
+ 
+   p = beam.Pipeline(argv=pipeline_args)
+   index_file = known_args.index_file
+   output_file = known_args.output_file
+   output_dir = known_args.output_dir
 
    # Madagascar
    lat =  -19
@@ -62,7 +71,7 @@ if __name__ == '__main__':
    scenes | beam.Map(lambda (yrmon, scene): scene.__dict__) | 'scene_info' >> beam.io.textio.WriteToText(output_file)
 
    # compute ndvi on scene
-   scenes | 'compute_ndvi' >> beam.Map(lambda (yrmon, scene): ndvi.computeNdvi(scene.BASE_URL, 'gs://cloud-training-demos/landsat/'))
+   scenes | 'compute_ndvi' >> beam.Map(lambda (yrmon, scene): ndvi.computeNdvi(scene.BASE_URL, output_dir))
 
    p.run()
 
