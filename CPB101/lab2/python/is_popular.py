@@ -15,7 +15,6 @@ limitations under the License.
 
 import apache_beam as beam
 import argparse
-import sys
 
 def startsWith(line, term):
    if line.startswith(term):
@@ -59,7 +58,7 @@ if __name__ == '__main__':
    parser.add_argument('--output_prefix', default='/tmp/output', help='Output prefix')
    parser.add_argument('--input', default='../javahelp/src/main/java/com/google/cloud/training/dataanalyst/javahelp/', help='Input directory')
 
-   options, pipeline_args = parser.parse_known_args(sys.argv)
+   options, pipeline_args = parser.parse_known_args()
    p = beam.Pipeline(argv=pipeline_args)
 
    input = '{0}*.java'.format(options.input)

@@ -22,19 +22,19 @@ def my_grep(line, term):
 PROJECT='cloud-training-demos'
 BUCKET='cloud-training-demos'
 
-if __name__ == '__main__':
+def run():
    argv = [
       '--project={0}'.format(PROJECT),
-      '--job_name=examplejob',
-      '--staging_location=gs://{0}/staging/'.format(BUCKET),
+      '--job_name=examplejob2',
       '--save_main_session',
+      '--staging_location=gs://{0}/staging/'.format(BUCKET),
       '--temp_location=gs://{0}/staging/'.format(BUCKET),
-      '--runner=DataflowPipelineRunner'
+      '--runner=BlockingDataflowPipelineRunner'
    ]
 
    p = beam.Pipeline(argv=argv)
-   input = 'gs://cloud-training-demos/javahelp/*.java'
-   output_prefix = 'gs://cloud-training-demos/javahelp/output'
+   input = 'gs://{0}/javahelp/*.java'.format(BUCKET)
+   output_prefix = 'gs://{0}/javahelp/output'.format(BUCKET)
    searchTerm = 'import'
 
    # find all lines that contain the searchTerm
@@ -46,3 +46,5 @@ if __name__ == '__main__':
 
    p.run()
 
+if __name__ == '__main__':
+   run()
