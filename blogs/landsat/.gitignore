@@ -1,0 +1,5 @@
+ndvi.pyc
+*.txt*
+index.csv.gz
+images
+*.egg-info
