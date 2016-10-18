@@ -52,7 +52,7 @@ def computeNdvi(gs_baseurl, outdir):
 
      red = red_ds.GetRasterBand(1)
      nir = nir_ds.GetRasterBand(1)
-     packformat = '{0:d}f'.format(red.XSize)  # 'f' * red.XSize
+     packformat = 'f' * red.XSize
      for line in xrange(0, red.YSize):
          red_data = struct.unpack(packformat, red.ReadRaster(0, line, red.XSize, 1, red.XSize, 1, gdal.GDT_Float32)) 
          nir_data = struct.unpack(packformat, nir.ReadRaster(0, line, nir.XSize, 1, nir.XSize, 1, gdal.GDT_Float32))
