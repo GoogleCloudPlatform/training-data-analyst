@@ -18,7 +18,6 @@ import numpy as np
 import argparse
 import datetime
 import ndvi
-import sys
 
 class SceneInfo:
    def __init__ (self, line):
@@ -57,12 +56,12 @@ def clearest(scenes):
    else:
       return None
 
-if __name__ == '__main__':
+def run():
    parser = argparse.ArgumentParser(description='Compute monthly NDVI')
    parser.add_argument('--index_file', default='2015index.txt.gz', help='default=2015index.txt.gz  Use gs://gcp-public-data-landsat/index.csv.gz to process full dataset')
    parser.add_argument('--output_file', default='output.txt', help='default=output.txt Supply a location on GCS when running on cloud')
    parser.add_argument('--output_dir', required=True, help='Where should the ndvi images be stored? Supply a GCS location when running on cloud')
-   known_args, pipeline_args = parser.parse_known_args(sys.argv)
+   known_args, pipeline_args = parser.parse_known_args()
  
    p = beam.Pipeline(argv=pipeline_args)
    index_file = known_args.index_file
@@ -88,3 +87,5 @@ if __name__ == '__main__':
 
    p.run()
 
+if __name__ == '__main__':
+   run()
