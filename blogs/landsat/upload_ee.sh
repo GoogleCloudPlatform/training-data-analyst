@@ -15,5 +15,6 @@ earthengine upload image --asset_id users/$EEUSER/$BASE $GCS_IMAGE
 echo "In code.earthengine.google.com check on progress of ingestion under Tasks. Once you have the image available under Assets, run this script:"
 echo ""
 echo "var ndvi = ee.Image('users/$EEUSER/$BASE');"
-echo "Map.addLayer(ndvi);"
+echo "var vizParams = {min: 0, max: 0.7, palette: ['000000', '00FF00']};"
+echo "Map.addLayer(ndvi, vizParams);"
 echo "Map.centerObject(ndvi);"

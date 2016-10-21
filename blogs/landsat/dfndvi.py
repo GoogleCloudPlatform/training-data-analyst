@@ -68,9 +68,8 @@ def run():
    output_file = known_args.output_file
    output_dir = known_args.output_dir
 
-   # Madagascar
-   lat =  -19
-   lon =   47
+   #lat =   4.37; lon =  -7.71  # Cape Palmas
+   lat =-21.1; lon = 55.50     # Reunion Island
 
    # Read the index file and find the best look
    scenes = (p

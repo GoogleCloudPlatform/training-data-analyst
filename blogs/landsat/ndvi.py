@@ -59,9 +59,9 @@ def computeNdvi(gs_baseurl, outdir):
          ndvi = [0] * red.XSize
 
          for i in xrange(0, len(red_data)):
-             if nir_data[i] > 0 and red_data[i] > 0:
-                ndvi_denom = nir_data[i] + red_data[i]
-                ndvi_num = nir_data[i] - red_data[i]
+             ndvi_denom = nir_data[i] + red_data[i]
+             ndvi_num = nir_data[i] - red_data[i]
+             if ndvi_denom != 0:
                 ndvi[i] = ndvi_num/ndvi_denom
          outline = struct.pack(packformat, *ndvi)
          outds.GetRasterBand(1).WriteRaster(0, line, red.XSize, 1, outline, buf_xsize=red.XSize, buf_ysize=1, buf_type=gdal.GDT_Float32)
@@ -73,4 +73,5 @@ def computeNdvi(gs_baseurl, outdir):
      print 'Wrote {0} ...'.format(outfilename)
 
 if __name__ == '__main__':
-   computeNdvi('gs://gcp-public-data-landsat/LE07/PRE/159/073/LE71590732015350NPA00', 'gs://cloud-training-demos/landsat/')
+   #computeNdvi('gs://gcp-public-data-landsat/LE07/PRE/198/057/LE71980572015351ASN00', 'gs://cloud-training-demos/landsat/') # cape palmas
+   computeNdvi('gs://gcp-public-data-landsat/LC08/PRE/153/075/LC81530752015348LGN00', 'gs://cloud-training-demos/landsat/') # reunion
