@@ -10,7 +10,7 @@ gsutil -m rm -rf gs://$BUCKET/landsat/output
     --runner=DataflowPipelineRunner \
     --staging_location=gs://$BUCKET/landsat/staging \
     --temp_location=gs://$BUCKET/landsat/staging \
-    --input_index=gs://gcp-public-data-landsat/index.csv.gz \
+    --input_index=gs://cloud-training-demos/landsat/2015index.txt.gz \
     --maxNworkers=100 \
     --output_file=gs://$BUCKET/landsat/output/scenes.txt \
     --output_dir=gs://$BUCKET/landsat/output \

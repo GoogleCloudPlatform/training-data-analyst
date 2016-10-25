@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import apache_beam as beam
-import numpy as np
 import argparse
 import datetime
 import ndvi
@@ -36,10 +35,6 @@ class SceneInfo:
    def contains(self, lat, lon):
       return (lat > self.SOUTH_LAT) and (lat < self.NORTH_LAT) and (lon > self.WEST_LON) and (lon < self.EAST_LON)
 
-   def distanceFrom(self, lat, lon):
-      return np.sqrt(np.square(lat - (self.SOUTH_LAT + self.NORTH_LAT)/2) + 
-                     np.square(lon - (self.WEST_LON + self.EAST_LON)/2))
-
    def timeDiff(self, date):
       return (self.DATE_ACQUIRED - date).days
 
@@ -57,8 +52,9 @@ def clearest(scenes):
       return None
 
 def run():
+   import os
    parser = argparse.ArgumentParser(description='Compute monthly NDVI')
-   parser.add_argument('--index_file', default='2015index.txt.gz', help='default=2015index.txt.gz  Use gs://gcp-public-data-landsat/index.csv.gz to process full dataset')
+   parser.add_argument('--index_file', default='2015index.txt.gz', help='default=2015.txt.gz ... gs://cloud-training-demos/landsat/2015index.txt.gz  Use gs://gcp-public-data-landsat/index.csv.gz to process full dataset')
    parser.add_argument('--output_file', default='output.txt', help='default=output.txt Supply a location on GCS when running on cloud')
    parser.add_argument('--output_dir', required=True, help='Where should the ndvi images be stored? Supply a GCS location when running on cloud')
    known_args, pipeline_args = parser.parse_known_args()
@@ -82,7 +78,7 @@ def run():
    scenes | beam.Map(lambda (yrmon, scene): scene.__dict__) | 'scene_info' >> beam.io.textio.WriteToText(output_file)
 
    # compute ndvi on scene
-   scenes | 'compute_ndvi' >> beam.Map(lambda (yrmon, scene): ndvi.computeNdvi(scene.BASE_URL, output_dir))
+   scenes | 'compute_ndvi' >> beam.Map(lambda (yrmon, scene): ndvi.computeNdvi(scene.BASE_URL, os.path.join(output_dir,yrmon), scene.SPACECRAFT_ID))
 
    p.run()
 

@@ -19,6 +19,7 @@ import os
 import os.path
 import subprocess
 import struct
+import numpy as np
 import tempfile
 
 class LandsatReader():
@@ -40,13 +41,22 @@ class LandsatReader():
       os.remove( self.dest ) # cleanup
 
 
-def computeNdvi(gs_baseurl, outdir):
-  with LandsatReader(gs_baseurl, 'B3', '.') as red_ds, \
-     LandsatReader(gs_baseurl, 'B4', '.') as nir_ds :
+def computeNdvi(gs_baseurl, outdir, instrument):
+  if instrument is 'LANDSAT_7':
+     band1 = 'B3'
+     band2 = 'B4'
+  else:
+     band1 = 'B4'
+     band2 = 'B5'
+
+  with LandsatReader(gs_baseurl, band1, '.') as red_ds, \
+     LandsatReader(gs_baseurl, band2, '.') as nir_ds :
+
+     outdtype = gdal.GDT_Float32  # gdal.GDT_Byte
 
      tmpfilename = os.path.join(tempfile.gettempdir(), '{0}_ndvi.TIF'.format(os.path.basename(gs_baseurl)) )
      driver = gdal.GetDriverByName('GTiff')
-     outds = driver.Create(tmpfilename, red_ds.RasterXSize, red_ds.RasterYSize, 1, gdal.GDT_Float32)
+     outds = driver.Create(tmpfilename, red_ds.RasterXSize, red_ds.RasterYSize, 1, outdtype)
      outds.SetGeoTransform(red_ds.GetGeoTransform())
      outds.SetProjection(red_ds.GetProjection())
 
@@ -56,15 +66,16 @@ def computeNdvi(gs_baseurl, outdir):
      for line in xrange(0, red.YSize):
          red_data = struct.unpack(packformat, red.ReadRaster(0, line, red.XSize, 1, red.XSize, 1, gdal.GDT_Float32)) 
          nir_data = struct.unpack(packformat, nir.ReadRaster(0, line, nir.XSize, 1, nir.XSize, 1, gdal.GDT_Float32))
-         ndvi = [0] * red.XSize
+         ndvi_scaled = np.array([255] * red.XSize, dtype=np.float32)   # mask value
 
          for i in xrange(0, len(red_data)):
              ndvi_denom = nir_data[i] + red_data[i]
              ndvi_num = nir_data[i] - red_data[i]
              if ndvi_denom != 0:
-                ndvi[i] = ndvi_num/ndvi_denom
-         outline = struct.pack(packformat, *ndvi)
-         outds.GetRasterBand(1).WriteRaster(0, line, red.XSize, 1, outline, buf_xsize=red.XSize, buf_ysize=1, buf_type=gdal.GDT_Float32)
+                ndvi = (ndvi_num/ndvi_denom)  # -1 to 1
+                ndvi_scaled[i] = int(0.5 + 100*ndvi) if ndvi > 0 else 0  # 0-100
+         outline = struct.pack(packformat, *ndvi_scaled)
+         outds.GetRasterBand(1).WriteRaster(0, line, red.XSize, 1, outline, buf_xsize=red.XSize, buf_ysize=1, buf_type=outdtype)
          del outline
      outds = None # close
 
@@ -73,5 +84,5 @@ def computeNdvi(gs_baseurl, outdir):
      print 'Wrote {0} ...'.format(outfilename)
 
 if __name__ == '__main__':
-   #computeNdvi('gs://gcp-public-data-landsat/LE07/PRE/198/057/LE71980572015351ASN00', 'gs://cloud-training-demos/landsat/') # cape palmas
-   computeNdvi('gs://gcp-public-data-landsat/LC08/PRE/153/075/LC81530752015348LGN00', 'gs://cloud-training-demos/landsat/') # reunion
+   computeNdvi('gs://gcp-public-data-landsat/LE07/PRE/198/057/LE71980572015351ASN00', 'gs://cloud-training-demos/landsat/', 'LANDSAT_7') # cape palmas
+   computeNdvi('gs://gcp-public-data-landsat/LC08/PRE/153/075/LC81530752015348LGN00', 'gs://cloud-training-demos/landsat/', 'LANDSAT_8') # reunion
