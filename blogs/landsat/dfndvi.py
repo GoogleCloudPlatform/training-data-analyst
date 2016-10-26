@@ -35,14 +35,13 @@ class SceneInfo:
    def contains(self, lat, lon):
       return (lat > self.SOUTH_LAT) and (lat < self.NORTH_LAT) and (lon > self.WEST_LON) and (lon < self.EAST_LON)
 
-   def timeDiff(self, date):
-      return (self.DATE_ACQUIRED - date).days
+def filterByLocation(scene, lat, lon):
+   if scene.contains(lat, lon):
+      yield scene
 
-
-def filterScenes(line, lat, lon):
-   scene = SceneInfo(line)
-   if scene.contains(lat, lon) and scene.DATE_ACQUIRED.day > 10 and scene.DATE_ACQUIRED.day < 20:
-      yrmon = '{0}-{1}'.format(scene.DATE_ACQUIRED.year, scene.DATE_ACQUIRED.month)
+def sceneByMonth(scene):
+   if scene.DATE_ACQUIRED.day > 10 and scene.DATE_ACQUIRED.day < 20:
+      yrmon = '{}-{:02d}'.format(scene.DATE_ACQUIRED.year, scene.DATE_ACQUIRED.month)
       yield (yrmon, scene)
 
 def clearest(scenes):
@@ -64,13 +63,15 @@ def run():
    output_file = known_args.output_file
    output_dir = known_args.output_dir
 
-   #lat =   4.37; lon =  -7.71  # Cape Palmas
-   lat =-21.1; lon = 55.50     # Reunion Island
+   lat =-21.1; lon = 55.50     # center of Reunion Island
 
    # Read the index file and find the best look
    scenes = (p
       | 'read_index' >> beam.Read(beam.io.TextFileSource(index_file))
-      | 'filter_scenes' >> beam.FlatMap(lambda line: filterScenes(line, lat, lon) )
+      | 'to_scene' >> beam.Map(lambda line:  SceneInfo(line))
+      | 'has_nwc' >> beam.FlatMap(lambda scene: filterByLocation(scene, lat+0.25, lon-0.4))
+      | 'has_sec' >> beam.FlatMap(lambda scene: filterByLocation(scene, lat-0.25, lon+0.4))
+      | 'by_month' >> beam.FlatMap(lambda scene: sceneByMonth(scene) )
       | 'least_cloudy' >> beam.CombinePerKey(clearest)
    )
 
