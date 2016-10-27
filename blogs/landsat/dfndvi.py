@@ -54,6 +54,14 @@ def clearest(scenes):
    else:
       return None
 
+def clearest_look(allscenes, lat, lon, i, j):
+   name = 'pt_{}x{}'.format(i,j)
+   return (allscenes
+     | 'covers_{}'.format(name) >> beam.FlatMap(lambda scene: filterByLocation(scene, lat+0.25*i, lon-0.4*j))
+     | 'bymonth_{}'.format(name) >> beam.FlatMap(lambda scene: sceneByMonth(scene) )
+     | 'clearest_{}'.format(name) >> beam.CombinePerKey(clearest)
+   )
+
 def run():
    import os
    parser = argparse.ArgumentParser(description='Compute monthly NDVI')
@@ -69,37 +77,25 @@ def run():
 
    lat =-21.1; lon = 55.50     # center of Reunion Island
 
-   # Read the index file and find all scenes that cover the center of island
+   # Read the index file and find all scenes
    allscenes = (p
       | 'read_index' >> beam.Read(beam.io.TextFileSource(index_file))
       | 'to_scene' >> beam.Map(lambda line:  SceneInfo(line))
-      | 'has_loc' >> beam.FlatMap(lambda scene: filterByLocation(scene, lat, lon))
    )
 
-   # clearest look at NW corner of island
-   best_nw = (allscenes
-      | 'has_nwc' >> beam.FlatMap(lambda scene: filterByLocation(scene, lat+0.25, lon-0.4))
-      | 'nwc_by_month' >> beam.FlatMap(lambda scene: sceneByMonth(scene) )
-      | 'nwc_least_cloudy' >> beam.CombinePerKey(clearest)
-   )
-
-   # clearest look at SE corner of island
-   best_se = (allscenes
-      | 'has_sec' >> beam.FlatMap(lambda scene: filterByLocation(scene, lat-0.25, lon+0.4))
-      | 'sec_by_month' >> beam.FlatMap(lambda scene: sceneByMonth(scene) )
-      | 'sec_least_cloudy' >> beam.CombinePerKey(clearest)
-   )
+   # find all the Landsat scenes that cover a set of points i,j in Reunion
+   all_looks = [clearest_look(allscenes, lat, lon, i,j) for i in xrange(-1,2) for j in xrange(-1,2)]
 
    # remove duplicate scenes from the two PCollections
-   scenes = ((best_nw, best_se) 
-      | 'both_looks' >> beam.Flatten()
-      | 'both_looks_by_month' >> beam.CombinePerKey(lambda x:x)
+   scenes = (all_looks
+      | 'all_looks' >> beam.Flatten()
+      | 'all_looks_by_month' >> beam.CombinePerKey(lambda x:x)
       | 'set_looks_by_month' >> beam.Map(lambda (a,x) : (a, set([item for sublist in x for item in sublist])))
       | 'looks_by_month' >> beam.FlatMap(lambda (k,vset): flatten_kvset(k,vset))
    )
 
    # write out info about scene
-   scenes | beam.Map(lambda (yrmon, scene): scene.__dict__) | 'scene_info' >> beam.io.textio.WriteToText(output_file)
+   scenes | beam.Map(lambda (yrmon, scene): '{}: {}'.format(yrmon,scene.SCENE_ID)) | 'scene_info' >> beam.io.textio.WriteToText(output_file)
 
    # compute ndvi on scene
    scenes | 'compute_ndvi' >> beam.Map(lambda (yrmon, scene): ndvi.computeNdvi(scene.BASE_URL, os.path.join(output_dir,yrmon), scene.SPACECRAFT_ID))
