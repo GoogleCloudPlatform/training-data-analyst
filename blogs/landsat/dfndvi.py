@@ -43,6 +43,10 @@ def sceneByMonth(scene):
    if scene.DATE_ACQUIRED.day > 10 and scene.DATE_ACQUIRED.day < 20:
       yrmon = '{}-{:02d}'.format(scene.DATE_ACQUIRED.year, scene.DATE_ACQUIRED.month)
       yield (yrmon, scene)
+      
+def flatten_kvset(key, vset):
+   for v in vset:
+      yield key, v
 
 def clearest(scenes):
    if scenes:
@@ -65,14 +69,33 @@ def run():
 
    lat =-21.1; lon = 55.50     # center of Reunion Island
 
-   # Read the index file and find the best look
-   scenes = (p
+   # Read the index file and find all scenes that cover the center of island
+   allscenes = (p
       | 'read_index' >> beam.Read(beam.io.TextFileSource(index_file))
       | 'to_scene' >> beam.Map(lambda line:  SceneInfo(line))
+      | 'has_loc' >> beam.FlatMap(lambda scene: filterByLocation(scene, lat, lon))
+   )
+
+   # clearest look at NW corner of island
+   best_nw = (allscenes
       | 'has_nwc' >> beam.FlatMap(lambda scene: filterByLocation(scene, lat+0.25, lon-0.4))
+      | 'nwc_by_month' >> beam.FlatMap(lambda scene: sceneByMonth(scene) )
+      | 'nwc_least_cloudy' >> beam.CombinePerKey(clearest)
+   )
+
+   # clearest look at SE corner of island
+   best_se = (allscenes
       | 'has_sec' >> beam.FlatMap(lambda scene: filterByLocation(scene, lat-0.25, lon+0.4))
-      | 'by_month' >> beam.FlatMap(lambda scene: sceneByMonth(scene) )
-      | 'least_cloudy' >> beam.CombinePerKey(clearest)
+      | 'sec_by_month' >> beam.FlatMap(lambda scene: sceneByMonth(scene) )
+      | 'sec_least_cloudy' >> beam.CombinePerKey(clearest)
+   )
+
+   # remove duplicate scenes from the two PCollections
+   scenes = ((best_nw, best_se) 
+      | 'both_looks' >> beam.Flatten()
+      | 'both_looks_by_month' >> beam.CombinePerKey(lambda x:x)
+      | 'set_looks_by_month' >> beam.Map(lambda (a,x) : (a, set([item for sublist in x for item in sublist])))
+      | 'looks_by_month' >> beam.FlatMap(lambda (k,vset): flatten_kvset(k,vset))
    )
 
    # write out info about scene
