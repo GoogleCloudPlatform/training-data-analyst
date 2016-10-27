@@ -44,8 +44,8 @@ def sceneByMonth(scene):
       yrmon = '{}-{:02d}'.format(scene.DATE_ACQUIRED.year, scene.DATE_ACQUIRED.month)
       yield (yrmon, scene)
       
-def flatten_kvset(key, vset):
-   for v in vset:
+def remove_duplicates(key, looks):
+   for v in set(looks):
       yield key, v
 
 def clearest(scenes):
@@ -89,9 +89,8 @@ def run():
    # remove duplicate scenes from the two PCollections
    scenes = (all_looks
       | 'all_looks' >> beam.Flatten()
-      | 'all_looks_by_month' >> beam.CombinePerKey(lambda x:x)
-      | 'set_looks_by_month' >> beam.Map(lambda (a,x) : (a, set([item for sublist in x for item in sublist])))
-      | 'looks_by_month' >> beam.FlatMap(lambda (k,vset): flatten_kvset(k,vset))
+      | 'all_looks_by_month' >> beam.GroupByKey()
+      | 'looks_by_month' >> beam.FlatMap(lambda (k, looks): remove_duplicates(k, looks))
    )
 
    # write out info about scene
