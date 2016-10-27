@@ -110,6 +110,7 @@ setuptools.setup(
     description='Monthly landsat workflow package.',
     install_requires=REQUIRED_PACKAGES,
     packages=setuptools.find_packages(),
+    py_modules=['dfndvi', 'ndvi'],
     cmdclass={
         # Command class instantiated and run during pip install scenarios.
         'build': build,
