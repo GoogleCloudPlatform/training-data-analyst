@@ -35,32 +35,28 @@ class SceneInfo:
    def contains(self, lat, lon):
       return (lat > self.SOUTH_LAT) and (lat < self.NORTH_LAT) and (lon > self.WEST_LON) and (lon < self.EAST_LON)
 
+   def intersects(self, slat, wlon, nlat, elon):
+      return (nlat > self.SOUTH_LAT) and (slat < self.NORTH_LAT) and (elon > self.WEST_LON) and (wlon < self.EAST_LON)
+
+   def month_path_row(self):
+      return '{}-{}-{}'.format(self.yrmon(), self.WRS_PATH, self.WRS_ROW)
+
+   def yrmon(self):
+      return '{}-{:02d}'.format(self.DATE_ACQUIRED.year, self.DATE_ACQUIRED.month)
+
 def filterByLocation(scene, lat, lon):
    if scene.contains(lat, lon):
       yield scene
 
-def sceneByMonth(scene):
-   if scene.DATE_ACQUIRED.day > 10 and scene.DATE_ACQUIRED.day < 20:
-      yrmon = '{}-{:02d}'.format(scene.DATE_ACQUIRED.year, scene.DATE_ACQUIRED.month)
-      yield (yrmon, scene)
-      
-def remove_duplicates(key, looks):
-   for v in set(looks):
-      yield key, v
+def filterByArea(scene, slat, wlon, nlat, elon):
+   if scene.intersects(slat, wlon, nlat, elon):
+      yield scene
 
 def clearest(scenes):
    if scenes:
       return min(scenes, key=lambda s: s.CLOUD_COVER)
    else:
       return None
-
-def clearest_look(allscenes, lat, lon, i, j):
-   name = 'pt_{}x{}'.format(i,j)
-   return (allscenes
-     | 'covers_{}'.format(name) >> beam.FlatMap(lambda scene: filterByLocation(scene, lat+0.25*i, lon-0.4*j))
-     | 'bymonth_{}'.format(name) >> beam.FlatMap(lambda scene: sceneByMonth(scene) )
-     | 'clearest_{}'.format(name) >> beam.CombinePerKey(clearest)
-   )
 
 def run():
    import os
@@ -76,21 +72,20 @@ def run():
    output_dir = known_args.output_dir
 
    lat =-21.1; lon = 55.50     # center of Reunion Island
+   dlat = 0.4; dlon = 0.4
 
-   # Read the index file and find all scenes
+   # Read the index file and find all scenes that cover this area
    allscenes = (p
       | 'read_index' >> beam.Read(beam.io.TextFileSource(index_file))
       | 'to_scene' >> beam.Map(lambda line:  SceneInfo(line))
+      | 'by_area' >> beam.FlatMap(lambda scene: filterByArea(scene,lat+dlat,lon-dlon,lat-dlat,lon+dlon) )
    )
 
-   # find all the Landsat scenes that cover a set of points i,j in Reunion
-   all_looks = [clearest_look(allscenes, lat, lon, i,j) for i in xrange(-1,2) for j in xrange(-1,2)]
-
-   # remove duplicate scenes from the two PCollections
-   scenes = (all_looks
-      | 'all_looks' >> beam.Flatten()
-      | 'all_looks_by_month' >> beam.GroupByKey()
-      | 'looks_by_month' >> beam.FlatMap(lambda (k, looks): remove_duplicates(k, looks))
+   # for each month and spacecraft-coverage-pattern (given by the path and row), find clearest scene
+   scenes = (allscenes
+      | 'cov_month' >> beam.Map(lambda scene: (scene.month_path_row(), scene))
+      | 'least_cloudy' >> beam.CombinePerKey(clearest)
+      | 'yrmon-scene' >> beam.Map(lambda (key,scene): (scene.yrmon(), scene))
    )
 
    # write out info about scene
