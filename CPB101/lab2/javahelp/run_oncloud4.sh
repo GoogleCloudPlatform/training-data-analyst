@@ -12,7 +12,8 @@ MAIN=com.google.cloud.training.dataanalyst.javahelp.$3
 
 echo "project=$PROJECT  bucket=$BUCKET  main=$MAIN"
 
-~/apache-maven-3.3.9/bin/mvn compile -e exec:java \
+export PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin/:$PATH
+mvn compile -e exec:java \
  -Dexec.mainClass=$MAIN \
       -Dexec.args="--project=$PROJECT \
       --stagingLocation=gs://$BUCKET/staging/ \
