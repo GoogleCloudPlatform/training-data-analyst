@@ -1,3 +1,4 @@
 landcover.tgz
 landcover_trained
 *.tif
+landcover_preproc
