@@ -190,7 +190,7 @@ def get_experiment_fn(args):
         eval_input_fn=input_reader_for_eval,
         train_steps=args.max_steps,
         train_monitors=[export_monitor],
-        min_eval_frequency=1000,
+        min_eval_frequency=args.min_eval_frequency,
         eval_metrics={
             ('accuracy', 'classes'): streaming_accuracy,
             # Export the accuracy as a metric for hyperparameter tuning.
@@ -215,6 +215,7 @@ def parse_arguments(argv):
   parser.add_argument('--epsilon', type=float, default=0.0005)
   parser.add_argument('--batch_size', type=int, default=30)
   parser.add_argument('--eval_batch_size', type=int, default=30)
+  parser.add_argument('--min_eval_frequency', type=int, default=1000)
   return parser.parse_args(args=argv[1:])
 
 
