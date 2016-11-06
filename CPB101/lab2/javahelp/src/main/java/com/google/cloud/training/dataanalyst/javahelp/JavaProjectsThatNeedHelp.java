@@ -137,9 +137,12 @@ public class JavaProjectsThatNeedHelp {
 						List<KV<String, Double>> sorted = new ArrayList<>(c.element());
 						Collections.sort(sorted, new KV.OrderByValue<>());
 						Collections.reverse(sorted);
+						
+						StringBuffer sb = new StringBuffer();
 						for (KV<String, Double> kv : c.element()) {
-							c.output(kv.getKey() + "," + kv.getValue());
+							sb.append(kv.getKey() + "," + kv.getValue() + '\n');
 						}
+						c.output(sb.toString());
 					}
 
 				})) //

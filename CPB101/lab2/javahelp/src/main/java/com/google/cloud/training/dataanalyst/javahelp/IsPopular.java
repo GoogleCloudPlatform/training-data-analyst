@@ -88,9 +88,11 @@ public class IsPopular {
 
 					@Override
 					public void processElement(ProcessContext c) throws Exception {
+						StringBuffer sb = new StringBuffer();
 						for (KV<String, Integer> kv : c.element()) {
-							c.output(kv.getKey() + "," + kv.getValue());
+							sb.append(kv.getKey() + "," + kv.getValue() + '\n');
 						}
+						c.output(sb.toString());
 					}
 
 				})) //
