@@ -42,7 +42,7 @@ def main():
   parser.add_argument('--number_buckets', type=int, default=5)
   parser.add_argument('--hidden_layer1_size', type=int, default=256)
   parser.add_argument('--batch_size', type=int, default=128)
-  parser.add_argument('--learning_rate', type=double, default=0.01)
+  parser.add_argument('--learning_rate', type=float, default=0.01)
 
   args = parser.parse_args()
   HYPERPARAMS['batch_size'] = args.batch_size
