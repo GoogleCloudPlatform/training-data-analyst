@@ -1,0 +1,11 @@
+runtime: python
+env: flex
+entrypoint: gunicorn -b :$PORT main:app
+
+runtime_config:
+  python_version: 3
+
+#[START env]
+env_variables:
+    CLOUD_STORAGE_BUCKET: cloud-training-demos-ml
+#[END env]
