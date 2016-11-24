@@ -18,6 +18,7 @@ import logging
 import ingest_flights
 
 from flask import Flask
+from flask import request
 import google.cloud.storage as gcs
 
 # [start config]
@@ -27,11 +28,15 @@ CLOUD_STORAGE_BUCKET = os.environ['CLOUD_STORAGE_BUCKET']
 # [end config]
 
 @app.route('/')
-def ingest_next_month():
+def welcome():
+         return '<html><a href="ingest">ingest next month</a>flight data</html>'
+
+@app.route('/ingest')
+def ingest_next_month():         
          # next month
          bucket = CLOUD_STORAGE_BUCKET
          year, month = ingest_flights.next_month(bucket)
-         logging.debug('Ingesting year={} month={}'.format(year, month))
+         logging.info('Ingesting year={} month={}'.format(year, month))
    
          # ingest
          gcsfile = ingest_flights.ingest(year, month, bucket)
