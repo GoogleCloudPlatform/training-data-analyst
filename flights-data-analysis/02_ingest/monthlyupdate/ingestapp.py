@@ -32,23 +32,22 @@ def welcome():
          return '<html><a href="ingest">ingest next month</a>flight data</html>'
 
 @app.route('/ingest')
-def ingest_next_month():         
+def ingest_next_month():
+    try:
          # next month
          bucket = CLOUD_STORAGE_BUCKET
          year, month = ingest_flights.next_month(bucket)
          logging.info('Ingesting year={} month={}'.format(year, month))
-   
+
          # ingest
          gcsfile = ingest_flights.ingest(year, month, bucket)
 
          # return page, and log
-         if gcsfile is None:
-            status = 'File for {}-{} not available yet ...'.format(year, month)
-            logging.debug(status)
-         else:
-            status = 'Successfully ingested {}'.format(gcsfile)
-            logging.info(status)
-         return status
+         status = 'Successfully ingested {}'.format(gcsfile)
+    except DataUnavailable:
+         status = 'File for {}-{} not available yet ...'.format(year, month)
+    logging.info(status)
+    return status
 
 @app.errorhandler(500)
 def server_error(e):
