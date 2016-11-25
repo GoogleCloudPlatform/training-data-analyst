@@ -53,9 +53,14 @@ def zip_to_csv(filename, destdir):
    print ("Extracted {}".format(csvfile))
    return csvfile
 
+
+class DataUnavailable(Exception):
+   def __init__(self, message):
+      self.message = message
+
 def remove_quotes_comma(csvfile, year, month):
  '''
-     returns output_csv_file or None
+     returns output_csv_file or raises DataUnavailable exception
  '''
  try:
    N = 0
@@ -72,37 +77,34 @@ def remove_quotes_comma(csvfile, year, month):
       print ('Cleaned up {} lines and wrote {} ...'.format(N, outfile))
       return outfile
    else:
-      print ('Empty file from BTS')
       os.remove(outfile)
-      return None
+      raise DataUnavailable('Empty file from BTS')
  finally:
    print ("... removing {}".format(csvfile))
    os.remove(csvfile)
 
-def upload(csvfile, bucketname, gcslocation):
+def upload(csvfile, bucketname, blobname):
    client = storage.Client()
    bucket = client.get_bucket(bucketname)
-   blob = Blob(gcslocation, bucket)
+   blob = Blob(blobname, bucket)
    blob.upload_from_filename(csvfile)
+   gcslocation = 'gs://{}/{}'.format(bucketname, blobname)
    print ('Uploaded {} ...'.format(gcslocation))
+   return gcslocation
 
 def ingest(year, month, bucket):
    '''
    ingest flights data from BTS website to Google Cloud Storage
-   return cloud-storage-file on success. None on failure.
+   return cloud-storage-blob-name on success.
+   raises DataUnavailable if this data is not on BTS website
    '''
    tempdir = tempfile.mkdtemp(prefix='ingest_flights')
    try:
-      zip = download(year, month, tempdir)
-      bts_csv = zip_to_csv(zip, tempdir)
+      zipfile = download(year, month, tempdir)
+      bts_csv = zip_to_csv(zipfile, tempdir)
       csvfile = remove_quotes_comma(bts_csv, year, month)
-      if csvfile is not None:
-         gcsloc = 'flights/{}'.format(os.path.basename(csvfile))
-         upload(csvfile, bucket, gcsloc)
-         return gcsloc
-      else:
-         print ('Requested data is not available')
-         return None
+      gcsloc = 'flights/{}'.format(os.path.basename(csvfile))
+      return upload(csvfile, bucket, gcsloc)
    finally:
       print 'Cleaning up by removing {}'.format(tempdir)
       shutil.rmtree(tempdir)
@@ -130,18 +132,17 @@ if __name__ == '__main__':
    parser.add_argument('--bucket', help='GCS bucket to upload data to', required=True)
    parser.add_argument('--year', help='Example: 2015.  If not provided, defaults to getting next month')
    parser.add_argument('--month', help='Specify 01 for January. If not provided, defaults to getting next month')
-   args = parser.parse_args()
 
-   if args.year is None or args.month is None:
-      year, month = next_month(args.bucket)
-   else:
-      year = args.year
-      month = args.month
-   print ('Ingesting year={} month={}'.format(year, month))
-
-   gcsfile = ingest(year, month, args.bucket)
-   if gcsfile is None:
-      print ('Try again later')
-   else:
+   try:
+      args = parser.parse_args()
+      if args.year is None or args.month is None:
+         year, month = next_month(args.bucket)
+      else:
+         year = args.year
+         month = args.month
+      print ('Ingesting year={} month={}'.format(year, month))
+      gcsfile = ingest(year, month, args.bucket)
       print ('Success ... ingested to {}'.format(gcsfile))
+   except DataUnavailable as e:
+      print ('Try again later: {}'.format(e.message))
 
