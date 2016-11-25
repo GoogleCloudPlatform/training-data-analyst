@@ -29,7 +29,7 @@ CLOUD_STORAGE_BUCKET = os.environ['CLOUD_STORAGE_BUCKET']
 
 @app.route('/')
 def welcome():
-         return '<html><a href="ingest">ingest next month</a>flight data</html>'
+         return '<html><a href="ingest">ingest next month</a> flight data</html>'
 
 @app.route('/ingest')
 def ingest_next_month():

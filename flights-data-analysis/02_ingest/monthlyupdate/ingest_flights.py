@@ -106,7 +106,7 @@ def ingest(year, month, bucket):
       gcsloc = 'flights/{}'.format(os.path.basename(csvfile))
       return upload(csvfile, bucket, gcsloc)
    finally:
-      print 'Cleaning up by removing {}'.format(tempdir)
+      print ('Cleaning up by removing {}'.format(tempdir))
       shutil.rmtree(tempdir)
 
 def next_month(bucketname):
