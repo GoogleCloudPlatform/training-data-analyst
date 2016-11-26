@@ -104,7 +104,7 @@ def ingest(year, month, bucket):
       zipfile = download(year, month, tempdir)
       bts_csv = zip_to_csv(zipfile, tempdir)
       csvfile = remove_quotes_comma(bts_csv, year, month)
-      gcsloc = 'flights/{}'.format(os.path.basename(csvfile))
+      gcsloc = 'flights/raw/{}'.format(os.path.basename(csvfile))
       return upload(csvfile, bucket, gcsloc)
    finally:
       logging.debug('Cleaning up by removing {}'.format(tempdir))
@@ -116,7 +116,7 @@ def next_month(bucketname):
    '''
    client = storage.Client()
    bucket = client.get_bucket(bucketname)
-   blobs  = list(bucket.list_blobs(prefix='flights/'))
+   blobs  = list(bucket.list_blobs(prefix='flights/raw/'))
    files = [blob.name for blob in blobs if 'csv' in blob.name] # csv files only
    lastfile = os.path.basename(files[-1])
    logging.debug('The latest file on GCS is {}'.format(lastfile))
