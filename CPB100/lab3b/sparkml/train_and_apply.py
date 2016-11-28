@@ -26,11 +26,10 @@ from pyspark import SparkContext, SparkConf, SQLContext
 from pyspark.mllib.recommendation import ALS, MatrixFactorizationModel, Rating
 from pyspark.sql.types import StructType, StructField, StringType, FloatType
 
-CLOUDSQL_INSTANCE_IP = '104.154.103.87'   # CHANGE
+CLOUDSQL_INSTANCE_IP = '104.155.188.32'   # CHANGE (database server IP)
 CLOUDSQL_DB_NAME = 'recommendation_spark'
 CLOUDSQL_USER = 'root'
 CLOUDSQL_PWD  = 'root'  # CHANGE
-BUCKET_NAME = 'cp100' # CHANGE
 
 conf = SparkConf().setAppName("train_model")
 sc = SparkContext(conf=conf)
