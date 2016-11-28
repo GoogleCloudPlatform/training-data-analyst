@@ -122,6 +122,9 @@ def next_month(bucketname):
    logging.debug('The latest file on GCS is {}'.format(lastfile))
    year = lastfile[:4]
    month = lastfile[4:6]
+   return compute_next_month(year, month)
+
+def compute_next_month(year, month):
    dt = datetime.datetime(int(year), int(month), 15) # 15th of month
    dt = dt + datetime.timedelta(30) # will always go to next month
    logging.debug('The next month is {}'.format(dt))

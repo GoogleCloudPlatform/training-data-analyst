@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2016 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,12 +18,11 @@ import os
 import logging
 import ingest_flights
 
-from flask import Flask
-from flask import request
+import flask
 import google.cloud.storage as gcs
 
 # [start config]
-app = Flask(__name__)
+app = flask.Flask(__name__)
 # Configure this environment variable via app.yaml
 CLOUD_STORAGE_BUCKET = os.environ['CLOUD_STORAGE_BUCKET']
 # [end config]
@@ -34,19 +34,29 @@ def welcome():
 @app.route('/ingest')
 def ingest_next_month():
     try:
+         # verify that this is a cron job request
+         is_cron = flask.request.headers['X-Appengine-Cron']
+         logging.info('Received cron request {}'.format(is_cron))
+
          # next month
          bucket = CLOUD_STORAGE_BUCKET
          year, month = ingest_flights.next_month(bucket)
-         logging.info('Ingesting year={} month={}'.format(year, month))
+         status = 'scheduling ingest of year={} month={}'.format(year, month)
+         logging.info(status)
 
-         # ingest
+         # ingest ...
          gcsfile = ingest_flights.ingest(year, month, bucket)
+         status = 'successfully ingested={}'.format(gcsfile)
+         logging.info(status)
 
-         # return page, and log
-         status = 'Successfully ingested {}'.format(gcsfile)
-    except DataUnavailable:
+    except ingest_flights.DataUnavailable:
          status = 'File for {}-{} not available yet ...'.format(year, month)
-    logging.info(status)
+         logging.info(status)
+
+    except KeyError as e:
+         status = '<html>Sorry, this capability is accessible only by the Cron service, but I got a KeyError for {} -- try invoking it from <a href="{}"> the GCP console / AppEngine / taskqueues </a></html>'.format(e, 'http://console.cloud.google.com/appengine/taskqueues?tab=CRON')
+         logging.info('Rejected non-Cron request')
+
     return status
 
 @app.errorhandler(500)
