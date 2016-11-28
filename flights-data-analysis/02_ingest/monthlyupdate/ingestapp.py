@@ -25,6 +25,8 @@ import google.cloud.storage as gcs
 app = flask.Flask(__name__)
 # Configure this environment variable via app.yaml
 CLOUD_STORAGE_BUCKET = os.environ['CLOUD_STORAGE_BUCKET']
+#
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 # [end config]
 
 @app.route('/')
