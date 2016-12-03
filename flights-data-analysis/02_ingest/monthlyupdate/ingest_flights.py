@@ -59,12 +59,33 @@ class DataUnavailable(Exception):
    def __init__(self, message):
       self.message = message
 
+class UnexpectedFormat(Exception):
+   def __init__(self, message):
+      self.message = message
+
+def verify_ingest(outfile):
+   expected_header = 'FL_DATE,UNIQUE_CARRIER,AIRLINE_ID,CARRIER,FL_NUM,ORIGIN_AIRPORT_ID,ORIGIN_AIRPORT_SEQ_ID,ORIGIN_CITY_MARKET_ID,ORIGIN,DEST_AIRPORT_ID,DEST_AIRPORT_SEQ_ID,DEST_CITY_MARKET_ID,DEST,CRS_DEP_TIME,DEP_TIME,DEP_DELAY,TAXI_OUT,WHEELS_OFF,WHEELS_ON,TAXI_IN,CRS_ARR_TIME,ARR_TIME,ARR_DELAY,CANCELLED,CANCELLATION_CODE,DIVERTED,DISTANCE'
+
+   with open(outfile, 'r') as outfp:
+      firstline = outfp.readline().strip()
+      if (firstline != expected_header):
+         os.remove(outfile)
+         msg = 'Got header={}, but expected={}'.format(
+                             firstline, expected_header)
+         logging.error(msg)
+         raise UnexpectedFormat(msg)
+
+      if next(outfp, None) == None:
+         os.remove(outfile)
+         msg = ('Received a file from BTS that has only the header and no content')
+         raise DataUnavailable(msg)
+
+
 def remove_quotes_comma(csvfile, year, month):
  '''
      returns output_csv_file or raises DataUnavailable exception
  '''
  try:
-   N = 0
    outfile = os.path.join(os.path.dirname(csvfile),
                           '{}{}.csv'.format(year, month))
    with open(csvfile, 'r') as infp:
@@ -73,13 +94,8 @@ def remove_quotes_comma(csvfile, year, month):
            outline = line.rstrip().rstrip(',').translate(None, '"')
            outfp.write(outline)
            outfp.write('\n')
-           N = N + 1
-   if N > 1:
-      logging.debug('Cleaned up {} lines and wrote {} ...'.format(N, outfile))
-      return outfile
-   else:
-      os.remove(outfile)
-      raise DataUnavailable('Empty file from BTS')
+   logging.debug('Ingested {} ...'.format(outfile))
+   return outfile
  finally:
    logging.debug("... removing {}".format(csvfile))
    os.remove(csvfile)
@@ -104,6 +120,7 @@ def ingest(year, month, bucket):
       zipfile = download(year, month, tempdir)
       bts_csv = zip_to_csv(zipfile, tempdir)
       csvfile = remove_quotes_comma(bts_csv, year, month)
+      verify_ingest(csvfile)
       gcsloc = 'flights/raw/{}'.format(os.path.basename(csvfile))
       return upload(csvfile, bucket, gcsloc)
    finally:
