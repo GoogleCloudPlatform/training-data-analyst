@@ -2,6 +2,8 @@ runtime: python
 env: flex
 entrypoint: gunicorn -b :$PORT ingestapp:app
 service: flights
+manual_scaling:
+  instances: 1
 
 #[START env]
 env_variables:
@@ -11,7 +13,6 @@ env_variables:
 handlers:
 - url: /ingest
   script: ingestapp.app
-  login: admin
 
 - url: /.*
   script: ingestapp.app
