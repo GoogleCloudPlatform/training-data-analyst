@@ -16,28 +16,32 @@
 
 package com.google.cloud.training.dataanalyst.javahelp;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import org.joda.time.Duration;
 
+import com.google.api.services.bigquery.model.TableFieldSchema;
+import com.google.api.services.bigquery.model.TableRow;
+import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.dataflow.sdk.Pipeline;
+import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.io.PubsubIO;
-import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.DataflowPipelineOptions;
 import com.google.cloud.dataflow.sdk.options.Default;
 import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.runners.DataflowPipelineRunner;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
-import com.google.cloud.dataflow.sdk.transforms.Mean;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.Sum;
 import com.google.cloud.dataflow.sdk.transforms.windowing.SlidingWindows;
 import com.google.cloud.dataflow.sdk.transforms.windowing.Window;
-import com.google.cloud.dataflow.sdk.values.PCollection;
 
 /**
- * A dataflow pipeline that listens to a PubSub topic
- * and writes out aggregates on windows
+ * A dataflow pipeline that listens to a PubSub topic and writes out aggregates
+ * on windows to BigQuery
  * 
  * @author vlakshmanan
  *
@@ -45,52 +49,60 @@ import com.google.cloud.dataflow.sdk.values.PCollection;
 public class StreamDemoConsumer {
 
 	public static interface MyOptions extends DataflowPipelineOptions {
-		@Description("Output topic")
-		@Default.String("projects/cloud-training-demos/topics/streamdemo2")
+		@Description("Output BigQuery table <project_id>:<dataset_id>.<table_id>")
+		@Default.String("cloud-training-demos:demos.streamdemo")
 		String getOutput();
 
 		void setOutput(String s);
-		
+
 		@Description("Input topic")
 		@Default.String("projects/cloud-training-demos/topics/streamdemo")
 		String getInput();
-
+		
 		void setInput(String s);
 	}
-	
+
 	@SuppressWarnings("serial")
 	public static void main(String[] args) {
 		MyOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(MyOptions.class);
-		options.setRunner(DataflowPipelineRunner.class);
 		options.setStreaming(true);
-		
 		Pipeline p = Pipeline.create(options);
 
 		String topic = options.getInput();
 		String output = options.getOutput();
-		
+
+		// Build the table schema for the output table.
+		List<TableFieldSchema> fields = new ArrayList<>();
+		fields.add(new TableFieldSchema().setName("timestamp").setType("TIMESTAMP"));
+		fields.add(new TableFieldSchema().setName("num_words").setType("INTEGER"));
+		TableSchema schema = new TableSchema().setFields(fields);
+
 		p //
 				.apply("GetMessages", PubsubIO.Read.topic(topic)) //
-				.apply("window", Window.into(SlidingWindows//
-						.of(Duration.standardMinutes(2))//
-						.every(Duration.standardSeconds(30)))) //
-				.apply("LineLength", ParDo.of(new DoFn<String, Integer>() {
+				.apply("window",
+						Window.into(SlidingWindows//
+								.of(Duration.standardMinutes(2))//
+								.every(Duration.standardSeconds(30)))) //
+				.apply("WordsPerLine", ParDo.of(new DoFn<String, Integer>() {
 					@Override
 					public void processElement(ProcessContext c) throws Exception {
 						String line = c.element();
-						c.output(line.length());
+						c.output(line.split(" ").length);
 					}
 				}))//
-				.apply(Sum.integersGlobally().withoutDefaults()) //
-				.apply("ToString", ParDo.of(new DoFn<Integer, String>() {
-
+				.apply("WordsInTimeWindow", Sum.integersGlobally().withoutDefaults()) //
+				.apply("ToBQRow", ParDo.of(new DoFn<Integer, TableRow>() {
 					@Override
 					public void processElement(ProcessContext c) throws Exception {
-						c.output(c.element().toString());
+						TableRow row = new TableRow();
+						row.set("timestamp", new Date().getTime());
+						row.set("num_words", c.element());
+						c.output(row);
 					}
-
 				})) //
-				.apply(PubsubIO.Write.topic(output));
+				.apply(BigQueryIO.Write.to(output)//
+						.withSchema(schema)//
+						.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
 		p.run();
 	}

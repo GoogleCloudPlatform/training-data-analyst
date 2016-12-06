@@ -1,14 +1,14 @@
 #!/bin/bash
 
-if [ "$#" -ne 3 ]; then
-   echo "Usage:   ./run_oncloud.sh project-name  bucket-name  mainclassname"
-   echo "Example: ./run_oncloud.sh cloud-training-demos  cloud-training-demos  StreamDemo[Consumer/Producer]"
+if [ "$#" -ne 2 ]; then
+   echo "Usage:   ./run_oncloud.sh project-name  bucket-name"
+   echo "Example: ./run_oncloud.sh cloud-training-demos  cloud-training-demos"
    exit
 fi
 
 PROJECT=$1
 BUCKET=$2
-MAIN=com.google.cloud.training.dataanalyst.javahelp.$3
+MAIN=com.google.cloud.training.dataanalyst.javahelp.StreamDemoConsumer
 
 echo "project=$PROJECT  bucket=$BUCKET  main=$MAIN"
 
@@ -18,6 +18,6 @@ mvn compile -e exec:java \
       -Dexec.args="--project=$PROJECT \
       --stagingLocation=gs://$BUCKET/staging/ \
       --tempLocation=gs://$BUCKET/staging/ \
-      --output=projects/$PROJECT/topics/streamdemo2 \
+      --output=$PROJECT:demos.streamdemo \
       --input=projects/$PROJECT/topics/streamdemo \
       --runner=DataflowPipelineRunner"
