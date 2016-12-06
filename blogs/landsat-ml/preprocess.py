@@ -48,7 +48,7 @@ def get_next_line(SMALL_SAMPLE):
   packformat = 'f' * ncols
   for line in xrange(0, nrows_to_read):
         line_data = [struct.unpack(packformat, band.ReadRaster(0, line, ncols, 1, ncols, 1, gdal.GDT_Float32)) for band in bands]
-        yield (line, line_data, featnames, ncols_to_read)
+        yield (line, (line_data, featnames, ncols_to_read))
       
 def get_features_from_line(args):
   '''
@@ -57,9 +57,11 @@ def get_features_from_line(args):
       or eval (0) partition.
       dict is the set of features formed from pixels from all the bands
   ''' 
-  (line, line_data, featnames, ncols_to_read) = args
-  if line_data:
-    for col in xrange(0, ncols_to_read):
+  # line, [(line_data, featnames, ncols_to_read)] = args
+  line = args[0]
+  for (line_data, featnames, ncols_to_read) in args[1]:
+    if line_data:
+       for col in xrange(0, ncols_to_read):
           featdict = {'rowcol': '{},{}'.format(line,col)}
           for f in xrange(0, len(featnames)):
             featdict[featnames[f]] = line_data[f][col]
@@ -89,7 +91,7 @@ def run_preprocessing(BUCKET=None, PROJECT=None):
     RUNNER = 'DirectPipelineRunner'
   else:
     SMALL_SAMPLE = False
-    OUTPUT_DIR = 'gs://{0}/landcover/preproc'.format(BUCKET)
+    OUTPUT_DIR = 'gs://{0}/landcoverml/preproc'.format(BUCKET)
     RUNNER = 'DataflowPipelineRunner'
   #
   
@@ -97,16 +99,18 @@ def run_preprocessing(BUCKET=None, PROJECT=None):
                                '--runner', RUNNER,
                                '--job_name', 'landcover',
                                '--extra_package', ml.sdk_location,
-                               '--max_num_workers', '10',
+                               '--max_num_workers', '50',
                                '--no_save_main_session', 'True',  # to prevent pickling and uploading Datalab itself!
                                '--setup_file', './preproc/setup.py',  # for gdal installation on the cloud -- see CUSTOM_COMMANDS in setup.py
-                               '--staging_location', 'gs://{0}/landcover/staging'.format(BUCKET),
-                               '--temp_location', 'gs://{0}/landcover/temp'.format(BUCKET)])
+                               '--staging_location', 'gs://{0}/landcoverml/staging'.format(BUCKET),
+                               '--temp_location', 'gs://{0}/landcoverml/temp'.format(BUCKET)])
         
   print ml.sdk_location
+  
   (evalg, traing) = (pipeline 
      | beam.Create([SMALL_SAMPLE]) # make the generator function like a source
-     | beam.FlatMap(get_next_line)
+     | beam.FlatMap(get_next_line) # (line, (line_data, featnames, ncols_to_read))
+     | beam.GroupByKey() # line, [(line_data, featnames, ncols_to_read)]
      | beam.FlatMap(get_features_from_line) # (is_train, featdict)
      | beam.Partition(get_partition, 2)
   )  # eval, train both contain (is_train, featdict)
@@ -140,7 +144,5 @@ def run_preprocessing(BUCKET=None, PROJECT=None):
      >> io.SaveFeatures(os.path.join(OUTPUT_DIR, 'features_eval')))
   pipeline.run()
 
-
 if __name__ == '__main__':
    run_preprocessing(BUCKET='cloud-training-demos-ml', PROJECT='cloud-training-demos')
-   
