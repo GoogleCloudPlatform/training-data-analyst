@@ -1,1 +1,2 @@
-pip install google-cloud-dataflow timezonefinder pytz python-dateutil
+#!/bin/bash
+sudo pip install google-cloud-dataflow timezonefinder pytz
