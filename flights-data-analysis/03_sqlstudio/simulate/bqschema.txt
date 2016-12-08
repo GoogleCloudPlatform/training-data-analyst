@@ -2,4 +2,4 @@ FL_DATE:date,UNIQUE_CARRIER:string,AIRLINE_ID:string,CARRIER:string,FL_NUM:strin
 
 +
 
-EVENT:string,NOTIFY_TIME:datetime
+EVENT:string,NOTIFY_TIME:datetime,EVENT_DATA:string
