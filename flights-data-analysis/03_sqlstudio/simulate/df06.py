@@ -3,6 +3,8 @@
 import apache_beam as beam
 import csv
 
+DATETIME_FORMAT='%Y-%m-%dT%H:%M:%S'
+
 def addtimezone(lat, lon):
    try:
       import timezonefinder
@@ -21,7 +23,7 @@ def as_utc(date, hhmm, tzone):
          # can't just parse hhmm because the data contains 2400 and the like ...
          loc_dt += datetime.timedelta(hours=int(hhmm[:2]), minutes=int(hhmm[2:]))
          utc_dt = loc_dt.astimezone(pytz.utc)
-         return utc_dt.strftime('%Y-%m-%d %H:%M:%S'), loc_dt.utcoffset().total_seconds()
+         return utc_dt.strftime(DATETIME_FORMAT), loc_dt.utcoffset().total_seconds()
       else:
          return '',0 # empty string corresponds to canceled flights
    except ValueError as e:
@@ -30,10 +32,10 @@ def as_utc(date, hhmm, tzone):
 
 def add_24h_if_before(arrtime, deptime):
    import datetime
-   if arrtime < deptime:
-      adt = datetime.datetime.strptime(arrtime, '%Y-%m-%d %H:%M:%S')
+   if len(arrtime) > 0 and len(deptime) > 0 and (arrtime < deptime):
+      adt = datetime.datetime.strptime(arrtime, DATETIME_FORMAT)
       adt += datetime.timedelta(hours=24)
-      return adt.strftime('%Y-%m-%d %H:%M:%S')
+      return adt.strftime(DATETIME_FORMAT)
    else:
       return arrtime
 
@@ -92,7 +94,7 @@ def run(project, bucket):
       '--runner=DataflowPipelineRunner'
    ]
    airports_filename = 'gs://{}/flights/airports/airports.csv.gz'.format(bucket)
-   flights_raw_files = 'gs://{}/flights/raw/201501.csv'.format(bucket)
+   flights_raw_files = 'gs://{}/flights/raw/*.csv'.format(bucket)
    flights_output = 'gs://{}/flights/tzcorr/all_flights'.format(bucket)
    events_output = '{}:flights.simevents'.format(project)
 
