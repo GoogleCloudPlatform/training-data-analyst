@@ -91,6 +91,8 @@ def run(project, bucket):
       '--staging_location=gs://{0}/flights/staging/'.format(bucket),
       '--temp_location=gs://{0}/flights/temp/'.format(bucket),
       '--setup_file=./setup.py',
+      '--max_num_workers=10',
+      '--autoscaling_algorithm=THROUGHPUT_BASED',
       '--runner=DataflowPipelineRunner'
    ]
    airports_filename = 'gs://{}/flights/airports/airports.csv.gz'.format(bucket)

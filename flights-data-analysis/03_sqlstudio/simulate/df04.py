@@ -30,7 +30,7 @@ def as_utc(date, hhmm, tzone):
 
 def add_24h_if_before(arrtime, deptime):
    import datetime
-   if arrtime < deptime:
+   if len(arrtime) > 0 and len(deptime) > 0 and arrtime < deptime:
       adt = datetime.datetime.strptime(arrtime, '%Y-%m-%d %H:%M:%S')
       adt += datetime.timedelta(hours=24)
       return adt.strftime('%Y-%m-%d %H:%M:%S')

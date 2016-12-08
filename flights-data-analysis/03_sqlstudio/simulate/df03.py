@@ -28,15 +28,6 @@ def as_utc(date, hhmm, tzone):
       print '{} {} {}'.format(date, hhmm, tzone)
       raise e
 
-def add_24h_if_before(arrtime, deptime):
-   import datetime
-   if arrtime < deptime:
-      adt = datetime.datetime.strptime(arrtime, '%Y-%m-%d %H:%M:%S')
-      adt += datetime.timedelta(hours=24)
-      return adt.strftime('%Y-%m-%d %H:%M:%S')
-   else:
-      return arrtime
-
 def tz_correct(line, airport_timezones):
    fields = line.split(',')
    if fields[0] != 'FL_DATE' and len(fields) == 27:
@@ -51,9 +42,6 @@ def tz_correct(line, airport_timezones):
       for f in [18, 20, 21]: #wheelson, crsarrtime, arrtime
          fields[f] = as_utc(fields[0], fields[f], arr_timezone)
       
-      for f in [17, 18, 20, 21]:
-         fields[f] = add_24h_if_before(fields[f], fields[14])
-
       yield ','.join(fields)
 
 if __name__ == '__main__':
