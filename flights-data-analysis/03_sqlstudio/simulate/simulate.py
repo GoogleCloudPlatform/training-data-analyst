@@ -47,7 +47,6 @@ def notify(topics, rows, simStartTime, programStart, speedFactor):
 
    for row in rows:
        event, notify_time, event_data = row
-       tonotify[event].append(event_data)
 
        # how much time should we sleep?
        if compute_sleep_secs(notify_time) > 1:
@@ -61,6 +60,7 @@ def notify(topics, rows, simStartTime, programStart, speedFactor):
           if to_sleep_secs > 0:
              logging.info('Sleeping {} seconds'.format(to_sleep_secs))
              time.sleep(to_sleep_secs)
+       tonotify[event].append(event_data)
 
    # left-over records; notify again
    publish(topics, tonotify)
