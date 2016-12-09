@@ -50,7 +50,7 @@ def notify(topics, rows, simStartTime, programStart, speedFactor):
        tonotify[event].append(event_data)
 
        # how much time should we sleep?
-       if compute_sleep_secs(notify_time) > 0:
+       if compute_sleep_secs(notify_time) > 1:
           # notify the accumulated tonotify
           publish(topics, tonotify)
           for key in topics:
@@ -99,7 +99,7 @@ ORDER BY
                                                  args.endTime))
    query.use_legacy_sql = False # standard SQL
    query.timeout_ms = 2000
-   query.max_results = 100  # at a time
+   query.max_results = 1000  # at a time
    query.run()
 
    # wait for query to complete and fetch first page of data
