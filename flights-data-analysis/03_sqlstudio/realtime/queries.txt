@@ -39,3 +39,29 @@ ON
   ABS(TIMESTAMP_DIFF(t1.timestamp, t2.latest, MINUTE)) < 29
 WHERE
   num_flights > 3
+
+
+
+SELECT
+  airport,
+  LAST(arr_delay) as arr_delay,
+  LAST(dep_delay) as dep_delay,
+  LAST(timestamp) as timestamp,
+  (STRING(LAST(latitude)) + "," + STRING(LAST(longitude))) AS location,
+  LAST(num_flights) AS num_flights
+FROM
+  [cloud-training-demos:flights.streaming_delays]
+GROUP BY airport
+
+
+SELECT
+  airport,
+  LAST(arr_delay) as arr_delay,
+  LAST(dep_delay) as dep_delay,
+  IF(LAST(dep_delay) < 15, -1, 1) as cancel,
+  LAST(timestamp) as timestamp,
+  (STRING(LAST(latitude)) + "," + STRING(LAST(longitude))) AS location,
+  LAST(num_flights) as num_flights,
+FROM
+  [cloud-training-demos:flights.streaming_delays]
+GROUP BY airport
