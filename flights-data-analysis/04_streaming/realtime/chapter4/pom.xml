@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.google.cloud.training.flights</groupId>
-  <artifactId>chapter3</artifactId>
+  <artifactId>chapter4</artifactId>
   <version>[1.0.0,2.0.0]</version>
 
   <build>
