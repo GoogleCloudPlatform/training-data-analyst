@@ -30,6 +30,7 @@ create table flights (
   CANCELLED float,
   CANCELLATION_CODE varchar(16),
   DIVERTED float,
-  DISTANCE float
+  DISTANCE float,
+  INDEX (FL_DATE), INDEX (ORIGIN_AIRPORT_ID), INDEX(ARR_DELAY), INDEX(DEP_TIME), INDEX(DEP_DELAY)
 );
 
