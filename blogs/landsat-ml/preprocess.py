@@ -100,6 +100,8 @@ def run_preprocessing(BUCKET=None, PROJECT=None):
                                '--job_name', 'landcover',
                                '--extra_package', ml.sdk_location,
                                '--max_num_workers', '50',
+                               '--autoscaling_algorithm', 'THROUGHPUT_BASED',
+                               '--worker_machine_type', 'n1-standard-4',
                                '--no_save_main_session', 'True',  # to prevent pickling and uploading Datalab itself!
                                '--setup_file', './preproc/setup.py',  # for gdal installation on the cloud -- see CUSTOM_COMMANDS in setup.py
                                '--staging_location', 'gs://{0}/landcoverml/staging'.format(BUCKET),
