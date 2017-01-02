@@ -31,7 +31,7 @@ logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
 @app.route('/')
 def welcome():
-         return '<html><a href="ingest">ingest last week's</a> earthquake data</html>'
+         return '<html><a href="ingest">ingest last week</a> earthquake data</html>'
 
 @app.route('/ingest')
 def ingest_last_week():
@@ -45,7 +45,7 @@ def ingest_last_week():
          outfile = 'earthquakes.png'
          status = 'scheduled ingest of {} to {}'.format(url, outfile)
          logging.info(status)
-         create_png(url, outfile)
+         transform.create_png(url, outfile)
 
          # upload to cloud storage
          client = gcs.Client()
