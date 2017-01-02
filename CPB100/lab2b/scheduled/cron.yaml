@@ -1,0 +1,5 @@
+cron:
+- description : ingest earthquake data
+  url : /ingest
+  schedule: every 2 hours
+  target: quakes
