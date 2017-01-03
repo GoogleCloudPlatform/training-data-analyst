@@ -1,1 +1,1 @@
-gcloud app deploy --quiet --stop-previous-version app.yaml cron.yaml
+gcloud app deploy --quiet app.yaml cron.yaml

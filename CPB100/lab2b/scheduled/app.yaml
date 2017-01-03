@@ -1,9 +1,7 @@
-runtime: python
+runtime: custom
 env: flex
 entrypoint: gunicorn -b :$PORT ingestapp:app
 service: quakes
-manual_scaling:
-  instances: 1
 
 #[START env]
 env_variables:

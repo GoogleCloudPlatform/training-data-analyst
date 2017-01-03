@@ -37,8 +37,8 @@ def welcome():
 def ingest_last_week():
     try:
          # verify that this is a cron job request
-         #is_cron = flask.request.headers['X-Appengine-Cron']
-         #logging.info('Received cron request {}'.format(is_cron))
+         is_cron = flask.request.headers['X-Appengine-Cron']
+         logging.info('Received cron request {}'.format(is_cron))
 
          # create png
          url = 'http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.csv'
@@ -54,7 +54,8 @@ def ingest_last_week():
          blob.upload_from_filename(outfile)
 
          # change permissions
-         blob.acl.all().grant_read().revoke_write().save()
+         blob.make_public()
+         status = 'uploaded {} to {}'.format(outfile, blob.name)
          logging.info(status)
 
     except KeyError as e:
@@ -72,7 +73,5 @@ def server_error(e):
     """.format(e), 500
 
 if __name__ == '__main__':
-    # This is used when running locally. Gunicorn is used to run the
-    # application on Google App Engine. See entrypoint in app.yaml.
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
 # [END app]
