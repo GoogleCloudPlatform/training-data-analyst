@@ -1,0 +1,16 @@
+runtime: custom
+env: flex
+entrypoint: gunicorn -b :$PORT ingestapp:app
+service: quakes
+
+#[START env]
+env_variables:
+    CLOUD_STORAGE_BUCKET: cloud-training-demos
+#[END env]
+
+handlers:
+- url: /ingest
+  script: ingestapp.app
+
+- url: /.*
+  script: ingestapp.app
