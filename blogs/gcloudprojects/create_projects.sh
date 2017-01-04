@@ -16,13 +16,15 @@ gcloud components update
 gcloud components install alpha
 
 for EMAIL in $EMAILS; do
-   PROJECT_ID=$(echo "${PROJECT_PREFIX}-${EMAIL}" | sed 's/@/-/g' | sed 's/\./-/g' | cut -c 1-30)
+   PROJECT_ID=$(echo "${PROJECT_PREFIX}-${EMAIL}" | sed 's/@/X/g' | sed 's/\./X/g' | cut -c 1-30)
    echo "Creating project $PROJECT_ID for $EMAIL ... "
 
    # create
    gcloud alpha projects create $PROJECT_ID
+   sleep 2
 
    # editor
+   rm -f iam.json.*
    gcloud alpha projects get-iam-policy $PROJECT_ID --format=json > iam.json.orig
    cat iam.json.orig | sed s'/"bindings": \[/"bindings": \[ \{"members": \["user:'$EMAIL'"\],"role": "roles\/editor"\},/g' > iam.json.new
    gcloud alpha projects set-iam-policy $PROJECT_ID iam.json.new
