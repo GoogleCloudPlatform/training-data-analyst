@@ -16,7 +16,7 @@ gcloud components update
 gcloud components install alpha
 
 for EMAIL in $EMAILS; do
-   PROJECT_ID=$(echo "${PROJECT_PREFIX}-${EMAIL}" | sed 's/@/X/g' | sed 's/\./X/g' | cut -c 1-30)
+   PROJECT_ID=$(echo "${PROJECT_PREFIX}-${EMAIL}" | sed 's/@/x/g' | sed 's/\./x/g' | cut -c 1-30)
    echo "Creating project $PROJECT_ID for $EMAIL ... "
 
    # create
