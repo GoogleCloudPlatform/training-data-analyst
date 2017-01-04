@@ -6,12 +6,12 @@ if [ "$#" -lt 2 ]; then
    exit
 fi
 
-gcloud components update
-gcloud components install alpha
-
 PROJECT_PREFIX=$1
 shift
 EMAILS=$@
+
+gcloud components update
+gcloud components install alpha
 
 for EMAIL in $EMAILS; do
    PROJECT_ID=$(echo "${PROJECT_PREFIX}-${EMAIL}" | sed 's/@/-/g' | sed 's/\./-/g' | cut -c 1-30)
