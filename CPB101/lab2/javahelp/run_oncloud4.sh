@@ -20,4 +20,4 @@ mvn compile -e exec:java \
       --tempLocation=gs://$BUCKET/staging/ \
       --output=$PROJECT:demos.streamdemo \
       --input=projects/$PROJECT/topics/streamdemo \
-      --runner=DataflowPipelineRunner"
+      --runner=DataflowRunner"
