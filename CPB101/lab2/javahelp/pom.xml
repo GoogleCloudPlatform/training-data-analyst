@@ -38,7 +38,7 @@
     <dependency>
       <groupId>com.google.cloud.dataflow</groupId>
       <artifactId>google-cloud-dataflow-java-sdk-all</artifactId>
-      <version>[1.6.0, 2.0.0)</version>
+      <version>[1.6.0, 1.9.9)</version>
     </dependency>
 
     <!-- slf4j API frontend binding with JUL backend -->
