@@ -29,10 +29,16 @@ flights = spark.read\
 # this view can now be queried ...
 flights.createOrReplaceTempView('flights')
 
-# run SQL over the registered view
+# run SQL over registered view
 results = spark.sql('SELECT COUNT(*) FROM flights WHERE DISTANCE < 300')
 results.show()
 
+# create hexbin distplot
+#df = spark.sql('SELECT distance, dep_delay FROM flights WHERE RAND() < 0.001 AND dep_delay > -20 AND dep_delay < 30 AND distance < 2000')
+#import seaborn as sns
+#g = sns.jointplot(df['distance'], df['dep_delay'], kind="hex", size=10, joint_kws={'gridsize':20})
+
+# quantization threshold for distance the hard way
 results  = spark.sql("""
  SELECT 
    distance,
@@ -48,5 +54,9 @@ results  = spark.sql("""
 results.show()
 results.describe().show()
 
+# the easy way
 distthresh = flights.approxQuantile('DISTANCE', [0.2, 0.4, 0.6, 0.8], 0.05)
 diststhresh
+
+delaythresh = flights.approxQuantile('DEP_DELAY', [0.2, 0.4, 0.6, 0.8], 0.05)
+delaythresh
