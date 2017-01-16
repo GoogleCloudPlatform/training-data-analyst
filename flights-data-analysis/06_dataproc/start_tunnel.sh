@@ -2,6 +2,5 @@
 
 ZONE=us-central1-a
 gcloud compute ssh  --zone=$ZONE  \
-  --ssh-flag="-N" --ssh-flag="-L" \
-  --ssh-flag="localhost:8081:localhost:8080" \
+  --ssh-flag="-D 1080" --ssh-flag="-N" --ssh-flag="-n" \
   ch6cluster-m
