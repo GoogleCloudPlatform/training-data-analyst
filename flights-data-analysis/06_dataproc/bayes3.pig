@@ -35,8 +35,12 @@ FLIGHTS2 = FOREACH FLIGHTS GENERATE
      (ARR_DELAY < 15? 1:0) AS ontime:int;
 
 grouped = GROUP FLIGHTS2 BY (distbin, depdelaybin);
-result = FOREACH grouped GENERATE 
+
+probs = FOREACH grouped GENERATE 
            FLATTEN(group) AS (dist, delay), 
-           ((double)SUM(FLIGHTS2.ontime))/COUNT(FLIGHTS2.ontime) AS ontime:double;
+           ((double)SUM(FLIGHTS2.ontime))/COUNT(FLIGHTS2.ontime) AS ontime:double,
+           COUNT(FLIGHTS2.ontime) AS numflights;
+
+result = FILTER probs BY (numflights > 10) AND (ontime < 0.7);
 
 store result into 'gs://cloud-training-demos-ml/flights/pigoutput/' using PigStorage(',','-schema');

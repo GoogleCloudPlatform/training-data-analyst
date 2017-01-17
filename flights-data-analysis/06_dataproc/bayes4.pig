@@ -22,21 +22,25 @@ FLIGHTS2 = FOREACH FLIGHTS GENERATE
      (DISTANCE < 1218? 7:
      (DISTANCE < 1849? 8:
           9))))))))) AS distbin:int,
-     (DEP_DELAY < -6? 0:
-     (DEP_DELAY < -5? 1:
-     (DEP_DELAY < -4? 2:
-     (DEP_DELAY < -3? 3:
-     (DEP_DELAY < 0? 4:
-     (DEP_DELAY < 3? 5:
-     (DEP_DELAY < 5? 6:
-     (DEP_DELAY < 11? 7:
-     (DEP_DELAY < 39? 8:
+     (DEP_DELAY < 11? 0:
+     (DEP_DELAY < 12? 1:
+     (DEP_DELAY < 13? 2:
+     (DEP_DELAY < 14? 3:
+     (DEP_DELAY < 15? 4:
+     (DEP_DELAY < 16? 5:
+     (DEP_DELAY < 17? 6:
+     (DEP_DELAY < 18? 7:
+     (DEP_DELAY < 19? 8:
           9))))))))) AS depdelaybin:int,
      (ARR_DELAY < 15? 1:0) AS ontime:int;
 
 grouped = GROUP FLIGHTS2 BY (distbin, depdelaybin);
-result = FOREACH grouped GENERATE 
+
+probs = FOREACH grouped GENERATE 
            FLATTEN(group) AS (dist, delay), 
-           ((double)SUM(FLIGHTS2.ontime))/COUNT(FLIGHTS2.ontime) AS ontime:double;
+           ((double)SUM(FLIGHTS2.ontime))/COUNT(FLIGHTS2.ontime) AS ontime:double,
+           COUNT(FLIGHTS2.ontime) AS numflights;
+
+result = FILTER probs BY (numflights > 10) AND (ontime < 0.7);
 
 store result into 'gs://cloud-training-demos-ml/flights/pigoutput/' using PigStorage(',','-schema');

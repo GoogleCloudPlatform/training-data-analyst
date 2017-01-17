@@ -1,2 +1,3 @@
-gsutil rm -r gs://cloud-training-demos/flights/pigoutput
-gcloud beta dataproc jobs submit pig --cluster cluster-1 --file bayes.pig
+#!/bin/bash
+gsutil rm -r gs://cloud-training-demos-ml/flights/pigoutput
+gcloud dataproc jobs submit pig --cluster ch6cluster --file $*
