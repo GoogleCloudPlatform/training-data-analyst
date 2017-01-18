@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. instance_details.sh
+. ../instance_details.sh
 echo "Creating instance name=$INSTANCE_NAME in zone=$ZONE of type=$MACHINE_TYPE"
 
 gcloud compute instances create $INSTANCE_NAME \
