@@ -2,7 +2,7 @@
 
 echo "This command won't exit. click on the *Web Preview* (up-arrow button at top-left), select *port 8081*, and start using Datalab."
 
-. instance_details.sh
+. ../instance_details.sh
 echo "Tunneling to instance=$INSTANCE_NAME"
 
 gcloud compute ssh --zone $ZONE \
