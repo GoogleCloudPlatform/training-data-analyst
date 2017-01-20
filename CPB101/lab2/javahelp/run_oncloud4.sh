@@ -13,7 +13,7 @@ MAIN=com.google.cloud.training.dataanalyst.javahelp.StreamDemoConsumer
 echo "project=$PROJECT  bucket=$BUCKET  main=$MAIN"
 
 export PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin/:$PATH
-mvn compile -e exec:java \
+mvn -U compile -e exec:java \
  -Dexec.mainClass=$MAIN \
       -Dexec.args="--project=$PROJECT \
       --stagingLocation=gs://$BUCKET/staging/ \
