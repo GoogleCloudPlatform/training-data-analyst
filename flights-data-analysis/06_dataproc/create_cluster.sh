@@ -9,7 +9,6 @@ gsutil cp install_on_cluster.sh $INSTALL
 
 # create cluster
 gcloud dataproc clusters create \
-   --bucket=$BUCKET \
    --num-workers=2 \
    --scopes=cloud-platform \
    --worker-machine-type=n1-standard-2 \
