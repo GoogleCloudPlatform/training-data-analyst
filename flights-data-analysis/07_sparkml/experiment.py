@@ -35,9 +35,14 @@ inputs = 'gs://cloud-training-demos-ml/flights/tzcorr/all_flights-*'  # FULL
 flights = spark.read\
             .schema(schema)\
             .csv(inputs)
-
-# this view can now be queried ...
 flights.createOrReplaceTempView('flights')
+
+# separate training and validation data
+from pyspark.sql.functions import rand
+
+traindays = traindays.withColumn("holdout", rand() > 0.8)  # 80% of data is for training
+traindays.createOrReplaceTempView('traindays')
+
 
 
 # logistic regression
@@ -49,6 +54,7 @@ JOIN traindays t
 ON f.FL_DATE == t.FL_DATE
 WHERE
   t.is_train_day == 'True' AND
+  t.holdout == False AND
   f.dep_delay IS NOT NULL AND 
   f.arr_delay IS NOT NULL
 """
@@ -70,4 +76,22 @@ lrmodel.setThreshold(0.7)
 # save model
 MODEL_FILE='gs://' + BUCKET + '/flights/sparkmloutput/model'
 lrmodel.save(sc, MODEL_FILE)
+
+
+# evaluate model on the heldout data
+evalquery = trainquery.replace("t.holdout == False","t.holdout == True")
+evaldata = spark.sql(evalquery)
+examples = evaldata.rdd.map(to_example)
+labelpred = examples.map(lambda p: (p.label, lrmodel.predict(p.features)))
+def eval(labelpred):
+    cancel = labelpred.filter(lambda (label, pred): pred == 0)
+    nocancel = labelpred.filter(lambda (label, pred): pred == 1)
+    corr_cancel = cancel.filter(lambda (label, pred): label == pred).count()
+    corr_nocancel = nocancel.filter(lambda (label, pred): label == pred).count()
+    return {'total_cancel': cancel.count(), \
+            'correct_cancel': float(corr_cancel)/cancel.count(), \
+            'total_noncancel': nocancel.count(), \
+            'correct_noncancel': float(corr_nocancel)/nocancel.count() \
+           }
+print eval(labelpred)
 
