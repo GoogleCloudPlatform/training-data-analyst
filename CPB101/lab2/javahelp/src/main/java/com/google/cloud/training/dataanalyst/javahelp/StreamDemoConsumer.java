@@ -26,6 +26,7 @@ import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.PubsubIO;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
@@ -77,7 +78,9 @@ public class StreamDemoConsumer {
 		TableSchema schema = new TableSchema().setFields(fields);
 
 		p //
-				.apply("GetMessages", PubsubIO.Read.topic(topic)) //
+				.apply("GetMessages", PubsubIO.<String>read()
+                                    .topic(topic)
+                                    .withCoder(StringUtf8Coder.of())) //
 				.apply("window",
 						Window.into(SlidingWindows//
 								.of(Duration.standardMinutes(2))//
