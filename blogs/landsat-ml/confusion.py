@@ -38,6 +38,7 @@ def create_confusion_matrix():
                                '--job_name', 'landcover-confusion-matrix',
                                '--extra_package', ml.sdk_location,
                                '--max_num_workers', '100',
+                               '--autoscaling_algorithm', 'THROUGHPUT_BASED',
                                '--save_main_session', 'True',
                                '--setup_file', './preproc/setup.py',  # for gdal installation on the cloud -- see CUSTOM_COMMANDS in setup.py
                                '--staging_location', 'gs://{0}/landcover/staging'.format(BUCKET),
@@ -49,7 +50,7 @@ def create_confusion_matrix():
   metadata = pipeline | io.LoadMetadata(metadata_file)
   evaluations = pipeline | beam.Read(beam.io.TextFileSource('gs://cloud-training-demos-ml/landcover/prediction/eval'))
  
-  analysis_source = evaluations | beam.Map('CreateAnalysisSource', lambda v : make_data_for_analysis(v, metadata_inmem))
+  analysis_source = evaluations | beam.Map('CreateAnalysisSource', lambda v : make_data_for_analysis(eval(v), metadata_inmem))
   confusion_matrix, precision_recall, logloss = (analysis_source |
     'Analyze Model' >> analysis.AnalyzeModel(metadata))
   confusion_matrix_file = os.path.join(OUTPUT_DIR, 'analyze_cm.json')
