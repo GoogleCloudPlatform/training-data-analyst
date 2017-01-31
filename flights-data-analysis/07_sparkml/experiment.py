@@ -66,7 +66,7 @@ def to_example(fields):
               float(fields['ARR_DELAY'] < 15), #ontime \
               [ \
                   fields['DEP_DELAY'], \
-                  fields['DISTANCE'], \
+                  fields['TAXI_OUT'], \
               ])
 
 examples = traindata.rdd.map(to_example)
