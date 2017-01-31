@@ -2,6 +2,7 @@ from pyspark.mllib.classification import LogisticRegressionWithLBFGS
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.sql import SparkSession
 from pyspark import SparkContext
+import numpy as np
 
 sc = SparkContext('local', 'logistic')
 spark = SparkSession \
@@ -39,8 +40,8 @@ flights.createOrReplaceTempView('flights')
 
 # separate training and validation data
 from pyspark.sql.functions import rand
-
-traindays = traindays.withColumn("holdout", rand() > 0.8)  # 80% of data is for training
+SEED=13
+traindays = traindays.withColumn("holdout", rand(SEED) > 0.8)  # 80% of data is for training
 traindays.createOrReplaceTempView('traindays')
 
 
@@ -55,8 +56,8 @@ ON f.FL_DATE == t.FL_DATE
 WHERE
   t.is_train_day == 'True' AND
   t.holdout == False AND
-  f.dep_delay IS NOT NULL AND 
-  f.arr_delay IS NOT NULL
+  f.CANCELLED == '0.00' AND 
+  f.DIVERTED == '0.00'
 """
 traindata = spark.sql(trainquery)
 
@@ -64,12 +65,12 @@ def to_example(fields):
   return LabeledPoint(\
               float(fields['ARR_DELAY'] < 15), #ontime \
               [ \
-                  fields['DEP_DELAY'], # DEP_DELAY \
-                  fields['TAXI_OUT'], # TAXI_OUT \
-                  fields['DISTANCE'], # DISTANCE \
+                  fields['DEP_DELAY'], \
+                  fields['DISTANCE'], \
               ])
 
 examples = traindata.rdd.map(to_example)
+examples = examples.repartition(1000) # to take advantage of large cluster
 lrmodel = LogisticRegressionWithLBFGS.train(examples, intercept=True)
 lrmodel.setThreshold(0.7)
 
@@ -88,10 +89,20 @@ def eval(labelpred):
     nocancel = labelpred.filter(lambda (label, pred): pred == 1)
     corr_cancel = cancel.filter(lambda (label, pred): label == pred).count()
     corr_nocancel = nocancel.filter(lambda (label, pred): label == pred).count()
+    totsqe = labelpred.map(lambda (label, pred): (label-pred)*(label-pred)).sum()
+
+    cancel_denom = cancel.count()
+    nocancel_denom = nocancel.count()
+    if cancel_denom == 0:
+        cancel_denom = 1
+    if nocancel_denom == 0:
+        nocancel_denom = 1
+
     return {'total_cancel': cancel.count(), \
-            'correct_cancel': float(corr_cancel)/cancel.count(), \
+            'correct_cancel': float(corr_cancel)/cancel_denom, \
             'total_noncancel': nocancel.count(), \
-            'correct_noncancel': float(corr_nocancel)/nocancel.count() \
+            'correct_noncancel': float(corr_nocancel)/nocancel_denom, \
+            'rmse': np.sqrt(totsqe/float(cancel_denom + nocancel_denom))
            }
 print eval(labelpred)
 

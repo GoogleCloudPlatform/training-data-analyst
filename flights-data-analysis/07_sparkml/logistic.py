@@ -14,7 +14,7 @@ BUCKET='cloud-training-demos-ml'
 # read dataset
 traindays = spark.read \
     .option("header", "true") \
-    .csv('gs://cloud-training-demos-ml/flights/trainday.csv')
+    .csv('gs://{}/flights/trainday.csv'.format(BUCKET))
 traindays.createOrReplaceTempView('traindays')
 
 from pyspark.sql.types import StringType, FloatType, StructType, StructField
@@ -30,8 +30,8 @@ def get_structfield(colname):
 schema = StructType([get_structfield(colname) for colname in header.split(',')])
 
 
-#inputs = 'gs://cloud-training-demos-ml/flights/tzcorr/all_flights-00000-*' # 1/30th
-inputs = 'gs://cloud-training-demos-ml/flights/tzcorr/all_flights-*'  # FULL
+#inputs = 'gs://{}/flights/tzcorr/all_flights-00000-*'.format(BUCKET) # 1/30th
+inputs = 'gs://{}/flights/tzcorr/all_flights-*'.format(BUCKET)  # FULL
 flights = spark.read\
             .schema(schema)\
             .csv(inputs)
@@ -49,8 +49,8 @@ JOIN traindays t
 ON f.FL_DATE == t.FL_DATE
 WHERE
   t.is_train_day == 'True' AND
-  f.dep_delay IS NOT NULL AND 
-  f.arr_delay IS NOT NULL
+  f.CANCELLED == '0.00' AND 
+  f.DIVERTED == '0.00'
 """
 traindata = spark.sql(trainquery)
 
@@ -70,4 +70,38 @@ lrmodel.setThreshold(0.7)
 # save model
 MODEL_FILE='gs://' + BUCKET + '/flights/sparkmloutput/model'
 lrmodel.save(sc, MODEL_FILE)
+
+# evaluate
+testquery = trainquery.replace("t.is_train_day == 'True'","t.is_train_day == 'False'")
+testdata = spark.sql(testquery)
+examples = testdata.rdd.map(to_example)
+
+def eval(labelpred):
+    cancel = labelpred.filter(lambda (label, pred): pred < 0.7)
+    nocancel = labelpred.filter(lambda (label, pred): pred >= 0.7)
+    corr_cancel = cancel.filter(lambda (label, pred): label == int(pred >= 0.7)).count()
+    corr_nocancel = nocancel.filter(lambda (label, pred): label == int(pred >= 0.7)).count()
+    
+    cancel_denom = cancel.count()
+    nocancel_denom = nocancel.count()
+    if cancel_denom == 0:
+        cancel_denom = 1
+    if nocancel_denom == 0:
+        nocancel_denom = 1
+    return {'total_cancel': cancel.count(), \
+            'correct_cancel': float(corr_cancel)/cancel_denom, \
+            'total_noncancel': nocancel.count(), \
+            'correct_noncancel': float(corr_nocancel)/nocancel_denom \
+           }
+
+# Evaluate model
+lrmodel.clearThreshold() # so it returns probabilities
+labelpred = examples.map(lambda p: (p.label, lrmodel.predict(p.features)))
+print 'All flights:'
+print eval(labelpred)
+
+# keep only those examples near the decision threshold
+print 'Flights near decision threshold:'
+labelpred = labelpred.filter(lambda (label, pred): pred > 0.65 and pred < 0.75)
+print eval(labelpred)
 
