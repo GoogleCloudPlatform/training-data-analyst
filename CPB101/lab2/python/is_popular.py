@@ -67,12 +67,12 @@ if __name__ == '__main__':
 
    # find most used packages
    (p
-      | 'GetJava' >> beam.Read(beam.io.TextFileSource(input))
+      | 'GetJava' >> beam.io.ReadFromText(input)
       | 'GetImports' >> beam.FlatMap(lambda line: startsWith(line, keyword))
       | 'PackageUse' >> beam.FlatMap(lambda line: packageUse(line, keyword))
       | 'TotalUse' >> beam.CombinePerKey(sum)
       | 'Top_5' >> beam.transforms.combiners.Top.Of(5, by_value)
-      | 'write' >> beam.io.textio.WriteToText(output_prefix)
+      | 'write' >> beam.io.WriteToText(output_prefix)
    )
 
    p.run()
