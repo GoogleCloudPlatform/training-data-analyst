@@ -62,11 +62,18 @@ WHERE
 traindata = spark.sql(trainquery)
 
 def to_example(fields):
+  def clip(x):
+     if (x < -1):
+        return -1
+     if (x > 1):
+        return 1
+     return x
   return LabeledPoint(\
               float(fields['ARR_DELAY'] < 15), #ontime \
               [ \
-                  fields['DEP_DELAY'], \
-                  fields['TAXI_OUT'], \
+                  clip(fields['DEP_DELAY'] / 30), \
+                  clip((fields['DISTANCE'] / 1000) - 1), \
+                  clip((fields['TAXI_OUT'] / 10) - 1), \
               ])
 
 examples = traindata.rdd.map(to_example)
