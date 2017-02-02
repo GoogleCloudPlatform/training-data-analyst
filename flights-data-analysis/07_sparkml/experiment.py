@@ -86,10 +86,11 @@ def get_local_hour(timestamp, correction):
 def to_example(fields):
   features = [ \
                   fields['DEP_DELAY'], \
+                  fields['DISTANCE'], \
                   fields['TAXI_OUT'], \
              ]
-  features.extend(get_local_hour(fields['DEP_TIME'],
-                          fields['DEP_AIRPORT_TZOFFSET']))
+  #features.extend(get_local_hour(fields['DEP_TIME'],
+  #                        fields['DEP_AIRPORT_TZOFFSET']))
 
   return LabeledPoint(\
               float(fields['ARR_DELAY'] < 15), #ontime \
