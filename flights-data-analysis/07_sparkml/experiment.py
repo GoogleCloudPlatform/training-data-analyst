@@ -23,7 +23,7 @@ from pyspark.sql.types import StringType, FloatType, StructType, StructField
 header = 'FL_DATE,UNIQUE_CARRIER,AIRLINE_ID,CARRIER,FL_NUM,ORIGIN_AIRPORT_ID,ORIGIN_AIRPORT_SEQ_ID,ORIGIN_CITY_MARKET_ID,ORIGIN,DEST_AIRPORT_ID,DEST_AIRPORT_SEQ_ID,DEST_CITY_MARKET_ID,DEST,CRS_DEP_TIME,DEP_TIME,DEP_DELAY,TAXI_OUT,WHEELS_OFF,WHEELS_ON,TAXI_IN,CRS_ARR_TIME,ARR_TIME,ARR_DELAY,CANCELLED,CANCELLATION_CODE,DIVERTED,DISTANCE,DEP_AIRPORT_LAT,DEP_AIRPORT_LON,DEP_AIRPORT_TZOFFSET,ARR_AIRPORT_LAT,ARR_AIRPORT_LON,ARR_AIRPORT_TZOFFSET,EVENT,NOTIFY_TIME'
 
 def get_structfield(colname):
-   if colname in ['ARR_DELAY', 'DEP_DELAY', 'DISTANCE', 'TAXI_OUT']:
+   if colname in ['ARR_DELAY', 'DEP_DELAY', 'DISTANCE', 'TAXI_OUT', 'DEP_AIRPORT_TZOFFSET']:
       return StructField(colname, FloatType(), True)
    else:
       return StructField(colname, StringType(), True)
@@ -62,19 +62,26 @@ WHERE
 traindata = spark.sql(trainquery)
 
 def to_example(fields):
-  def clip(x):
-     if (x < -1):
-        return -1
-     if (x > 1):
-        return 1
-     return x
+  def get_local_hour(timestamp, correction):
+      import datetime
+      TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+      timestamp = timestamp.replace('T', ' ') # incase different
+      t = datetime.datetime.strptime(timestamp, TIME_FORMAT)
+      d = datetime.timedelta(seconds=correction)
+      t = t + d
+      theta = np.radians(360 * t.hour / 24.0)
+      return [np.sin(theta), np.cos(theta)]
+
+  features = [ \
+                  fields['DEP_DELAY'], \
+                  fields['TAXI_OUT'], \
+              ]
+  features.extend(get_local_hour(fields['DEP_TIME'], 
+                                 fields['DEP_AIRPORT_TZOFFSET']))
+
   return LabeledPoint(\
               float(fields['ARR_DELAY'] < 15), #ontime \
-              [ \
-                  clip(fields['DEP_DELAY'] / 30), \
-                  clip((fields['DISTANCE'] / 1000) - 1), \
-                  clip((fields['TAXI_OUT'] / 10) - 1), \
-              ])
+              features)
 
 examples = traindata.rdd.map(to_example)
 examples = examples.repartition(1000) # to take advantage of large cluster
