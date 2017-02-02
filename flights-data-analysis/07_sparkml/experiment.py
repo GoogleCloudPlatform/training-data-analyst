@@ -61,23 +61,24 @@ WHERE
 """
 traindata = spark.sql(trainquery)
 
-def to_example(fields):
-  def get_local_hour(timestamp, correction):
+def get_local_hour(timestamp, correction):
       import datetime
       TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
       timestamp = timestamp.replace('T', ' ') # incase different
       t = datetime.datetime.strptime(timestamp, TIME_FORMAT)
       d = datetime.timedelta(seconds=correction)
       t = t + d
-      theta = np.radians(360 * t.hour / 24.0)
-      return [np.sin(theta), np.cos(theta)]
+      return t.hour
+      #theta = np.radians(360 * t.hour / 24.0)
+      #return [np.sin(theta), np.cos(theta)]
 
+def to_example(fields):
   features = [ \
                   fields['DEP_DELAY'], \
                   fields['TAXI_OUT'], \
-              ]
-  features.extend(get_local_hour(fields['DEP_TIME'], 
-                                 fields['DEP_AIRPORT_TZOFFSET']))
+                  get_local_hour(fields['DEP_TIME'], 
+                                 fields['DEP_AIRPORT_TZOFFSET'])
+             ]
 
   return LabeledPoint(\
               float(fields['ARR_DELAY'] < 15), #ontime \
