@@ -59,7 +59,17 @@ WHERE
   f.CANCELLED == '0.00' AND 
   f.DIVERTED == '0.00'
 """
-traindata = spark.sql(trainquery)
+traindata = spark.sql(trainquery).repartition(1000)
+
+def get_category(hour):
+  if hour < 6 or hour > 20:
+     return [1, 0, 0, 0]  # night
+  if hour < 10:
+     return [0, 1, 0, 0] # morning
+  if hour < 5:
+     return [0, 0, 1, 0] # mid-day
+  else:
+     return [0, 0, 0, 1] # evening
 
 def get_local_hour(timestamp, correction):
       import datetime
@@ -68,24 +78,36 @@ def get_local_hour(timestamp, correction):
       t = datetime.datetime.strptime(timestamp, TIME_FORMAT)
       d = datetime.timedelta(seconds=correction)
       t = t + d
-      return t.hour
-      #theta = np.radians(360 * t.hour / 24.0)
+      #return t.hour    # raw
+      #theta = np.radians(360 * t.hour / 24.0)  # von-Miyes
       #return [np.sin(theta), np.cos(theta)]
+      return get_category(t.hour)   # bucketize
 
 def to_example(fields):
   features = [ \
                   fields['DEP_DELAY'], \
                   fields['TAXI_OUT'], \
-                  get_local_hour(fields['DEP_TIME'], 
-                                 fields['DEP_AIRPORT_TZOFFSET'])
              ]
+  features.extend(get_local_hour(fields['DEP_TIME'],
+                          fields['DEP_AIRPORT_TZOFFSET']))
 
   return LabeledPoint(\
               float(fields['ARR_DELAY'] < 15), #ontime \
               features)
 
+def add_hour(df):
+   from pyspark.sql.functions import udf
+   from pyspark.ml.feature import OneHotEncoder
+   hour_encoder = OneHotEncoder(inputCol="HOUR", outputCol="HOUR_onehot")
+   udf_get_local_hour = udf( lambda (t, c): get_local_hour(t,c) )
+   with_hour = df.withColumn('HOUR', 
+                   udf_get_local_hour(traindata['DEP_TIME'],
+                                      traindata['DEP_AIRPORT_TZOFFSET']))
+   with_hour = with_hour.withColumn("HOUR", with_hour["HOUR"].cast("int"))
+   return hour_encoder.transform(with_hour)
+
+#traindata = add_hour(traindata)
 examples = traindata.rdd.map(to_example)
-examples = examples.repartition(1000) # to take advantage of large cluster
 lrmodel = LogisticRegressionWithLBFGS.train(examples, intercept=True)
 lrmodel.setThreshold(0.7)
 
@@ -96,7 +118,8 @@ lrmodel.save(sc, MODEL_FILE)
 
 # evaluate model on the heldout data
 evalquery = trainquery.replace("t.holdout == False","t.holdout == True")
-evaldata = spark.sql(evalquery)
+evaldata = spark.sql(evalquery).repartition(1000)
+#evaldata = add_hour(evaldata)
 examples = evaldata.rdd.map(to_example)
 labelpred = examples.map(lambda p: (p.label, lrmodel.predict(p.features)))
 def eval(labelpred):
