@@ -25,19 +25,19 @@ import org.joda.time.Duration;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
-import com.google.cloud.dataflow.sdk.Pipeline;
-import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.PubsubIO;
-import com.google.cloud.dataflow.sdk.options.DataflowPipelineOptions;
-import com.google.cloud.dataflow.sdk.options.Default;
-import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
-import com.google.cloud.dataflow.sdk.runners.DataflowPipelineRunner;
-import com.google.cloud.dataflow.sdk.transforms.DoFn;
-import com.google.cloud.dataflow.sdk.transforms.ParDo;
-import com.google.cloud.dataflow.sdk.transforms.Sum;
-import com.google.cloud.dataflow.sdk.transforms.windowing.SlidingWindows;
-import com.google.cloud.dataflow.sdk.transforms.windowing.Window;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
+import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.io.PubsubIO;
+import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
+import org.apache.beam.sdk.options.Default;
+import org.apache.beam.sdk.options.Description;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Sum;
+import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
+import org.apache.beam.sdk.transforms.windowing.Window;
 
 /**
  * A dataflow pipeline that listens to a PubSub topic and writes out aggregates
@@ -78,13 +78,15 @@ public class StreamDemoConsumer {
 		TableSchema schema = new TableSchema().setFields(fields);
 
 		p //
-				.apply("GetMessages", PubsubIO.Read.topic(topic)) //
+				.apply("GetMessages", PubsubIO.<String>read()
+                                    .topic(topic)
+                                    .withCoder(StringUtf8Coder.of())) //
 				.apply("window",
 						Window.into(SlidingWindows//
 								.of(Duration.standardMinutes(2))//
 								.every(Duration.standardSeconds(30)))) //
 				.apply("WordsPerLine", ParDo.of(new DoFn<String, Integer>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						String line = c.element();
 						c.output(line.split(" ").length);
@@ -92,7 +94,7 @@ public class StreamDemoConsumer {
 				}))//
 				.apply("WordsInTimeWindow", Sum.integersGlobally().withoutDefaults()) //
 				.apply("ToBQRow", ParDo.of(new DoFn<Integer, TableRow>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						TableRow row = new TableRow();
 						row.set("timestamp", new Date().getTime());

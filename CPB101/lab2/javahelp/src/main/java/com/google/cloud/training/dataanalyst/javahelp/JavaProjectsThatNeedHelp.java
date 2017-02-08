@@ -22,21 +22,21 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.cloud.dataflow.sdk.Pipeline;
-import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.TextIO;
-import com.google.cloud.dataflow.sdk.options.Default;
-import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
-import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
-import com.google.cloud.dataflow.sdk.transforms.DoFn;
-import com.google.cloud.dataflow.sdk.transforms.ParDo;
-import com.google.cloud.dataflow.sdk.transforms.Sum;
-import com.google.cloud.dataflow.sdk.transforms.Top;
-import com.google.cloud.dataflow.sdk.transforms.View;
-import com.google.cloud.dataflow.sdk.values.KV;
-import com.google.cloud.dataflow.sdk.values.PCollection;
-import com.google.cloud.dataflow.sdk.values.PCollectionView;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.options.Default;
+import org.apache.beam.sdk.options.Description;
+import org.apache.beam.sdk.options.PipelineOptions;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Sum;
+import org.apache.beam.sdk.transforms.Top;
+import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 
 /**
  * A dataflow pipeline that finds Java packages on github that are: (a) used a
@@ -67,7 +67,7 @@ public class JavaProjectsThatNeedHelp {
 		String javaQuery = "SELECT content FROM [fh-bigquery:github_extracts.contents_java_2016]";
 		PCollection<String[]> javaContent = p.apply("GetJava", BigQueryIO.Read.fromQuery(javaQuery)) //
 				.apply("ToLines", ParDo.of(new DoFn<TableRow, String[]>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						TableRow row = c.element();
 						String content = (String) row.get("content");
@@ -84,7 +84,7 @@ public class JavaProjectsThatNeedHelp {
 		PCollectionView<Map<String, Integer>> packagesThatNeedHelp = javaContent
 				.apply("NeedsHelp", ParDo.of(new DoFn<String[], KV<String, Integer>>() {
 
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						String[] lines = c.element();
 						String[] packages = parsePackageStatement(lines);
@@ -103,7 +103,7 @@ public class JavaProjectsThatNeedHelp {
 		// packages in terms of use and which need help
 		javaContent //
 				.apply("IsPopular", ParDo.of(new DoFn<String[], KV<String, Integer>>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						String[] lines = c.element();
 						String[] packages = parseImportStatement(lines);
@@ -116,7 +116,7 @@ public class JavaProjectsThatNeedHelp {
 				.apply("CompositeScore", ParDo.withSideInputs(packagesThatNeedHelp) //
 						.of(new DoFn<KV<String, Integer>, KV<String, Double>>() {
 
-							@Override
+							@ProcessElement
 							public void processElement(ProcessContext c) throws Exception {
 								String packageName = c.element().getKey();
 								int numTimesUsed = c.element().getValue();
@@ -132,7 +132,7 @@ public class JavaProjectsThatNeedHelp {
 				.apply("Top_" + TOPN, Top.of(TOPN, new KV.OrderByValue<>())) //
 				.apply("ToString", ParDo.of(new DoFn<List<KV<String, Double>>, String>() {
 
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						List<KV<String, Double>> sorted = new ArrayList<>(c.element());
 						Collections.sort(sorted, new KV.OrderByValue<>());

@@ -16,12 +16,12 @@
 
 package com.google.cloud.training.dataanalyst.javahelp;
 
-import com.google.cloud.dataflow.sdk.Pipeline;
-import com.google.cloud.dataflow.sdk.io.TextIO;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
-import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
-import com.google.cloud.dataflow.sdk.transforms.DoFn;
-import com.google.cloud.dataflow.sdk.transforms.ParDo;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.options.PipelineOptions;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
 
 /**
  * A dataflow pipeline that prints the lines that match a specific search term
@@ -43,7 +43,7 @@ public class Grep {
 		p //
 				.apply("GetJava", TextIO.Read.from(input)) //
 				.apply("Grep", ParDo.of(new DoFn<String, String>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						String line = c.element();
 						if (line.contains(searchTerm)) {

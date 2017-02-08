@@ -19,17 +19,17 @@ package com.google.cloud.training.dataanalyst.javahelp;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.cloud.dataflow.sdk.Pipeline;
-import com.google.cloud.dataflow.sdk.io.TextIO;
-import com.google.cloud.dataflow.sdk.options.Default;
-import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
-import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
-import com.google.cloud.dataflow.sdk.transforms.DoFn;
-import com.google.cloud.dataflow.sdk.transforms.ParDo;
-import com.google.cloud.dataflow.sdk.transforms.Sum;
-import com.google.cloud.dataflow.sdk.transforms.Top;
-import com.google.cloud.dataflow.sdk.values.KV;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.options.Default;
+import org.apache.beam.sdk.options.Description;
+import org.apache.beam.sdk.options.PipelineOptions;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Sum;
+import org.apache.beam.sdk.transforms.Top;
+import org.apache.beam.sdk.values.KV;
 
 /**
  * A dataflow pipeline that finds the most commonly imported packages
@@ -65,7 +65,7 @@ public class IsPopular {
 		p //
 				.apply("GetJava", TextIO.Read.from(input)) //
 				.apply("GetImports", ParDo.of(new DoFn<String, String>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						String line = c.element();
 						if (line.startsWith(keyword)) {
@@ -74,7 +74,7 @@ public class IsPopular {
 					}
 				})) //
 				.apply("PackageUse", ParDo.of(new DoFn<String, KV<String,Integer>>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						List<String> packages = getPackages(c.element(), keyword);
 						for (String p : packages) {
@@ -86,7 +86,7 @@ public class IsPopular {
 				.apply("Top_5", Top.of(5, new KV.OrderByValue<>())) //
 				.apply("ToString", ParDo.of(new DoFn<List<KV<String, Integer>>, String>() {
 
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						StringBuffer sb = new StringBuffer();
 						for (KV<String, Integer> kv : c.element()) {
