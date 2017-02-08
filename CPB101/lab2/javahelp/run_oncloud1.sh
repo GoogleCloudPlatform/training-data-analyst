@@ -18,4 +18,4 @@ mvn compile -e exec:java \
       -Dexec.args="--project=$PROJECT \
       --stagingLocation=gs://$BUCKET/staging/ \
       --tempLocation=gs://$BUCKET/staging/ \
-      --runner=BlockingDataflowPipelineRunner"
+      --runner=DataflowRunner"
