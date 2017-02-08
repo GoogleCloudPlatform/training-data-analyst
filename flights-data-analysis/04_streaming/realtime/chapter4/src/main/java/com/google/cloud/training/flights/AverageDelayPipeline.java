@@ -24,26 +24,27 @@ import org.joda.time.Duration;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
-import com.google.cloud.dataflow.sdk.Pipeline;
-import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.PubsubIO;
-import com.google.cloud.dataflow.sdk.options.DataflowPipelineOptions;
-import com.google.cloud.dataflow.sdk.options.Default;
-import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
-import com.google.cloud.dataflow.sdk.transforms.DoFn;
-import com.google.cloud.dataflow.sdk.transforms.Max;
-import com.google.cloud.dataflow.sdk.transforms.Mean;
-import com.google.cloud.dataflow.sdk.transforms.ParDo;
-import com.google.cloud.dataflow.sdk.transforms.Sum;
-import com.google.cloud.dataflow.sdk.transforms.join.CoGbkResult;
-import com.google.cloud.dataflow.sdk.transforms.join.CoGroupByKey;
-import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
-import com.google.cloud.dataflow.sdk.transforms.windowing.SlidingWindows;
-import com.google.cloud.dataflow.sdk.transforms.windowing.Window;
-import com.google.cloud.dataflow.sdk.values.KV;
-import com.google.cloud.dataflow.sdk.values.PCollection;
-import com.google.cloud.dataflow.sdk.values.TupleTag;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
+import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.io.PubsubIO;
+import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
+import org.apache.beam.sdk.options.Default;
+import org.apache.beam.sdk.options.Description;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Max;
+import org.apache.beam.sdk.transforms.Mean;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Sum;
+import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.transforms.join.CoGroupByKey;
+import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
+import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
+import org.apache.beam.sdk.transforms.windowing.Window;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TupleTag;
 
 /**
  * A dataflow pipeline that listens to a PubSub topic and writes out aggregates
@@ -109,7 +110,7 @@ public class AverageDelayPipeline {
 				.apply("airport:cogroup", CoGroupByKey.<Airport> create()) //
 				.apply("airport:stats", ParDo.of(new DoFn<KV<Airport, CoGbkResult>, AirportStats>() {
 
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						KV<Airport, CoGbkResult> e = c.element();
 						Airport airport = e.getKey();
@@ -126,7 +127,7 @@ public class AverageDelayPipeline {
 
 				}))//
 				.apply("airport:to_BQrow", ParDo.of(new DoFn<AirportStats, TableRow>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						AirportStats stats = c.element();
 						TableRow row = new TableRow();
@@ -169,13 +170,14 @@ public class AverageDelayPipeline {
 		String topic = "projects/" + options.getProject() + "/topics/" + event;
 		final FieldNumberLookup eventType = FieldNumberLookup.create(event);
 		PCollection<Flight> flights = p //
-				.apply(event + ":read", PubsubIO.Read.topic(topic)) //
+				.apply(event + ":read", //
+						PubsubIO.<String>read().topic(topic).withCoder(StringUtf8Coder.of())) //
 				.apply(event + ":window",
 						Window.into(SlidingWindows//
 								.of(averagingInterval)//
 								.every(averagingFrequency))) //
 				.apply(event + ":parse", ParDo.of(new DoFn<String, Flight>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						try {
 							String line = c.element();
@@ -190,7 +192,7 @@ public class AverageDelayPipeline {
 		WindowStats stats = new WindowStats();
 		stats.delay = flights //
 				.apply(event + ":airportdelay", ParDo.of(new DoFn<Flight, KV<Airport, Double>>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						Flight stats = c.element();
 						c.output(KV.of(stats.airport, stats.delay)); // delay at airport
@@ -200,7 +202,7 @@ public class AverageDelayPipeline {
 		
 		stats.timestamp = flights //
 				.apply(event + ":timestamps", ParDo.of(new DoFn<Flight, KV<Airport, String>>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						Flight stats = c.element();
 						c.output(KV.of(stats.airport, stats.timestamp));
@@ -210,7 +212,7 @@ public class AverageDelayPipeline {
 		
 		stats.num_flights = flights //
 				.apply(event + ":numflights", ParDo.of(new DoFn<Flight, KV<Airport, Integer>>() {
-					@Override
+					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						Flight stats = c.element();
 						c.output(KV.of(stats.airport, 1));
