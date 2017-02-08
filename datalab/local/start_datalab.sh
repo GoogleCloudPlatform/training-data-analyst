@@ -7,8 +7,16 @@ IMAGE=gcr.io/cloud-datalab/datalab:local   # release
 
 # By default, the home directory is used to store Cloud Datalab notebooks and
 # configurations. If you want to change this directory, simply update the
-# CONTENT variable below to the desired directory.
-CONTENT=${HOME}
+# CONTENT variable below to the desired directory, or set the environment
+# variable before launching this script
+if [ -z $CONTENT ]; then
+   CONTENT=${HOME}
+   echo "Defaulting to $CONTENT to store your notebooks"
+else
+   echo "Using $CONTENT to store your notebooks based on env variable"
+fi
+
+exit
 
 if [ ! -d $CONTENT ]; then
     echo "CONTENT directory does not exist. Please check start_datalab.sh"

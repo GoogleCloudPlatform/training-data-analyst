@@ -1,0 +1,12 @@
+{
+  "bindings": [ {"members": ["user:lakshmanok@gmail.com"],"role": "roles/editor"},
+    {
+      "members": [
+        "user:vlakshmanan@google.com"
+      ],
+      "role": "roles/owner"
+    }
+  ],
+  "etag": "BwVFSrukDzI=",
+  "version": 1
+}
