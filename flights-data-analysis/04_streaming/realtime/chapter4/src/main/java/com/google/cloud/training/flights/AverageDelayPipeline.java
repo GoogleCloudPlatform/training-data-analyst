@@ -146,6 +146,7 @@ public class AverageDelayPipeline {
 				.apply("airport:write_toBQ",
 						BigQueryIO.Write.to(outputTable) //
 								.withSchema(schema)//
+								.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
 								.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
 		p.run();

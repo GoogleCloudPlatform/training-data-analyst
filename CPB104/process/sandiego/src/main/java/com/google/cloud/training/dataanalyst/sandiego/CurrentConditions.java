@@ -14,9 +14,8 @@
  * the License.
  */
 
-package com.google.cloud.training.dataanalyst.javahelp;
+package com.google.cloud.training.dataanalyst.sandiego;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,14 +24,12 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.PubsubIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
-import org.apache.beam.sdk.options.Default;
-import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.Sum;
 import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
+import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Duration;
 
 import com.google.api.services.bigquery.model.TableFieldSchema;
@@ -40,26 +37,15 @@ import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
 
 /**
- * A dataflow pipeline that listens to a PubSub topic and writes out aggregates
- * on windows to BigQuery
+ * A dataflow pipeline that pulls from Pub/Sub and writes to BigQuery
  * 
  * @author vlakshmanan
  *
  */
-public class StreamDemoConsumer {
+public class CurrentConditions {
 
 	public static interface MyOptions extends DataflowPipelineOptions {
-		@Description("Output BigQuery table <project_id>:<dataset_id>.<table_id>")
-		@Default.String("cloud-training-demos:demos.streamdemo")
-		String getOutput();
 
-		void setOutput(String s);
-
-		@Description("Input topic")
-		@Default.String("projects/cloud-training-demos/topics/streamdemo")
-		String getInput();
-		
-		void setInput(String s);
 	}
 
 	@SuppressWarnings("serial")
@@ -68,41 +54,54 @@ public class StreamDemoConsumer {
 		options.setStreaming(true);
 		Pipeline p = Pipeline.create(options);
 
-		String topic = options.getInput();
-		String output = options.getOutput();
+		String topic = "projects/" + options.getProject() + "/topics/sandiego";
+		String currConditionsTable = options.getProject() + ":demos.current_conditions";
 
 		// Build the table schema for the output table.
 		List<TableFieldSchema> fields = new ArrayList<>();
 		fields.add(new TableFieldSchema().setName("timestamp").setType("TIMESTAMP"));
-		fields.add(new TableFieldSchema().setName("num_words").setType("INTEGER"));
+		fields.add(new TableFieldSchema().setName("latitude").setType("FLOAT"));
+		fields.add(new TableFieldSchema().setName("longitude").setType("FLOAT"));
+		fields.add(new TableFieldSchema().setName("highway").setType("STRING"));
+		fields.add(new TableFieldSchema().setName("direction").setType("STRING"));
+		fields.add(new TableFieldSchema().setName("lane").setType("INTEGER"));
+		fields.add(new TableFieldSchema().setName("speed").setType("FLOAT"));
+		fields.add(new TableFieldSchema().setName("sensorId").setType("STRING"));
 		TableSchema schema = new TableSchema().setFields(fields);
 
-		p //
+		PCollection<LaneInfo> laneInfo = p //
 				.apply("GetMessages", PubsubIO.<String>read()
                                     .topic(topic)
                                     .withCoder(StringUtf8Coder.of())) //
-				.apply("window",
+				.apply("TimeWindow",
 						Window.into(SlidingWindows//
-								.of(Duration.standardMinutes(2))//
-								.every(Duration.standardSeconds(30)))) //
-				.apply("WordsPerLine", ParDo.of(new DoFn<String, Integer>() {
+								.of(Duration.standardSeconds(300))//
+								.every(Duration.standardSeconds(60)))) //
+				.apply("ExtractData", ParDo.of(new DoFn<String, LaneInfo>() {
 					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						String line = c.element();
-						c.output(line.split(" ").length);
+						c.output(LaneInfo.newLaneInfo(line));
 					}
-				}))//
-				.apply("WordsInTimeWindow", Sum.integersGlobally().withoutDefaults()) //
-				.apply("ToBQRow", ParDo.of(new DoFn<Integer, TableRow>() {
+				}));
+				
+		laneInfo.apply("ToBQRow", ParDo.of(new DoFn<LaneInfo, TableRow>() {
 					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
 						TableRow row = new TableRow();
-						row.set("timestamp", Instant.now().toString());
-						row.set("num_words", c.element());
+						LaneInfo info = c.element();
+						row.set("timestamp", info.getTimestamp());
+						row.set("latitude", info.getLatitude());
+						row.set("longitude", info.getLongitude());
+						row.set("highway", info.getHighway());
+						row.set("direction", info.getDirection());
+						row.set("lane", info.getLane());
+						row.set("speed", info.getSpeed());
+						row.set("sensorId", info.getSensorKey());
 						c.output(row);
 					}
 				})) //
-				.apply(BigQueryIO.Write.to(output)//
+				.apply(BigQueryIO.Write.to(currConditionsTable)//
 						.withSchema(schema)//
 						.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
 						.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
