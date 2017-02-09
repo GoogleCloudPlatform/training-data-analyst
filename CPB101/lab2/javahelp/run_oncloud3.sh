@@ -19,4 +19,4 @@ mvn compile -e exec:java \
       --stagingLocation=gs://$BUCKET/staging/ \
       --tempLocation=gs://$BUCKET/staging/ \
       --outputPrefix=gs://$BUCKET/javahelp/output \
-      --runner=BlockingDataflowPipelineRunner"
+      --runner=DataflowRunner"
