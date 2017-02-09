@@ -1,0 +1,36 @@
+# (1) Go to BigQuery console and create a dataset named 'demos'
+
+# (2) In one CloudShell window, cd to CPB104/publish and type in:
+        cd CPB104/publish   
+        ./send_sensor_data.py --speedFactor=60
+
+# (3) In another CloudShell window, launch a DataFlow job:
+        cd CPB104/process/sandiego
+        ./run_oncloud.sh cloud-training-demos cloud-training-demos CurrentConditions
+        
+# (4) Go to Cloud Console and view new job. Wait for the last step to show some activity (like 1 min or 3 events/second)
+
+# (5) Go to BigQuery console and issue this query (make sure you have selected the standard SQL option)
+SELECT
+  s.*
+FROM
+  demos.current_conditions AS s
+JOIN (
+  SELECT
+    sensorId,
+    MAX(timestamp) AS timestamp
+  FROM
+    demos.current_conditions
+  GROUP BY
+    sensorId) AS c
+ON
+  s.sensorId = c.sensorId
+  AND s.timestamp = c.timestamp
+
+# (6) save the above as a view in BigQuery
+
+# (7) In DataStudio, connect to this view to create a dashboard
+
+# For average speed, same process except that the classname in step 3 is AverageSpeeds and the tablename in step 5 is now demos.average_speeds
+
+# For accidents, use AccidentAlert and demos.accidents

@@ -1,0 +1,17 @@
+# note that because this is a federated source, they won't see the
+# kind of speed they associate with BQ ... still good for exploring, though
+# the first query takes about 90s
+
+# how many lanes, and what kinds of speeds do we see?
+SELECT
+  FREEWAY_ID,
+  FREEWAY_DIR,
+  MAX(LANE) AS numlanes,
+  MIN(SPEED) AS minspeed,
+  AVG(SPEED) AS avgspeed,
+  MAX(SPEED) AS topspeed
+FROM
+  demos.test
+GROUP BY
+  FREEWAY_ID, FREEWAY_DIR
+
