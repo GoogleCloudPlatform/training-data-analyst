@@ -1,5 +1,0 @@
-cron:
-- description : ingest monthly flight data
-  url : /ingest
-  schedule: every 2 minutes
-  target: flights
