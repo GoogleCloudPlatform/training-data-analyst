@@ -30,7 +30,7 @@ CSV_COLUMNS = ['pickuplon','pickuplat','dropofflon','dropofflat','passengers', '
 
 LABEL_COLUMN = 'fare_amount'
 
-DEFAULTS = [[-97], [40], [-97], [40], [1]]
+DEFAULTS = [[-74.0], [40.0], [-74.0], [40.7], [1.0], [0.0]]
 
 # These are the raw input columns, and will be provided for prediction also
 INPUT_COLUMNS = [
@@ -77,11 +77,11 @@ def build_estimator(model_dir, embedding_size, hidden_units):
       plat, plon, dlat, dlon
   ]
 
-  return tf.contrib.learn.DNNLinearCombinedClassifier(
+  return tf.contrib.learn.DNNLinearCombinedRegressor(
       model_dir=model_dir,
       linear_feature_columns=wide_columns,
       dnn_feature_columns=deep_columns,
-      dnn_hidden_units=hidden_units)
+      dnn_hidden_units=hidden_units or [128, 32, 4])
 
 
 serving_input_fn = input_fn_utils.build_parsing_serving_input_fn(
@@ -102,7 +102,7 @@ def generate_input_fn(filename, num_epochs=None, batch_size=512):
 
     features = dict(zip(CSV_COLUMNS, columns))
 
-    label = features.pop(LABEL_COLUMN, None)
+    label = features.pop(LABEL_COLUMN)
 
     return features, label
 
