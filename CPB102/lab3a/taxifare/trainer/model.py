@@ -93,7 +93,7 @@ def generate_input_fn(filename, num_epochs=None, batch_size=512):
   def _input_fn():
     # could be a path to one file or a file pattern.
     # input_file_names = tf.train.match_filenames_once(filename)
-    input_file_names = [filename]  # FIXME
+    input_file_names = [filename]  # FIXME: doesn't work no op named 'match_filenames'
 
     filename_queue = tf.train.string_input_producer(
         input_file_names, num_epochs=num_epochs, shuffle=True)
@@ -112,3 +112,12 @@ def generate_input_fn(filename, num_epochs=None, batch_size=512):
 
   return _input_fn
 
+def get_eval_metrics():
+  # FIXME: doesn't work -- "needs 3 parameters to streaming_root_m..."
+  def _ms(metric_fn):
+     return tf.contrib.learn.MetricSpec(metric_fn)
+
+  return {
+     'root_mean_sq_error': _ms(tf.contrib.metrics.streaming_root_mean_squared_error),
+     'mean_relative_error': _ms(tf.contrib.metrics.streaming_mean_relative_error) 
+  }
