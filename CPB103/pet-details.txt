@@ -1,0 +1,11 @@
+Dog,Noir,Schnoodle,Black,21
+Dog,Bree,MaltePoo,White,10
+Dog,Pickles,Golden Retriever,Yellow,30
+Dog,Sparky,Mutt,Gray,13
+Cat,Tom,Alley,Yellow,11
+Cat,Cleo,Siamese,Gray,22
+Frog,Kermit,Bull,Green,1
+Pig,Bacon,Pot Belly,Pink,30
+Pig,Babe,Domestic,White,150
+Dog,Rusty,Poodle,White,20
+Cat,Joe,Mix,Black,15
