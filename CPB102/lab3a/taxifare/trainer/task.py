@@ -21,6 +21,7 @@ import os
 
 import model
 
+import tensorflow as tf
 from tensorflow.contrib.learn import Experiment
 from tensorflow.contrib.learn.python.learn import learn_runner
 from tensorflow.contrib.learn.python.learn.utils import (
@@ -29,17 +30,21 @@ from tensorflow.contrib.learn.python.learn.utils import (
 
 def generate_experiment_fn(train_data_paths,
                            eval_data_paths,
+                           format,
                            num_epochs=None,
                            train_batch_size=512,
                            eval_batch_size=512,
                            embedding_size=8,
                            hidden_units=None,
                            **experiment_args):
+
   def _experiment_fn(output_dir):
-    train_input = model.generate_input_fn(
+    input_fn = (model.generate_csv_input_fn if format == 'csv' 
+                 else model.generate_tfrecord_input_fn)
+    train_input = input_fn(
         train_data_paths, num_epochs=num_epochs, batch_size=train_batch_size)
-    eval_input = model.generate_input_fn(
-        eval_data_paths, batch_size=eval_batch_size)
+    eval_input = input_fn(
+        eval_data_paths, batch_size=eval_batch_size, mode=tf.contrib.learn.ModeKeys.EVAL)
     return Experiment(
         model.build_estimator(
             output_dir,
@@ -141,10 +146,18 @@ if __name__ == '__main__':
       default=1,
       type=int
   )
+  parser.add_argument(
+      '--format',
+      help='Is the input data format csv or tfrecord?',
+      default='csv',
+  )
 
   args = parser.parse_args()
   arguments = args.__dict__
   
+  # unused args provided by service
+  arguments.pop('job_dir', None)
+
   output_dir = arguments.pop('output_dir')
   # Append trial_id to path if we are doing hptuning
   # This code can be removed if you are not using hyperparameter tuning
