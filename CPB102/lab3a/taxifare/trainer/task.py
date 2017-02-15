@@ -132,6 +132,11 @@ if __name__ == '__main__':
       help='GCS location to write checkpoints and export models',
       required=True
   )
+  parser.add_argument(
+      '--job_dir',
+      help='this model ignores this field, but it is required by gcloud',
+      default='junk'
+  )
 
   # Experiment arguments
   parser.add_argument(
@@ -157,6 +162,7 @@ if __name__ == '__main__':
   
   # unused args provided by service
   arguments.pop('job_dir', None)
+  arguments.pop('job-dir', None)
 
   output_dir = arguments.pop('output_dir')
   # Append trial_id to path if we are doing hptuning
