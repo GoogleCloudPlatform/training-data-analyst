@@ -26,11 +26,11 @@ from tensorflow.contrib.learn.python.learn.utils import (
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-CSV_COLUMNS = ['pickuplon','pickuplat','dropofflon','dropofflat','passengers', 'fare_amount']
+CSV_COLUMNS = ['fare_amount', 'pickuplon','pickuplat','dropofflon','dropofflat','passengers', 'key']
 
 LABEL_COLUMN = 'fare_amount'
 
-DEFAULTS = [[-74.0], [40.0], [-74.0], [40.7], [1.0], [0.0]]
+DEFAULTS = [[0.0], [-74.0], [40.0], [-74.0], [40.7], [1.0], ['nokey']]
 
 # These are the raw input columns, and will be provided for prediction also
 INPUT_COLUMNS = [

@@ -1,4 +1,5 @@
+taxifare.json
+temp.csv
+taxi_model
 taxi_preproc
-*.tar.gz
 taxi_trained
-taxifare.tgz
