@@ -58,7 +58,7 @@ def generate_experiment_fn(train_data_paths,
             default_output_alternative_key=None,
             exports_to_keep=1
         )],
-        # eval_metrics=model.get_eval_metrics(),
+        eval_metrics=model.get_eval_metrics(),
         **experiment_args
     )
   return _experiment_fn

@@ -20,8 +20,8 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.contrib import layers
-from tensorflow.contrib.learn.python.learn.utils import (
-    saved_model_export_utils, input_fn_utils)
+import tensorflow.contrib.learn as tflearn
+from tensorflow.contrib import metrics
 
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -84,9 +84,29 @@ def build_estimator(model_dir, embedding_size, hidden_units):
       dnn_hidden_units=hidden_units or [128, 32, 4])
 
 
-serving_input_fn = input_fn_utils.build_parsing_serving_input_fn(
-    layers.create_feature_spec_for_parsing(INPUT_COLUMNS)
-)
+#def serving_input_fn():
+#    features = layers.create_feature_spec_for_parsing(INPUT_COLUMNS)
+#    return tflearn.python.learn.utils.input_fn_utils.build_default_serving_input_fn(features)
+
+
+
+def serving_input_fn():
+    feature_placeholders = {
+        column.name: tf.placeholder(
+            tf.string if isinstance(column, layers.feature_column._SparseColumn) else tf.float32,
+            [None]
+        )
+        for column in INPUT_COLUMNS
+    }
+    features = {
+      key: tf.expand_dims(tensor, -1)
+      for key, tensor in feature_placeholders.items()
+    }
+    return tflearn.python.learn.utils.input_fn_utils.InputFnOps(
+      features,
+      None,
+      feature_placeholders
+    )
 
 
 def generate_csv_input_fn(filename, num_epochs=None, batch_size=512, mode=tf.contrib.learn.ModeKeys.TRAIN):
@@ -117,7 +137,7 @@ def generate_tfrecord_input_fn(data_paths, num_epochs=None, batch_size=512, mode
   def get_input_features():
     """Read the input features from the given data paths."""
     columns = CSV_COLUMNS
-    feature_spec = tf.contrib.layers.create_feature_spec_for_parsing(columns)
+    feature_spec = layers.create_feature_spec_for_parsing(columns)
     feature_spec[LABEL_COLUMN] = tf.FixedLenFeature(
         [1], dtype=tf.float64)
 
@@ -140,11 +160,6 @@ def generate_tfrecord_input_fn(data_paths, num_epochs=None, batch_size=512, mode
 
 
 def get_eval_metrics():
-  # FIXME: doesn't work -- "needs 3 parameters to streaming_root_m..."
-  def _ms(metric_fn):
-     return tf.contrib.learn.MetricSpec(metric_fn)
-
   return {
-     'root_mean_sq_error': _ms(tf.contrib.metrics.streaming_root_mean_squared_error),
-     'mean_relative_error': _ms(tf.contrib.metrics.streaming_mean_relative_error) 
+     'rmse': tflearn.MetricSpec(metric_fn=metrics.streaming_root_mean_squared_error),
   }
