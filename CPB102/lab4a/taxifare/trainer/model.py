@@ -29,7 +29,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 CSV_COLUMNS = ['fare_amount', 'pickuplon','pickuplat','dropofflon','dropofflat','passengers', 'key']
 
 LABEL_COLUMN = 'fare_amount'
-
+KEY_FEATURE_COLUMN = 'key'
 DEFAULTS = [[0.0], [-74.0], [40.0], [-74.0], [40.7], [1.0], ['nokey']]
 
 # These are the raw input columns, and will be provided for prediction also
@@ -132,14 +132,17 @@ def generate_csv_input_fn(filename, num_epochs=None, batch_size=512, mode=tf.con
 
   return _input_fn
 
+def gzip_reader_fn():
+  return tf.TFRecordReader(options=tf.python_io.TFRecordOptions(
+      compression_type=tf.python_io.TFRecordCompressionType.GZIP))
 
 def generate_tfrecord_input_fn(data_paths, num_epochs=None, batch_size=512, mode=tf.contrib.learn.ModeKeys.TRAIN):
   def get_input_features():
     """Read the input features from the given data paths."""
-    columns = CSV_COLUMNS
+    columns = INPUT_COLUMNS
     feature_spec = layers.create_feature_spec_for_parsing(columns)
     feature_spec[LABEL_COLUMN] = tf.FixedLenFeature(
-        [1], dtype=tf.float64)
+        [1], dtype=tf.float32)
 
     keys, features = tf.contrib.learn.io.read_keyed_batch_features(
         data_paths[0] if len(data_paths) == 1 else data_paths,

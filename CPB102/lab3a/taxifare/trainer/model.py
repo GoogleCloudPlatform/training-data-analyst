@@ -133,32 +133,6 @@ def generate_csv_input_fn(filename, num_epochs=None, batch_size=512, mode=tf.con
   return _input_fn
 
 
-def generate_tfrecord_input_fn(data_paths, num_epochs=None, batch_size=512, mode=tf.contrib.learn.ModeKeys.TRAIN):
-  def get_input_features():
-    """Read the input features from the given data paths."""
-    columns = CSV_COLUMNS
-    feature_spec = layers.create_feature_spec_for_parsing(columns)
-    feature_spec[LABEL_COLUMN] = tf.FixedLenFeature(
-        [1], dtype=tf.float64)
-
-    keys, features = tf.contrib.learn.io.read_keyed_batch_features(
-        data_paths[0] if len(data_paths) == 1 else data_paths,
-        batch_size,
-        feature_spec,
-        reader=gzip_reader_fn,
-        reader_num_threads=4,
-        queue_capacity=batch_size * 2,
-        randomize_input=(mode != tf.contrib.learn.ModeKeys.EVAL),
-        num_epochs=(1 if mode == tf.contrib.learn.ModeKeys.EVAL else num_epochs))
-    target = features.pop(LABEL_COLUMN)
-    features[KEY_FEATURE_COLUMN] = keys
-    return features, target
-
-  # Return a function to input the features into the model from a data path.
-  return get_input_features
-
-
-
 def get_eval_metrics():
   return {
      'rmse': tflearn.MetricSpec(metric_fn=metrics.streaming_root_mean_squared_error),

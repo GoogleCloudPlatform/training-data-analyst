@@ -39,8 +39,7 @@ def generate_experiment_fn(train_data_paths,
                            **experiment_args):
 
   def _experiment_fn(output_dir):
-    input_fn = (model.generate_csv_input_fn if format == 'csv' 
-                 else model.generate_tfrecord_input_fn)
+    input_fn = model.generate_csv_input_fn
     train_input = input_fn(
         train_data_paths, num_epochs=num_epochs, batch_size=train_batch_size)
     eval_input = input_fn(
