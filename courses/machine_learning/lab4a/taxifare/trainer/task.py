@@ -133,7 +133,7 @@ if __name__ == '__main__':
       required=True
   )
   parser.add_argument(
-      '--job_dir',
+      '--job-dir',
       help='this model ignores this field, but it is required by gcloud',
       default='junk'
   )
