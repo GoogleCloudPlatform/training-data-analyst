@@ -22,19 +22,20 @@ import tensorflow as tf
 from tensorflow.contrib import layers
 import tensorflow.contrib.learn as tflearn
 from tensorflow.contrib import metrics
-
+import numpy as np
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-CSV_COLUMNS = ['fare_amount', 'pickuplon','pickuplat','dropofflon','dropofflat','passengers', 'key']
-
+CSV_COLUMNS = 'fare_amount,dayofweek,hourofday,pickuplon,pickuplat,dropofflon,dropofflat,passengers,key'.split(',')
 LABEL_COLUMN = 'fare_amount'
 KEY_FEATURE_COLUMN = 'key'
-DEFAULTS = [[0.0], [-74.0], [40.0], [-74.0], [40.7], [1.0], ['nokey']]
+DEFAULTS = [[0.0], ['Sun'], [0], [-74.0], [40.0], [-74.0], [40.7], [1.0], ['nokey']]
 
 # These are the raw input columns, and will be provided for prediction also
 INPUT_COLUMNS = [
-    # sparse_column_with_keys
+    # define features
+    layers.sparse_column_with_keys('dayofweek', keys=['Sun', 'Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat']),
+    layers.sparse_column_with_integerized_feature('hourofday', bucket_size=24),
 
     # sparse_column_with_hash_bucket
 
@@ -46,7 +47,7 @@ INPUT_COLUMNS = [
     layers.real_valued_column('passengers'),
 ]
 
-def build_estimator(model_dir, embedding_size, hidden_units):
+def build_estimator(model_dir, nbuckets, hidden_units):
   """
      Build an estimator starting from INPUT COLUMNS.
      These include feature transformations and synthetic features.
@@ -54,24 +55,39 @@ def build_estimator(model_dir, embedding_size, hidden_units):
   """
 
   # input columns
-  (plon, plat, dlon, dlat, pcount) = INPUT_COLUMNS 
+  (dayofweek, hourofday, plon, plat, dlon, dlat, pcount) = INPUT_COLUMNS 
 
-  # Sparse base columns.
+  # bucketize the lats & lons
+  latbuckets = np.linspace(38.0, 42.0, nbuckets).tolist()
+  lonbuckets = np.linspace(-76.0, -72.0, nbuckets).tolist()
+  b_plat = layers.bucketized_column(plat, latbuckets)
+  b_dlat = layers.bucketized_column(dlat, latbuckets)
+  b_plon = layers.bucketized_column(plon, lonbuckets)
+  b_dlon = layers.bucketized_column(dlon, lonbuckets)
 
-  # reusable transformations
+  # feature cross
+  ploc = layers.crossed_column([b_plat, b_plon], nbuckets*nbuckets)
+  dloc = layers.crossed_column([b_dlat, b_dlon], nbuckets*nbuckets)
+  pd_pair = layers.crossed_column([ploc, dloc], nbuckets ** 4 )
+  day_hr =  layers.crossed_column([dayofweek, hourofday], 24*7)
 
   # Wide columns and deep columns.
   wide_columns = [
       # feature crosses
+      dloc, ploc, pd_pair,
+      day_hr,
 
-      # sparse columns with keys
+      # sparse columns
+      dayofweek, hourofday,
 
       # anything with a linear relationship
       pcount 
   ]
 
   deep_columns = [
-      # embedding_column
+      # embedding_column to "group" together ...
+      layers.embedding_column(pd_pair, 10),
+      layers.embedding_column(day_hr, 10),
 
       # real_valued_column
       plat, plon, dlat, dlon
@@ -83,21 +99,14 @@ def build_estimator(model_dir, embedding_size, hidden_units):
       dnn_feature_columns=deep_columns,
       dnn_hidden_units=hidden_units or [128, 32, 4])
 
-
-#def serving_input_fn():
-#    features = layers.create_feature_spec_for_parsing(INPUT_COLUMNS)
-#    return tflearn.python.learn.utils.input_fn_utils.build_default_serving_input_fn(features)
-
-
-
 def serving_input_fn():
     feature_placeholders = {
-        column.name: tf.placeholder(
-            tf.string if isinstance(column, layers.feature_column._SparseColumn) else tf.float32,
-            [None]
-        )
-        for column in INPUT_COLUMNS
+        # all the real-valued columns
+        column.name: tf.placeholder(tf.float32, [None]) for column in INPUT_COLUMNS[2:]
     }
+    feature_placeholders['dayofweek'] = tf.placeholder(tf.string, [None])
+    feature_placeholders['hourofday'] = tf.placeholder(tf.int32, [None])
+  
     features = {
       key: tf.expand_dims(tensor, -1)
       for key, tensor in feature_placeholders.items()

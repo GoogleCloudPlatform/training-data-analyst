@@ -34,7 +34,7 @@ def generate_experiment_fn(train_data_paths,
                            num_epochs=None,
                            train_batch_size=512,
                            eval_batch_size=512,
-                           embedding_size=8,
+                           nbuckets=10,
                            hidden_units=None,
                            **experiment_args):
 
@@ -48,7 +48,7 @@ def generate_experiment_fn(train_data_paths,
     return Experiment(
         model.build_estimator(
             output_dir,
-            embedding_size=embedding_size,
+            nbuckets=nbuckets,
             hidden_units=hidden_units
         ),
         train_input_fn=train_input,
@@ -115,9 +115,9 @@ if __name__ == '__main__':
   )
   # Training arguments
   parser.add_argument(
-      '--embedding_size',
-      help='Number of embedding dimensions for categorical columns',
-      default=8,
+      '--nbuckets',
+      help='Number of buckets into which to discretize lats and lons',
+      default=10,
       type=int
   )
   parser.add_argument(
