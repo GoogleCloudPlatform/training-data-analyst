@@ -34,11 +34,6 @@ DEFAULTS = [[0.0], [-74.0], [40.0], [-74.0], [40.7], [1.0], ['nokey']]
 
 # These are the raw input columns, and will be provided for prediction also
 INPUT_COLUMNS = [
-    # sparse_column_with_keys
-
-    # sparse_column_with_hash_bucket
-
-    # real_valued_column
     layers.real_valued_column('pickuplon'),
     layers.real_valued_column('pickuplat'),
     layers.real_valued_column('dropofflat'),
@@ -46,57 +41,17 @@ INPUT_COLUMNS = [
     layers.real_valued_column('passengers'),
 ]
 
-def build_estimator(model_dir, embedding_size, hidden_units):
-  """
-     Build an estimator starting from INPUT COLUMNS.
-     These include feature transformations and synthetic features.
-     The model is a wide-and-deep model.
-  """
-
-  # input columns
+def build_estimator(model_dir, hidden_units):
   (plon, plat, dlon, dlat, pcount) = INPUT_COLUMNS 
-
-  # Sparse base columns.
-
-  # reusable transformations
-
-  # Wide columns and deep columns.
-  wide_columns = [
-      # feature crosses
-
-      # sparse columns with keys
-
-      # anything with a linear relationship
-      pcount 
-  ]
-
-  deep_columns = [
-      # embedding_column
-
-      # real_valued_column
-      plat, plon, dlat, dlon
-  ]
-
-  return tf.contrib.learn.DNNLinearCombinedRegressor(
+  return tf.contrib.learn.DNNRegressor(
       model_dir=model_dir,
-      linear_feature_columns=wide_columns,
-      dnn_feature_columns=deep_columns,
-      dnn_hidden_units=hidden_units or [128, 32, 4])
-
-
-#def serving_input_fn():
-#    features = layers.create_feature_spec_for_parsing(INPUT_COLUMNS)
-#    return tflearn.python.learn.utils.input_fn_utils.build_default_serving_input_fn(features)
-
+      feature_columns=[plon, plat, dlon, dlat, pcount],  # as-is
+      hidden_units=hidden_units or [128, 32, 4])
 
 
 def serving_input_fn():
     feature_placeholders = {
-        column.name: tf.placeholder(
-            tf.string if isinstance(column, layers.feature_column._SparseColumn) else tf.float32,
-            [None]
-        )
-        for column in INPUT_COLUMNS
+        column.name: tf.placeholder(tf.float32, [None]) for column in INPUT_COLUMNS
     }
     features = {
       key: tf.expand_dims(tensor, -1)
@@ -107,7 +62,6 @@ def serving_input_fn():
       None,
       feature_placeholders
     )
-
 
 def generate_csv_input_fn(filename, num_epochs=None, batch_size=512, mode=tf.contrib.learn.ModeKeys.TRAIN):
   def _input_fn():

@@ -34,7 +34,6 @@ def generate_experiment_fn(train_data_paths,
                            num_epochs=None,
                            train_batch_size=512,
                            eval_batch_size=512,
-                           embedding_size=8,
                            hidden_units=None,
                            **experiment_args):
 
@@ -47,7 +46,6 @@ def generate_experiment_fn(train_data_paths,
     return Experiment(
         model.build_estimator(
             output_dir,
-            embedding_size=embedding_size,
             hidden_units=hidden_units
         ),
         train_input_fn=train_input,
@@ -113,12 +111,6 @@ if __name__ == '__main__':
       required=True
   )
   # Training arguments
-  parser.add_argument(
-      '--embedding_size',
-      help='Number of embedding dimensions for categorical columns',
-      default=8,
-      type=int
-  )
   parser.add_argument(
       '--hidden_units',
       help='List of hidden layer sizes to use for DNN feature columns',
