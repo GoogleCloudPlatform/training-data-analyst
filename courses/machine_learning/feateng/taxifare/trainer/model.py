@@ -174,4 +174,5 @@ def generate_tfrecord_input_fn(data_paths, num_epochs=None, batch_size=512, mode
 def get_eval_metrics():
   return {
      'rmse': tflearn.MetricSpec(metric_fn=metrics.streaming_root_mean_squared_error),
+     'training/hptuning/metric': tflearn.MetricSpec(metric_fn=metrics.streaming_root_mean_squared_error),
   }

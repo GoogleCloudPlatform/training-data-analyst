@@ -27,6 +27,8 @@ from tensorflow.contrib.learn.python.learn import learn_runner
 from tensorflow.contrib.learn.python.learn.utils import (
     saved_model_export_utils)
 
+def parse_to_int(hidden):
+   return [ int(p) for p in hidden.split(' ')]
 
 def generate_experiment_fn(train_data_paths,
                            eval_data_paths,
@@ -35,7 +37,7 @@ def generate_experiment_fn(train_data_paths,
                            train_batch_size=512,
                            eval_batch_size=512,
                            nbuckets=10,
-                           hidden_units=None,
+                           hidden_units='128 64 32',
                            **experiment_args):
 
   def _experiment_fn(output_dir):
@@ -49,7 +51,7 @@ def generate_experiment_fn(train_data_paths,
         model.build_estimator(
             output_dir,
             nbuckets=nbuckets,
-            hidden_units=hidden_units
+            hidden_units=parse_to_int(hidden_units)
         ),
         train_input_fn=train_input,
         eval_input_fn=eval_input,
@@ -122,10 +124,8 @@ if __name__ == '__main__':
   )
   parser.add_argument(
       '--hidden_units',
-      help='List of hidden layer sizes to use for DNN feature columns',
-      nargs='+',
-      type=int,
-      default=[128, 32, 4]
+      help='Hidden layer sizes to use for DNN feature columns -- provide space-separated layers',
+      default='128 32 4'
   )
   parser.add_argument(
       '--output_dir',
@@ -165,13 +165,14 @@ if __name__ == '__main__':
   arguments.pop('job-dir', None)
 
   output_dir = arguments.pop('output_dir')
+
   # Append trial_id to path if we are doing hptuning
   # This code can be removed if you are not using hyperparameter tuning
   output_dir = os.path.join(
       output_dir,
       json.loads(
           os.environ.get('TF_CONFIG', '{}')
-      ).get('task', {}).get('trail', '')
+      ).get('task', {}).get('trial', '')
   )
 
   # Run the training job

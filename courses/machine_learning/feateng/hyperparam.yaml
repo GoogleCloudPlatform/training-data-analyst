@@ -1,0 +1,20 @@
+trainingInput:
+  scaleTier: STANDARD_1
+  hyperparameters:
+    goal: MINIMIZE
+    maxTrials: 30
+    maxParallelTrials: 1
+    params:
+    - parameterName: train_batch_size
+      type: INTEGER
+      minValue: 64
+      maxValue: 512
+      scaleType: UNIT_LOG_SCALE
+    - parameterName: nbuckets
+      type: INTEGER
+      minValue: 10
+      maxValue: 20
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: hidden_units
+      type: CATEGORICAL
+      categoricalValues: ["128 64 32", "256 128 16", "512 128 64"]       
