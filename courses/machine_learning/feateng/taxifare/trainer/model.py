@@ -27,6 +27,7 @@ import numpy as np
 tf.logging.set_verbosity(tf.logging.INFO)
 
 CSV_COLUMNS = 'fare_amount,dayofweek,hourofday,pickuplon,pickuplat,dropofflon,dropofflat,passengers,key'.split(',')
+SCALE_COLUMNS = ['pickuplon','pickuplat','dropofflon','dropofflat','passengers']
 LABEL_COLUMN = 'fare_amount'
 KEY_FEATURE_COLUMN = 'key'
 DEFAULTS = [[0.0], ['Sun'], [0], [-74.0], [40.0], [-74.0], [40.7], [1.0], ['nokey']]
@@ -147,16 +148,19 @@ def gzip_reader_fn():
 
 def generate_tfrecord_input_fn(data_paths, num_epochs=None, batch_size=512, mode=tf.contrib.learn.ModeKeys.TRAIN):
   def get_input_features():
-    """Read the input features from the given data paths."""
-    columns = INPUT_COLUMNS
-    feature_spec = layers.create_feature_spec_for_parsing(columns)
-    feature_spec[LABEL_COLUMN] = tf.FixedLenFeature(
-        [1], dtype=tf.float32)
-
+    """Read the tfrecords. this is the same code as in preprocessing"""
+    input_schema = {name: tf.FixedLenFeature(shape=[], dtype=tf.string, default_value='0') 
+                  for name in CSV_COLUMNS}   
+    if mode == tf.contrib.learn.ModeKeys.INFER:
+      input_schema.pop(LABEL_COLUMN)
+    for name in SCALE_COLUMNS:
+      input_schema[name] = tf.FixedLenFeature(shape=[], dtype=tf.float64, default_value=0)
+   
+    # how? 
     keys, features = tf.contrib.learn.io.read_keyed_batch_features(
         data_paths[0] if len(data_paths) == 1 else data_paths,
         batch_size,
-        feature_spec,
+        input_schema,
         reader=gzip_reader_fn,
         reader_num_threads=4,
         queue_capacity=batch_size * 2,
