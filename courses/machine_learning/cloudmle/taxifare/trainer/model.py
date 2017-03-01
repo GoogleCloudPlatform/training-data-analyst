@@ -57,7 +57,7 @@ def serving_input_fn():
       key: tf.expand_dims(tensor, -1)
       for key, tensor in feature_placeholders.items()
     }
-    return tflearn.python.learn.utils.input_fn_utils.InputFnOps(
+    return tflearn.utils.input_fn_utils.InputFnOps(
       features,
       None,
       feature_placeholders
