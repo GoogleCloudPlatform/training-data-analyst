@@ -15,6 +15,7 @@
 """Example implementation of code to run on the Cloud ML service.
 """
 
+import traceback
 import argparse
 import json
 import os
@@ -175,6 +176,9 @@ if __name__ == '__main__':
       ).get('task', {}).get('trial', '')
   )
 
-  # Run the training job
-  learn_runner.run(generate_experiment_fn(**arguments), output_dir)
+  # Run the training job:w
+  try:
+     learn_runner.run(generate_experiment_fn(**arguments), output_dir)
+  except:
+     traceback.print_exc()
 

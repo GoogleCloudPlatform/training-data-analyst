@@ -148,14 +148,17 @@ def gzip_reader_fn():
 
 def generate_tfrecord_input_fn(data_paths, num_epochs=None, batch_size=512, mode=tf.contrib.learn.ModeKeys.TRAIN):
   def get_input_features():
-    """Read the tfrecords. this is the same code as in preprocessing"""
-    input_schema = {name: tf.FixedLenFeature(shape=[], dtype=tf.string, default_value='0') 
-                  for name in CSV_COLUMNS}   
-    if mode == tf.contrib.learn.ModeKeys.INFER:
-      input_schema.pop(LABEL_COLUMN)
+    # Read the tfrecords. Same input schema as in preprocess
+    input_schema = {}
+    if mode != tf.contrib.learn.ModeKeys.INFER:
+      input_schema[LABEL_COLUMN] = tf.FixedLenFeature(shape=[1], dtype=tf.float32, default_value=0.0)
+    for name in ['dayofweek', 'key']:
+      input_schema[name] = tf.FixedLenFeature(shape=[1], dtype=tf.string, default_value='null')
+    for name in ['hourofday']:
+      input_schema[name] = tf.FixedLenFeature(shape=[1], dtype=tf.int64, default_value=0)
     for name in SCALE_COLUMNS:
-      input_schema[name] = tf.FixedLenFeature(shape=[], dtype=tf.float64, default_value=0)
-   
+      input_schema[name] = tf.FixedLenFeature(shape=[1], dtype=tf.float32, default_value=0.0)
+
     # how? 
     keys, features = tf.contrib.learn.io.read_keyed_batch_features(
         data_paths[0] if len(data_paths) == 1 else data_paths,
