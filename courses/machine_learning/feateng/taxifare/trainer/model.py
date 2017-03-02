@@ -38,7 +38,10 @@ INPUT_COLUMNS = [
     layers.sparse_column_with_keys('dayofweek', keys=['Sun', 'Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat']),
     layers.sparse_column_with_integerized_feature('hourofday', bucket_size=24),
 
-    # sparse_column_with_hash_bucket
+    # engineered features that are created in the input_fn
+    layers.real_valued_column('latdiff'),
+    layers.real_valued_column('londiff'),
+    layers.real_valued_column('euclidean'),
 
     # real_valued_column
     layers.real_valued_column('pickuplon'),
@@ -56,7 +59,7 @@ def build_estimator(model_dir, nbuckets, hidden_units):
   """
 
   # input columns
-  (dayofweek, hourofday, plon, plat, dlon, dlat, pcount) = INPUT_COLUMNS 
+  (dayofweek, hourofday, latdiff, londiff, euclidean, plon, plat, dlon, dlat, pcount) = INPUT_COLUMNS 
 
   # bucketize the lats & lons
   latbuckets = np.linspace(38.0, 42.0, nbuckets).tolist()
@@ -91,7 +94,8 @@ def build_estimator(model_dir, nbuckets, hidden_units):
       layers.embedding_column(day_hr, 10),
 
       # real_valued_column
-      plat, plon, dlat, dlon
+      plat, plon, dlat, dlon,
+      latdiff, londiff, euclidean
   ]
 
   return tf.contrib.learn.DNNLinearCombinedRegressor(
@@ -99,6 +103,21 @@ def build_estimator(model_dir, nbuckets, hidden_units):
       linear_feature_columns=wide_columns,
       dnn_feature_columns=deep_columns,
       dnn_hidden_units=hidden_units or [128, 32, 4])
+
+def add_engineered(features):
+    # this is how you can do feature engineering in TensorFlow
+    lat1 = features['pickuplat']
+    lat2 = features['dropofflat']
+    lon1 = features['pickuplon']
+    lon2 = features['dropofflon']
+    latdiff = (lat1 - lat2)
+    londiff = (lon1 - lon2)
+    # set features for distance with sign that indicates direction
+    features['latdiff'] = latdiff
+    features['londiff'] = londiff
+    dist = tf.sqrt(latdiff*latdiff + londiff*londiff)
+    features['euclidean'] = dist
+    return features   
 
 def serving_input_fn():
     feature_placeholders = {
@@ -113,7 +132,7 @@ def serving_input_fn():
       for key, tensor in feature_placeholders.items()
     }
     return tflearn.utils.input_fn_utils.InputFnOps(
-      features,
+      add_engineered(features),
       None,
       feature_placeholders
     )
@@ -138,7 +157,7 @@ def generate_csv_input_fn(filename, num_epochs=None, batch_size=512, mode=tf.con
 
     label = features.pop(LABEL_COLUMN)
 
-    return features, label
+    return add_engineered(features), label
 
   return _input_fn
 
@@ -171,7 +190,7 @@ def generate_tfrecord_input_fn(data_paths, num_epochs=None, batch_size=512, mode
         num_epochs=(1 if mode == tf.contrib.learn.ModeKeys.EVAL else num_epochs))
     target = features.pop(LABEL_COLUMN)
     features[KEY_FEATURE_COLUMN] = keys
-    return features, target
+    return add_engineered(features), target
 
   # Return a function to input the features into the model from a data path.
   return get_input_features
