@@ -3,7 +3,7 @@
 # If the PROJECT_ID environment variable is not set, Datalab will ask you
 # to set a project id when you try to use GCP resources such as BigQuery.
 # PROJECT_ID='your-project-id'
-IMAGE=gcr.io/cloud-datalab/datalab:local   # release
+IMAGE=gcr.io/cloud-datalab/datalab:latest   # release
 
 # By default, the home directory is used to store Cloud Datalab notebooks and
 # configurations. If you want to change this directory, simply update the

@@ -1,4 +1,4 @@
-FROM gcr.io/cloud-datalab/datalab:codelabs
+FROM gcr.io/cloud-datalab/datalab:latest
 
 ADD startup.sh /datalab/
 RUN chmod a+x /datalab/startup.sh
