@@ -16,8 +16,6 @@ else
    echo "Using $CONTENT to store your notebooks based on env variable"
 fi
 
-exit
-
 if [ ! -d $CONTENT ]; then
     echo "CONTENT directory does not exist. Please check start_datalab.sh"
     exit 1
