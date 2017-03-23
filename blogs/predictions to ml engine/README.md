@@ -4,6 +4,6 @@ Taxifare Example Predictions API shows how to create simple regression and class
 
 Taxifare Example Machine Learning Engine shows how to create a simple linear regression model to predict taxi fares using Machine Learning Engine along with Cloud Datalab and Cloud Storage APIs.
 
-The sample data used for this datalab is taken from another taxi fare example in [feateng](../../courses/machine_learning/feateng/sample).
+The sample data used for this datalab is taken from another taxi fare example and duped here.
 
-[ Goes Here]() will be a link to the article explaining the migration once reviewed and completed.
+[Link goes here]() will be a link to the article explaining the migration once reviewed and completed.
