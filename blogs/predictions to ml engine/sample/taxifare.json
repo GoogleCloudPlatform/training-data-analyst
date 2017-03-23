@@ -1,0 +1,47 @@
+[
+    {
+        "mode": "NULLABLE",
+        "name": "fare_amount",
+        "type": "FLOAT"
+    }, 
+    {
+        "mode": "NULLABLE",
+        "name": "dayofweek",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "hourofday",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "pickuplon",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "pickuplat",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "dropofflon",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "dropofflat",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "passengers",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "key",
+        "type": "STRING"
+    } 
+]
