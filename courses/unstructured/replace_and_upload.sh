@@ -12,9 +12,9 @@ echo "replacing bucket references to $BUCKET and copying to gs://$BUCKET/unstruc
 TEMP=tmp
 rm -rf $TEMP
 mkdir $TEMP
-for FILE in $(ls -1 *.py *.ipynb); do
+for FILE in $(ls -1 *.py *.ipynb init*.sh); do
     echo $FILE
-    cat $FILE | sed "s/BUCKET_NAME/$BUCKET/g" > $TEMP/$FILE
+    cat $FILE | sed "s/BUCKET_NAME/$BUCKET/g" | sed "s/USER_NAME/$USER/g" > $TEMP/$FILE
 done 
 
 # first the originals, then the modified
