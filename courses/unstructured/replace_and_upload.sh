@@ -20,3 +20,7 @@ done
 # first the originals, then the modified
 gsutil -m cp * gs://$BUCKET/unstructured
 gsutil -m cp $TEMP/* gs://$BUCKET/unstructured
+
+# photos ...
+gsutil -m cp photos/* gs://$BUCKET/unstructured/photos
+gsutil acl ch -g AllUsers:R gs://$BUCKET/unstructured/photos/*
