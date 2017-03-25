@@ -2,16 +2,25 @@
 
 Labs and demos for courses in the Data Engineer track of GCP Training (http://cloud.google.com/training).
 
-The following courses are supported:
+## Courses
 
-title: Google Cloud Platform Big Data and Machine Learning Fundamentals
-directory: CPB100
-url:  https://cloud.google.com/training/courses/data-ml-fundamentals
+### Google Cloud Platform Big Data and Machine Learning Fundamentals
 
-title: Data Engineering on Google Cloud Platform
-directory:  courses/data_analysis  (Module: Serverless Data Analysis)
-            courses/unstructured (Module: Leveraging unstructured data)
-            courses/machine_learning (Module: Serverless Machine Learning)
-            courses/streaming (Module: Resilient streaming systems)
-url: https://cloud.google.com/training/courses/data-engineering
+https://cloud.google.com/training/courses/data-ml-fundamentals
 
+CPB100
+
+
+### Data Engineering on Google Cloud Platform
+  
+https://cloud.google.com/training/courses/data-engineering
+
+1. courses/data_analysis  (Module: Serverless Data Analysis)
+2. courses/unstructured (Module: Leveraging unstructured data)
+3. courses/machine_learning (Module: Serverless Machine Learning)
+4. courses/streaming (Module: Resilient streaming systems)
+
+
+### Blog posts
+
+blogs/
