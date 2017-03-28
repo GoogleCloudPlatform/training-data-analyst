@@ -29,7 +29,7 @@ def run():
       '--save_main_session',
       '--staging_location=gs://{0}/staging/'.format(BUCKET),
       '--temp_location=gs://{0}/staging/'.format(BUCKET),
-      '--runner=BlockingDataflowPipelineRunner'
+      '--runner=DataflowRunner'
    ]
 
    p = beam.Pipeline(argv=argv)
