@@ -24,3 +24,6 @@ gsutil -m cp $TEMP/* gs://$BUCKET/unstructured
 # photos ...
 gsutil -m cp photos/* gs://$BUCKET/unstructured/photos
 gsutil acl ch -g AllUsers:R gs://$BUCKET/unstructured/photos/*
+
+# this allows you to look at the .py file in a browser
+gsutil -m setmeta -h "Content-Type:text/plain" gs://$BUCKET/unstructured/*.py
