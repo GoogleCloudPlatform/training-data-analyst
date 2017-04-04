@@ -17,3 +17,8 @@ mvn compile -e exec:java \
       --stagingLocation=gs://$BUCKET/staging/ \
       --tempLocation=gs://$BUCKET/staging/ \
       --runner=DataflowRunner"
+
+
+# If you run into quota problems, add this option the command line above
+#     --maxNumWorkers=2 
+# In this case, you will not be able to view autoscaling, however.
