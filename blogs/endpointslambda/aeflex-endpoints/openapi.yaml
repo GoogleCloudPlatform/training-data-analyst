@@ -1,0 +1,79 @@
+# Copyright 2017 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# [START swagger]
+swagger: "2.0"
+info:
+  description: "A Google Cloud Endpoints API example."
+  title: "Endpoints Example"
+  version: "1.0.0"
+host: "echo-api.endpoints.aeflex-endpoints.cloud.goog"
+# [END swagger]
+basePath: "/"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+schemes:
+- "https"
+paths:
+  # This section configures the processmessage endpoint.
+  "/processmessage":
+    post:
+      description: "Process the given message."
+      operationId: "processmessage"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "Return a success response"
+          schema:
+            $ref: "#/definitions/successMessage"
+      parameters:
+      - description: "Message to process"
+        in: body
+        name: inputMessage
+        required: true
+        schema:
+          $ref: "#/definitions/inputMessage"
+      security:
+      - api_key: []
+
+definitions:
+  successMessage:
+    properties:
+      message:
+        type: string
+  inputMessage:
+    # This section contains information about the S3 bucket and object to be processed.
+    properties:
+      Bucket: 
+        type: string
+      ObjectKey:
+        type: string
+      ContentType:
+        type: string
+      ContentLength:
+        type: integer
+      ETag:
+        type: string
+      PresignedUrl:
+        type: string
+
+securityDefinitions:
+  # This section configures basic authentication with an API key.
+  api_key:
+    type: "apiKey"
+    name: "key"
+    in: "query"
