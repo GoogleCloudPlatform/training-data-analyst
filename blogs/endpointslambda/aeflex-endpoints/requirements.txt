@@ -1,0 +1,6 @@
+Flask==0.12
+flask-cors==3.0.2
+gunicorn==19.6.0
+six==1.10.0
+pyyaml==3.12
+requests==2.13.0
