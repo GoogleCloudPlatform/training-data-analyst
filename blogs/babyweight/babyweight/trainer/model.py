@@ -97,7 +97,7 @@ def serving_input_fn():
     feature_placeholders = {
       'is_male': tf.placeholder(tf.string, [None]),
       'mother_age': tf.placeholder(tf.float32, [None]),
-      'mother_race': tf.placeholder(tf.int32, [None]),
+      'mother_race': tf.placeholder(tf.string, [None]),
       'plurality': tf.placeholder(tf.float32, [None]),
       'gestation_weeks': tf.placeholder(tf.float32, [None]),
       'mother_married': tf.placeholder(tf.string, [None]),
