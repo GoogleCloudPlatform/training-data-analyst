@@ -62,7 +62,7 @@ def generate_experiment_fn(train_data_paths,
             exports_to_keep=1
         )],
         eval_metrics=model.get_eval_metrics(),
-        min_eval_frequency = 1000,
+        #min_eval_frequency = 1000,  # change this to speed up training on large datasets
         **experiment_args
     )
   return _experiment_fn
