@@ -15,12 +15,12 @@
  */
 package com.google.cloud.public_datasets.nexrad2;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
+import org.apache.beam.runners.dataflow.options.DataflowPipelineWorkerPoolOptions.AutoscalingAlgorithmType;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.TextIO;
@@ -71,6 +71,9 @@ public class APPipeline {
     MyOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(MyOptions.class);
     options.setRunner(DataflowRunner.class);
     options.setTempLocation(options.getOutput() + "staging");
+    options.setMaxNumWorkers(15);
+    options.setAutoscalingAlgorithm(AutoscalingAlgorithmType.THROUGHPUT_BASED);
+    options.setWorkerMachineType("n1-highmem-8");
     Pipeline p = Pipeline.create(options);
     
     // now use Dataflow to process them all in parallel
