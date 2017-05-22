@@ -15,12 +15,12 @@
  */
 package com.google.cloud.public_datasets.nexrad2;
 
-import java.util.Arrays;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
-import org.apache.beam.runners.dataflow.options.DataflowPipelineWorkerPoolOptions.AutoscalingAlgorithmType;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.TextIO;
@@ -71,27 +71,24 @@ public class APPipeline {
     MyOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(MyOptions.class);
     options.setRunner(DataflowRunner.class);
     options.setTempLocation(options.getOutput() + "staging");
-    options.setMaxNumWorkers(15);
-    options.setAutoscalingAlgorithm(AutoscalingAlgorithmType.THROUGHPUT_BASED);
-    options.setWorkerMachineType("n1-highmem-8");
     Pipeline p = Pipeline.create(options);
     
     // now use Dataflow to process them all in parallel
     // GCP will scale out the processing
     PCollection<APDetector.AnomalousPropagation> ap = p//
-        .apply("getRadars", Create.of(getRadars(options)).withCoder(StringUtf8Coder.of())) //
+        .apply("getParams", Create.of(getTarNameParams(options)).withCoder(StringUtf8Coder.of())) //
         .apply("getArchives", ParDo.of(new DoFn<String, String>() {
           @ProcessElement
           public void processElement(ProcessContext c) throws Exception {
-            String radar = c.element();
-            for (int year : YEARS) {
-              for (int month : MONTHS) {
-                List<String> files = GcsNexradL2List.getFiles(radar, year, month);
-                log.info(files.size() + " files for " + radar + " " + year + " " + month);
-                for (String file : files) {
-                  c.output(file);
-                }
-              }
+            String[] params = c.element().split(",");
+            String radar = params[0];
+            int year = Integer.parseInt(params[1]);
+            int month = Integer.parseInt(params[2]);
+            int day = Integer.parseInt(params[3]);
+            List<String> files = GcsNexradL2List.getFiles(radar, year, month, day);
+            log.info(files.size() + " files for " + radar + " " + year + "-" + month + "-" + day);
+            for (String file : files) {
+              c.output(file);
             }
           }
         }))
@@ -145,8 +142,19 @@ public class APPipeline {
     p.run();
   }
 
-  private static List<String> getRadars(MyOptions options) {
-    String[] radars = options.getRadars().split(",");
-    return Arrays.asList(radars);
+  private static List<String> getTarNameParams(MyOptions options) {
+    List<String> params = new ArrayList<>();
+    for (String radar : options.getRadars().split(",")) {
+      for (int year : YEARS) {
+        for (int month : MONTHS) {
+          YearMonth yearMonthObject = YearMonth.of(year, month);
+          int maxday = yearMonthObject.lengthOfMonth();
+          for (int day=1; day <= maxday; ++day) {
+            params.add(radar + "," + year + "," + month + "," + day);
+          }
+        }
+      }
+    }
+    return params;
   }
 }
