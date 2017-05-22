@@ -39,9 +39,9 @@ public class APDetector {
 
   @DefaultCoder(AvroCoder.class)
   static class AnomalousPropagation {
-    public final String radarId;
-    public final Date time;
-    public final float azimuth, range;
+    public String radarId;
+    public Date time;
+    public float azimuth, range;
     public AnomalousPropagation(String radarId, Date time, float azimuth, float range) {
       this.radarId = radarId;
       this.time = time;
@@ -51,6 +51,8 @@ public class APDetector {
     @Override
     public String toString() {
       return radarId + "," + time + "," + azimuth + "," + range;
+    }
+    public AnomalousPropagation(){
     }
   }
   

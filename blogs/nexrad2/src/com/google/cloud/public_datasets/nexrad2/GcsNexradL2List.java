@@ -17,6 +17,7 @@ package com.google.cloud.public_datasets.nexrad2;
 
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.cloud.storage.Blob;
@@ -56,6 +57,10 @@ public class GcsNexradL2List {
   }
   
   public static void main(String[] args) throws Exception {
-    System.out.println(getFiles("KYUX", 2012, 7, 23));
+    List<String> files = getFiles("KYUX", 2012, 7, 23);
+    Collections.sort(files);
+    System.out.println(files.size() + " files");
+    System.out.println(" from " + files.get(0));
+    System.out.println(" to " + files.get(files.size()-1));
   }
 }
