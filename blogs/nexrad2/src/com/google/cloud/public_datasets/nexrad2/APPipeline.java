@@ -31,6 +31,7 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Sum;
+import org.apache.beam.sdk.util.Reshuffle;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
@@ -48,9 +49,6 @@ import ucar.nc2.dt.RadialDatasetSweep;
  */
 public class APPipeline {
   private static final Logger log = LoggerFactory.getLogger(APPipeline.class);
-  
-  public static int[] YEARS  = { 2012, 2013, 2014 };
-  public static int[] MONTHS = { 6, 7, 8 };
 
   public static interface MyOptions extends DataflowPipelineOptions {
     @Description("Output directory")
@@ -59,11 +57,29 @@ public class APPipeline {
 
     void setOutput(String s);
 
-    @Description("radars to process")
-    @Default.String("KYUX,KIWA,KFSX")
+    @Description("comma-separated radars to process")
+    @Default.String("KYUX")
     String getRadars();
 
     void setRadars(String s);
+
+    @Description("comma-separated years to process")
+    @Default.String("2012")
+    String getYears();
+
+    void setYears(String s);
+
+    @Description("comma-separated months to process -- empty implies all")
+    @Default.String("7")
+    String getMonths();
+
+    void setMonths(String s);
+
+    @Description("comma-separated days to process -- empty implies all")
+    @Default.String("23")
+    String getDays();
+
+    void setDays(String s);
   }
 
   @SuppressWarnings("serial")
@@ -72,10 +88,10 @@ public class APPipeline {
     options.setRunner(DataflowRunner.class);
     options.setTempLocation(options.getOutput() + "staging");
     Pipeline p = Pipeline.create(options);
-    
+
     // now use Dataflow to process them all in parallel
     // GCP will scale out the processing
-    PCollection<APDetector.AnomalousPropagation> ap = p//
+    PCollection<String> tars = p//
         .apply("getParams", Create.of(getTarNameParams(options)).withCoder(StringUtf8Coder.of())) //
         .apply("getArchives", ParDo.of(new DoFn<String, String>() {
           @ProcessElement
@@ -91,7 +107,11 @@ public class APPipeline {
               c.output(file);
             }
           }
-        }))
+        }));
+
+    tars = rebundle("reshuffle", tars, 1000);
+
+    PCollection<APDetector.AnomalousPropagation> ap = tars//
         .apply("processTar", ParDo.of(new DoFn<String, AnomalousPropagation>() {
           @ProcessElement
           public void processElement(ProcessContext c) throws Exception {
@@ -104,6 +124,8 @@ public class APPipeline {
                   c.output(ap);
                 }
               }
+            } catch (Exception e) {
+              log.error("Skipping " + tarFile, e);
             }
           }
         }));
@@ -113,7 +135,7 @@ public class APPipeline {
       @ProcessElement
       public void processElement(ProcessContext c) throws Exception {
         AnomalousPropagation ap = c.element();
-        c.output(ap.toString());
+        c.output(ap.toCsv());
       }
     }))//
         .apply("writeAll", TextIO.Write.to(options.getOutput() + "allDetections").withSuffix(".csv"));
@@ -137,24 +159,75 @@ public class APPipeline {
         }))//
         .apply("writeTotalByRadar", TextIO.Write.to(options.getOutput() + "totalByRadar")//
             .withSuffix(".csv").withoutSharding());
-    
+
     // run the graph
     p.run();
   }
 
+  @SuppressWarnings("serial")
+  private static PCollection<String> rebundle(String name, PCollection<String> inputs, int K) {
+    PCollection<KV<Integer, String>> resplit = inputs//
+        .apply(name + "-1", ParDo.of(new DoFn<String, KV<Integer, String>>() {
+          @ProcessElement
+          public void processElement(ProcessContext c) throws Exception {
+            String input = c.element();
+            Integer key = (int) (Math.random() * K);
+            c.output(KV.of(key, input));
+          }
+        }));
+    return Reshuffle.<Integer, String> of()//
+        .expand(resplit)//
+        .apply(name + "-2", ParDo.of(new DoFn<KV<Integer, String>, String>() {
+          @ProcessElement
+          public void processElement(ProcessContext c) throws Exception {
+            c.output(c.element().getValue());
+          }
+        }));
+  }
+
   private static List<String> getTarNameParams(MyOptions options) {
+    // parse command-line options
+    String[] radars = options.getRadars().split(",");
+    int[] years = toIntArray(options.getYears().split(","));
+    int[] months = toIntArray(options.getMonths().split(","));
+    if (months.length == 0) {
+      // all months
+      months = new int[12];
+      for (int i = 1; i <= 12; ++i) {
+        months[i] = i;
+      }
+    }
+    int[] days = toIntArray(options.getDays().split(","));
+
+    // generate parameter options
     List<String> params = new ArrayList<>();
-    for (String radar : options.getRadars().split(",")) {
-      for (int year : YEARS) {
-        for (int month : MONTHS) {
+    for (String radar : radars) {
+      for (int year : years) {
+        for (int month : months) {
           YearMonth yearMonthObject = YearMonth.of(year, month);
           int maxday = yearMonthObject.lengthOfMonth();
-          for (int day=1; day <= maxday; ++day) {
-            params.add(radar + "," + year + "," + month + "," + day);
+          if (days.length == 0) {
+            for (int day = 1; day <= maxday; ++day) {
+              params.add(radar + "," + year + "," + month + "," + day);
+            }
+          } else {
+            for (int day : days) {
+              if (day >= 1 && day <= maxday) {
+                params.add(radar + "," + year + "," + month + "," + day);
+              }
+            }
           }
         }
       }
     }
     return params;
+  }
+
+  private static int[] toIntArray(String[] s) {
+    int[] result = new int[s.length];
+    for (int i = 0; i < result.length; ++i) {
+      result[i] = Integer.parseInt(s[i]);
+    }
+    return result;
   }
 }

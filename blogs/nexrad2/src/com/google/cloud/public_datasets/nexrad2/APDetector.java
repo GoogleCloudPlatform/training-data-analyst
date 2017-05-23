@@ -48,8 +48,8 @@ public class APDetector {
       this.azimuth = azimuth;
       this.range = range;
     }
-    @Override
-    public String toString() {
+   
+    public String toCsv() {
       return radarId + "," + time + "," + azimuth + "," + range;
     }
     public AnomalousPropagation(){
