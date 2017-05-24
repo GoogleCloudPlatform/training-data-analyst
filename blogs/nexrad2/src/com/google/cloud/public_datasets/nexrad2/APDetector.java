@@ -16,9 +16,12 @@
 package com.google.cloud.public_datasets.nexrad2;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;
@@ -50,7 +53,9 @@ public class APDetector {
     }
    
     public String toCsv() {
-      return radarId + "," + time + "," + azimuth + "," + range;
+      DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+      df.setTimeZone(TimeZone.getTimeZone("UTC"));
+      return radarId + "," + df.format(time) + "," + azimuth + "," + range;
     }
     public AnomalousPropagation(){
     }
@@ -139,12 +144,15 @@ public class APDetector {
   public static void main(String[] args) throws Exception {
     //String tarFile = "/Users/vlakshmanan/data/nexrad/2016%2F05%2F03%2FKAMA%2FNWS_NEXRAD_NXL2DP_KAMA_20160503090000_20160503095959.tar";
     String tarFile = "gs://gcp-public-data-nexrad-l2/2012/07/23/KYUX/NWS_NEXRAD_NXL2DP_KYUX_20120723150000_20120723155959.tar";
-
+    
     System.out.println("Reading " + tarFile);
     try (GcsNexradL2Read hourly = new GcsNexradL2Read(tarFile)) {
       for (RadialDatasetSweep volume : hourly.getVolumeScans()) {
-        List<AnomalousPropagation> ap = APDetector.findAP(volume);
-        System.out.println(ap.size() + " AP found");
+        List<AnomalousPropagation> apDetections = APDetector.findAP(volume);
+        System.out.println(apDetections.size() + " AP found");
+        for (AnomalousPropagation rangeGate : apDetections) {
+          System.out.println(rangeGate.toCsv());
+        }
       }
     }
   }

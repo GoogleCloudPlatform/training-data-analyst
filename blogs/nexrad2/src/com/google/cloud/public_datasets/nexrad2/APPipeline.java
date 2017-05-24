@@ -109,7 +109,7 @@ public class APPipeline {
           }
         }));
 
-    tars = rebundle("reshuffle", tars, 1000);
+    tars = rebundle("rebundle", tars, 1000);
 
     PCollection<APDetector.AnomalousPropagation> ap = tars//
         .apply("processTar", ParDo.of(new DoFn<String, AnomalousPropagation>() {
@@ -164,20 +164,29 @@ public class APPipeline {
     p.run();
   }
 
+  /**
+   * Rebundling improves parallelism. Each worker in Apache Beam works on only one bundle,
+   * so if the number of bundles < # of potential workers, you will have limited parallelism.
+   * If that's case, use this rebundle utility
+   * 
+   * @param name of rebundling transforms
+   * @param inputs the collection to rebundle
+   * @param nbundles number of bundles
+   * @return
+   */
   @SuppressWarnings("serial")
-  private static PCollection<String> rebundle(String name, PCollection<String> inputs, int K) {
-    PCollection<KV<Integer, String>> resplit = inputs//
-        .apply(name + "-1", ParDo.of(new DoFn<String, KV<Integer, String>>() {
+  private static <T> PCollection<T> rebundle(String name, PCollection<T> inputs, int nbundles) {
+    return inputs//
+        .apply(name + "-1", ParDo.of(new DoFn<T, KV<Integer, T>>() {
           @ProcessElement
           public void processElement(ProcessContext c) throws Exception {
-            String input = c.element();
-            Integer key = (int) (Math.random() * K);
+            T input = c.element();
+            Integer key = (int) (Math.random() * nbundles);
             c.output(KV.of(key, input));
           }
-        }));
-    return Reshuffle.<Integer, String> of()//
-        .expand(resplit)//
-        .apply(name + "-2", ParDo.of(new DoFn<KV<Integer, String>, String>() {
+        })) //
+        .apply(name + "-2", Reshuffle.<Integer, T> of())//
+        .apply(name + "-3", ParDo.of(new DoFn<KV<Integer, T>, T>() {
           @ProcessElement
           public void processElement(ProcessContext c) throws Exception {
             c.output(c.element().getValue());
