@@ -65,7 +65,7 @@ public class JavaProjectsThatNeedHelp {
 		Pipeline p = Pipeline.create(options);
 
 		String javaQuery = "SELECT content FROM [fh-bigquery:github_extracts.contents_java_2016]";
-		PCollection<String[]> javaContent = p.apply("GetJava", BigQueryIO.Read.fromQuery(javaQuery)) //
+		PCollection<String[]> javaContent = p.apply("GetJava", BigQueryIO.read().fromQuery(javaQuery)) //
 				.apply("ToLines", ParDo.of(new DoFn<TableRow, String[]>() {
 					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
@@ -113,7 +113,7 @@ public class JavaProjectsThatNeedHelp {
 					}
 				})) //
 				.apply(Sum.integersPerKey()) // package -> number-of-uses
-				.apply("CompositeScore", ParDo.withSideInputs(packagesThatNeedHelp) //
+				.apply("CompositeScore", ParDo //
 						.of(new DoFn<KV<String, Integer>, KV<String, Double>>() {
 
 							@ProcessElement
@@ -128,7 +128,7 @@ public class JavaProjectsThatNeedHelp {
 								}
 							}
 
-						})) //
+						}).withSideInputs(packagesThatNeedHelp)) //
 				.apply("Top_" + TOPN, Top.of(TOPN, new KV.OrderByValue<>())) //
 				.apply("ToString", ParDo.of(new DoFn<List<KV<String, Double>>, String>() {
 
@@ -146,7 +146,7 @@ public class JavaProjectsThatNeedHelp {
 					}
 
 				})) //
-				.apply(TextIO.Write.to(options.getOutputPrefix()).withSuffix(".csv").withoutSharding());
+				.apply(TextIO.write().to(options.getOutputPrefix()).withSuffix(".csv").withoutSharding());
 
 		p.run();
 	}
