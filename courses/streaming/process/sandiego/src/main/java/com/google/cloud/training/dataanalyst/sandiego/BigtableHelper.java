@@ -101,11 +101,10 @@ public class BigtableHelper {
         LaneInfo info = c.element();
         DateTime ts = fmt.parseDateTime(info.getTimestamp().replace('T', ' '));
         
-        // key is HIGHWAY#DIR#LANE#SENSORID#REVTS
+        // key is HIGHWAY#DIR#LANE#REVTS
         String key =  info.getHighway() //
             + "#" + info.getDirection() // 
             + "#" + info.getLane() //
-            + "#" + info.getSensorKey() //
             + "#" + (Long.MAX_VALUE - ts.getMillis()); // reverse time stamp
 
         // all the data is in a wide column table with only one column family
