@@ -63,7 +63,7 @@ public class IsPopular {
 		final String keyword = "import";
 		
 		p //
-				.apply("GetJava", TextIO.Read.from(input)) //
+				.apply("GetJava", TextIO.read().from(input)) //
 				.apply("GetImports", ParDo.of(new DoFn<String, String>() {
 					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
@@ -96,7 +96,7 @@ public class IsPopular {
 					}
 
 				})) //
-				.apply(TextIO.Write.to(outputPrefix).withSuffix(".csv").withoutSharding());
+				.apply(TextIO.write().to(outputPrefix).withSuffix(".csv").withoutSharding());
 
 		p.run();
 	}

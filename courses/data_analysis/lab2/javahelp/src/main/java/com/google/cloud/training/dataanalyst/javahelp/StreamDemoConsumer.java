@@ -22,9 +22,8 @@ import java.util.List;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
-import org.apache.beam.sdk.io.PubsubIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -78,9 +77,7 @@ public class StreamDemoConsumer {
 		TableSchema schema = new TableSchema().setFields(fields);
 
 		p //
-				.apply("GetMessages", PubsubIO.<String>read()
-                                    .topic(topic)
-                                    .withCoder(StringUtf8Coder.of())) //
+				.apply("GetMessages", PubsubIO.readStrings().fromTopic(topic)) //
 				.apply("window",
 						Window.into(SlidingWindows//
 								.of(Duration.standardMinutes(2))//
@@ -102,7 +99,7 @@ public class StreamDemoConsumer {
 						c.output(row);
 					}
 				})) //
-				.apply(BigQueryIO.Write.to(output)//
+				.apply(BigQueryIO.writeTableRows().to(output)//
 						.withSchema(schema)//
 						.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
 						.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));

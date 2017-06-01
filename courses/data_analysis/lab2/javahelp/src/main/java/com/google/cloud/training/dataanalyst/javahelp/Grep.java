@@ -41,7 +41,7 @@ public class Grep {
 		final String searchTerm = "import";
 
 		p //
-				.apply("GetJava", TextIO.Read.from(input)) //
+				.apply("GetJava", TextIO.read().from(input)) //
 				.apply("Grep", ParDo.of(new DoFn<String, String>() {
 					@ProcessElement
 					public void processElement(ProcessContext c) throws Exception {
@@ -51,7 +51,7 @@ public class Grep {
 						}
 					}
 				})) //
-				.apply(TextIO.Write.to(outputPrefix).withSuffix(".txt").withoutSharding());
+				.apply(TextIO.write().to(outputPrefix).withSuffix(".txt").withoutSharding());
 
 		p.run();
 	}

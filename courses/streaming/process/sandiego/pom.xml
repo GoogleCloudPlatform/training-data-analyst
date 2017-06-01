@@ -58,12 +58,23 @@
       <version>[2.0.0-beta2,3.0.0)</version>
     </dependency>
 
+	<dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-discovery</artifactId>
+      <version>v1-rev58-1.22.0</version>
+    </dependency>
+
     <!-- slf4j API frontend binding with JUL backend -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.7.14</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>1.7.14</version>
+    </dependency>
+    
   </dependencies>
 </project>
