@@ -1,11 +1,11 @@
 # (1) Go to BigQuery console and create a dataset named 'demos'
 
 # (2) In one CloudShell window, cd to CPB104/publish and type in:
-        cd CPB104/publish   
+        cd courses/streaming/publish   
         ./send_sensor_data.py --speedFactor=60
 
 # (3) In another CloudShell window, launch a DataFlow job:
-        cd CPB104/process/sandiego
+        cd courses/streaming/process/sandiego
         ./run_oncloud.sh cloud-training-demos cloud-training-demos CurrentConditions
         
 # (4) Go to Cloud Console and view new job. Wait for the last step to show some activity (like 1 min or 3 events/second)

@@ -22,8 +22,7 @@ import java.util.Map;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
-import org.apache.beam.sdk.io.PubsubIO;
+import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -105,7 +104,7 @@ public class AccidentAlert {
 		TableSchema schema = new TableSchema().setFields(fields);
 
 		PCollection<LaneInfo> laneInfo = p //
-				.apply("GetMessages", PubsubIO.<String> read().topic(topic).withCoder(StringUtf8Coder.of())) //
+				.apply("GetMessages", PubsubIO.readStrings().fromTopic(topic)) //
 				.apply("TimeWindow",
 						Window.into(SlidingWindows//
 								.of(averagingInterval)//
@@ -132,7 +131,7 @@ public class AccidentAlert {
 				.apply("ToView", View.asMap());
 
 		PCollection<LaneInfo> accidents = laneInfo.apply("FindSlowdowns", 
-				ParDo.withSideInputs(avgSpeedLocation).of(new DoFn<LaneInfo, LaneInfo>() {
+				ParDo.of(new DoFn<LaneInfo, LaneInfo>() {
 			@ProcessElement
 			public void processElement(ProcessContext c) throws Exception {
 				LaneInfo info = c.element();
@@ -144,7 +143,7 @@ public class AccidentAlert {
 					c.output(info);
 				}
 			}
-		})); //
+		}).withSideInputs(avgSpeedLocation)); //
 		
 		accidents.apply("ToBQRow", ParDo.of(new DoFn<LaneInfo, TableRow>() {
 			@ProcessElement
@@ -162,7 +161,7 @@ public class AccidentAlert {
 				c.output(row);
 			}
 		})) //
-				.apply(BigQueryIO.Write.to(avgSpeedTable)//
+				.apply(BigQueryIO.writeTableRows().to(avgSpeedTable)//
 						.withSchema(schema)//
 						.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
 						.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));

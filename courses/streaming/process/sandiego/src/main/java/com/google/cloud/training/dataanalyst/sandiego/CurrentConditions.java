@@ -21,9 +21,10 @@ import java.util.List;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
-import org.apache.beam.sdk.io.PubsubIO;
+import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.options.Default;
+import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -42,13 +43,17 @@ import com.google.api.services.bigquery.model.TableSchema;
  * @author vlakshmanan
  *
  */
+@SuppressWarnings("serial")
 public class CurrentConditions {
 
 	public static interface MyOptions extends DataflowPipelineOptions {
+    @Description("Also stream to Bigtable?")
+    @Default.Boolean(false)
+    boolean getBigtable();
 
+    void setBigtable(boolean b);
 	}
 
-	@SuppressWarnings("serial")
 	public static void main(String[] args) {
 		MyOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(MyOptions.class);
 		options.setStreaming(true);
@@ -70,9 +75,7 @@ public class CurrentConditions {
 		TableSchema schema = new TableSchema().setFields(fields);
 
 		PCollection<LaneInfo> laneInfo = p //
-				.apply("GetMessages", PubsubIO.<String>read()
-                                    .topic(topic)
-                                    .withCoder(StringUtf8Coder.of())) //
+				.apply("GetMessages", PubsubIO.readStrings().fromTopic(topic)) //
 				.apply("TimeWindow",
 						Window.into(SlidingWindows//
 								.of(Duration.standardSeconds(300))//
@@ -101,11 +104,16 @@ public class CurrentConditions {
 						c.output(row);
 					}
 				})) //
-				.apply(BigQueryIO.Write.to(currConditionsTable)//
+				.apply(BigQueryIO.writeTableRows().to(currConditionsTable)//
 						.withSchema(schema)//
 						.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
 						.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
+		
+		if (options.getBigtable()) {
+		  BigtableHelper.writeToBigtable(laneInfo, options);
+		}
+		
 		p.run();
 	}
 }
