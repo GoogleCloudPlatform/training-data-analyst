@@ -43,129 +43,140 @@ import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
 
 /**
- * A dataflow pipeline that finds lanes in which traffic is much slower
- * than in adjacent lanes.
+ * A dataflow pipeline that finds lanes in which traffic is much slower than in
+ * adjacent lanes.
  * 
  * @author vlakshmanan
  *
  */
 public class AccidentAlert {
 
-	public static interface MyOptions extends DataflowPipelineOptions {
-		@Description("Over how long a time period should we average? (in minutes)")
-		@Default.Double(60.0)
-		Double getAveragingInterval();
+  public static interface MyOptions extends DataflowPipelineOptions {
+    @Description("Over how long a time period should we average? (in minutes)")
+    @Default.Double(60.0)
+    Double getAveragingInterval();
 
-		void setAveragingInterval(Double d);
+    void setAveragingInterval(Double d);
 
-		@Description("Simulation speedup factor. Use 1.0 if no speedup")
-		@Default.Double(60.0)
-		Double getSpeedupFactor();
+    @Description("Simulation speedup factor. Use 1.0 if no speedup")
+    @Default.Double(60.0)
+    Double getSpeedupFactor();
 
-		void setSpeedupFactor(Double d);
-		
-		@Description("If speed in lane is x of the average speed, then accident in lane. What is x?")
-		@Default.Double(0.5)
-		Double getRatioThreshold();
+    void setSpeedupFactor(Double d);
 
-		void setRatioThreshold(Double d);
-	}
+    @Description("If speed in lane is x of the average speed, then accident in lane. What is x?")
+    @Default.Double(0.5)
+    Double getRatioThreshold();
 
-	@SuppressWarnings("serial")
-	public static void main(String[] args) {
-		MyOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(MyOptions.class);
-		options.setStreaming(true);
-		Pipeline p = Pipeline.create(options);
+    void setRatioThreshold(Double d);
 
-		String topic = "projects/" + options.getProject() + "/topics/sandiego";
-		String avgSpeedTable = options.getProject() + ":demos.accidents";
-		double RATIO = options.getRatioThreshold();
-		
-		// if we need to average over 60 minutes and speedup is 30x
-		// then we need to average over 2 minutes of sped-up stream
-		Duration averagingInterval = Duration
-				.millis(Math.round(1000 * 60 * (options.getAveragingInterval() / options.getSpeedupFactor())));
-		Duration averagingFrequency = averagingInterval.dividedBy(2); // 2 times
-																		// in
-																		// window
-		System.out.println("Averaging interval = " + averagingInterval);
-		System.out.println("Averaging freq = " + averagingFrequency);
+    @Description("Also stream to Bigtable?")
+    @Default.Boolean(false)
+    boolean getBigtable();
 
-		// Build the table schema for the output table.
-		List<TableFieldSchema> fields = new ArrayList<>();
-		fields.add(new TableFieldSchema().setName("timestamp").setType("TIMESTAMP"));
-		fields.add(new TableFieldSchema().setName("latitude").setType("FLOAT"));
-		fields.add(new TableFieldSchema().setName("longitude").setType("FLOAT"));
-		fields.add(new TableFieldSchema().setName("highway").setType("STRING"));
-		fields.add(new TableFieldSchema().setName("direction").setType("STRING"));
-		fields.add(new TableFieldSchema().setName("lane").setType("INTEGER"));
-		fields.add(new TableFieldSchema().setName("speed").setType("FLOAT"));
-		fields.add(new TableFieldSchema().setName("sensorId").setType("STRING"));
-		TableSchema schema = new TableSchema().setFields(fields);
+    void setBigtable(boolean b);
+  }
 
-		PCollection<LaneInfo> laneInfo = p //
-				.apply("GetMessages", PubsubIO.readStrings().fromTopic(topic)) //
-				.apply("TimeWindow",
-						Window.into(SlidingWindows//
-								.of(averagingInterval)//
-								.every(averagingFrequency))) //
-				.apply("ExtractData", ParDo.of(new DoFn<String, LaneInfo>() {
-					@ProcessElement
-					public void processElement(ProcessContext c) throws Exception {
-						String line = c.element();
-						c.output(LaneInfo.newLaneInfo(line));
-					}
-				}));
-		
-		PCollectionView<Map<String, Double>> avgSpeedLocation = laneInfo //
-				.apply("ByLocation", ParDo.of(new DoFn<LaneInfo, KV<String, Double>>() {
-					@ProcessElement
-					public void processElement(ProcessContext c) throws Exception {
-						LaneInfo info = c.element();
-						String key = info.getLocationKey();
-						Double speed = info.getSpeed();
-						c.output(KV.of(key, speed));
-					}
-				})) //
-				.apply("AvgByLocation", Mean.perKey()) //
-				.apply("ToView", View.asMap());
+  @SuppressWarnings("serial")
+  public static void main(String[] args) {
+    MyOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(MyOptions.class);
+    options.setStreaming(true);
+    Pipeline p = Pipeline.create(options);
 
-		PCollection<LaneInfo> accidents = laneInfo.apply("FindSlowdowns", 
-				ParDo.of(new DoFn<LaneInfo, LaneInfo>() {
-			@ProcessElement
-			public void processElement(ProcessContext c) throws Exception {
-				LaneInfo info = c.element();
-				String location = info.getLocationKey();
-				double speed = info.getSpeed();
-				double avgSpeed = c.sideInput(avgSpeedLocation).get(location);
-				if (speed < RATIO * avgSpeed) {
-					// 50% of average speed?
-					c.output(info);
-				}
-			}
-		}).withSideInputs(avgSpeedLocation)); //
-		
-		accidents.apply("ToBQRow", ParDo.of(new DoFn<LaneInfo, TableRow>() {
-			@ProcessElement
-			public void processElement(ProcessContext c) throws Exception {
-				TableRow row = new TableRow();
-				LaneInfo info = c.element();
-				row.set("timestamp", info.getTimestamp());
-				row.set("latitude", info.getLatitude());
-				row.set("longitude", info.getLongitude());
-				row.set("highway", info.getHighway());
-				row.set("direction", info.getDirection());
-				row.set("lane", info.getLane());
-				row.set("speed", info.getSpeed());
-				row.set("sensorId", info.getSensorKey());
-				c.output(row);
-			}
-		})) //
-				.apply(BigQueryIO.writeTableRows().to(avgSpeedTable)//
-						.withSchema(schema)//
-						.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
-						.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+    String topic = "projects/" + options.getProject() + "/topics/sandiego";
+    String accidentsTable = options.getProject() + ":demos.accidents";
+    double RATIO = options.getRatioThreshold();
 
-		p.run();
-	}
+    // if we need to average over 60 minutes and speedup is 30x
+    // then we need to average over 2 minutes of sped-up stream
+    Duration averagingInterval = Duration
+        .millis(Math.round(1000 * 60 * (options.getAveragingInterval() / options.getSpeedupFactor())));
+    Duration averagingFrequency = averagingInterval.dividedBy(2); // 2 times
+    // in
+    // window
+    System.out.println("Averaging interval = " + averagingInterval);
+    System.out.println("Averaging freq = " + averagingFrequency);
+
+    // Build the table schema for the output table.
+    List<TableFieldSchema> fields = new ArrayList<>();
+    fields.add(new TableFieldSchema().setName("timestamp").setType("TIMESTAMP"));
+    fields.add(new TableFieldSchema().setName("latitude").setType("FLOAT"));
+    fields.add(new TableFieldSchema().setName("longitude").setType("FLOAT"));
+    fields.add(new TableFieldSchema().setName("highway").setType("STRING"));
+    fields.add(new TableFieldSchema().setName("direction").setType("STRING"));
+    fields.add(new TableFieldSchema().setName("lane").setType("INTEGER"));
+    fields.add(new TableFieldSchema().setName("speed").setType("FLOAT"));
+    fields.add(new TableFieldSchema().setName("sensorId").setType("STRING"));
+    TableSchema schema = new TableSchema().setFields(fields);
+
+    PCollection<LaneInfo> currentConditions = p //
+        .apply("GetMessages", PubsubIO.readStrings().fromTopic(topic)) //
+        .apply("ExtractData", ParDo.of(new DoFn<String, LaneInfo>() {
+          @ProcessElement
+          public void processElement(ProcessContext c) throws Exception {
+            String line = c.element();
+            c.output(LaneInfo.newLaneInfo(line));
+          }
+        }));
+
+    if (options.getBigtable()) {
+      BigtableHelper.writeToBigtable(currentConditions, options);
+    }
+
+    PCollection<LaneInfo> laneInfo = currentConditions //
+        .apply("TimeWindow",
+            Window.into(SlidingWindows//
+                .of(averagingInterval)//
+                .every(averagingFrequency)));
+
+    PCollectionView<Map<String, Double>> avgSpeedLocation = laneInfo //
+        .apply("ByLocation", ParDo.of(new DoFn<LaneInfo, KV<String, Double>>() {
+          @ProcessElement
+          public void processElement(ProcessContext c) throws Exception {
+            LaneInfo info = c.element();
+            String key = info.getLocationKey();
+            Double speed = info.getSpeed();
+            c.output(KV.of(key, speed));
+          }
+        })) //
+        .apply("AvgByLocation", Mean.perKey()) //
+        .apply("ToView", View.asMap());
+
+    PCollection<LaneInfo> accidents = laneInfo.apply("FindSlowdowns", ParDo.of(new DoFn<LaneInfo, LaneInfo>() {
+      @ProcessElement
+      public void processElement(ProcessContext c) throws Exception {
+        LaneInfo info = c.element();
+        String location = info.getLocationKey();
+        double speed = info.getSpeed();
+        double avgSpeed = c.sideInput(avgSpeedLocation).get(location);
+        if (speed < RATIO * avgSpeed) {
+          // 50% of average speed?
+          c.output(info);
+        }
+      }
+    }).withSideInputs(avgSpeedLocation)); //
+
+    accidents.apply("ToBQRow", ParDo.of(new DoFn<LaneInfo, TableRow>() {
+      @ProcessElement
+      public void processElement(ProcessContext c) throws Exception {
+        TableRow row = new TableRow();
+        LaneInfo info = c.element();
+        row.set("timestamp", info.getTimestamp());
+        row.set("latitude", info.getLatitude());
+        row.set("longitude", info.getLongitude());
+        row.set("highway", info.getHighway());
+        row.set("direction", info.getDirection());
+        row.set("lane", info.getLane());
+        row.set("speed", info.getSpeed());
+        row.set("sensorId", info.getSensorKey());
+        c.output(row);
+      }
+    })) //
+        .apply(BigQueryIO.writeTableRows().to(accidentsTable)//
+            .withSchema(schema)//
+            .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
+            .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+
+    p.run();
+  }
 }

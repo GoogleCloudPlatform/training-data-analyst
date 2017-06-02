@@ -52,9 +52,9 @@ import com.google.protobuf.ByteString;
 public class BigtableHelper {
 
   private final static String INSTANCE_ID = "sandiego";
-  private final static String TABLE_ID = "current_conditions";
-  private final static String CF_FAMILY = "lane";
-  
+  private final static String TABLE_ID    = "current_conditions";
+  private final static String CF_FAMILY   = "lane";
+
   public static void writeToBigtable(PCollection<LaneInfo> laneInfo, DataflowPipelineOptions options) {
     BigtableOptions.Builder optionsBuilder = //
         new BigtableOptions.Builder()//
@@ -70,23 +70,23 @@ public class BigtableHelper {
     Table.Builder tableBuilder = Table.newBuilder();
     ColumnFamily cf = ColumnFamily.newBuilder().build();
     tableBuilder.putColumnFamilies(CF_FAMILY, cf);
- 
+
     try (BigtableSession session = new BigtableSession(optionsBuilder
         .setCredentialOptions(CredentialOptions.credential(options.as(GcpOptions.class).getGcpCredential())).build())) {
       BigtableTableAdminClient tableAdminClient = session.getTableAdminClient();
-      
+
       try {
         // if get fails, then create
-        String tableName = getTableName(options); 
+        String tableName = getTableName(options);
         GetTableRequest.Builder getTableRequestBuilder = GetTableRequest.newBuilder().setName(tableName);
         tableAdminClient.getTable(getTableRequestBuilder.build());
       } catch (Exception e) {
         CreateTableRequest.Builder createTableRequestBuilder = //
             CreateTableRequest.newBuilder().setParent(getInstanceName(options)) //
-            .setTableId(TABLE_ID).setTable(tableBuilder.build());
+                .setTableId(TABLE_ID).setTable(tableBuilder.build());
         tableAdminClient.createTable(createTableRequestBuilder.build());
       }
-      
+
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -100,10 +100,10 @@ public class BigtableHelper {
       public void processElement(ProcessContext c) throws Exception {
         LaneInfo info = c.element();
         DateTime ts = fmt.parseDateTime(info.getTimestamp().replace('T', ' '));
-        
+
         // key is HIGHWAY#DIR#LANE#REVTS
-        String key =  info.getHighway() //
-            + "#" + info.getDirection() // 
+        String key = info.getHighway() //
+            + "#" + info.getDirection() //
             + "#" + info.getLane() //
             + "#" + (Long.MAX_VALUE - ts.getMillis()); // reverse time stamp
 
@@ -119,34 +119,35 @@ public class BigtableHelper {
         addCell(mutations, "sensorId", info.getSensorKey(), ts.getMillis());
         c.output(KV.of(ByteString.copyFromUtf8(key), mutations));
       }
- 
+
     }));
   }
-  
+
   private static void addCell(List<Mutation> mutations, String cellName, double cellValue, long ts) {
     addCell(mutations, cellName, Double.toString(cellValue), ts);
   }
-  
+
   private static void addCell(List<Mutation> mutations, String cellName, String cellValue, long ts) {
     if (cellValue.length() > 0) {
       ByteString value = ByteString.copyFromUtf8(cellValue);
       ByteString colname = ByteString.copyFromUtf8(cellName);
       Mutation m = //
-          Mutation.newBuilder().setSetCell(//
+          Mutation.newBuilder()
+              .setSetCell(//
                   Mutation.SetCell.newBuilder() //
                       .setValue(value)//
                       .setFamilyName(CF_FAMILY)//
                       .setColumnQualifier(colname)//
                       .setTimestampMicros(ts) //
-          ).build();
+              ).build();
       mutations.add(m);
     }
   }
-  
+
   private static String getInstanceName(DataflowPipelineOptions options) {
     return String.format("projects/%s/instances/%s", options.getProject(), INSTANCE_ID);
   }
-  
+
   private static String getTableName(DataflowPipelineOptions options) {
     return String.format("%s/tables/%s", getInstanceName(options), TABLE_ID);
   }
