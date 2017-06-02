@@ -29,9 +29,9 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Sum;
-import org.apache.beam.sdk.util.Reshuffle;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
@@ -138,7 +138,7 @@ public class APPipeline {
         c.output(ap.toCsv());
       }
     }))//
-        .apply("writeAll", TextIO.Write.to(options.getOutput() + "allDetections").withSuffix(".csv"));
+        .apply("writeAll", TextIO.write().to(options.getOutput() + "allDetections").withSuffix(".csv"));
 
     // let's also find the total problems by radar
     ap.apply("ByRadar", ParDo.of(new DoFn<AnomalousPropagation, KV<String, Integer>>() {
@@ -157,7 +157,7 @@ public class APPipeline {
             c.output(radar + "," + numPixelsAP);
           }
         }))//
-        .apply("writeTotalByRadar", TextIO.Write.to(options.getOutput() + "totalByRadar")//
+        .apply("writeTotalByRadar", TextIO.write().to(options.getOutput() + "totalByRadar")//
             .withSuffix(".csv").withoutSharding());
 
     // run the graph
@@ -185,11 +185,13 @@ public class APPipeline {
             c.output(KV.of(key, input));
           }
         })) //
-        .apply(name + "-2", Reshuffle.<Integer, T> of())//
-        .apply(name + "-3", ParDo.of(new DoFn<KV<Integer, T>, T>() {
+        .apply(name + "-2", GroupByKey.<Integer, T> create())
+        .apply(name + "-3", ParDo.of(new DoFn<KV<Integer, Iterable<T>>, T>() {
           @ProcessElement
           public void processElement(ProcessContext c) throws Exception {
-            c.output(c.element().getValue());
+            for (T item : c.element().getValue()) {
+              c.output(item);
+            }
           }
         }));
   }
