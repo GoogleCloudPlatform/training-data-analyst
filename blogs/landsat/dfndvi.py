@@ -76,7 +76,7 @@ def run():
 
    # Read the index file and find all scenes that cover this area
    allscenes = (p
-      | 'read_index' >> beam.Read(beam.io.TextFileSource(index_file))
+      | 'read_index' >> beam.io.ReadFromText(index_file)
       | 'to_scene' >> beam.Map(lambda line:  SceneInfo(line))
       | 'by_area' >> beam.FlatMap(lambda scene: filterByArea(scene,lat+dlat,lon-dlon,lat-dlat,lon+dlon) )
    )
@@ -89,7 +89,7 @@ def run():
    )
 
    # write out info about scene
-   scenes | beam.Map(lambda (yrmon, scene): '{}: {}'.format(yrmon,scene.SCENE_ID)) | 'scene_info' >> beam.io.textio.WriteToText(output_file)
+   scenes | beam.Map(lambda (yrmon, scene): '{}: {}'.format(yrmon,scene.SCENE_ID)) | 'scene_info' >> beam.io.WriteToText(output_file)
 
    # compute ndvi on scene
    scenes | 'compute_ndvi' >> beam.Map(lambda (yrmon, scene): ndvi.computeNdvi(scene.BASE_URL, os.path.join(output_dir,yrmon), scene.SPACECRAFT_ID))
