@@ -1,13 +1,19 @@
 #!/bin/bash
 
+if [ "$#" -ne 2 ]; then
+   echo "Usage:   ./run_oncloud.sh project-name  bucket-name"
+   echo "Example: ./run_oncloud.sh cloud-training-demos  cloud-training-demos"
+   exit
+fi
 
-BUCKET=cloud-training-demos
-PROJECT=cloud-training-demos
+PROJECT=$1
+BUCKET=$2
+
 gsutil -m rm -rf gs://$BUCKET/landsat/output
 
 ./dfndvi.py \
     --project=$PROJECT \
-    --runner=DataflowPipelineRunner \
+    --runner=DataflowRunner \
     --staging_location=gs://$BUCKET/landsat/staging \
     --temp_location=gs://$BUCKET/landsat/staging \
     --index_file=gs://cloud-training-demos/landsat/2015index.txt.gz \
