@@ -82,7 +82,7 @@ def save_vocab(trainfile, txtcolname, outfilename):
 
 def read_dataset(prefix, batch_size=20):
   # use prefix to create filename
-  filename = 'gs://{}/txtcls1/{}*'.format(BUCKET, prefix)
+  filename = 'gs://{}/txtcls1/{}*csv*'.format(BUCKET, prefix)
   if prefix == 'train':
     mode = tf.contrib.learn.ModeKeys.TRAIN
   else:
