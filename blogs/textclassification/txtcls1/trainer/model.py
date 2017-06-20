@@ -69,7 +69,7 @@ def save_vocab(trainfile, txtcolname, outfilename):
   import pandas as pd
   df = pd.read_csv(filename, header=None, sep='\t', names=['source', 'title'])
   # the text to be classified
-  vocab_processor = tflearn.preprocessing.VocabularyProcessor(MAX_DOCUMENT_LENGTH)
+  vocab_processor = tflearn.preprocessing.VocabularyProcessor(MAX_DOCUMENT_LENGTH, min_frequency=10)
   vocab_processor.fit(df[txtcolname])
 
   with gfile.Open(outfilename, 'wb') as f:
@@ -109,7 +109,7 @@ def read_dataset(prefix, batch_size=20):
     table = tf.contrib.lookup.index_table_from_tensor(
                    mapping=tf.constant(TARGETS), num_oov_buckets=0, default_value=-1)
     target = table.lookup(label)
-  
+ 
     return features, target
   
   return _input_fn
@@ -127,7 +127,6 @@ def cnn_model(features, target, mode):
       word_indexes, vocab_size=(N_WORDS+1), embed_dim=EMBEDDING_SIZE, scope='words')
   word_vectors = tf.expand_dims(word_vectors, 3)   # (1, embedding_size, 1)
  
-  # one-hot encode the targets
   n_classes = len(TARGETS)
   #target = tf.one_hot(target, n_classes, 1, 0)
   #target = tf.squeeze(target, squeeze_dims=[1])
@@ -178,6 +177,42 @@ def cnn_model(features, target, mode):
       loss=loss,
       train_op=train_op)
 
+def linear_model(features, target, mode):
+  # make input features numeric
+  from tensorflow.contrib import lookup
+  table = lookup.index_table_from_file(
+        vocabulary_file=WORD_VOCAB_FILE, num_oov_buckets=1, vocab_size=N_WORDS, default_value=-1, name="word_to_index")
+  word_indexes = table.lookup(features['title'])
+  word_vectors = tf.contrib.layers.embed_sequence(
+      word_indexes, vocab_size=(N_WORDS+1), embed_dim=EMBEDDING_SIZE, scope='words')
+
+  n_classes = len(TARGETS)
+
+  logits = tf.contrib.layers.fully_connected(word_vectors, n_classes, activation_fn=None)
+  logits = tf.squeeze(logits, squeeze_dims=[1]) # from (?,1,3) to (?,3)
+  predictions_dict = {
+      'source': tf.gather(TARGETS, tf.argmax(logits, 1)),
+      'class': tf.argmax(logits, 1),
+      'prob': tf.nn.softmax(logits)
+  }
+
+  if mode == tf.contrib.learn.ModeKeys.TRAIN or mode == tf.contrib.learn.ModeKeys.EVAL:
+     loss = tf.losses.sparse_softmax_cross_entropy(target, logits)
+     train_op = tf.contrib.layers.optimize_loss(
+       loss,
+       tf.contrib.framework.get_global_step(),
+       optimizer='Adam',
+       learning_rate=0.01)
+  else:
+     loss = None
+     train_op = None
+
+  return tflearn.ModelFnOps(
+      mode=mode,
+      predictions=predictions_dict,
+      loss=loss,
+      train_op=train_op)
+
 
 def serving_input_fn():
     feature_placeholders = {
@@ -202,7 +237,7 @@ from tensorflow.contrib.learn.python.learn.utils import saved_model_export_utils
 def experiment_fn(output_dir):
     # run experiment
     return tflearn.Experiment(
-        tflearn.Estimator(model_fn=cnn_model, model_dir=output_dir),
+        tflearn.Estimator(model_fn=linear_model, model_dir=output_dir),
         train_input_fn=get_train(),
         eval_input_fn=get_valid(),
         eval_metrics={
