@@ -35,7 +35,7 @@ WORD_VOCAB_FILE = None
 N_WORDS = -1 # set by init
 
 # describe your data
-TARGETS = ['nytimes', 'wired', 'techcrunch']
+TARGETS = ['nytimes', 'github', 'techcrunch']
 MAX_DOCUMENT_LENGTH = 20
 CSV_COLUMNS = ['source', 'title']
 LABEL_COLUMN = 'source'
@@ -109,7 +109,7 @@ def read_dataset(prefix, batch_size=20):
     table = tf.contrib.lookup.index_table_from_tensor(
                    mapping=tf.constant(TARGETS), num_oov_buckets=0, default_value=-1)
     target = table.lookup(label)
- 
+
     return features, target
   
   return _input_fn
@@ -182,13 +182,38 @@ def linear_model(features, target, mode):
   from tensorflow.contrib import lookup
   table = lookup.index_table_from_file(
         vocabulary_file=WORD_VOCAB_FILE, num_oov_buckets=1, vocab_size=N_WORDS, default_value=-1, name="word_to_index")
-  word_indexes = table.lookup(features['title'])
-  word_vectors = tf.contrib.layers.embed_sequence(
-      word_indexes, vocab_size=(N_WORDS+1), embed_dim=EMBEDDING_SIZE, scope='words')
+  titles = tf.squeeze(features['title'], [1])
+  words = tf.string_split(titles)
+  words = tf.sparse_tensor_to_dense(words, default_value='ZYXW')
+  words = table.lookup(words)
+  print('lookup_words={}'.format(words))
+
+  # each row has variable length of words
+  # take the first MAX_DOCUMENT_LENGTH words (pad shorter titles to this)
+  padding = tf.stack([tf.zeros_like(titles,dtype=tf.int64),tf.ones_like(titles,dtype=tf.int64)*MAX_DOCUMENT_LENGTH])
+  words = tf.pad(words, padding)
+  words = tf.slice(words, [0,0], [-1,MAX_DOCUMENT_LENGTH])
+  print('words_sliced={}'.format(words))  # (?, 20)
+
+  # embed the words in a common way
+  words = tf.contrib.layers.embed_sequence(
+      words, vocab_size=(N_WORDS+1), embed_dim=EMBEDDING_SIZE, scope='words')
+  print('words_embed={}'.format(words)) # (?, 20, 10)
+
+  # now do convolution
+  conv = tf.contrib.layers.convolution2d(
+           words, 5, [3, EMBEDDING_SIZE] , padding='VALID')
+  conv = tf.nn.relu(conv1)
+  words = tf.nn.max_pool(conv,
+        ksize=[1, POOLING_WINDOW, 1, 1],
+        strides=[1, POOLING_STRIDE, 1, 1],
+        padding='SAME')
+  print('words_conv={}'.format(words)) # 
 
   n_classes = len(TARGETS)
 
-  logits = tf.contrib.layers.fully_connected(word_vectors, n_classes, activation_fn=None)
+  logits = tf.contrib.layers.fully_connected(words, n_classes, activation_fn=None)
+  print('logits={}'.format(logits))
   logits = tf.squeeze(logits, squeeze_dims=[1]) # from (?,1,3) to (?,3)
   predictions_dict = {
       'source': tf.gather(TARGETS, tf.argmax(logits, 1)),
