@@ -81,25 +81,26 @@ def simple_rnn(features, targets, mode):
   bias = tf.Variable(tf.random_normal([N_OUTPUTS]))
   predictions = tf.matmul(outputs, weight) + bias
     
-  # 2. Define the loss function for training/evaluation
-  #print 'targets={}'.format(targets)
-  #print 'preds={}'.format(predictions)
-  loss = tf.losses.mean_squared_error(targets, predictions)
-  eval_metric_ops = {
+  # 2. loss function, training/eval ops
+  if mode == tf.contrib.learn.ModeKeys.TRAIN or mode == tf.contrib.learn.ModeKeys.EVAL:
+     loss = tf.losses.mean_squared_error(targets, predictions)
+     train_op = tf.contrib.layers.optimize_loss(
+         loss=loss,
+         global_step=tf.contrib.framework.get_global_step(),
+         learning_rate=0.01,
+         optimizer="SGD")
+     eval_metric_ops = {
       "rmse": tf.metrics.root_mean_squared_error(targets, predictions)
-  }
+     }
+  else:
+     loss = None
+     train_op = None
+     eval_metric_ops = None
   
-  # 3. Define the training operation/optimizer
-  train_op = tf.contrib.layers.optimize_loss(
-      loss=loss,
-      global_step=tf.contrib.framework.get_global_step(),
-      learning_rate=0.01,
-      optimizer="SGD")
-
-  # 4. Create predictions
+  # 3. Create predictions
   predictions_dict = {"predicted": predictions}
   
-  # 5. return ModelFnOps
+  # 4. return ModelFnOps
   return tflearn.ModelFnOps(
       mode=mode,
       predictions=predictions_dict,
@@ -116,6 +117,7 @@ def serving_input_fn():
       key: tf.expand_dims(tensor, -1)
       for key, tensor in feature_placeholders.items()
     }
+    features[TIMESERIES_COL] = tf.squeeze(features[TIMESERIES_COL], axis=[2])
 
     return tflearn.utils.input_fn_utils.InputFnOps(
       features,
