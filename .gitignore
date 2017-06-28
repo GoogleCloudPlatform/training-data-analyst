@@ -1,1 +1,2 @@
-.*
+*.pyc
+courses/machine_learning/cloudmle/.ipynb_checkpoints/*
