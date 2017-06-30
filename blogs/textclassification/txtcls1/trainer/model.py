@@ -25,6 +25,7 @@ import tensorflow.contrib.layers as tflayers
 from tensorflow.contrib.learn.python.learn import learn_runner
 import tensorflow.contrib.metrics as metrics
 from tensorflow.python.platform import gfile
+from tensorflow.contrib import lookup
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -32,7 +33,10 @@ tf.logging.set_verbosity(tf.logging.INFO)
 BUCKET = None
 NUM_EPOCHS = 100
 WORD_VOCAB_FILE = None 
-N_WORDS = -1 # set by init
+N_WORDS = -1
+
+# hardcoded into graph
+BATCH_SIZE = 8
 
 # describe your data
 TARGETS = ['nytimes', 'github', 'techcrunch']
@@ -40,16 +44,7 @@ MAX_DOCUMENT_LENGTH = 20
 CSV_COLUMNS = ['source', 'title']
 LABEL_COLUMN = 'source'
 DEFAULTS = [['null'], ['null']]
-
-# CNN model parameters
-EMBEDDING_SIZE = 10
-N_FILTERS = 8
-WINDOW_SIZE = 1
-FILTER_SHAPE1 = [WINDOW_SIZE, EMBEDDING_SIZE]
-FILTER_SHAPE2 = [WINDOW_SIZE, N_FILTERS]
-POOLING_WINDOW = 4
-POOLING_STRIDE = 2
-
+PADWORD = 'ZYXW'
 
 def init(bucket, num_epochs):
   global BUCKET, NUM_EPOCHS, WORD_VOCAB_FILE, N_WORDS
@@ -73,14 +68,14 @@ def save_vocab(trainfile, txtcolname, outfilename):
   vocab_processor.fit(df[txtcolname])
 
   with gfile.Open(outfilename, 'wb') as f:
+    f.write("{}\n".format(PADWORD))
     for word, index in vocab_processor.vocabulary_._mapping.iteritems():
-      f.write("{}\t{}\n".format(word, index))
-  
-  n_words = len(vocab_processor.vocabulary_) 
-  print('{} words in {} being written to {}'.format(n_words, trainfile, outfilename))
-  return n_words
+      f.write("{}\n".format(word))
+  nwords = len(vocab_processor.vocabulary_)
+  print('{} words into {}'.format(nwords, outfilename))
+  return nwords + 2  # PADWORD and <UNK>
 
-def read_dataset(prefix, batch_size=20):
+def read_dataset(prefix):
   # use prefix to create filename
   filename = 'gs://{}/txtcls1/{}*csv*'.format(BUCKET, prefix)
   if prefix == 'train':
@@ -99,7 +94,8 @@ def read_dataset(prefix, batch_size=20):
  
     # read CSV
     reader = tf.TextLineReader()
-    _, value = reader.read_up_to(filename_queue, num_records=batch_size)
+    _, value = reader.read_up_to(filename_queue, num_records=BATCH_SIZE)
+    #value = tf.train.shuffle_batch([value], BATCH_SIZE, capacity=10*BATCH_SIZE, min_after_dequeue=BATCH_SIZE, enqueue_many=True, allow_smaller_final_batch=False)
     value_column = tf.expand_dims(value, -1)
     columns = tf.decode_csv(value_column, record_defaults=DEFAULTS, field_delim='\t')
     features = dict(zip(CSV_COLUMNS, columns))
@@ -114,125 +110,58 @@ def read_dataset(prefix, batch_size=20):
   
   return _input_fn
 
-
+# CNN model parameters
+EMBEDDING_SIZE = 10
+N_FILTERS = 2
+WINDOW_SIZE = 5
 def cnn_model(features, target, mode):
-  """2 layer ConvNet to predict from sequence of words to a class."""     
+    table = lookup.index_table_from_file(vocabulary_file=WORD_VOCAB_FILE, num_oov_buckets=1, default_value=-1)
+    
+    # string operations
+    titles = tf.squeeze(features['title'], [1])
+    words = tf.string_split(titles)
+    densewords = tf.sparse_tensor_to_dense(words, default_value=PADWORD)
+    numbers = table.lookup(densewords)
+    padding = tf.constant([[0,0],[0,MAX_DOCUMENT_LENGTH]])
+    padded = tf.pad(numbers, padding)
+    sliced = tf.slice(padded, [0,0], [-1, MAX_DOCUMENT_LENGTH])
+    print('words_sliced={}'.format(words))  # (?, 20)
 
-  # make input features numeric
-  from tensorflow.contrib import lookup
-  table = lookup.index_table_from_file(
-        vocabulary_file=WORD_VOCAB_FILE, num_oov_buckets=1, vocab_size=N_WORDS, default_value=-1, name="word_to_index")
-  word_indexes = table.lookup(features['title'])
-  word_vectors = tf.contrib.layers.embed_sequence(
-      word_indexes, vocab_size=(N_WORDS+1), embed_dim=EMBEDDING_SIZE, scope='words')
-  word_vectors = tf.expand_dims(word_vectors, 3)   # (1, embedding_size, 1)
- 
-  n_classes = len(TARGETS)
-  #target = tf.one_hot(target, n_classes, 1, 0)
-  #target = tf.squeeze(target, squeeze_dims=[1])
+    # layer to take the words and convert them into vectors (embeddings)
+    embeds = tf.contrib.layers.embed_sequence(sliced, vocab_size=N_WORDS, embed_dim=EMBEDDING_SIZE)
+    print('words_embed={}'.format(embeds)) # (?, 20, 10)
+    
+    # now do convolution and max-pooling
+    conv = tf.contrib.layers.conv2d(embeds, N_FILTERS, WINDOW_SIZE, padding='SAME')
+    conv = tf.nn.relu(conv) # (?, 20, 2)
+    conv = tf.expand_dims(conv, -1) # (?, 20, 2, 1)
+    conv = tf.contrib.layers.max_pool2d(conv, 
+              [MAX_DOCUMENT_LENGTH/2, N_FILTERS], padding='SAME') # (?, 10, 1, 1)
+    words = tf.squeeze(conv, [2, 3])
+    print('words_conv={}'.format(words)) # (?, 10)
 
-  with tf.variable_scope('CNN_Layer1'):
-    # Apply Convolution filtering on input sequence.
-    conv1 = tf.contrib.layers.convolution2d(
-        word_vectors, N_FILTERS, FILTER_SHAPE1, padding='VALID')
-    # Add a RELU for non linearity.
-    conv1 = tf.nn.relu(conv1)
-    # Max pooling across output of Convolution+Relu.
-    pool1 = tf.nn.max_pool(
-        conv1,
-        ksize=[1, POOLING_WINDOW, 1, 1],
-        strides=[1, POOLING_STRIDE, 1, 1],
-        padding='SAME')
-    # Transpose matrix so that n_filters from convolution becomes width.
-    pool1 = tf.transpose(pool1, [0, 1, 3, 2])
-  with tf.variable_scope('CNN_Layer2'):
-    # Second level of convolution filtering.
-    conv2 = tf.contrib.layers.convolution2d(
-        pool1, N_FILTERS, FILTER_SHAPE2, padding='VALID')
-    # Max across each filter to get useful features for classification.
-    pool2 = tf.squeeze(tf.reduce_max(conv2, 1), squeeze_dims=[1])
+    n_classes = len(TARGETS)
 
-  # Apply regular WX + B and classification.
-  logits = tf.contrib.layers.fully_connected(pool2, n_classes, activation_fn=None)
-  predictions_dict = {
+    logits = tf.contrib.layers.fully_connected(words, n_classes, activation_fn=None)
+    #print('logits={}'.format(logits)) # (?, 3)
+    predictions_dict = {
       'source': tf.gather(TARGETS, tf.argmax(logits, 1)),
       'class': tf.argmax(logits, 1),
       'prob': tf.nn.softmax(logits)
-  }
+    }
 
-  if mode == tf.contrib.learn.ModeKeys.TRAIN or mode == tf.contrib.learn.ModeKeys.EVAL:
-     loss = tf.losses.sparse_softmax_cross_entropy(target, logits)
-     train_op = tf.contrib.layers.optimize_loss(
-       loss,
-       tf.contrib.framework.get_global_step(),
-       optimizer='Adam',
-       learning_rate=0.01)
-  else:
-     loss = None
-     train_op = None
+    if mode == tf.contrib.learn.ModeKeys.TRAIN or mode == tf.contrib.learn.ModeKeys.EVAL:
+       loss = tf.losses.sparse_softmax_cross_entropy(target, logits)
+       train_op = tf.contrib.layers.optimize_loss(
+         loss,
+         tf.contrib.framework.get_global_step(),
+         optimizer='Adam',
+         learning_rate=0.01)
+    else:
+       loss = None
+       train_op = None
 
-  return tflearn.ModelFnOps(
-      mode=mode,
-      predictions=predictions_dict,
-      loss=loss,
-      train_op=train_op)
-
-def linear_model(features, target, mode):
-  # make input features numeric
-  from tensorflow.contrib import lookup
-  table = lookup.index_table_from_file(
-        vocabulary_file=WORD_VOCAB_FILE, num_oov_buckets=1, vocab_size=N_WORDS, default_value=-1, name="word_to_index")
-  titles = tf.squeeze(features['title'], [1])
-  words = tf.string_split(titles)
-  words = tf.sparse_tensor_to_dense(words, default_value='ZYXW')
-  words = table.lookup(words)
-  print('lookup_words={}'.format(words))
-
-  # each row has variable length of words
-  # take the first MAX_DOCUMENT_LENGTH words (pad shorter titles to this)
-  padding = tf.stack([tf.zeros_like(titles,dtype=tf.int64),tf.ones_like(titles,dtype=tf.int64)*MAX_DOCUMENT_LENGTH])
-  words = tf.pad(words, padding)
-  words = tf.slice(words, [0,0], [-1,MAX_DOCUMENT_LENGTH])
-  print('words_sliced={}'.format(words))  # (?, 20)
-
-  # embed the words in a common way
-  words = tf.contrib.layers.embed_sequence(
-      words, vocab_size=(N_WORDS+1), embed_dim=EMBEDDING_SIZE, scope='words')
-  print('words_embed={}'.format(words)) # (?, 20, 10)
-
-  # now do convolution
-  conv = tf.contrib.layers.convolution2d(
-           words, 5, [3, EMBEDDING_SIZE] , padding='VALID')
-  conv = tf.nn.relu(conv1)
-  words = tf.nn.max_pool(conv,
-        ksize=[1, POOLING_WINDOW, 1, 1],
-        strides=[1, POOLING_STRIDE, 1, 1],
-        padding='SAME')
-  print('words_conv={}'.format(words)) # 
-
-  n_classes = len(TARGETS)
-
-  logits = tf.contrib.layers.fully_connected(words, n_classes, activation_fn=None)
-  print('logits={}'.format(logits))
-  logits = tf.squeeze(logits, squeeze_dims=[1]) # from (?,1,3) to (?,3)
-  predictions_dict = {
-      'source': tf.gather(TARGETS, tf.argmax(logits, 1)),
-      'class': tf.argmax(logits, 1),
-      'prob': tf.nn.softmax(logits)
-  }
-
-  if mode == tf.contrib.learn.ModeKeys.TRAIN or mode == tf.contrib.learn.ModeKeys.EVAL:
-     loss = tf.losses.sparse_softmax_cross_entropy(target, logits)
-     train_op = tf.contrib.layers.optimize_loss(
-       loss,
-       tf.contrib.framework.get_global_step(),
-       optimizer='Adam',
-       learning_rate=0.01)
-  else:
-     loss = None
-     train_op = None
-
-  return tflearn.ModelFnOps(
+    return tflearn.ModelFnOps(
       mode=mode,
       predictions=predictions_dict,
       loss=loss,
@@ -262,7 +191,7 @@ from tensorflow.contrib.learn.python.learn.utils import saved_model_export_utils
 def experiment_fn(output_dir):
     # run experiment
     return tflearn.Experiment(
-        tflearn.Estimator(model_fn=linear_model, model_dir=output_dir),
+        tflearn.Estimator(model_fn=cnn_model, model_dir=output_dir),
         train_input_fn=get_train(),
         eval_input_fn=get_valid(),
         eval_metrics={
