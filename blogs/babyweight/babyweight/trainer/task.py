@@ -37,10 +37,10 @@ if __name__ == '__main__':
       required=True
   )
   parser.add_argument(
-      '--num_epochs',
-      help='How many epochs to train',
+      '--train_steps',
+      help='Steps to run the training job for.',
       type=int,
-      default=100
+      default=10000
   )
   parser.add_argument(
       '--pattern',
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
   output_dir = arguments.pop('output_dir')
   model.BUCKET     = arguments.pop('bucket')
-  model.NUM_EPOCHS = arguments.pop('num_epochs')
+  model.TRAIN_STEPS = arguments.pop('train_steps')
   model.PATTERN = arguments.pop('pattern')
 
   # Append trial_id to path if we are doing hptuning
@@ -76,4 +76,3 @@ if __name__ == '__main__':
 
   # Run the training job
   learn_runner.run(model.experiment_fn, output_dir)
-
