@@ -30,7 +30,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 BUCKET = None  # set from task.py
 PATTERN = 'of' # gets all files
-NUM_EPOCHS = 100
+TRAIN_STEPS = 10000
 CSV_COLUMNS = 'weight_pounds,is_male,mother_age,mother_race,plurality,gestation_weeks,mother_married,cigarette_use,alcohol_use,key'.split(',')
 LABEL_COLUMN = 'weight_pounds'
 KEY_COLUMN = 'key'
@@ -47,12 +47,10 @@ def read_dataset(prefix, batch_size=512):
     
   # the actual input function passed to TensorFlow
   def _input_fn():
-    num_epochs = NUM_EPOCHS if mode == tf.contrib.learn.ModeKeys.TRAIN else 1
-
     # could be a path to one file or a file pattern.
     input_file_names = tf.train.match_filenames_once(filename)
     filename_queue = tf.train.string_input_producer(
-        input_file_names, num_epochs=num_epochs, shuffle=True)
+        input_file_names, shuffle=True)
  
     # read CSV
     reader = tf.TextLineReader()
@@ -133,6 +131,6 @@ def experiment_fn(output_dir):
             serving_input_fn,
             default_output_alternative_key=None,
             exports_to_keep=1
-        )]
+        )],
+        train_steps=TRAIN_STEPS
     )
-
