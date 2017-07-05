@@ -31,12 +31,12 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 # variables set by init()
 BUCKET = None
-NUM_EPOCHS = 100
+TRAIN_STEPS = 1000
 WORD_VOCAB_FILE = None 
 N_WORDS = -1
 
 # hardcoded into graph
-BATCH_SIZE = 8
+BATCH_SIZE = 32
 
 # describe your data
 TARGETS = ['nytimes', 'github', 'techcrunch']
@@ -46,10 +46,10 @@ LABEL_COLUMN = 'source'
 DEFAULTS = [['null'], ['null']]
 PADWORD = 'ZYXW'
 
-def init(bucket, num_epochs):
-  global BUCKET, NUM_EPOCHS, WORD_VOCAB_FILE, N_WORDS
+def init(bucket, num_steps):
+  global BUCKET, TRAIN_STEPS, WORD_VOCAB_FILE, N_WORDS
   BUCKET = bucket
-  NUM_EPOCHS = num_epochs
+  TRAIN_STEPS = num_steps
   WORD_VOCAB_FILE = 'gs://{}/txtcls1/vocab_words'.format(BUCKET)
   N_WORDS = save_vocab('gs://{}/txtcls1/train.csv'.format(BUCKET), 'title', WORD_VOCAB_FILE);
 
@@ -85,12 +85,9 @@ def read_dataset(prefix):
    
   # the actual input function passed to TensorFlow
   def _input_fn():
-    num_epochs = NUM_EPOCHS if mode == tf.contrib.learn.ModeKeys.TRAIN else 1
-
     # could be a path to one file or a file pattern.
     input_file_names = tf.train.match_filenames_once(filename)
-    filename_queue = tf.train.string_input_producer(
-        input_file_names, num_epochs=num_epochs, shuffle=True)
+    filename_queue = tf.train.string_input_producer(input_file_names, shuffle=True)
  
     # read CSV
     reader = tf.TextLineReader()
@@ -112,8 +109,8 @@ def read_dataset(prefix):
 
 # CNN model parameters
 EMBEDDING_SIZE = 10
-N_FILTERS = 2
-WINDOW_SIZE = 5
+WINDOW_SIZE = EMBEDDING_SIZE
+STRIDE = int(WINDOW_SIZE/2)
 def cnn_model(features, target, mode):
     table = lookup.index_table_from_file(vocabulary_file=WORD_VOCAB_FILE, num_oov_buckets=1, default_value=-1)
     
@@ -131,14 +128,11 @@ def cnn_model(features, target, mode):
     embeds = tf.contrib.layers.embed_sequence(sliced, vocab_size=N_WORDS, embed_dim=EMBEDDING_SIZE)
     print('words_embed={}'.format(embeds)) # (?, 20, 10)
     
-    # now do convolution and max-pooling
-    conv = tf.contrib.layers.conv2d(embeds, N_FILTERS, WINDOW_SIZE, padding='SAME')
-    conv = tf.nn.relu(conv) # (?, 20, 2)
-    conv = tf.expand_dims(conv, -1) # (?, 20, 2, 1)
-    conv = tf.contrib.layers.max_pool2d(conv, 
-              [MAX_DOCUMENT_LENGTH/2, N_FILTERS], padding='SAME') # (?, 10, 1, 1)
-    words = tf.squeeze(conv, [2, 3])
-    print('words_conv={}'.format(words)) # (?, 10)
+    # now do convolution
+    conv = tf.contrib.layers.conv2d(embeds, 1, WINDOW_SIZE, stride=STRIDE, padding='SAME') # (?, 4, 1)
+    conv = tf.nn.relu(conv) # (?, 4, 1)
+    words = tf.squeeze(conv, [2]) # (?, 4)
+    print('words_conv={}'.format(words)) # (?, 4)
 
     n_classes = len(TARGETS)
 
@@ -203,6 +197,7 @@ def experiment_fn(output_dir):
             serving_input_fn,
             default_output_alternative_key=None,
             exports_to_keep=1
-        )]
+        )],
+        train_steps = TRAIN_STEPS
     )
 

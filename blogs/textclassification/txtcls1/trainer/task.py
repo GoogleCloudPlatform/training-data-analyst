@@ -37,10 +37,10 @@ if __name__ == '__main__':
       required=True
   )
   parser.add_argument(
-      '--num_epochs',
-      help='How many epochs to train',
+      '--train_steps',
+      help='How many batches to run training job for',
       type=int,
-      default=100
+      default=1000
   )
   parser.add_argument(
       '--job-dir',
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
   output_dir = arguments.pop('output_dir')
   model.init(arguments.pop('bucket'),
-             arguments.pop('num_epochs')
+             arguments.pop('train_steps')
             )
 
   # Append trial_id to path if we are doing hptuning
