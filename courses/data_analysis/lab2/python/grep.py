@@ -14,10 +14,11 @@ limitations under the License.
 """
 
 import apache_beam as beam
+import re
 import sys
 
 def my_grep(line, term):
-   if term in line:
+   if re.match( r'^' + re.escape(term), line):
       yield line
 
 if __name__ == '__main__':

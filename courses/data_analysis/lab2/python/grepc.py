@@ -14,9 +14,10 @@ limitations under the License.
 """
 
 import apache_beam as beam
+import re
 
 def my_grep(line, term):
-   if term in line:
+   if re.match( r'^' + re.escape(term), line):
       yield line
 
 PROJECT='cloud-training-demos'
