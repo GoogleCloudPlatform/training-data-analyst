@@ -11,7 +11,7 @@ BUCKET=$2
 
 gsutil -m rm -rf gs://$BUCKET/landsat/output
 
-./dfndvi.py \
+python ./dfndvi.py \
     --project=$PROJECT \
     --runner=DataflowRunner \
     --staging_location=gs://$BUCKET/landsat/staging \
