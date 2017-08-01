@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [ "$#" -ne 3 ]; then
-    echo "authorize_nodes.sh clustername  zone  numworkers"
-    echo "  e.g.  ./authorize_nodes.sh cluster-1 us-east1-b 2"
+    echo "authorize_dataproc.sh clustername  zone  numworkers"
+    echo "  e.g.  ./authorize_dataproc.sh cluster-1 us-east1-b 2"
     exit
 fi
 
