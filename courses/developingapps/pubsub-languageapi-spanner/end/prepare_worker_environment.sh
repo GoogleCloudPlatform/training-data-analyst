@@ -17,7 +17,7 @@ export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID
 export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media
 
 echo "Creating quiz-account Service Account"
-gcloud iam service-accounts create quiz-account --display-name 
+gcloud iam service-accounts create quiz-account --display-name "Quiz Account"
 gcloud iam service-accounts keys create key.json --iam-account=quiz-account@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com
 export GOOGLE_APPLICATION_CREDENTIALS=key.json
 

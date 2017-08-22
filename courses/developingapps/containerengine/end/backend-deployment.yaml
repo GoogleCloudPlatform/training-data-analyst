@@ -16,3 +16,10 @@ spec:
       - name: quiz-app
         image: gcr.io/[GCLOUD_PROJECT]/quiz-backend
         imagePullPolicy: Always
+        env:
+          - name: GCLOUD_PROJECT
+            value: <GCLOUD_PROJECT_ID>
+          - name: GCLOUD_BUCKET
+            value: <GCLOUD_BUCKET>
+          - name: NODE_ENV
+            value: production
