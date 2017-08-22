@@ -11,15 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-echo "Creating App Engine app"
-gcloud app create --region "us-central"
-
-echo "Making bucket: gs://$DEVSHELL_PROJECT_ID-media"
-gsutil mb gs://$DEVSHELL_PROJECT_ID-media
-
 echo "Exporting GCLOUD_PROJECT and GCLOUD_BUCKET"
 export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID
 export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media
+
+echo "Creating Compute Engine instance"
+gcloud compute firewall-rules create default-allow-http --allow tcp:80 --source-ranges 0.0.0.0/0 --target-tags http-server
+gcloud compute instances create quiz-host --zone us-central1-a --tags http-server --scopes=cloud-platform --metadata-from-file=startup-script=./setup/quizhost_startup_script.sh
+
+echo "Creating App Engine app"
+gcloud app create --region "us-central"
+
+echo "Making bucket: gs://$GCLOUD_BUCKET"
+gsutil mb gs://$GCLOUD_BUCKET
 
 echo "Installing dependencies"
 npm install

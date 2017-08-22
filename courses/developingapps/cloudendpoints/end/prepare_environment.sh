@@ -11,15 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-echo "Creating App Engine app"
-gcloud app create --region "us-central"
-
-echo "Making bucket: gs://$DEVSHELL_PROJECT_ID-media"
-gsutil mb gs://$DEVSHELL_PROJECT_ID-media
-
 echo "Exporting GCLOUD_PROJECT and GCLOUD_BUCKET"
 export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID
 export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media
+
+echo "Creating Compute Engine instance"
+gcloud compute firewall-rules create default-allow-http --allow tcp:80 --source-ranges 0.0.0.0/0 --target-tags http-server
+gcloud compute instances create endpoint-host --zone us-central1-a --tags http-server --scopes=cloud-platform --metadata endpoints-service-name="quiz-api.endpoints.$GCLOUD_PROJECT.cloud.goog",endpoints-service-config-id="`date +%Y-%m-%d`r0" --metadata-from-file=startup-script=./setup/endpointhost_startup_script.sh
+
+echo "Creating App Engine app"
+gcloud app create --region "us-central"
+
+echo "Making bucket: gs://$GCLOUD_BUCKET"
+gsutil mb gs://$GCLOUD_BUCKET
 
 echo "Installing dependencies"
 npm install
@@ -36,5 +40,15 @@ gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CR
 
 echo "Creating Cloud Function"
 gcloud beta functions deploy process-feedback --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+
+echo "Creating Cloud Endpoint"
+sed -i "s/GCLOUD_PROJECT/$GCLOUD_PROJECT/g" ./endpoint/quiz-api.json
+gcloud service-management deploy ./endpoint/quiz-api.json
+
+echo "Copying source to Compute Engine"
+gcloud compute scp --recurse ./endpoint/quiz-api endpoint-host:~/
+
+echo "Installing and running Cloud Endpoint backend"
+gcloud compute ssh endpoint-host --command "cd ~/quiz-api && export PORT=8081 && export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID && export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media && npm install && npm start"
 
 echo "Project ID: $DEVSHELL_PROJECT_ID"

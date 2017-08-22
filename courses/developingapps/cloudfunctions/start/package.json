@@ -5,8 +5,7 @@
   "repository": "UNKNOWN",
   "private": true,
   "scripts": {
-    "start": "node server/app.js",
-    "worker": "node console/worker.js"
+    "start": "node server/app.js"
   },
   "license": "Apache-2.0",
   "dependencies": {
