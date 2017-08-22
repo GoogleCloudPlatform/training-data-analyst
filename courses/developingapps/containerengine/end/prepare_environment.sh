@@ -39,8 +39,8 @@ gcloud container clusters create quiz-cluster --zone us-central1-a --scopes clou
 gcloud container clusters get-credentials quiz-cluster --zone us-central1-a
 
 echo "Building Containers"
-gcloud container build submit -t gcr.io/$DEVSHELL_PROJECT_ID/quiz-frontend ./frontend/
-gcloud container build submit -t gcr.io/$DEVSHELL_PROJECT_ID/quiz-backend ./backend/
+gcloud container builds submit -t gcr.io/$DEVSHELL_PROJECT_ID/quiz-frontend ./frontend/
+gcloud container builds submit -t gcr.io/$DEVSHELL_PROJECT_ID/quiz-backend ./backend/
 
 echo "Deploying to Container Engine"
 sed -i -e "s/\[GCLOUD_PROJECT\]/$DEVSHELL_PROJECT_ID/g" ./frontend-deployment.yaml
