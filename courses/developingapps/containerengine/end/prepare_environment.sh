@@ -34,4 +34,20 @@ echo "Creating Cloud Spanner Instance, Database, and Table"
 gcloud spanner instances create quiz-instance --config=regional-us-central1 --description="Quiz instance" --nodes=1
 gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CREATE TABLE Feedback ( feedbackId STRING(100) NOT NULL, email STRING(100), quiz STRING(20), feedback STRING(MAX), rating INT64, score FLOAT64, timestamp INT64 ) PRIMARY KEY (feedbackId);"
 
+echo "Creating Container Engine cluster"
+gcloud container clusters create quiz-cluster --zone us-central1-a --scopes cloud_platform
+gcloud container clusters get-credentials quiz-cluster --zone us-central1-a
+
+echo "Building Containers"
+gcloud container build submit -t gcr.io/$DEVSHELL_PROJECT_ID/quiz-frontend ./frontend/
+gcloud container build submit -t gcr.io/$DEVSHELL_PROJECT_ID/quiz-backend ./backend/
+
+echo "Deploying to Container Engine"
+sed -i -e "s/\[GCLOUD_PROJECT\]/$DEVSHELL_PROJECT_ID/g" ./frontend-deployment.yaml
+sed -i -e "s/\[GCLOUD_PROJECT\]/$DEVSHELL_PROJECT_ID/g" ./backend-deployment.yaml
+kubectl create -f ./frontend-deployment.yaml
+kubectl create -f ./backend-deployment.yaml
+kubectl create -f ./frontend-service.yaml
+
+
 echo "Project ID: $DEVSHELL_PROJECT_ID"

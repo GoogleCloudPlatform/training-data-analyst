@@ -20,6 +20,6 @@ spec:
           - name: GCLOUD_PROJECT
             value: [GCLOUD_PROJECT]
           - name: GCLOUD_BUCKET
-            value: [GCLOUD_BUCKET]
+            value: [GCLOUD_PROJECT]-media
           - name: NODE_ENV
             value: production
