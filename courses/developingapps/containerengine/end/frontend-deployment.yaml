@@ -13,15 +13,16 @@ spec:
         tier: frontend
     spec:
       containers:
-      - name: quiz-appimage: gcr.io/[GCLOUD_PROJECT]/quiz-app
+      - name: quiz-app
+        image: gcr.io/[GCLOUD_PROJECT]/quiz-app
         imagePullPolicy: Always
         ports:
         - name: http-server
           containerPort: 8080
         env:
           - name: GCLOUD_PROJECT
-            value: <GCLOUD_PROJECT_ID>
+            value: [GCLOUD_PROJECT]
           - name: GCLOUD_BUCKET
-            value: <GCLOUD_BUCKET>
+            value: [GCLOUD_BUCKET]
           - name: NODE_ENV
             value: production

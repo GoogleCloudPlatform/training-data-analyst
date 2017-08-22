@@ -18,8 +18,8 @@ spec:
         imagePullPolicy: Always
         env:
           - name: GCLOUD_PROJECT
-            value: <GCLOUD_PROJECT_ID>
+            value: [GCLOUD_PROJECT]
           - name: GCLOUD_BUCKET
-            value: <GCLOUD_BUCKET>
+            value: [GCLOUD_BUCKET]
           - name: NODE_ENV
             value: production
