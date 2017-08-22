@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: quiz-frontend
+  labels:
+    app: quiz
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: quiz-app
+        tier: frontend
+    spec:
+      containers:
+      - name: quiz-appimage: gcr.io/[GCLOUD_PROJECT]/quiz-app
+       imagePullPolicy: Always
+       ports:
+        - name: http-server
+          containerPort: 8080

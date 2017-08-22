@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: quiz-worker
+  labels:
+    app: quiz
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: quiz
+        tier: worker
+    spec:
+      containers:
+      - name: quiz-app
+        image: gcr.io/[GCLOUD_PROJECT]/quiz-backend
+        imagePullPolicy: Always
