@@ -12,18 +12,22 @@
 // limitations under the License.
 
 'use strict';
-
+require('@google-cloud/debug-agent').start({ allowExpressions: true });
+const ErrorReporting = require('@google-cloud/error-reporting');
 const path = require('path');
 const express = require('express');
 const config = require('./config');
 
+const errorReporting = ErrorReporting({
+  projectId: config.get('GCLOUD_PROJECT')
+});
 const app = express();
 
 // Static files
-app.use(express.static('./public/'));
+app.use(express.static('public/'));
 
 app.disable('etag');
-app.set('views', path.join(__dirname, './web-app/views'));
+app.set('views', path.join(__dirname, 'web-app/views'));
 app.set('view engine', 'pug');
 app.set('trust proxy', true);
 app.set('json spaces', 2);
@@ -38,6 +42,9 @@ app.use('/api/quizzes', require('./api'));
 app.get('/', (req, res) => {
   res.render('home.pug');
 });
+
+// Use Stackdriver Error Reporting Express middleware
+app.use(errorReporting.express);
 
 // Basic 404 handler
 app.use((req, res) => {
