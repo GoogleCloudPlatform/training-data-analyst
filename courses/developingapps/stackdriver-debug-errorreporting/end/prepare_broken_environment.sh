@@ -15,10 +15,6 @@ echo "Exporting GCLOUD_PROJECT and GCLOUD_BUCKET"
 export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID
 export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media
 
-# echo "Creating Compute Engine instance"
-# gcloud compute firewall-rules create default-allow-http --allow tcp:80 --source-ranges 0.0.0.0/0 --target-tags http-server
-# gcloud compute instances create quiz-host --zone us-central1-a --tags http-server --scopes=cloud-platform --metadata-from-file=startup-script=./setup/quizhost_startup_script.sh
-
 echo "Creating App Engine app"
 gcloud app create --region "us-central"
 
@@ -31,14 +27,14 @@ npm install
 echo "Creating Datastore entities"
 node setup/add_entities.js
 
-echo "Creating Cloud Pub/Sub topic"
-gcloud beta pubsub topics create feedback
+echo "NOT Creating Cloud Pub/Sub topic"
+# gcloud beta pubsub topics create feedback
 
-echo "Creating Cloud Spanner Instance, Database, and Table"
+echo "Creating Cloud Spanner Instance, but NOT Database, and NOT Table"
 gcloud spanner instances create quiz-instance --config=regional-us-central1 --description="Quiz instance" --nodes=1
 # gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CREATE TABLE Feedback ( feedbackId STRING(100) NOT NULL, email STRING(100), quiz STRING(20), feedback STRING(MAX), rating INT64, score FLOAT64, timestamp INT64 ) PRIMARY KEY (feedbackId);"
 
-echo "Creating Cloud Function"
-gcloud beta functions deploy process-feedback --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+echo "NOT Creating Cloud Function"
+# gcloud beta functions deploy process-feedback --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 
 echo "Project ID: $DEVSHELL_PROJECT_ID"
