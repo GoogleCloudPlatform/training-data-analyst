@@ -27,16 +27,6 @@ npm install
 echo "Creating Datastore entities"
 node setup/add_entities.js
 
-echo "Creating quiz-account Service Account"
-gcloud iam service-accounts create quiz-account --display-name 
-gcloud iam service-accounts keys create key.json --iam-account=quiz-account@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com
-export GOOGLE_APPLICATION_CREDENTIALS=key.json
-
-echo "Setting quiz-account IAM Role"
-gcloud projects get-iam-policy $DEVSHELL_PROJECT_ID --format json > iam.json
-node setup/add_iam_policy_to_service_account.js
-gcloud projects set-iam-policy $DEVSHELL_PROJECT_ID iam_modified.json
-
 echo "Creating Cloud Pub/Sub topic"
 gcloud beta pubsub topics create feedback
 

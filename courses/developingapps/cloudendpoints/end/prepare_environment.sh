@@ -28,6 +28,9 @@ gsutil mb gs://$GCLOUD_BUCKET
 echo "Installing dependencies"
 npm install
 
+echo "Installing Open API generator"
+sudo npm install -g api2swagger
+
 echo "Creating Datastore entities"
 node setup/add_entities.js
 
