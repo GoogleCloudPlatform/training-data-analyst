@@ -12,7 +12,7 @@
 // limitations under the License.
 (function () {
 
-    var module = angular.module('gcsCors');
+    var module = angular.module('gcsCors', []);
 
 
 })();
