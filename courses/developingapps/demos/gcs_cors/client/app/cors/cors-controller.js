@@ -19,7 +19,7 @@
     CorsController.$inject = ['$http'];
 
     function CorsController($http) {
-        var qc = this;
+        var cc = this;
 
         $http.get('./data.json').then(function (response) {
             cc.data = response.data;
