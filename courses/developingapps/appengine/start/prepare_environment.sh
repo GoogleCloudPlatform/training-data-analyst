@@ -15,9 +15,6 @@ echo "Exporting GCLOUD_PROJECT and GCLOUD_BUCKET"
 export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID
 export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media
 
-echo "Updating config.json"
-sed -i "s/THE_GCLOUD_BUCKET/$GCLOUD_BUCKET/g" ./frontend/config.json
-
 echo "Creating App Engine app"
 gcloud app create --region "us-central"
 
@@ -41,6 +38,3 @@ echo "Creating Cloud Function"
 gcloud beta functions deploy process-feedback --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 
 echo "Project ID: $DEVSHELL_PROJECT_ID"
-
-echo "Deploying App Engine app. This may take some time..."
-gcloud app deploy ./frontend/app.yaml
