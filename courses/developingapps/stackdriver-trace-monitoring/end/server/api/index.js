@@ -61,9 +61,11 @@ router.post('/:quiz', (req, res, next) => {
         funcs.reduce((promise, func) =>
           promise.then(result => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]));
 
+      // Executes a set of promises in parallel
+      const parallel = funcs => Promise.all(funcs);
 
-      // Send the answers to Pub/Sub one at a time (a bad thing...)
-      serial(answersWithCorrect.map(answer => () => publisher.publishAnswer(answer))).then(() => {
+      // Send the answers to Pub/Sub one at a time (this is a bad thing...)
+      parallel(answersWithCorrect.map(answer => () => publisher.publishAnswer(answer))).then(() => {
         const score = answersWithCorrect.filter(a => a.answer == a.correct).length; // number of correct answers            
         res.status(200).json({ correct: score, total: questions.length });
       });
