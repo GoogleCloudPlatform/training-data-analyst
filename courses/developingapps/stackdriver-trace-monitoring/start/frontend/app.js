@@ -11,14 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 'use strict';
+const config = require('./config');
 
 require('@google-cloud/debug-agent').start({
-	allowExpressions: true
+	allowExpressions: true,
+	projectId: config.get('GCLOUD_PROJECT')
 });
 
 const path = require('path');
 const express = require('express');
-const config = require('./config');
 const scores = require('./gcp/spanner');
 
 const ErrorReporting = require('@google-cloud/error-reporting');

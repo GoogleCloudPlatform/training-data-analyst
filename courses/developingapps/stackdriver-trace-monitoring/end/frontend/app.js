@@ -22,7 +22,6 @@ require('@google-cloud/debug-agent').start({
 
 const path = require('path');
 const express = require('express');
-const config = require('./config');
 const scores = require('./gcp/spanner');
 
 const ErrorReporting = require('@google-cloud/error-reporting');
