@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const ds_client = require('../server/gcp/datastore');
+const ds_client = require('../frontend/gcp/datastore');
 
 const questions = [
     {
@@ -56,6 +56,28 @@ const questions = [
         answer3: 'Paris',
         answer4: 'Stockholm',
         correctAnswer: 3,
+        imageUrl: ''
+    },
+    {
+        quiz: 'places',
+        author: 'Nigel',
+        title: 'What is the capital of Norway?',
+        answer1: 'Copenhagen',
+        answer2: 'Helsinki',
+        answer3: 'Oslo',
+        answer4: 'Stockholm',
+        correctAnswer: 3,
+        imageUrl: ''
+    },
+    {
+        quiz: 'people',
+        author: 'Nigel',
+        title: 'Who was the first President of the United States of America?',
+        answer1: 'George Washington',
+        answer2: 'William Taft',
+        answer3: 'Franklin D Roosevelt',
+        answer4: 'George H W Bush',
+        correctAnswer: 1,
         imageUrl: ''
     },
 ];

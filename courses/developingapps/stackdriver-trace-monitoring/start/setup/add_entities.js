@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const ds_client = require('../server/gcp/datastore');
+const ds_client = require('../frontend/gcp/datastore');
 
 const questions = [
     {
