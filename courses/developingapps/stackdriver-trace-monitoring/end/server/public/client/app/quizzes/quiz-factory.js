@@ -30,6 +30,7 @@
         };
 
         function getQuestions(quizName) {
+            answers = [];
             return $http.get('/api/quizzes/' + quizName).then(function (response) {
                 return response.data.questions;
             });
