@@ -1,4 +1,4 @@
-const config = require('../server/config');
+const config = require('../frontend/config');
 const iamPolicies = require('../iam.json');
 const fs = require('fs');
 
