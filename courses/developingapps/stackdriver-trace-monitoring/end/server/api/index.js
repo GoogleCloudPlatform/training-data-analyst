@@ -63,15 +63,17 @@ router.post('/:quiz', (req, res, next) => {
       //     console.log('answer sent to Pub/Sub');
       //   });
       // });
-      answersWithCorrect.reduce(
+      var bla = answersWithCorrect.reduce(
         (p, a) => p.then(() => 
           publisher.publishAnswer(a),
-          Promise.resolve())).then(() => {
-            const score = answersWithCorrect.filter(a => a.answer == a.correct).length; // number of correct answers
-            
-            res.status(200).json({ correct: score, total: questions.length });
-            
-          });
+          Promise.resolve()));
+
+          console.log(bla);
+
+          const score = answersWithCorrect.filter(a => a.answer == a.correct).length; // number of correct answers
+          
+          res.status(200).json({ correct: score, total: questions.length });
+
 
     }, err => { next(err) });
 });
