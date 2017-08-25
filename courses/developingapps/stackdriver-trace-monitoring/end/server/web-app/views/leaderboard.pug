@@ -21,7 +21,7 @@ block content
     each item in scores
       div= JSON.stringify(item)
       div before
-      div= typeof(item.quiz)
+      div= item.quiz
       div after
     hr
     table.table.table-striped.table-hover
@@ -31,10 +31,10 @@ block content
           th.col-md-6 Email
           th.col-md-2 Score
       tbody
-        //- each item in scores
-        //-   tr
-        //-     td= item.quiz
-        //-     td= item.email
-        //-     td= item.score
+        each item in scores
+          tr
+            td= item.quiz
+            td= item.email
+            td= item.score.value
 
 

@@ -29,7 +29,9 @@ FROM Answers
 WHERE correct = answer
 GROUP BY quiz, email
 LIMIT 100`;
-    return database.run({ sql });
+    return database.run({ sql }).then(([scoreData]) => {
+        return scoreData.map(itemData => itemData.toJSON());
+    });
   }
   
 
