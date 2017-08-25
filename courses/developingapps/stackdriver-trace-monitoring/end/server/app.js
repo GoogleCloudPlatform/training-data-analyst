@@ -16,6 +16,7 @@
 const path = require('path');
 const express = require('express');
 const config = require('./config');
+const scores = require('./gcp/spanner');
 
 const app = express();
 
@@ -42,10 +43,11 @@ app.get('/', (req, res) => {
 
 // Display the Leaderboard
 app.get('/leaderboard', (req, res) => {
-  res.render('leaderboard.pug', {
-    scores: [
-      {quiz:'gcp', email:'user@domain.org', score: 5}
-    ]
+  scores.getLeaderboard().then(response => {
+    const scores = response[0];
+    res.render('leaderboard.pug', {
+      scores
+    });  
   });
 });
 

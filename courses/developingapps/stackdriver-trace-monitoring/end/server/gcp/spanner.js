@@ -25,12 +25,11 @@ const table = database.table('answers');
 function getLeaderboard() {
     const sql = 
     `SELECT 
-        quiz, email, COUNT(*) 
-    FROM Answers
-    GROUP BY quiz, email
-    WHERE correct = answer
-    LIMIT 100
-    `;
+    quiz, email, COUNT(*) AS score
+FROM Answers
+WHERE correct = answer
+GROUP BY quiz, email
+LIMIT 100`;
     return table.insert(record);
   }
   
