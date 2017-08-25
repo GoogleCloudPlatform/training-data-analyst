@@ -58,7 +58,7 @@ router.post('/:quiz', (req, res, next) => {
       console.log(answersWithCorrect);
 
       // Send the answers to Pub/Sub one at a time (a bad thing...)
-      answersWithCorrect.foreEach(a => {
+      answersWithCorrect.forEach(a => {
         publisher.publishAnswer(a).then(() => {
           console.log('answer sent to Pub/Sub');
         });

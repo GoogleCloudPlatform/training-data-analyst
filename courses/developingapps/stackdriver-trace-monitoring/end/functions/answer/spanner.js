@@ -19,33 +19,10 @@ const database = instance.database('quiz-database');
 const feedbackTable = database.table('feedback');
 const answersTable = database.table('answers');
 
-function encodeEmail(email) {
-    return email
-    .replace(/[@\.]/, '_')
-    .split('_')
-    .reverse();
-}
-
-function saveFeedback(
-    {email, quiz, timestamp, rating, feedback, score}) {
-        const rev_encode_email = encodeEmail(email);
-    const record = {
-          feedbackId: `${rev_encode_email}_${quiz}_${timestamp}`,
-          email,
-          quiz,
-          timestamp,
-          rating,
-          score,
-          feedback,      
-    };
-    console.log('Feedback saved');
-    return feedbackTable.insert(record);
-  }
-
 function saveAnswer(
     {id, email, quiz, timestamp, correct, answer}) {
     const record = {
-          answerId:  `${quiz}_${email}_${timestamp}`,
+          answerId:  `${quiz}_${email}_${id}_${timestamp}`,
           email,
           quiz,
           timestamp,
@@ -58,6 +35,5 @@ function saveAnswer(
   
 
 module.exports = {
-    saveFeedback,
     saveAnswer
 };
