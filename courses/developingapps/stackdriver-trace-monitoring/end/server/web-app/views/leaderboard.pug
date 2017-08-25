@@ -18,11 +18,8 @@ block content
   .row
     p Congratulations to our leaders, who have done so well
   .row
-    each item in scores
-      div= JSON.stringify(item)
-      div before
-      div= item.quiz
-      div after
+    div= typeof(scores)
+    div= scores.constructor
     hr
     table.table.table-striped.table-hover
       thead
