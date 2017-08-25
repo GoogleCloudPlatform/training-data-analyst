@@ -19,18 +19,17 @@ const spanner = Spanner({
 
 const instance = spanner.instance('quiz-instance');
 const database = instance.database('quiz-database');
-const table = database.table('answers');
 
 
 function getLeaderboard() {
-    const sql = 
-    `SELECT 
+    const sql =
+        `SELECT 
     quiz, email, COUNT(*) AS score
 FROM Answers
 WHERE correct = answer
 GROUP BY quiz, email
 LIMIT 100`;
-    return table.insert(record);
+    return database.run({ sql });
   }
   
 
