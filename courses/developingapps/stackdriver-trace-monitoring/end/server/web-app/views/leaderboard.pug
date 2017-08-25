@@ -19,7 +19,7 @@ block content
     p Congratulations to our leaders, who have done so well
   .row
     each item in scores
-      !JSON.stringify(item)
+      div= JSON.stringify(item)
     hr
     table.table.table-striped.table-hover
       thead
