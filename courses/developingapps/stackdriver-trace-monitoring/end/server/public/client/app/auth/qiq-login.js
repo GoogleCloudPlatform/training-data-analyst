@@ -30,7 +30,6 @@
 
         function init() {
             lc.isLoggedIn = !!lc.user;
-            lc.email = lc.user.email;
         }
 
         function login() {

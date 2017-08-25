@@ -42,6 +42,7 @@
                 answer: selectedAnswer,
                 timestamp: Date.now()
             };
+            console.log(answer);
             answers.push(answer);
         }
 
