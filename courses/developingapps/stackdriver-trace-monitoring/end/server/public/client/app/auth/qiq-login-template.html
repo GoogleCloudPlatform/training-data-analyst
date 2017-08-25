@@ -25,7 +25,7 @@ limitations under the License.
         {{$ctrl.errorMessage}}
     </form>
     <p class='navbar-text navbar-right' ng-if='$ctrl.isLoggedIn'>
-        Hello {{$ctrl.email}}
+        Hello {{$ctrl.email}} <input class='form-control input-sm' ng-model='$ctrl.email'>
         <a href='#' class='navbar-link' ng-click='$ctrl.logout()'>Logout</a>
     </p>
 </span>
