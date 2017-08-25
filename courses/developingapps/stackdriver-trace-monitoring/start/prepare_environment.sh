@@ -17,9 +17,10 @@ gcloud app create --region "us-central"
 echo "Making bucket: gs://$DEVSHELL_PROJECT_ID-media"
 gsutil mb gs://$DEVSHELL_PROJECT_ID-media
 
-echo "Exporting GCLOUD_PROJECT and GCLOUD_BUCKET"
+echo "Exporting GCLOUD_PROJECT and GCLOUD_BUCKET and NODE_ENV"
 export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID
 export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media
+export NODE_ENV=production
 
 echo "Installing dependencies"
 npm install
