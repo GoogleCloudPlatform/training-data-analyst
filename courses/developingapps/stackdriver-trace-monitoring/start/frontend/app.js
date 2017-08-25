@@ -30,7 +30,7 @@ const errorReporting = ErrorReporting({
 const app = express();
 
 // Static files
-app.use(express.static('./public/'));
+app.use(express.static('frontend/public/'));
 
 app.disable('etag');
 app.set('views', path.join(__dirname, 'web-app/views'));
