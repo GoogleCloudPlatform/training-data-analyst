@@ -28,7 +28,7 @@ function getLeaderboard() {
 FROM Answers
 WHERE correct = answer
 GROUP BY quiz, email
-LIMIT 100`;
+ORDER BY quiz, score DESC`;
     return database.run({ sql }).then(([scoreData]) => {
         const scores = scoreData.map(itemData => itemData.toJSON());
         return scores;
