@@ -18,6 +18,9 @@ block content
   .row
     p Congratulations to our leaders, who have done so well
   .row
+    each item in scores
+      !JSON.stringify(item)
+    hr
     table.table.table-striped.table-hover
       thead
         tr
@@ -29,6 +32,6 @@ block content
           tr
             td= item.quiz
             td= item.email
-            td= item.score
+            td= item.score.value
 
 
