@@ -20,6 +20,9 @@ block content
   .row
     each item in scores
       div= JSON.stringify(item)
+      div before
+      div= item.quiz
+      div after
     hr
     table.table.table-striped.table-hover
       thead
