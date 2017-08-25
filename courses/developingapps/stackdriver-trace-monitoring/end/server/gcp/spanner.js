@@ -30,7 +30,9 @@ WHERE correct = answer
 GROUP BY quiz, email
 LIMIT 100`;
     return database.run({ sql }).then(([scoreData]) => {
-        return scoreData.map(itemData => itemData.toJSON());
+        const scores = scoreData.map(itemData => itemData.toJSON());
+        console.log(scores);
+        return scores;
     });
   }
   
