@@ -32,7 +32,7 @@ LIMIT 100`;
     return database.run({ sql }).then(([scoreData]) => {
         const scores = scoreData.map(itemData => itemData.toJSON());
         console.log(scores);
-        return scores;
+        return [...scores];
     });
   }
   
