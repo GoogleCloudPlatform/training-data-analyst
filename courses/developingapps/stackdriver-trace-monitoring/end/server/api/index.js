@@ -51,17 +51,24 @@ router.post('/:quiz', (req, res, next) => {
       const { questions } = response;
 
       const answersWithCorrect = answers.map(({ id, email, quiz, answer, timestamp }) => {
-        const correct = questions.find(q => q.id == id).correctAnswer;
-        return { id, email, quiz, answer, correctAnswer, timestamp };
+        const theQuestion = questions.find(q => q.id == id);
+        return { id, email, quiz:theQuestion.quiz, answer, correct:theQuestion.correctAnswer, timestamp };
       });
 
-      // Send the answers to Pub/Sub one at a time (a bad thing...)
-      answersWithCorrect.reduce(
-        (p, a) => p.then(() => 
-          publisher.publishAnswer(a),
-          Promise.resolve()));
+      console.log(answersWithCorrect);
 
-      const score = answersWithCorrect.filter(a => a.answer == a.correctAnswer).length; // number of correct answers
+      // Send the answers to Pub/Sub one at a time (a bad thing...)
+      answersWithCorrect.foreEach(a => {
+        publisher.publishAnswer(a).then(() => {
+          console.log('answer sent to Pub/Sub');
+        });
+      });
+      // answersWithCorrect.reduce(
+      //   (p, a) => p.then(() => 
+      //     publisher.publishAnswer(a),
+      //     Promise.resolve()));
+
+      const score = answersWithCorrect.filter(a => a.answer == a.correct).length; // number of correct answers
 
       res.status(200).json({ correct: score, total: questions.length });
     }, err => { next(err) });

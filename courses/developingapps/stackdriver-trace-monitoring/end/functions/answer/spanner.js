@@ -43,7 +43,7 @@ function saveFeedback(
   }
 
 function saveAnswer(
-    {email, quiz, timestamp, correct, answer}) {
+    {id, email, quiz, timestamp, correct, answer}) {
     const record = {
           answerId:  `${quiz}_${email}_${timestamp}`,
           email,
