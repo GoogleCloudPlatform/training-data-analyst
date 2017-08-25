@@ -52,27 +52,22 @@ router.post('/:quiz', (req, res, next) => {
 
       const answersWithCorrect = answers.map(({ id, email, quiz, answer, timestamp }) => {
         const theQuestion = questions.find(q => q.id == id);
-        return { id, email, quiz:theQuestion.quiz, answer, correct:theQuestion.correctAnswer, timestamp };
+        return { id, email, quiz: theQuestion.quiz, answer, correct: theQuestion.correctAnswer, timestamp };
       });
 
-      console.log(answersWithCorrect);
+
+      // Executes a set of promises in sequence
+      const serial = funcs =>
+        funcs.reduce((promise, func) =>
+          promise.then(result => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]));
+
 
       // Send the answers to Pub/Sub one at a time (a bad thing...)
-      // answersWithCorrect.forEach(a => {
-      //   publisher.publishAnswer(a).then(() => {
-      //     console.log('answer sent to Pub/Sub');
-      //   });
-      // });
-      var bla = answersWithCorrect.reduce(
-        (p, a) => p.then(() => 
-          publisher.publishAnswer(a),
-          Promise.resolve()));
+      serial(answersWithCorrect.map(answer => publisher.publishAnswer(answer))).then(() => {
+        const score = answersWithCorrect.filter(a => a.answer == a.correct).length; // number of correct answers            
+        res.status(200).json({ correct: score, total: questions.length });
+      });
 
-          console.log(bla);
-
-          const score = answersWithCorrect.filter(a => a.answer == a.correct).length; // number of correct answers
-          
-          res.status(200).json({ correct: score, total: questions.length });
 
 
     }, err => { next(err) });
