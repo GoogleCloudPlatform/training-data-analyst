@@ -44,8 +44,8 @@ app.get('/', (req, res) => {
 // Display the Leaderboard
 app.get('/leaderboard', (req, res) => {
   scores.getLeaderboard().then(response => {
-    console.log(response);
     const scores = response[0];
+    console.log(JSON.stringify(scores);
     res.render('leaderboard.pug', {
       scores
     });  
