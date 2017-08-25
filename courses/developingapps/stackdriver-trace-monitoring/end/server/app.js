@@ -45,7 +45,7 @@ app.get('/', (req, res) => {
 app.get('/leaderboard', (req, res) => {
   scores.getLeaderboard().then(response => {
     const scores = response[0];
-    console.log(JSON.stringify(scores);
+    console.log(JSON.stringify(scores));
     res.render('leaderboard.pug', {
       scores
     });  
