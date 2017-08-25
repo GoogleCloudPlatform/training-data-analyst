@@ -63,7 +63,7 @@ router.post('/:quiz', (req, res, next) => {
 
 
       // Send the answers to Pub/Sub one at a time (a bad thing...)
-      serial(answersWithCorrect.map(answer => publisher.publishAnswer(answer))).then(() => {
+      serial(answersWithCorrect.map(answer => () => publisher.publishAnswer(answer))).then(() => {
         const score = answersWithCorrect.filter(a => a.answer == a.correct).length; // number of correct answers            
         res.status(200).json({ correct: score, total: questions.length });
       });
