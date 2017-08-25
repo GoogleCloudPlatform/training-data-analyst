@@ -15,19 +15,21 @@ extends base.pug
 
 block content
   h1 Quite Interesting Quiz Leaderboard
-  div.row Congratulations to our leaders, who have done so well
-  div.row.well
-    table.table.table-striped.table-hover
-      thead
-        tr
-          th.col-md-4 Quiz
-          th.col-md-6 Email
-          th.col-md-2 Score
-      tbody
-        each item in scores
+  .row 
+    .col-md-12 Congratulations to our leaders, who have done so well
+  .row
+    .col-md-12
+      table.table.table-striped.table-hover
+        thead
           tr
-            td= item.quiz
-            td= item.email
-            td= item.score
+            th.col-md-4 Quiz
+            th.col-md-6 Email
+            th.col-md-2 Score
+        tbody
+          each item in scores
+            tr
+              td= item.quiz
+              td= item.email
+              td= item.score
 
 
