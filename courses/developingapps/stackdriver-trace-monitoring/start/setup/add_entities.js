@@ -58,6 +58,28 @@ const questions = [
         correctAnswer: 3,
         imageUrl: ''
     },
+    {
+        quiz: 'places',
+        author: 'Nigel',
+        title: 'What is the capital of Norway?',
+        answer1: 'Copenhagen',
+        answer2: 'Helsinki',
+        answer3: 'Oslo',
+        answer4: 'Stockholm',
+        correctAnswer: 3,
+        imageUrl: ''
+    },
+    {
+        quiz: 'people',
+        author: 'Nigel',
+        title: 'Who was the first President of the United States of America?',
+        answer1: 'George Washington',
+        answer2: 'William Taft',
+        answer3: 'Franklin D Roosevelt',
+        answer4: 'George H W Bush',
+        correctAnswer: 1,
+        imageUrl: ''
+    },
 ];
 
 questions.forEach(item => {
