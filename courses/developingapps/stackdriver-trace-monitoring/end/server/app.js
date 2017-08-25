@@ -39,6 +39,16 @@ app.get('/', (req, res) => {
   res.render('home.pug');
 });
 
+
+// Display the Leaderboard
+app.get('/leaderboard', (req, res) => {
+  res.render('leaderboard.pug', {
+    scores: [
+      {quiz:'gcp', email:'user@domain.org', score: 5}
+    ]
+  });
+});
+
 // Basic 404 handler
 app.use((req, res) => {
   res.status(404).send('Not Found');

@@ -23,6 +23,7 @@ function saveAnswer(
     {id, email, quiz, timestamp, correct, answer}) {
     const record = {
           answerId:  `${quiz}_${email}_${id}_${timestamp}`,
+          id,
           email,
           quiz,
           timestamp,
