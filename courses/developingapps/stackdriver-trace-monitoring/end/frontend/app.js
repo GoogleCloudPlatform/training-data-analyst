@@ -10,13 +10,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 'use strict';
+const config = require('./config');
+require('@google-cloud/trace-agent').start({
+	projectId: config.get('GCLOUD_PROJECT')
+});
+require('@google-cloud/debug-agent').start({
+  allowExpressions: true,
+	projectId: config.get('GCLOUD_PROJECT')
+});
 
 const path = require('path');
 const express = require('express');
 const config = require('./config');
 const scores = require('./gcp/spanner');
+
+const ErrorReporting = require('@google-cloud/error-reporting');
+const errorReporting = ErrorReporting({
+	projectId: config.get('GCLOUD_PROJECT')
+});
 
 const app = express();
 
@@ -49,6 +61,9 @@ app.get('/leaderboard', (req, res) => {
     });  
   });
 });
+
+// Use Stackdriver Error Reporting with Express
+app.use(errorReporting.express);
 
 // Basic 404 handler
 app.use((req, res) => {

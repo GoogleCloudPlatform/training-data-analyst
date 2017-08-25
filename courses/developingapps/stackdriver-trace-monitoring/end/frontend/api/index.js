@@ -55,22 +55,20 @@ router.post('/:quiz', (req, res, next) => {
         return { id, email, quiz: theQuestion.quiz, answer, correct: theQuestion.correctAnswer, timestamp };
       });
 
-
       // Executes a set of promises in sequence
-      const serial = funcs =>
+      const sequence = funcs =>
         funcs.reduce((promise, func) =>
           promise.then(result => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]));
 
       // Executes a set of promises in parallel
       const parallel = funcs => Promise.all(funcs.map(func => func()));
 
-      // Send the answers to Pub/Sub one at a time (this is a bad thing...)
-      parallel(answersWithCorrect.map(answer => () => publisher.publishAnswer(answer))).then(() => {
-        const score = answersWithCorrect.filter(a => a.answer == a.correct).length; // number of correct answers            
+      // Sends the answers to Pub/Sub one at a time waiting for a response (this is a bad thing...)
+      sequence(answersWithCorrect.map(answer => () => publisher.publishAnswer(answer))).then(() => {
+        // Waits until all the Pub/Sub messages have been acknowledged before returning to the client
+        const score = answersWithCorrect.filter(a => a.answer == a.correct).length;           
         res.status(200).json({ correct: score, total: questions.length });
       });
-
-
 
     }, err => { next(err) });
 });

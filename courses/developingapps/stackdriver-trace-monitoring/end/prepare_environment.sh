@@ -42,4 +42,14 @@ echo "Creating Cloud Functions"
 gcloud beta functions deploy process-feedback --trigger-topic feedback --source ./functions/feedback --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 gcloud beta functions deploy process-answer --trigger-topic answers --source ./functions/answer --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 
+# echo "Creating quiz-account Service Account"
+# gcloud iam service-accounts create quiz-account --display-name "Quiz Account"
+# gcloud iam service-accounts keys create key.json --iam-account=quiz-account@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com
+# export GOOGLE_APPLICATION_CREDENTIALS=key.json
+
+# echo "Setting quiz-account IAM Role"
+# gcloud projects get-iam-policy $DEVSHELL_PROJECT_ID --format json > iam.json
+# node setup/add_iam_policy_to_service_account.js
+# gcloud projects set-iam-policy $DEVSHELL_PROJECT_ID iam_modified.json
+
 echo "Project ID: $DEVSHELL_PROJECT_ID"
