@@ -90,25 +90,6 @@ router.post('/add',
   });
 // [END add_post]
 
-
-
-/**
- * GET /questions/:id
- *
- * Display a question.
- */
-router.get('/:question', (req, res, next) => {
-  model.read(req.params.question, (err, entity) => {
-    if (err) {
-      next(err);
-      return;
-    }
-    res.render('questions/view.pug', {
-      question: entity
-    });
-  });
-});
-
 /**
  * Errors on "/questions/*" routes.
  */

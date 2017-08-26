@@ -82,32 +82,13 @@ router.post('/add',
     // Save the data to the database.
     // res.redirect('/');
     model.create(data)
-      .then(entity => { res.redirect('/') })
+      .then(() => { res.redirect('/'); })
       .catch(err => {
         next(err);
         return;
       });
   });
 // [END add_post]
-
-
-
-/**
- * GET /questions/:id
- *
- * Display a question.
- */
-router.get('/:question', (req, res, next) => {
-  model.read(req.params.question, (err, entity) => {
-    if (err) {
-      next(err);
-      return;
-    }
-    res.render('questions/view.pug', {
-      question: entity
-    });
-  });
-});
 
 /**
  * Errors on "/questions/*" routes.
