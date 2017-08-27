@@ -27,11 +27,11 @@ def to_entity(line):
              entity.key, kind, str(id))
   googledatastore.helper.add_properties(entity, {  
     'president': unicode(president), 
-    'startYear': unicode(startYear), 
-    'endYear': unicode(endYear), 
+    'startYear': int(startYear), 
+    'endYear': int(endYear), 
     'party': unicode(party), 
     'homeState': unicode(homeState), 
-    'dateOfBirth': unicode(dateOfBirth) })
+    'dateOfBirth': date(dateOfBirth) })
   return entity
 
 
