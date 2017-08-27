@@ -28,5 +28,5 @@ resources:
     networkInterfaces:
     - network: global/networks/default
     - accessConfigs:
-      name: External NAT
-      type: ONE_TO_ONE_NAT
+        name: External NAT
+        type: ONE_TO_ONE_NAT
