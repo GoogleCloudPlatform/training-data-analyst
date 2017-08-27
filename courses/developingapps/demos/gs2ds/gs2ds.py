@@ -2,6 +2,7 @@ from google.cloud.proto.datastore.v1 import entity_pb2
 from google.cloud.proto.datastore.v1 import query_pb2
 import googledatastore
 import apache_beam as beam
+from datetime import datetime
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.io.gcp.datastore.v1.datastoreio import ReadFromDatastore
 from apache_beam.io.gcp.datastore.v1.datastoreio import WriteToDatastore
@@ -31,7 +32,7 @@ def to_entity(line):
     'endYear': int(endYear), 
     'party': unicode(party), 
     'homeState': unicode(homeState), 
-    'dateOfBirth': date(dateOfBirth) })
+    'dateOfBirth': datetime.strptime(dateOfBirth, '%Y-%m-%d') })
   return entity
 
 
