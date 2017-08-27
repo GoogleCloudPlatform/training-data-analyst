@@ -1,0 +1,58 @@
+{
+    "swagger": "2.0",
+    "host": "quiz-api.endpoints.GCLOUD_PROJECT.cloud.goog",
+    "schemes": [
+      "https",
+      "http"
+    ],
+    "info": {
+      "description": "An API for the Quite Interesting Quiz",
+      "title": "Quite Interesting Quiz API",
+      "version": "0.0.1",
+      "termsOfService": "http://example.com/about/terms",
+      "contact": {
+        "name": "API Docs",
+        "url": "http://example.com/contact",
+        "email": "apidocs@example.com"
+      },
+      "license": {
+        "name": "Apache 2.0",
+        "url": "http://example.com"
+      }
+    },
+    "basePath": "/api/quizzes",
+    "paths": {
+      "/{quizName}": {
+        "get": {
+          "description": "Gets questions for a quiz",
+          "summary": "Get quiz questions",
+          "externalDocs": {
+            "description": "Find out more",
+            "url": "http://docs.example.com/management/apis/get/entities"
+          },
+          "operationId": "getQuizQuestions",
+          "tags": [
+            "api2swagger"
+          ],
+          "produces": [
+            "text/html; charset=UTF-8"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          },
+          "security": [],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "quizName",
+              "description": "The name of the quiz",
+              "required": true,
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  }

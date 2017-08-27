@@ -1,0 +1,23 @@
+{
+  "name": "quite-interesting-quiz-api",
+  "version": "1.0.0",
+  "description": "Just the API",
+  "repository": "UNKNOWN",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@google-cloud/datastore": "~1.0.0",
+    "@google-cloud/pubsub": "^0.13.2",
+    "body-parser": "~1.17.1",
+    "express": "~4.15.2",
+    "lodash": "~4.17.4",
+    "nconf": "~0.8.4",
+    "prompt": "~1.0.0"
+  },
+  "engines": {
+    "node": ">=4.3.2"
+  }
+}

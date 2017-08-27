@@ -1,0 +1,10 @@
+{
+  "name": "feedback-function",
+  "version": "0.0.1",
+  "dependencies": {
+    "@google-cloud/spanner": "^0.7.1",
+    "@google-cloud/language": "^0.11.0"
+  }
+}
+
+
