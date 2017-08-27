@@ -1,0 +1,28 @@
+{
+  "name": "quite-interesting-quiz-frontend",
+  "version": "1.0.0",
+  "description": "Create quiz questions, take tests",
+  "repository": "UNKNOWN",
+  "private": true,
+  "scripts": {
+    "start": "node ./app.js"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@google-cloud/datastore": "~1.0.0",
+    "@google-cloud/language": "^0.11.0",
+    "@google-cloud/pubsub": "^0.13.2",
+    "@google-cloud/spanner": "^0.7.1",
+    "@google-cloud/storage": "^1.2.1",
+    "body-parser": "~1.17.1",
+    "express": "~4.15.2",
+    "lodash": "~4.17.4",
+    "multer": "^1.3.0",
+    "nconf": "~0.8.4",
+    "prompt": "~1.0.0",
+    "pug": "2.0.0-rc.2"
+  },
+  "engines": {
+    "node": ">=4.3.2"
+  }
+}
