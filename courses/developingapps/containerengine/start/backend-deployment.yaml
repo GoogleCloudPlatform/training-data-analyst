@@ -14,7 +14,7 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: quiz-worker
+  name: quiz-backend
   labels:
     app: quiz-app
 spec:
