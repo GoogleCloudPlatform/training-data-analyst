@@ -19,7 +19,7 @@ const config = require('../config');
 // Express middleware that will automatically pass uploads to Cloud Storage.
 // req.file is processed and will have a new property:
 // * ``cloudStoragePublicUrl`` the public url to the object.
-// [START process]
+// [START sendUploadToGCS]
 function sendUploadToGCS (req, res, next) {
   if (!req.file) {
     return next();
@@ -28,7 +28,7 @@ function sendUploadToGCS (req, res, next) {
   const oname = Date.now() + req.file.originalname;
   
 }
-// [END process]
+// [END sendUploadToGCS]
 
 // Multer handles parsing multipart/form-data requests.
 // This instance is configured to store images in memory.

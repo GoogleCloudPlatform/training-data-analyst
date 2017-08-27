@@ -24,7 +24,7 @@ const bucket = storage.bucket(GCLOUD_BUCKET);
 // Express middleware that will automatically pass uploads to Cloud Storage.
 // req.file is processed and will have a new property:
 // * ``cloudStoragePublicUrl`` the public url to the object.
-// [START process]
+// [START sendUploadToGCS]
 function sendUploadToGCS(req, res, next) {
   if (!req.file) {
     return next();
@@ -51,7 +51,7 @@ function sendUploadToGCS(req, res, next) {
   });
   stream.end(req.file.buffer);
 }
-// [END process]
+// [END sendUploadToGCS]
 
 // Multer handles parsing multipart/form-data requests.
 // This instance is configured to store images in memory.
