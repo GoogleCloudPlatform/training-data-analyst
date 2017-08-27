@@ -19,6 +19,9 @@ def to_entity(line):
   fields = line.split(',') #id,president,startYear,endYear,party,homeState,dateOfBirth
   id = fields[0]
   president = fields[1]
+  names = president.split(' ')
+  firstName = names[0]
+  lastName = names[1]
   startYear = fields[2]
   endYear = fields[3]
   party = fields[4]
@@ -27,7 +30,8 @@ def to_entity(line):
   googledatastore.helper.add_key_path(
              entity.key, kind, str(id))
   googledatastore.helper.add_properties(entity, {  
-    'president': unicode(president), 
+    'firstName': unicode(firstName), 
+    'lastName': unicode(lastName), 
     'startYear': int(startYear), 
     'endYear': int(endYear), 
     'party': unicode(party), 
