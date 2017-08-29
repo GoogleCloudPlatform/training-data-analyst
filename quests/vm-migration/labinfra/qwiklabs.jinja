@@ -1,0 +1,34 @@
+{# Outputs described in this special qwiklabs template will be surfaced  #}
+{# back up to the student in the Qwiklabs UI, so you can say things like #}
+{# 'enter the name of the ExampleBucket we created for you'              #}
+
+{# Create whatever cloud deployment magic you want here.           #}
+{# See go/qwiklabs-deployment-manager for the available properties. #}
+resources:
+- name: allow-rdp
+  type: compute.v1.firewall
+  properties:
+    network: global/networks/default
+    sourceRanges: ["0.0.0.0/0"]
+    allowed:
+    - IPProtocol: TCP
+      ports: ["3389"]
+- name: migration-source
+  type: compute.v1.instance
+  properties:
+    description: "Sample migration source"
+    zone: {{ properties['zone'] }}
+    machineType: zones/{{ properties['zone'] }}/machineTypes/n1-standard-1
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/windows-cloud/global/images/windows-server-2012-r2-dc-v20170615
+        diskType: projects/{{ env['project'] }}/zones/{{ properties['zone'] }}/diskTypes/pd-ssd 
+    networkInterfaces:
+    - accessConfigs:
+      - kind: compute#accessConfig
+        name: external-nat
+        type: ONE_TO_ONE_NAT
