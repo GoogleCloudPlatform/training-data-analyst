@@ -18,6 +18,7 @@ const pubsub = Pubsub({
 });
 
 const topic = pubsub.topic('feedback');
+const answersTopic = pubsub.topic('answers');
 
 function publishFeedback(feedback) {
   return topic.publish({
