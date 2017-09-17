@@ -40,7 +40,7 @@ function answerHandler(message) {
 
     storage.saveAnswer(message.data)
     .then(() => {
-        console.log('Feedback saved');	
+        console.log('Answer saved');	
     });
 
 }
