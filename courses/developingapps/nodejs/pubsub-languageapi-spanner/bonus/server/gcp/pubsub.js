@@ -28,17 +28,33 @@ function publishFeedback(feedback) {
 
 function registerFeedbackNotification(cb) {
   topic.subscribe('worker-subscription', { autoAck: true })
-  .then(results => {
-  const subscription = results[0];
+    .then(results => {
+      const subscription = results[0];
 
-  subscription.on('message', message => {
-    cb(message.data);
-  });
+      subscription.on('message', message => {
+        cb(message.data);
+      });
 
-  subscription.on('error', err => {
-    console.error(err);
-  });
-});
+      subscription.on('error', err => {
+        console.error(err);
+      });
+    });
+
+}
+
+function registerAnswerNotification(cb) {
+  topic.subscribe('worker-subscription', { autoAck: true })
+    .then(results => {
+      const subscription = results[0];
+
+      subscription.on('message', message => {
+        cb(message.data);
+      });
+
+      subscription.on('error', err => {
+        console.error(err);
+      });
+    });
 
 }
 
@@ -53,6 +69,7 @@ function publishAnswer(answer) {
 module.exports = {
   publishAnswer,
   publishFeedback,
-  registerFeedbackNotification
+  registerFeedbackNotification,
+  registerAnswerNotification
 };
 // [END exports]
