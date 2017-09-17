@@ -36,7 +36,7 @@ function feedbackHandler(message) {
 
 function answerHandler(message) {
     console.log('Answer received');
-    console.log(message.data);
+    console.log(message);
 
     storage.saveAnswer(message.data)
     .then(() => {
