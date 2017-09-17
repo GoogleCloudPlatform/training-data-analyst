@@ -44,6 +44,7 @@ function answerHandler(message) {
     });
 
 }
-
 subscriber.registerFeedbackNotification(feedbackHandler);
+console.log('Feedback registration complete...');
 subscriber.registerAnswerNotification(answerHandler);
+console.log('Answer registration complete...');
