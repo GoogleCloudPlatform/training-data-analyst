@@ -51,10 +51,10 @@ sed -i "s/GCLOUD_PROJECT/$GCLOUD_PROJECT/g" ./endpoint/quiz-api.json
 gcloud service-management deploy ./endpoint/quiz-api.json
 
 echo "Copying source to Compute Engine"
-gcloud compute scp --recurse ./endpoint/quiz-api endpoint-host:~/
+gcloud compute scp --force-key-file-overwrite --quiet --recurse ./endpoint/quiz-api endpoint-host:~/ --zone us-central1-a
 
 echo "Installing and running Cloud Endpoint backend"
 gcloud compute ssh endpoint-host --command "cd ~/quiz-api && export PORT=8081 && export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID && export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media && npm install && npm start"
 
-echo "To complete setup, generate an API key and apply key=API_KEY to the end of the Cloud Endpoint"
+echo "To complete setup, generate an API key and apply key=<API_KEY> to the end of the Cloud Endpoint"
 echo "Project ID: $DEVSHELL_PROJECT_ID"
