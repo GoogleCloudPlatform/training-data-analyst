@@ -17,12 +17,12 @@ console.log('Answer worker starting...');
 
 function handler(message) {
     console.log('Message received');
-    console.log(message);
+    console.log(message.data);
 
-    storage.saveAnswer(message)
+    storage.saveAnswer(message.data)
     .then(() => {
         console.log('Answer saved');	
-    });
+    }).catch(console.error);
 
 }
 

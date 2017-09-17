@@ -16,7 +16,6 @@ const spanner = Spanner();
 
 const instance = spanner.instance('quiz-instance');
 const database = instance.database('quiz-database');
-const feedbackTable = database.table('feedback');
 const answersTable = database.table('answers');
 
 function saveAnswer(
@@ -30,7 +29,7 @@ function saveAnswer(
           correct,
           answer   
     };
-    console.log('Answer saved');
+    console.log('Saving answer');
     return answersTable.insert(record);
   }
   
