@@ -41,9 +41,16 @@ function registerFeedbackNotification(cb) {
 
 }
 
+function publishAnswer(answer) {
+  return answersTopic.publish({
+    data: answer
+  });
+}
+
 // [START exports]
 module.exports = {
   publishFeedback,
+  publishAnswer,
   registerFeedbackNotification
 };
 // [END exports]

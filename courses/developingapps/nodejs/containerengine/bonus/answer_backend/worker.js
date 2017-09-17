@@ -21,7 +21,7 @@ function handler(message) {
 
     storage.saveAnswer(message)
     .then(() => {
-        console.log('Feedback saved');	
+        console.log('Answer saved');	
     });
 
 }
