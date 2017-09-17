@@ -23,26 +23,24 @@ const table = database.table('feedback');
 
 
 function saveFeedback(
-    {email, quiz, timestamp, rating, feedback, score}) {
+    { email, quiz, timestamp, rating, feedback, score }) {
     const rev_email = email
-                       .split('@')
-                       .reverse()
-                       .join('@')
-                       .split('.')
-                       .reverse()
-                       .join('.');
+        .replace(/@\./, '_')
+        .split('_')
+        .reverse()
+        .join('_');
     const record = {
-          feedbackId:  `${rev_email}_${quiz}_${timestamp}`,
-          email,
-          quiz,
-          timestamp,
-          rating,
-          score,
-          feedback,      
+        feedbackId: `${rev_email}_${quiz}_${timestamp}`,
+        email,
+        quiz,
+        timestamp,
+        rating,
+        score,
+        feedback,
     };
     return table.insert(record);
-  }
-  
+}
+
 
 module.exports = {
     saveFeedback

@@ -24,13 +24,11 @@ const table = database.table('feedback');
 
 function saveFeedback(
     {email, quiz, timestamp, rating, feedback, score}) {
-    const rev_email = email
-                       .split('@')
-                       .reverse()
-                       .join('@')
-                       .split('.')
-                       .reverse()
-                       .join('.');
+        const rev_email = email
+        .replace(/@\./, '_')
+        .split('_')
+        .reverse()
+        .join('_');
     const record = {
           feedbackId:  `${rev_email}_${quiz}_${timestamp}`,
           email,
