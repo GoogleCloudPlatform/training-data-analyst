@@ -17,17 +17,17 @@ const pubsub = Pubsub({
   projectId: config.get('GCLOUD_PROJECT')
 });
 
-const topic = pubsub.topic('feedback');
+const feedbackTopic = pubsub.topic('feedback');
 const answersTopic = pubsub.topic('answers');
 
 function publishFeedback(feedback) {
-  return topic.publish({
+  return feedbackTopic.publish({
     data: feedback
   });
 }
 
 function registerFeedbackNotification(cb) {
-  topic.subscribe('worker-subscription', { autoAck: true })
+  feedbackTopic.subscribe('worker-subscription', { autoAck: true })
     .then(results => {
       const subscription = results[0];
 
@@ -43,7 +43,7 @@ function registerFeedbackNotification(cb) {
 }
 
 function registerAnswerNotification(cb) {
-  topic.subscribe('worker-subscription', { autoAck: true })
+  answersTopic.subscribe('worker-subscription', { autoAck: true })
     .then(results => {
       const subscription = results[0];
 
