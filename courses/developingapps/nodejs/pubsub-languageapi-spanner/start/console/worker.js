@@ -24,6 +24,13 @@
 
 // END TODO
 
+// TODO: Load the ../server/gcp/spanner module
+
+
+
+
+// END TODO
+
 
 
 console.log('Worker starting...');

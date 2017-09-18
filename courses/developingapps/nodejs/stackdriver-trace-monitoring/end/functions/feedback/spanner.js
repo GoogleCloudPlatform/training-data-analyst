@@ -21,7 +21,7 @@ const table = database.table('feedback');
 function saveFeedback(
     { email, quiz, timestamp, rating, feedback, score }) {
     const rev_encode_email = email
-        .replace(/[@\.]/, '_')
+        .replace(/[@\.]/g, '_')
         .split('_')
         .reverse();
         

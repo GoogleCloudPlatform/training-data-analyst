@@ -17,7 +17,7 @@
 
 // END TODO
 
-// TODO: Load the spanner module
+// TODO: Load the ./spanner module
 
 
 

@@ -54,7 +54,7 @@ ORDER BY quiz, score DESC`;
 function saveFeedback(
     { email, quiz, timestamp, rating, feedback, score }) {
     const rev_email = email
-        .replace(/@\./, '_')
+        .replace(/[@\.]/g, '_')
         .split('_')
         .reverse()
         .join('_');
