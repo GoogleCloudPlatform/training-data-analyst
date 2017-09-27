@@ -23,7 +23,7 @@
 
         var user = {
             isLoggedIn: true,
-            email: 'app.dev.student@dummy.org',
+            email: 'app.dev.student@example.org',
             uid: -1
         };
 
