@@ -20,7 +20,6 @@ from __future__ import print_function
 
 import shutil
 import tensorflow as tf
-import tensorflow.contrib.learn as tflearn
 import tensorflow.contrib.layers as tflayers
 from tensorflow.contrib.learn.python.learn import learn_runner
 import tensorflow.contrib.metrics as metrics
@@ -70,24 +69,27 @@ def get_wide_deep():
            'Japanese', 'Hawaiian', 'Filipino', 'Unknown',
            'Asian Indian', 'Korean', 'Samaon', 'Vietnamese']
   is_male,mother_age,mother_race,plurality,gestation_weeks,mother_married,cigarette_use,alcohol_use = \
-   [ \
-    tflayers.sparse_column_with_keys('is_male', keys=['True', 'False']),
-    tflayers.real_valued_column('mother_age'),
-    tflayers.sparse_column_with_keys('mother_race', keys=races),
-    tflayers.real_valued_column('plurality'),
-    tflayers.real_valued_column('gestation_weeks'),
-    tflayers.sparse_column_with_keys('mother_married', keys=['True', 'False']),
-    tflayers.sparse_column_with_keys('cigarette_use', keys=['True', 'False', 'None']),
-    tflayers.sparse_column_with_keys('alcohol_use', keys=['True', 'False', 'None'])
-    ]
+      [ \
+          tflayers.sparse_column_with_keys('is_male', keys=['True', 'False']),
+          tflayers.real_valued_column('mother_age'),
+          tflayers.sparse_column_with_keys('mother_race', keys=races),
+          tflayers.real_valued_column('plurality'),
+          tflayers.real_valued_column('gestation_weeks'),
+          tflayers.sparse_column_with_keys('mother_married', keys=['True', 'False']),
+          tflayers.sparse_column_with_keys('cigarette_use', keys=['True', 'False', 'None']),
+          tflayers.sparse_column_with_keys('alcohol_use', keys=['True', 'False', 'None'])
+      ]
 
   # which columns are wide (sparse, linear relationship to output) and which are deep (complex relationship to output?)  
-  wide = [is_male, mother_race, plurality, mother_married, cigarette_use, alcohol_use]
-  deep = [\
-                mother_age,
-                gestation_weeks,
-                tflayers.embedding_column(mother_race, 3)
-               ]
+  wide = [is_male,
+          mother_race,
+          plurality,
+          mother_married,
+          cigarette_use,
+          alcohol_use]
+  deep = [mother_age,
+          gestation_weeks,
+          tflayers.embedding_column(mother_race, 3)]
   return wide, deep
 
 
@@ -106,7 +108,7 @@ def serving_input_fn():
       key: tf.expand_dims(tensor, -1)
       for key, tensor in feature_placeholders.items()
     }
-    return tflearn.utils.input_fn_utils.InputFnOps(
+    return tf.contrib.learn.utils.input_fn_utils.InputFnOps(
       features,
       None,
       feature_placeholders)
@@ -115,15 +117,15 @@ def serving_input_fn():
 from tensorflow.contrib.learn.python.learn.utils import saved_model_export_utils
 def experiment_fn(output_dir):
     wide, deep = get_wide_deep()
-    return tflearn.Experiment(
-        tflearn.DNNLinearCombinedRegressor(model_dir=output_dir,
-                                           linear_feature_columns=wide,
-                                           dnn_feature_columns=deep,
-                                           dnn_hidden_units=[64, 32]),
+    return tf.contrib.learn.Experiment(
+        tf.contrib.learn.DNNLinearCombinedRegressor(model_dir=output_dir,
+                                                    linear_feature_columns=wide,
+                                                    dnn_feature_columns=deep,
+                                                    dnn_hidden_units=[64, 32]),
         train_input_fn=read_dataset('train'),
         eval_input_fn=read_dataset('eval'),
         eval_metrics={
-            'rmse': tflearn.MetricSpec(
+            'rmse': tf.contrib.learn.MetricSpec(
                 metric_fn=metrics.streaming_root_mean_squared_error
             )
         },
