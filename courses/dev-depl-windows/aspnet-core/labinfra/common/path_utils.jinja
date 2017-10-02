@@ -1,0 +1,77 @@
+# Copyright 2015 Google Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# path_utils.jinja
+#
+# Jinja macros for expanding short resource names into full paths
+# Must have reference to the global env object, so when including this file,
+# use the jinja import "with context" option.
+
+{% macro projectPrefix() -%}
+{{ "https://www.googleapis.com/compute/v1/projects/%s"|format(env["project"]) }}
+{%- endmacro %}
+
+{% macro diskPath(zone, disk) -%}
+{% if disk.startswith("https://") -%}
+{{ disk }}
+{% else -%}
+{{ "%s/zones/%s/disks/%s"|format(projectPrefix(), zone, disk) }}
+{% endif -%}
+{%- endmacro %}
+
+{% macro diskTypePath(zone, diskType) -%}
+{% if diskType.startswith("https://") -%}
+{{ diskType }}
+{% else -%}
+{{ "%s/zones/%s/diskTypes/%s"|format(projectPrefix(), zone, diskType) }}
+{% endif -%}
+{%- endmacro %}
+
+{% macro imagePath(image) -%}
+{% if image.startswith("https://") -%}
+{{ image }}
+{% elif image.startswith("debian-") -%}
+{{ "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/" + image }}
+{% elif image.startswith("windows-") -%}
+{{ "https://www.googleapis.com/compute/v1/projects/windows-cloud/global/images/" + image }}
+{% endif -%}
+{%- endmacro %}
+
+{% macro machineTypePath(zone, machineType) -%}
+{% if machineType.startswith("https://") -%}
+{{ machineType }}
+{% else -%}
+{{ "%s/zones/%s/machineTypes/%s"|format(projectPrefix(), zone, machineType) }}
+{% endif -%}
+{%- endmacro %}
+
+{% macro networkPath(network) -%}
+{% if network.startswith("https://") or network.startswith("$(ref.") -%}
+{{ network }}
+{% else -%}
+{{ "%s/global/networks/%s"|format(projectPrefix(), network) }}
+{% endif -%}
+{%- endmacro %}
+
+{% macro subnetworkPath(zone, subnetwork) -%}
+{% if subnetwork is none or subnetwork.startswith("https://") -%}
+{{ subnetwork }}
+{% else -%}
+{{ "%s/regions/%s/subnetworks/%s"|format(projectPrefix(), zoneToRegion(zone), subnetwork) }}
+{% endif -%}
+{%- endmacro %}
+
+{% macro zoneToRegion(zone) -%}
+{{ zone.split('-')[0:2]|join('-') }}
+{%- endmacro %}

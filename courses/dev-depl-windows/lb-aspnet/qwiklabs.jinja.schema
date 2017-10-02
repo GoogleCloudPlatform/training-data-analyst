@@ -1,0 +1,153 @@
+imports:
+  - path: qwiklabs.jinja
+  - path: qwiklabs_ad.jinja
+  - path: qwiklabs_network.jinja
+  - path: qwiklabs_sql_nodes.jinja
+  - path: qwiklabs_web.jinja
+  - name: common.py
+    path: common/common.py
+  - name: default.py
+    path: common/default.py
+  - name: password.py
+    path: common/password.py
+  - name: path_utils.jinja
+    path: common/path_utils.jinja
+  - name: software_status.py
+    path: common/software_status.py
+
+info:
+  version: 1.0
+  title: GCP Windows BootCamp Template
+
+required:
+  - zone
+  - webMachineType
+  - adMachineType
+  - adBootDiskType
+  - adBootDiskSizeGb
+  - adImage
+  - domainDNSName
+  - sqlNodes
+  - sqlMachineType
+  - sqlBootDiskType
+  - sqlBootDiskSizeGb
+  - sqlImage
+
+properties:
+  zone:
+    type: string
+    default: us-central1-f
+    x-googleProperty:
+      type: GCE_ZONE
+  externalIP:
+    type: string
+    enum:
+      - Ephemeral
+      - None
+    default: Ephemeral
+  webMachineType:
+    type: string
+    default: n1-highmem-2
+    x-googleProperty:
+      type: GCE_MACHINE_TYPE
+      zoneProperty: zone
+      gceMachineType:
+        minCpu: 1
+        minRamGb: 3.8399999141693115
+  adMachineType:
+    type: string
+    default: n1-highmem-2
+    x-googleProperty:
+      type: GCE_MACHINE_TYPE
+      zoneProperty: zone
+      gceMachineType:
+        minCpu: 1
+        minRamGb: 3.8399999141693115
+  adBootDiskType:
+    type: string
+    default: pd-standard
+    x-googleProperty:
+      type: GCE_DISK_TYPE
+      zoneProperty: zone
+  adBootDiskSizeGb:
+    type: integer
+    default: 100
+    minimum: 50
+    maximum: 10000
+    x-googleProperty:
+      type: GCE_DISK_SIZE
+      gceDiskSize:
+        diskTypeProperty: adBootDiskType
+  sqlNodes:
+    type: integer
+    default: 2
+    enum:
+      - 2
+      - 3
+  sqlMachineType:
+    type: string
+    default: n1-standard-4
+    x-googleProperty:
+      type: GCE_MACHINE_TYPE
+      zoneProperty: zone
+      gceMachineType:
+        minCpu: 4
+        minRamGb: 15.359999656677246
+  sqlBootDiskType:
+    type: string
+    default: pd-standard
+    x-googleProperty:
+      type: GCE_DISK_TYPE
+      zoneProperty: zone
+  sqlBootDiskSizeGb:
+    type: integer
+    default: 200
+    minimum: 100
+    maximum: 10000
+    x-googleProperty:
+      type: GCE_DISK_SIZE
+      gceDiskSize:
+        diskTypeProperty: sqlBootDiskType
+  enableTcp3389:
+    type: boolean
+    default: True
+  enableTcp1433:
+    type: boolean
+    default: True
+  enableTcp5022:
+    type: boolean
+    default: False
+  enableTcp80:
+    type: boolean
+    default: True
+  enableTcp443:
+    type: boolean
+    default: True
+  enableTcp8172:
+    type: boolean
+    default: True
+  enableTcp3389:
+    type: boolean
+    default: True
+  adImage:
+    type: integer
+    default: 2016
+    enum:
+      - 2016
+  sqlImage:
+    type: integer
+    default: 2016
+    enum:
+      - 2016
+  domainDNSName:
+    type: string
+    default: gcpnext.com
+    pattern: (\w+[.]\w+)
+
+outputs:
+  deployment:
+    type: string
+  password0:
+    type: string
+  project:
+    type: string

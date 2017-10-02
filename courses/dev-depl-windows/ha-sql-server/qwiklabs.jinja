@@ -1,0 +1,267 @@
+{% import "path_utils.jinja" as path_utils with context %}
+
+{% set project = env["project"] %}
+{% set deployment = env["deployment"] %}
+{% set zone = properties["zone"] %}
+{% set saAccount = "bootcampadmin" %}
+
+{# Win AD#}
+{% set ad_name = "dc" %}
+{# Expand resource input parameters into full URLs#}
+{% set adImageBasenames = {
+    2016:"windows-server-2016-dc-core-v20170214"
+   }
+%}
+{% set ad_image_path = "projects/windows-cloud/global/images/" ~
+    adImageBasenames[properties["adImage"]]
+%}
+
+{% set domainDNSName = properties["domainDNSName"] %}
+{% set adMachineType = properties["adMachineType"] %}
+{% set adBootDiskType = path_utils.diskTypePath(zone, properties["adBootDiskType"]) %}
+{% set adBootDiskSizeGb = properties["adBootDiskSizeGb"] %}
+
+{# MSSQL#}
+{% set sql_name = "cluster-sql" %}
+{# Expand resource input parameters into full URLs#}
+{% set sqlImageBasenames = {
+    2016:"sql-2016-enterprise-windows-2016-dc-v20170214"
+   }
+%}
+{% set sql_image_path = "projects/windows-sql-cloud/global/images/" ~
+    sqlImageBasenames[properties["sqlImage"]]
+%}
+
+{% set sqlMachineType = properties["sqlMachineType"] %}
+{% set sqlBootDiskType = path_utils.diskTypePath(zone, properties["sqlBootDiskType"]) %}
+{% set sqlBootDiskSizeGb = properties["sqlBootDiskSizeGb"] %}
+{% set sqlNodes = properties["sqlNodes"] %}
+
+{% set bootDiskType = properties["bootDiskType"] %}
+{% set bootDiskSizeGb = properties["bootDiskSizeGb"] %}
+{% set hasExternalIP = properties["externalIP"] != "None" %}
+{# Software status only works if the VM has an external IP. #}
+{% set enableStatusWaiter = hasExternalIP %}
+
+{# Web Machines#}
+{% set webMachineType = properties["webMachineType"] %}
+{% set web_image_path = "projects/click-to-deploy-images/global/images/asp-windows-2016-v20170304" %}
+{% set dev_image_path = "projects/click-to-deploy-images/global/images/vs-windows-2016-v20170304" %}
+
+{# Waiter Variables#}
+{# 18 minute timeout for sql install.#}
+{% set WAITER_TIMEOUT = 1080 %}
+{# 20 minutes timeout for AD install#}
+{% set AD_WAITER_TIMEOUT = 1200 %}
+{% set adStatusVariablePath = "ad" %}
+{% set webStatusVariablePath = "web" %}
+{# 18 minute timeout for SQL install.#}
+{% set SQL_WAITER_TIMEOUT = 1080 %}
+{% set sqlStatusVariablePath = "mssql" %}
+{# 15 minute timeout for availabilty group install.#}
+{% set SUB_WAITER_TIMEOUT = 900 %}
+
+
+
+{% macro nodes() -%}
+{% for instance in range(1, properties["sqlNodes"] + 1) -%}
+  {{ ("%s-sql-%d"|format((env["deployment"]|truncate(9,true,"")), instance)) + '|' }}
+{%- endfor %}
+{%- endmacro %}
+
+resources:
+  {# Passwords#}
+  - name: generate-safe-password
+    type: password.py
+    properties:
+      length: 14
+      includeSymbols: True
+  - name: sa-password
+    type: password.py
+    properties:
+      length: 14
+      includeSymbols: True
+  - name: sql-sa-password
+    type: password.py
+    properties:
+      length: 14
+      includeSymbols: True
+
+  {# Network Config#}
+  - name: qwiklabs_network
+    type: qwiklabs_network.jinja
+    properties:
+      deployment: {{ deployment }}
+      zone: {{ zone }}
+      sqlNodes: {{ sqlNodes }}
+
+  {# Machine Configs#}
+  {# AD#}
+  - name: qwiklabs_ad
+    type: qwiklabs_ad.jinja
+    properties:
+      name: {{ ad_name }}
+      deployment: {{ deployment }}
+      zone: {{ zone }}
+      image: {{ ad_image_path }}
+      machineType: {{ adMachineType }}
+      network: {{ deployment }}-net
+      subnetwork: {{ deployment }}-sub0
+      networkIP: 10.0.0.100
+      bootDiskType: {{ adBootDiskType }}
+      bootDiskSizeGb: {{ adBootDiskSizeGb }}
+      domainDNSName: {{ domainDNSName }}
+      allNodes: {{ nodes() | trim }}
+      safeModePassword: $(ref.generate-safe-password.password)
+      saAccount: {{ saAccount }}
+      saPassword: "$(ref.sa-password.password)"
+      statusConfigUrl: $(ref.software-status.config-url)
+      statusVariablePath: {{ adStatusVariablePath }}
+      statusUptimeDeadline: {{ AD_WAITER_TIMEOUT }}
+
+  {# SQL Machines, Start count with 1#}
+{% for index in range(sqlNodes) %}
+  - name: {{ deployment }}-node-{{ index + 1}}
+    type: qwiklabs_sql_nodes.jinja
+    properties:
+      name: {{ sql_name }}{{ index + 1}}
+      deployment: {{ deployment }}
+      zone: {{ zone }}
+      image: {{ sql_image_path }}
+      machineType: {{ sqlMachineType }}
+      network: {{ deployment }}-net
+      subnetwork: {{ deployment }}-sub{{ index + 1 }}
+      networkIP: 10.{{ index + 1 }}.0.4
+      routeIP: 10.{{ index + 1 }}.1.4
+      listnerIP: 10.{{ index + 1 }}.1.5
+      bootDiskType: {{ sqlBootDiskType }}
+      bootDiskSizeGb: {{ sqlBootDiskSizeGb }}
+      sequence: {{ index + 1}}
+      domainDNSName: {{ domainDNSName }}
+      adHost: {{ ad_name }}
+      allNodes: {{ nodes() | trim }}
+      saAccount: {{ saAccount }}
+      saPassword: $(ref.sa-password.password)
+      saSQLPassword: $(ref.sql-sa-password.password)
+      statusConfigUrl: $(ref.software-status.config-url)
+      statusVariablePath: {{ sqlStatusVariablePath }}
+      statusUptimeDeadline: {{ SQL_WAITER_TIMEOUT }}
+{% endfor %}
+
+  {# Firewall Configs
+  # Create Internal Firewall Rules#}
+  - name: {{ deployment }}-allow-internal-ports
+    type: compute.v1.firewall
+    properties:
+      allowed:
+        - IPProtocol: TCP
+          ports: [ 1-65535 ]
+        - IPProtocol: UDP
+          ports: [ 1-65535 ]
+        - IPProtocol: ICMP
+      sourceRanges: [10.0.0.0/24,10.1.0.0/24,10.2.0.0/24]
+      network: $(ref.{{ deployment }}-net.selfLink)
+    metadata:
+      dependsOn:
+      - {{ deployment }}-net
+{% if properties["enableTcp3389"] %}
+  - name: {{ deployment }}-tcp-3389
+    type: compute.v1.firewall
+    properties:
+      network: $(ref.{{ deployment }}-net.selfLink)
+      sourceRanges: ["0.0.0.0/0"]
+      targetTags: ["{{ deployment }}-tcp-3389"]
+      allowed:
+        - IPProtocol: TCP
+          ports: ["3389"]
+    metadata:
+      dependsOn:
+      - {{ deployment }}-net
+{% endif %}
+{% if properties["enableTcp1433"] %}
+  - name: {{ deployment }}-tcp-1433
+    type: compute.v1.firewall
+    properties:
+      network: $(ref.{{ deployment }}-net.selfLink)
+      sourceRanges: ["0.0.0.0/0"]
+      targetTags: ["{{ deployment }}-tcp-1433"]
+      allowed:
+        - IPProtocol: TCP
+          ports: ["1433"]
+    metadata:
+      dependsOn:
+      - {{ deployment }}-net
+{% endif %}
+{% if properties["enableTcp5022"] %}
+  - name: {{ deployment }}-tcp-5022
+    type: compute.v1.firewall
+    properties:
+      network: $(ref.{{ deployment }}-net.selfLink)
+      sourceRanges: ["0.0.0.0/0"]
+      targetTags: ["{{ deployment }}-tcp-5022"]
+      allowed:
+        - IPProtocol: TCP
+          ports: ["5022"]
+    metadata:
+      dependsOn:
+      - {{ deployment }}-net
+{% endif %}
+{% if properties["enableTcp80"] %}
+  - name: {{ deployment }}-tcp-80
+    type: compute.v1.firewall
+    properties:
+      network: $(ref.{{ deployment }}-net.selfLink)
+      sourceRanges: ["0.0.0.0/0"]
+      targetTags: ["{{ deployment }}-tcp-80"]
+      allowed:
+        - IPProtocol: TCP
+          ports: ["80"]
+    metadata:
+        dependsOn:
+        - {{ deployment }}-net
+{% endif %}
+{% if properties["enableTcp443"] %}
+  - name: {{ deployment }}-tcp-443
+    type: compute.v1.firewall
+    properties:
+      network: $(ref.{{ deployment }}-net.selfLink)
+      sourceRanges: ["0.0.0.0/0"]
+      targetTags: ["{{ deployment }}-tcp-443"]
+      allowed:
+        - IPProtocol: TCP
+          ports: ["443"]
+    metadata:
+        dependsOn:
+        - {{ deployment }}-net
+{% endif %}
+{% if properties["enableTcp8172"] %}
+  - name: {{ deployment }}-tcp-8172
+    type: compute.v1.firewall
+    properties:
+      network: $(ref.{{ deployment }}-net.selfLink)
+      sourceRanges: ["0.0.0.0/0"]
+      targetTags: ["{{ deployment }}-tcp-8172"]
+      allowed:
+        - IPProtocol: TCP
+          ports: ["8172"]
+    metadata:
+        dependsOn:
+        - {{ deployment }}-net
+{% endif %}
+
+  {# RuntimeConfigs#}
+  - name: software-status
+    type: software_status.py
+    properties:
+      successNumber: 2
+      timeout: {{ WAITER_TIMEOUT }}
+      waiterDependsOn:
+        - {{ ad_name }}
+        {% for index in range(sqlNodes) %}
+        - {{ sql_name }}{{ index + 1}}
+        {% endfor %}
+outputs:
+  - name: DomainAccountName
+    value: {{ saAccount }}
+  - name: DomainAccountPassword
+    value: $(ref.sa-password.password)
