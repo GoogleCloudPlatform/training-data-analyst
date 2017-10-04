@@ -30,3 +30,8 @@ resources:
       accessConfigs:
       - name: External NAT
         type: ONE_TO_ONE_NAT
+outputs:
+- name: Region
+  value: {{ properties["region"] }}
+- name: Zone
+  value: {{ properties["zone"] }}
