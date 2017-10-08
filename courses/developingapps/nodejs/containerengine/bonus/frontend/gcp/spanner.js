@@ -50,7 +50,7 @@ function saveFeedback(
         quiz,
         timestamp,
         rating,
-        score,
+        score: spanner.float(score),
         feedback,
     };
     return table.insert(record);
