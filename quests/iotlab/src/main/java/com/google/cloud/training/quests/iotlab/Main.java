@@ -68,19 +68,19 @@ public class Main {
     List<TableFieldSchema> fields = new ArrayList<>();
     fields.add(new TableFieldSchema().setName("timestamp").setType("TIMESTAMP"));
     fields.add(new TableFieldSchema().setName("device").setType("INTEGER"));
-    fields.add(new TableFieldSchema().setName("temperature").setType("INTEGER"));
+    fields.add(new TableFieldSchema().setName("temperature").setType("FLOAT64"));
     TableSchema schema = new TableSchema().setFields(fields);
 
     p //
         .apply("GetMessages", PubsubIO.readStrings().fromTopic(topic)) //
-        .apply("ParseMessage", ParDo.of(new DoFn<String, KV<Integer,Integer>>() {
+        .apply("ParseMessage", ParDo.of(new DoFn<String, KV<Integer,Double>>() {
           @ProcessElement
           public void processElement(ProcessContext c) throws Exception {
             String line = c.element();
             // iotlab-registry/device-1-payload-90
             String[] pieces = line.split("-");
             int device = Integer.parseInt(pieces[1]);
-            int temperature = Integer.parseInt(pieces[3]);
+            double temperature = Double.parseDouble(pieces[3]);
             c.output(KV.of(device, temperature));
           }
         })) //
@@ -90,8 +90,8 @@ public class Main {
                 .every(Duration.standardSeconds(30)))) //
     
     
-        .apply("MaxTemperature", Max.integersPerKey()) //
-        .apply("ToBQRow", ParDo.of(new DoFn<KV<Integer,Integer>, TableRow>() {
+        .apply("MaxTemperature", Max.doublesPerKey()) //
+        .apply("ToBQRow", ParDo.of(new DoFn<KV<Integer,Double>, TableRow>() {
           @ProcessElement
           public void processElement(ProcessContext c) throws Exception {
             TableRow row = new TableRow();
