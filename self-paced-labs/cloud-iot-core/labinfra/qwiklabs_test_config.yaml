@@ -1,0 +1,39 @@
+###################################
+## Sample Configuration for testing
+## Qwiklabs cloud deployments using
+## local gcloud tools
+##
+## Values in here subject to change
+## when the environment is launched
+## for a given Qwiklabs learner
+####################################
+
+imports:
+- path: qwiklabs.jinja
+
+# Outputs here for your testing, so you can make
+# sure the right values are coming back from
+# the deployment.  But the values Qwiklabs will
+# use are derived directly from the outputs of
+# the qwiklabs.jinja template.
+#
+# These, along with the rest of the file, are
+# ignored by Qwiklabs runtime environment
+outputs:
+
+# Similarly, this section should only include the
+# special 'qwiklabs' resource, properties available
+# for your testing, but all dev work should happen
+# under the qwiklabs.jinja template
+resources:
+- name: qwiklabs
+  type: qwiklabs.jinja
+  properties:
+    zone: us-west1-a
+    region: us-west1
+    userName: googlestudent
+    userPassword: googlestudent
+    sshPubKey: A123412341234
+    # NOTE: randomize this Uuid if you get namespace
+    #       conflicts when testing (e.g. duplicate bucket name)
+    qwiklabsUuid: ql-1e433efb3jdfd

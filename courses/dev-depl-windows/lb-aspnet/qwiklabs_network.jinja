@@ -1,0 +1,26 @@
+{% import "path_utils.jinja" as path_utils with context %}
+
+{% set deployment = env["deployment"] %}
+{% set sqlNodes= properties["sqlNodes"] %}
+{% set zone = properties["zone"] %}
+{% set sub_zone = path_utils.zoneToRegion(zone) %}
+
+resources:
+  - name: {{ deployment }}-net
+    type: compute.v1.network
+    properties:
+      autoCreateSubnetworks: false
+      description: "MSSQL Server HA Network."
+  # Create SubNetworks
+{% for index in range(sqlNodes + 1) %}
+  - name: {{ deployment }}-sub{{ index }}
+    type: compute.v1.subnetwork
+    properties:
+      ipCidrRange: 10.{{ index }}.0.0/24
+      description: "MSSQL Subnetwork"
+      network: $(ref.{{ deployment }}-net.selfLink)
+      region: {{ sub_zone }}
+    metadata:
+      dependsOn:
+      - {{ deployment }}-net
+{% endfor %}

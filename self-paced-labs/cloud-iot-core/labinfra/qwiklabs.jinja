@@ -1,0 +1,37 @@
+{# Outputs described in this special qwiklabs template will be surfaced  #}
+{# back up to the student in the Qwiklabs UI, so you can say things like #}
+{# 'enter the name of the ExampleBucket we created for you'              #}
+
+{# Create whatever cloud deployment magic you want here.           #}
+{# See go/qwiklabs-deployment-manager for the available properties. #}
+resources:
+- name: allow-ssh
+  type: compute.v1.firewall
+  properties:
+    network: global/networks/default
+    sourceRanges: ["0.0.0.0/0"]
+    allowed:
+    - IPProtocol: TCP
+      ports: ["22"]
+- name: iot
+  type: compute.v1.instance
+  properties:
+    zone: {{ properties['zone'] }}
+    machineType: zones/{{ properties['zone'] }}/machineTypes/n1-standard-1
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/debian-cloud/global/images/debian-9-stretch-v20170918
+    networkInterfaces:
+    - network: https://www.googleapis.com/compute/v1/projects/{{ env["project"] }}/global/networks/default
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+outputs:
+- name: Region
+  value: {{ properties["region"] }}
+- name: Zone
+  value: {{ properties["zone"] }}
