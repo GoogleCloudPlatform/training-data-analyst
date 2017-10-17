@@ -1,0 +1,14 @@
+{
+  "name": "gce-demo",
+  "version": "1.0.0",
+  "description": "List Compute Engine instances",
+  "repository": "UNKNOWN",
+  "private": true,
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@google-cloud/compute": "~0.8.0"
+  },
+  "engines": {
+    "node": ">=4.3.2"
+  }
+}
