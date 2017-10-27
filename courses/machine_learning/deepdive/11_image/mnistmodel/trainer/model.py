@@ -47,9 +47,30 @@ def dnn_dropout_model(img, mode):
   X = tf.reshape(img, [-1, HEIGHT*WIDTH]) # flattened
   h1 = tf.layers.dense(X, 300, activation=tf.nn.relu)
   h2 = tf.layers.dense(h1,100, activation=tf.nn.relu)
-  h2d = tf.layers.dropout(h2, rate=0.1, training=(mode == tf.estimator.ModeKeys.TRAIN))
-  h3 = tf.layers.dense(h2d, 30, activation=tf.nn.relu)
-  ylogits = tf.layers.dense(h3, NCLASSES, activation=None)
+  h3 = tf.layers.dense(h2, 30, activation=tf.nn.relu)
+  h3d = tf.layers.dropout(h3, rate=0.1, training=(mode == tf.estimator.ModeKeys.TRAIN))
+  ylogits = tf.layers.dense(h3d, NCLASSES, activation=None)
+  return ylogits, NCLASSES
+
+def cnn_model(img, mode):
+  X = tf.reshape(img, [-1, HEIGHT, WIDTH, 1]) # as a 2D image with one grayscale channel
+  c1 = tf.layers.max_pooling2d(
+         tf.layers.conv2d(X, filters=10,
+                          kernel_size=5, strides=1, # ?x28x28x10
+                          padding='same', activation=tf.nn.relu),
+         pool_size=2, strides=2
+       ) # ?x14x14x10
+  c2 = tf.layers.max_pooling2d(
+         tf.layers.conv2d(c1, filters=20,
+                          kernel_size=5, strides=1, 
+                          padding='same', activation=tf.nn.relu),
+         pool_size=2, strides=2
+       ) # ?x7x7x20
+  outlen = (HEIGHT//4)*(WIDTH//4)*20 # integer division; 980
+  c2flat = tf.reshape(c2, [-1, outlen]) # flattened
+  h3 = tf.layers.dense(c2flat, 300, activation=tf.nn.relu)
+  h3d = tf.layers.dropout(h3, rate=0.25, training=(mode == tf.estimator.ModeKeys.TRAIN))
+  ylogits = tf.layers.dense(h3d, NCLASSES, activation=None)
   return ylogits, NCLASSES
 
 def serving_input_fn():
