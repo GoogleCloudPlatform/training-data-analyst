@@ -28,8 +28,13 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 def make_train_input_fn(mnist, hparams):
   def input_fn():
-    features, labels = tf.train.shuffle_batch([tf.constant(mnist.train.images), tf.constant(mnist.train.labels)],
-                                            batch_size=hparams['train_batch_size'], capacity=5000, min_after_dequeue=2000, enqueue_many=True)
+    batch_size = hparams['train_batch_size']
+    features, labels = tf.train.shuffle_batch(
+                             [tf.constant(mnist.train.images), tf.constant(mnist.train.labels)],
+                             batch_size=batch_size, 
+                             capacity=50*batch_size,
+                             min_after_dequeue=20*batch_size,
+                             enqueue_many=True)
     features = {'image': features}
     return features, labels
   return input_fn
@@ -42,7 +47,8 @@ def make_eval_input_fn(mnist):
   return input_fn
 
 def image_classifier(features, labels, mode, params):
-  ylogits, nclasses = model.linear_model(features['image'])
+  model_func = model.get_model_func(params['model']) # linear, dnn, cnn1, cnn2, etc.
+  ylogits, nclasses = model_func(features['image'], mode)
   probabilities = tf.nn.softmax(ylogits)
   classes = tf.cast(tf.argmax(probabilities, 1), tf.uint8)
   if mode == tf.estimator.ModeKeys.TRAIN or mode == tf.estimator.ModeKeys.EVAL:
@@ -113,6 +119,11 @@ if __name__ == '__main__':
   parser.add_argument(
       '--output_dir',
       help='GCS location to write checkpoints and export models',
+      required=True
+  )
+  parser.add_argument(
+      '--model',
+      help='Type of model. Supported types are {}'.format(model.get_model_names()),
       required=True
   )
   parser.add_argument(

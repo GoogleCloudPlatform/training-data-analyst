@@ -26,7 +26,7 @@ HEIGHT=28
 WIDTH=28
 NCLASSES=10
 
-def linear_model(img):
+def linear_model(img, mode):
   X = tf.reshape(img, [-1, HEIGHT*WIDTH]) # flattened
   #W = tf.Variable(tf.zeros([HEIGHT*WIDTH, NCLASSES]))
   #b = tf.Variable(tf.zeros([NCLASSES]))
@@ -34,6 +34,23 @@ def linear_model(img):
   b = tf.Variable(tf.truncated_normal([NCLASSES], stddev=0.1))
   ylogits = tf.matmul(X, W) + b
   return ylogits, NCLASSES
+
+def dnn_model(img, mode):
+  X = tf.reshape(img, [-1, HEIGHT*WIDTH]) # flattened
+  h1 = tf.layers.dense(X, 300, activation=tf.nn.relu)
+  h2 = tf.layers.dense(h1,100, activation=tf.nn.relu)
+  h3 = tf.layers.dense(h2, 30, activation=tf.nn.relu)
+  ylogits = tf.layers.dense(h3, NCLASSES, activation=None)
+  return ylogits, NCLASSES
+
+MODELS = {
+  'linear' : linear_model,
+  'dnn' : dnn_model
+}
+def get_model_names() :
+  return MODELS.keys()
+def get_model_func(name) :
+  return MODELS[name]
 
 def serving_input_fn():
     inputs = {'image': tf.placeholder(tf.float32, [None, HEIGHT, WIDTH])}
