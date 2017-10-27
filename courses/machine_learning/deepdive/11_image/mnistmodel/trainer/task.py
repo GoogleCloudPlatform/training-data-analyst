@@ -47,7 +47,7 @@ def make_eval_input_fn(mnist):
   return input_fn
 
 def image_classifier(features, labels, mode, params):
-  model_func = model.get_model_func(params['model']) # linear, dnn, cnn1, cnn2, etc.
+  model_func = getattr(model, '{}_model'.format(params['model']))  # linear, dnn, cnn1, cnn2, etc.
   ylogits, nclasses = model_func(features['image'], mode)
   probabilities = tf.nn.softmax(ylogits)
   classes = tf.cast(tf.argmax(probabilities, 1), tf.uint8)
@@ -74,21 +74,23 @@ def image_classifier(features, labels, mode, params):
     )
 
 def create_custom_estimator(output_dir, hparams):
+  save_freq = max(1, min(100, hparams['train_steps']/100))
   training_config = tf.contrib.learn.RunConfig(save_checkpoints_secs=None,
-                                               save_checkpoints_steps=hparams['train_steps']/5)
+                                               save_checkpoints_steps=save_freq)
   return tf.estimator.Estimator(model_fn=image_classifier, model_dir=output_dir, 
                                 config=training_config, params=hparams)
 
 def make_experiment_fn(output_dir, data_dir, hparams):
   def experiment_fn(output_dir):
     mnist = input_data.read_data_sets(data_dir, reshape=False)  
+    eval_freq = max(1, min(2000, hparams['train_steps']/5))
     return tf.contrib.learn.Experiment(
       estimator=create_custom_estimator(output_dir, hparams),
       train_input_fn=make_train_input_fn(mnist, hparams),
       eval_input_fn=make_eval_input_fn(mnist),
       train_steps=hparams['train_steps'],
       eval_steps=1,
-      min_eval_frequency=min(100,hparams['train_steps']/10),
+      min_eval_frequency=eval_freq,
       export_strategies=tf.contrib.learn.utils.saved_model_export_utils.make_export_strategy(serving_input_fn=model.serving_input_fn)
     )
   return experiment_fn
@@ -100,7 +102,7 @@ if __name__ == '__main__':
       '--train_batch_size',
       help='Batch size for training steps',
       type=int,
-      default=512
+      default=100
   )
   parser.add_argument(
       '--learning_rate',
@@ -111,8 +113,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--train_steps',
       help="""\
-      Steps to run the training job for. If --num-epochs is not specified,
-      this must be. Otherwise the training job will run indefinitely.\
+      Steps to run the training job for. A step is one batch-size,\
       """,
       type=int
   )
@@ -121,9 +122,12 @@ if __name__ == '__main__':
       help='GCS location to write checkpoints and export models',
       required=True
   )
+  model_names = [name.replace('_model','') \
+                   for name in dir(model) \
+                     if name.endswith('_model')]
   parser.add_argument(
       '--model',
-      help='Type of model. Supported types are {}'.format(model.get_model_names()),
+      help='Type of model. Supported types are {}'.format(model_names),
       required=True
   )
   parser.add_argument(

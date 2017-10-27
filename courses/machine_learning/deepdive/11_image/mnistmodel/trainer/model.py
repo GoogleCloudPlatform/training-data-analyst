@@ -43,14 +43,14 @@ def dnn_model(img, mode):
   ylogits = tf.layers.dense(h3, NCLASSES, activation=None)
   return ylogits, NCLASSES
 
-MODELS = {
-  'linear' : linear_model,
-  'dnn' : dnn_model
-}
-def get_model_names() :
-  return MODELS.keys()
-def get_model_func(name) :
-  return MODELS[name]
+def dnn_dropout_model(img, mode):
+  X = tf.reshape(img, [-1, HEIGHT*WIDTH]) # flattened
+  h1 = tf.layers.dense(X, 300, activation=tf.nn.relu)
+  h2 = tf.layers.dense(h1,100, activation=tf.nn.relu)
+  h2d = tf.layers.dropout(h2, rate=0.1, training=(mode == tf.estimator.ModeKeys.TRAIN))
+  h3 = tf.layers.dense(h2d, 30, activation=tf.nn.relu)
+  ylogits = tf.layers.dense(h3, NCLASSES, activation=None)
+  return ylogits, NCLASSES
 
 def serving_input_fn():
     inputs = {'image': tf.placeholder(tf.float32, [None, HEIGHT, WIDTH])}
