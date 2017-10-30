@@ -48,7 +48,7 @@ def make_eval_input_fn(mnist):
 
 def image_classifier(features, labels, mode, params):
   model_func = getattr(model, '{}_model'.format(params['model']))  # linear, dnn, cnn1, cnn2, etc.
-  ylogits, nclasses = model_func(features['image'], mode)
+  ylogits, nclasses = model_func(features['image'], mode, params)
   probabilities = tf.nn.softmax(ylogits)
   classes = tf.cast(tf.argmax(probabilities, 1), tf.uint8)
   if mode == tf.estimator.ModeKeys.TRAIN or mode == tf.estimator.ModeKeys.EVAL:
@@ -135,6 +135,13 @@ if __name__ == '__main__':
       help='this model ignores this field, but it is required by gcloud',
       default='junk'
   )
+
+  # optional hyperparameters used by cnn
+  parser.add_argument('--ksize1', help='kernel size of first layer for CNN', type=int, default=5)
+  parser.add_argument('--ksize2', help='kernel size of second layer for CNN', type=int, default=5)
+  parser.add_argument('--nfil1', help='number of filters in first layer for CNN', type=int, default=10)
+  parser.add_argument('--nfil2', help='number of filters in second layer for CNN', type=int, default=20)
+  parser.add_argument('--dprob', help='dropout probability for CNN', type=float, default=0.25)
 
   args = parser.parse_args()
   hparams = args.__dict__
