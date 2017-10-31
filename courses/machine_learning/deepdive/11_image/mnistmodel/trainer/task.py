@@ -50,14 +50,13 @@ def image_classifier(features, labels, mode, params):
   model_func = getattr(model, '{}_model'.format(params['model']))  # linear, dnn, cnn1, cnn2, etc.
   ylogits, nclasses = model_func(features['image'], mode, params)
 
-  ylogits = tf.layers.batch_normalization(ylogits)
-
   probabilities = tf.nn.softmax(ylogits)
   classes = tf.cast(tf.argmax(probabilities, 1), tf.uint8)
   if mode == tf.estimator.ModeKeys.TRAIN or mode == tf.estimator.ModeKeys.EVAL:
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ylogits, labels=tf.one_hot(labels, nclasses)))
     evalmetrics =  {'accuracy': tf.metrics.accuracy(classes, labels)}
     if mode == tf.estimator.ModeKeys.TRAIN:
+      # this is needed for batch normalization, but has no effect otherwise
       update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
       with tf.control_dependencies(update_ops):
          train_op = tf.contrib.layers.optimize_loss(loss, tf.train.get_global_step(),
@@ -147,6 +146,7 @@ if __name__ == '__main__':
   parser.add_argument('--nfil1', help='number of filters in first layer for CNN', type=int, default=10)
   parser.add_argument('--nfil2', help='number of filters in second layer for CNN', type=int, default=20)
   parser.add_argument('--dprob', help='dropout probability for CNN', type=float, default=0.25)
+  parser.add_argument('--batch_norm', help='if specified, do batch_norm for CNN', dest='batch_norm', action='store_true'); parser.set_defaults(batch_norm=False)
 
   args = parser.parse_args()
   hparams = args.__dict__

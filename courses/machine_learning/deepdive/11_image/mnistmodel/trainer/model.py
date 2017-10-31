@@ -72,11 +72,24 @@ def cnn_model(img, mode, hparams):
                           padding='same', activation=tf.nn.relu),
          pool_size=2, strides=2
        ) # ?x7x7x20
+
   outlen = (HEIGHT//4)*(WIDTH//4)*nfil2 # integer division; 980
   c2flat = tf.reshape(c2, [-1, outlen]) # flattened
-  h3 = tf.layers.dense(c2flat, 300, activation=tf.nn.relu)
+
+  if hparams['batch_norm']:
+    h3 = tf.layers.dense(c2flat, 300, activation=None)
+    h3 = tf.layers.batch_normalization(h3, training=(mode == tf.estimator.ModeKeys.TRAIN))
+    h3 = tf.nn.relu(h3)
+  else:  
+    h3 = tf.layers.dense(c2flat, 300, activation=tf.nn.relu)
+
   h3d = tf.layers.dropout(h3, rate=dprob, training=(mode == tf.estimator.ModeKeys.TRAIN))
+
   ylogits = tf.layers.dense(h3d, NCLASSES, activation=None)
+
+  if hparams['batch_norm']:
+     ylogits = tf.layers.batch_normalization(ylogits, training=(mode == tf.estimator.ModeKeys.TRAIN))
+
   return ylogits, NCLASSES
 
 def serving_input_fn():
