@@ -119,7 +119,8 @@ if __name__ == '__main__':
       help="""\
       Steps to run the training job for. A step is one batch-size,\
       """,
-      type=int
+      type=int,
+      default=0
   )
   parser.add_argument(
       '--output_dir',
@@ -161,8 +162,14 @@ if __name__ == '__main__':
       output_dir,
       json.loads(
           os.environ.get('TF_CONFIG', '{}')
-      ).get('task', {}).get('trail', '')
+      ).get('task', {}).get('trial', '')
   )
+
+  # calculate train_steps if not provided
+  if hparams['train_steps'] < 1:
+     # 10,000 steps at batch_size of 512
+     hparams['train_steps'] = (10000 * 512) // hparams['train_batch_size']
+     print "Training for {} steps".format(hparams['train_steps'])
   
   # Run the training job
   tf.contrib.learn.learn_runner.run(make_experiment_fn(output_dir, 'mnist/data', hparams), output_dir)
