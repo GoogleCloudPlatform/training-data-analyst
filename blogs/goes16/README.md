@@ -10,12 +10,12 @@
   ```
   gcloud beta pubsub subscriptions pull testsubscription | tr ' ' '\n' | grep objectId
   ```
-    It is likely that the number of messages will be zero the first time. Wait a couple of minutes until you can reasonably expect that the bucket will contain new files. You will be notified only about files added to the bucket after the subscription was created.
-  * Once you get a objectId, you can verify that the file exists:
+It is likely that the number of messages will be zero the first time. Wait a couple of minutes until you can reasonably expect that the bucket will contain new files. You will be notified only about files added to the bucket after the subscription was created.
+  * Once you get a objectId, you can verify that the file exists. For example, let's say you got this:
    ```
    objectId=ABI-L2-MCMIPF/2017/306/21/OR_ABI-L2-MCMIPF-M4_G16_s20173062105222_e20173062110034_c20173062110127.nc
    ```
-   You can verify that it exists using:
+   Then, you can verify that it exists using:
    ```
    gsutil ls -l gs://gcp-public-data-goes-16/ABI-L2-MCMIPF/2017/306/21/OR_ABI-L2-MCMIPF-M4_G16_s20173062105222_e20173062110034_c20173062110127.nc
    ```
