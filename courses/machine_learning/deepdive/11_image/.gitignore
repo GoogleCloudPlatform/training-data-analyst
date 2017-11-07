@@ -2,3 +2,4 @@ mnist
 mnist_trained
 sources
 test.json
+hyperparam.yaml
