@@ -109,7 +109,10 @@ def read_and_preprocess(filename):
 def serving_input_fn():
     # Note: only handles one image at a time ... 
     inputs = {'imageurl': tf.placeholder(tf.string, shape=())}
-    image = read_and_preprocess(inputs['imageurl'])
-    #image = tf.expand_dims(image, 0) # make it a batch
+    filename = tf.squeeze(inputs['imageurl']) # make it a scalar
+    image = read_and_preprocess(filename)
+    # make the outer dimension unknown (and not 1)
+    image = tf.placeholder_with_default(image, shape=[None, HEIGHT, WIDTH, NUM_CHANNELS])
+
     features = {'image' : image}
     return tf.estimator.export.ServingInputReceiver(features, inputs)
