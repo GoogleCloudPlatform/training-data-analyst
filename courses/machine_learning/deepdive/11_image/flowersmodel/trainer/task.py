@@ -24,7 +24,7 @@ import os
 import model
 import tensorflow as tf
 
-def make_input_fn(csv_of_filenames, batch_size):
+def make_input_fn(csv_of_filenames, batch_size, augment):
   def read_lines(filename):
     from tensorflow.python.lib.io.file_io import FileIO
     with FileIO(filename, 'rb') as f:
@@ -43,8 +43,11 @@ def make_input_fn(csv_of_filenames, batch_size):
 
     # decode the image file starting from the filename
     # end up with pixel values that are in the -1, 1 range
-    image = model.read_and_preprocess(filename)
-    
+    if batch_size != None:
+       image = model.read_and_preprocess(filename)
+    else:
+       image = model.read_and_preprocess(filename)
+
     # covert 'roses' in the csv file to '2', for example
     labels_table = tf.contrib.lookup.index_table_from_tensor(
       tf.constant(model.LIST_OF_LABELS))
@@ -114,9 +117,9 @@ def make_experiment_fn(output_dir, hparams):
     return tf.contrib.learn.Experiment(
       estimator=create_custom_estimator(output_dir, hparams),
       train_input_fn=make_input_fn('gs://cloud-ml-data/img/flower_photos/train_set.csv',
-                                   hparams['train_batch_size']),
+                                   hparams['train_batch_size'], hparams['augment']),
       eval_input_fn=make_input_fn('gs://cloud-ml-data/img/flower_photos/eval_set.csv',
-                                   None),
+                                   batch_size=None, augment=False),
       train_steps=hparams['train_steps'],
       eval_steps=1, # This multiplied by 1000 should cover complete dataset
       min_eval_frequency=eval_freq,
@@ -165,6 +168,8 @@ if __name__ == '__main__':
       help='this model ignores this field, but it is required by gcloud',
       default='junk'
   )
+
+  parser.add_argument('--augment', help='if specified, augment image data', dest='augment', action='store_true'); parser.set_defaults(augment=False)
 
   # optional hyperparameters used by cnn
   parser.add_argument('--ksize1', help='kernel size of first layer for CNN', type=int, default=5)

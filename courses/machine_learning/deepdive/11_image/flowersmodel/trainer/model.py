@@ -93,15 +93,25 @@ def cnn_model(img, mode, hparams):
 
   return ylogits, NCLASSES
 
-def read_and_preprocess(filename):
+def read_and_preprocess(filename, augment=False):
     # decode the image file starting from the filename
     # end up with pixel values that are in the -1, 1 range
     image_contents = tf.read_file(filename)
     image = tf.image.decode_jpeg(image_contents, channels=NUM_CHANNELS)
     image = tf.image.convert_image_dtype(image, dtype=tf.float32) # 0-1
     image = tf.expand_dims(image, 0) # resize_bilinear needs batches
-    image = tf.image.resize_bilinear(image, [HEIGHT, WIDTH], align_corners=False)
+
+    if augment:
+       image = tf.image.resize_bilinear(image, [HEIGHT+10, WIDTH+10], align_corners=False)
+       image = tf.random_crop(image, [HEIGHT, WIDTH, NUM_CHANNELS])
+       image = tf.random_flip_left_right(image)
+       image = tf.image.random_brightness(image, max_delta=63.0/255.0)
+       image = tf.image.random_contrast(image, lower=0.2, upper=1.8)
+    else:
+       image = tf.image.resize_bilinear(image, [HEIGHT, WIDTH], align_corners=False)
+
     tf.logging.info('After resizing ... image={}'.format(image.get_shape()))
+    #image = tf.image.per_image_whitening(image)  # useful if mean not important
     image = tf.subtract(image, 0.5)
     image = tf.multiply(image, 2.0) # -1 to 1
     return image
