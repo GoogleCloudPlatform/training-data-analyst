@@ -67,9 +67,35 @@ def read_dataset(filename, mode, batch_size):
     return {TIMESERIES_COL: inputs}, label   # dict of features, label
   return _input_fn
 
-
 # create the inference model
-def lstm_model(features, targets, mode, params):
+def dnn_model(features, mode, params):
+  X = tf.reshape(features[TIMESERIES_COL], [-1, N_INPUTS]) # flattened
+  h1 = tf.layers.dense(X, 10, activation=tf.nn.relu)
+  h2 = tf.layers.dense(h1, 3, activation=tf.nn.relu)
+  predictions = tf.layers.dense(h2, 1, activation=None) # linear output: regression
+  return predictions
+
+def cnn_model(features, mode, params):
+  X = tf.reshape(features[TIMESERIES_COL], [-1, N_INPUTS, 1]) # as a 1D "image" with a grayscale channel ?x10x1
+  c1 = tf.layers.max_pooling1d(
+         tf.layers.conv1d(X, filters=N_INPUTS//2,
+                          kernel_size=3, strides=1, # ?x10x5
+                          padding='same', activation=tf.nn.relu),
+         pool_size=2, strides=2
+       ) # ?x5x5
+  c2 = tf.layers.max_pooling1d(
+         tf.layers.conv1d(c1, filters=N_INPUTS//2,
+                          kernel_size=3, strides=1,
+                          padding='same', activation=tf.nn.relu),
+         pool_size=2, strides=2
+       ) # ?x2x5
+  outlen = (N_INPUTS//4) * (N_INPUTS//2)
+  c2flat = tf.reshape(c2, [-1, outlen])
+  h1 = tf.layers.dense(c2flat, 3, activation=tf.nn.relu)
+  predictions = tf.layers.dense(h1, 1, activation=None) # linear output: regression
+  return predictions
+
+def lstm_model(features, mode, params):
   LSTM_SIZE = 3  # number of hidden layers in each of the LSTM cells
 
   # 1. Reformat input shape to become a sequence

@@ -33,7 +33,7 @@ def sequence_regressor(features, labels, mode, params):
 
   # run the appropriate model
   model_func = getattr(model, '{}_model'.format(params['model']))  # models available
-  predictions = model_func(features, labels, mode, params)
+  predictions = model_func(features, mode, params)
 
   # 2. loss function, training/eval ops
   if mode == tf.contrib.learn.ModeKeys.TRAIN or mode == tf.contrib.learn.ModeKeys.EVAL:
