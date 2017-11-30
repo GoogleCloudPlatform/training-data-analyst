@@ -96,26 +96,6 @@ def cnn_model(features, mode, params):
   return predictions
 
 def lstm_model(features, mode, params):
-  LSTM_SIZE = 3  # number of hidden layers in each of the LSTM cells
-
-  # 1. Reformat input shape to become a sequence
-  x = tf.split(features[TIMESERIES_COL], N_INPUTS, 1)
-    
-  # 2. configure the RNN
-  lstm_cell = rnn.BasicLSTMCell(LSTM_SIZE, forget_bias=1.0)
-  outputs, _ = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
-
-  # 3. slice to keep only the last cell of the RNN
-  outputs = outputs[-1]
-  
-  # 4. output is result of linear activation of last layer of RNN
-  weight = tf.Variable(tf.random_normal([LSTM_SIZE, N_OUTPUTS]))
-  bias = tf.Variable(tf.random_normal([N_OUTPUTS]))
-  predictions = tf.matmul(outputs, weight) + bias
-  
-  return predictions
-
-def lstm2_model(features, mode, params):
   LSTM_SIZE = N_INPUTS//3  # number of hidden layers in each of the LSTM cells
 
   # 1. Reformat input shape to become a sequence
@@ -124,9 +104,10 @@ def lstm2_model(features, mode, params):
   # 2. configure the RNN
   lstm_cell = rnn.BasicLSTMCell(LSTM_SIZE, forget_bias=1.0)
   outputs, _ = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
+  outputs = outputs[-1]  # last cell only
 
   # 3. flatten lstm output and pass through a dense layer
-  lstm_flat = tf.reshape(outputs, [-1, lstm_cell.output_size*N_INPUTS])
+  lstm_flat = tf.reshape(outputs, [-1, lstm_cell.output_size])
   h1 = tf.layers.dense(lstm_flat, N_INPUTS//2, activation=tf.nn.relu)
   predictions = tf.layers.dense(h1, 1, activation=None) # (?, 1)
   return predictions
