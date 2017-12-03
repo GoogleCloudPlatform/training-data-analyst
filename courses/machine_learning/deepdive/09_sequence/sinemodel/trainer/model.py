@@ -112,6 +112,7 @@ def lstm_model(features, mode, params):
   predictions = tf.layers.dense(h1, 1, activation=None) # (?, 1)
   return predictions
 
+# see: https://r2rt.com/recurrent-neural-networks-in-tensorflow-i.html
  
 def serving_input_fn():
     feature_placeholders = {
