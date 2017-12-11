@@ -113,17 +113,17 @@ def lstm_model(features, mode, params):
   return predictions
 
 
-# 2-layer LSTM
+# 2-layer LSTM -- doesn't help
 def lstm2_model(features, mode, params):
-  # 1. Reformat input shape to become a sequence
-  x = tf.split(features[TIMESERIES_COL], N_INPUTS, 1)
+  # dynamic_rnn needs 3D shape: [BATCH_SIZE, N_INPUTS, 1]
+  x = tf.reshape(features[TIMESERIES_COL], [-1, N_INPUTS, 1])
  
   # 2. configure the RNN
   lstm_cell1 = rnn.BasicLSTMCell(N_INPUTS*2, forget_bias=1.0)
   lstm_cell2 = rnn.BasicLSTMCell(N_INPUTS//2, forget_bias=1.0)
   lstm_cells = rnn.MultiRNNCell([lstm_cell1, lstm_cell2])
-  outputs, _ = rnn.static_rnn(lstm_cells, x, dtype=tf.float32)
-  outputs = outputs[-1]  # last cell only
+  outputs, _ = tf.nn.dynamic_rnn(lstm_cells, x, dtype=tf.float32)
+  outputs = outputs[:, (N_INPUTS-1):, :] # last one only
 
   # 3. flatten lstm output and pass through a dense layer
   lstm_flat = tf.reshape(outputs, [-1, lstm_cells.output_size])
