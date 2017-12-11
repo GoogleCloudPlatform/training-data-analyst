@@ -112,7 +112,25 @@ def lstm_model(features, mode, params):
   predictions = tf.layers.dense(h1, 1, activation=None) # (?, 1)
   return predictions
 
-# see: https://r2rt.com/recurrent-neural-networks-in-tensorflow-i.html
+
+# 2-layer LSTM
+def lstm2_model(features, mode, params):
+  # 1. Reformat input shape to become a sequence
+  x = tf.split(features[TIMESERIES_COL], N_INPUTS, 1)
+ 
+  # 2. configure the RNN
+  lstm_cell1 = rnn.BasicLSTMCell(N_INPUTS*2, forget_bias=1.0)
+  lstm_cell2 = rnn.BasicLSTMCell(N_INPUTS//2, forget_bias=1.0)
+  lstm_cells = rnn.MultiRNNCell([lstm_cell1, lstm_cell2])
+  outputs, _ = rnn.static_rnn(lstm_cells, x, dtype=tf.float32)
+  outputs = outputs[-1]  # last cell only
+
+  # 3. flatten lstm output and pass through a dense layer
+  lstm_flat = tf.reshape(outputs, [-1, lstm_cells.output_size])
+  h1 = tf.layers.dense(lstm_flat, lstm_cells.output_size//2, activation=tf.nn.relu)
+  predictions = tf.layers.dense(h1, 1, activation=None) # (?, 1)
+  return predictions
+
  
 def serving_input_fn():
     feature_placeholders = {
