@@ -95,16 +95,17 @@ def cnn_model(features, mode, params):
   predictions = tf.layers.dense(h1, 1, activation=None) # linear output: regression
   return predictions
 
+
 def lstm_model(features, mode, params):
   LSTM_SIZE = N_INPUTS//3  # number of hidden layers in each of the LSTM cells
 
-  # 1. Reformat input shape to become a sequence
-  x = tf.split(features[TIMESERIES_COL], N_INPUTS, 1)
-    
+  # 1. dynamic_rnn needs 3D shape: [BATCH_SIZE, N_INPUTS, 1]
+  x = tf.reshape(features[TIMESERIES_COL], [-1, N_INPUTS, 1])
+
   # 2. configure the RNN
   lstm_cell = rnn.BasicLSTMCell(LSTM_SIZE, forget_bias=1.0)
-  outputs, _ = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
-  outputs = outputs[-1]  # last cell only
+  outputs, _ = tf.nn.dynamic_rnn(lstm_cell, x, dtype=tf.float32)
+  outputs = outputs[:, (N_INPUTS-1):, :]  # last cell only
 
   # 3. flatten lstm output and pass through a dense layer
   lstm_flat = tf.reshape(outputs, [-1, lstm_cell.output_size])
@@ -112,8 +113,7 @@ def lstm_model(features, mode, params):
   predictions = tf.layers.dense(h1, 1, activation=None) # (?, 1)
   return predictions
 
-
-# 2-layer LSTM -- doesn't help
+# 2-layer LSTM
 def lstm2_model(features, mode, params):
   # dynamic_rnn needs 3D shape: [BATCH_SIZE, N_INPUTS, 1]
   x = tf.reshape(features[TIMESERIES_COL], [-1, N_INPUTS, 1])
@@ -130,6 +130,27 @@ def lstm2_model(features, mode, params):
   h1 = tf.layers.dense(lstm_flat, lstm_cells.output_size//2, activation=tf.nn.relu)
   predictions = tf.layers.dense(h1, 1, activation=None) # (?, 1)
   return predictions
+
+# create N-1 predictions
+def lstmN_model(features, mode, params):
+  # dynamic_rnn needs 3D shape: [BATCH_SIZE, N_INPUTS, 1]
+  x = tf.reshape(features[TIMESERIES_COL], [-1, N_INPUTS, 1])
+ 
+  # 2. configure the RNN
+  lstm_cell1 = rnn.BasicLSTMCell(N_INPUTS*2, forget_bias=1.0)
+  lstm_cell2 = rnn.BasicLSTMCell(N_INPUTS//2, forget_bias=1.0)
+  lstm_cells = rnn.MultiRNNCell([lstm_cell1, lstm_cell2])
+  outputs, _ = tf.nn.dynamic_rnn(lstm_cells, x, dtype=tf.float32)
+
+  # 3. make lstm output a 2D matrix and pass through a dense layer
+  # so that the dense layer is shared for all outputs
+  lstm_flat = tf.reshape(outputs, [-1, N_INPUTS, lstm_cells.output_size])
+  h1 = tf.layers.dense(lstm_flat, lstm_cells.output_size, activation=tf.nn.relu)
+  h2 = tf.layers.dense(h1, lstm_cells.output_size//2, activation=tf.nn.relu)
+  predictions = tf.layers.dense(h2, 1, activation=None) # (?, N_INPUTS, 1)
+  predictions = tf.reshape(predictions, [-1, N_INPUTS])
+  return predictions
+
 
  
 def serving_input_fn():

@@ -27,24 +27,41 @@ from tensorflow.contrib.learn.python.learn import learn_runner
 from tensorflow.contrib.learn.python.learn.utils import (
     saved_model_export_utils)
 
+def compute_errors(features, labels, predictions):
+   if predictions.shape[1] == 1:
+      loss = tf.losses.mean_squared_error(labels, predictions)
+      rmse = tf.metrics.root_mean_squared_error(labels, predictions)
+      return loss, rmse, predictions
+   else:
+      # one prediction for every input in sequence
+      # get 1-N of (x + label)
+      labelsN = tf.concat([features[model.TIMESERIES_COL], labels], axis=1)
+      labelsN = labelsN[:, 1:]
+      loss = tf.losses.mean_squared_error(labelsN, predictions)
+      # rmse is computed from last prediction and last label
+      lastPred = predictions[:, -1]
+      rmse = tf.metrics.root_mean_squared_error(labels, lastPred)
+      return loss, rmse, lastPred
 
 # create the inference model
 def sequence_regressor(features, labels, mode, params):
 
-  # run the appropriate model
+  # 1. run the appropriate model
   model_func = getattr(model, '{}_model'.format(params['model']))  # models available
   predictions = model_func(features, mode, params)
 
   # 2. loss function, training/eval ops
   if mode == tf.contrib.learn.ModeKeys.TRAIN or mode == tf.contrib.learn.ModeKeys.EVAL:
-     loss = tf.losses.mean_squared_error(labels, predictions)
+     loss, rmse, predictions = compute_errors(features, labels, predictions)
+
+     # 2b. set up training operation and eval metrics
      train_op = tf.contrib.layers.optimize_loss(
          loss=loss,
          global_step=tf.contrib.framework.get_global_step(),
          learning_rate=params['learning_rate'],
          optimizer="SGD")
      eval_metric_ops = {
-      "rmse": tf.metrics.root_mean_squared_error(labels, predictions)
+      "rmse": rmse
      }
   else:
      loss = None
