@@ -34,5 +34,5 @@ if __name__ == '__main__':
       | 'write' >> beam.io.WriteToText(output_prefix)
    )
 
-   p.run()
+   p.run().wait_until_finish()
 
