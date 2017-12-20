@@ -44,13 +44,15 @@ def create_snapshots_on_cloud(bucket, project, runner):
         'no_save_main_session': True
    }
    opts = beam.pipeline.PipelineOptions(flags=[], **options)
-   with beam.Pipeline(runner, options=opts) as p:
-      (p
+   p = beam.Pipeline(runner, options=opts)
+   (p
         | 'lines' >> beam.io.ReadFromText(
                            'gs://{}/{}'.format(bucket, input_file))
         | 'to_jpg' >> beam.Map(lambda line: g2j.goes_to_jpeg(line, bucket, 'maria/images'))
-      )
-      p.run()
+   )
+   job = p.run()
+   if runner == 'DirectRunner':
+      job.wait_until_finish()
 
 if __name__ == '__main__':
    import argparse

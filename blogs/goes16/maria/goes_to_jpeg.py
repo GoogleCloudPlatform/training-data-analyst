@@ -122,6 +122,7 @@ def goes_to_jpeg(line, bucket, outdir):
     dayno = dt.timetuple().tm_yday
     lat = float(fields[8])
     lon = float(fields[9])
+    logging.info('Looking for data collected on {} near {},{}'.format(dt, lat, lon))
 
     # copy 11-micron band (C14) to local disk
     # See: https://www.goes-r.gov/education/ABI-bands-quick-info.html
@@ -131,10 +132,12 @@ def goes_to_jpeg(line, bucket, outdir):
     tmpdir = tempfile.mkdtemp()
     local_file = copy_fromgcs('gcp-public-data-goes-16', gcs_prefix,
                               gcs_patterns, tmpdir)
+    logging.info('Creating image from {} near {},{}'.format(os.path.basename(local_file), lat, lon))
 
     # create image in temporary dir, then move over
     jpgfile = '{}/ir_{}{}{}.jpg'.format(tmpdir, dt.year, dayno, dt.hour)
     jpgfile = plot_image(local_file, jpgfile, lat, lon)
+    logging.info('Created {} from {}'.format(os.path.basename(jpgfile), os.path.basename(local_file)))
 
     # move over
     if bucket != None:
