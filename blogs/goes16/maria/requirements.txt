@@ -1,6 +1,0 @@
-#!/bin/bash
-pyresample
-netcdf4
-matplotlib
-python-tk
-pillow
