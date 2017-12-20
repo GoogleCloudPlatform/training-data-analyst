@@ -44,17 +44,13 @@ def create_snapshots_on_cloud(bucket, project, runner):
         'no_save_main_session': True
    }
    opts = beam.pipeline.PipelineOptions(flags=[], **options)
-   p = beam.Pipeline(runner, options=opts)
-   (p
-      | 'lines' >> beam.io.ReadFromText(
+   with beam.Pipeline(runner, options=opts) as p:
+      (p
+        | 'lines' >> beam.io.ReadFromText(
                            'gs://{}/{}'.format(bucket, input_file))
-      | 'to_jpg' >> beam.Map(lambda line: g2j.goes_to_jpeg(line, 'gs://{}/maria/images'.format(bucket)))
-   )
-
-   job = p.run()
-   if runner == 'DirectRunner':
-      job.wait_until_finish()
-
+        | 'to_jpg' >> beam.Map(lambda line: g2j.goes_to_jpeg(line, bucket, 'maria/images'))
+      )
+      p.run()
 
 if __name__ == '__main__':
    import argparse
@@ -62,10 +58,11 @@ if __name__ == '__main__':
    parser.add_argument('--bucket', default='', help='Specify GCS bucket to run on cloud')
    parser.add_argument('--project', default='', help='Specify GCP project to bill')
    parser.add_argument('--outdir', default='image', help='output dir if local')
-   parser.add_argument('--oncloud', default=False, help='Run locally or on cloud?')
    
    opts = parser.parse_args()
-   runner = opts.oncloud?  'DataflowRunner' : 'DirectRunner'
+   runner = 'DataflowRunner' # run on Cloud
+   #runner = 'DirectRunner' # run Beam on local machine, but write outputs to cloud
+
    if len(opts.bucket) > 0:
       create_snapshots_on_cloud(opts.bucket, opts.project, runner)
    else:

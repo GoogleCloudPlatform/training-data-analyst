@@ -42,6 +42,7 @@ def copy_fromgcs(bucket, gcs_prefix, gcs_patterns, destdir):
       dest = os.path.join(destdir, basename)
       blobs[0].download_to_filename(dest)
       return dest
+   logging.error('No matching files found for gs://{}/{}* containing {}'.format(bucket, gcs_prefix, gcs_patterns))
    return None
 
 def copy_togcs(localfile, bucket, blob_name):
@@ -124,11 +125,11 @@ def goes_to_jpeg(line, bucket, outdir):
 
     # copy 11-micron band (C14) to local disk
     # See: https://www.goes-r.gov/education/ABI-bands-quick-info.html
-    gcs_prefix = 'ABI-L1b-RadF/{0}/{1:03d}/{2:02d}/*C14*_s{0}{1:03d}{2:02d}*'.format(dt.year, dayno, dt.hour)
+    gcs_prefix = 'ABI-L1b-RadF/{0}/{1:03d}/{2:02d}/'.format(dt.year, dayno, dt.hour)
     gcs_patterns = ['C14',
           's{0}{1:03d}{2:02d}'.format(dt.year, dayno, dt.hour)]
     tmpdir = tempfile.mkdtemp()
-    local_file = copy_fromgcs('gcp-public-data-goes', gcs_prefix,
+    local_file = copy_fromgcs('gcp-public-data-goes-16', gcs_prefix,
                               gcs_patterns, tmpdir)
 
     # create image in temporary dir, then move over
@@ -144,7 +145,8 @@ def goes_to_jpeg(line, bucket, outdir):
 
     # cleanup
     shutil.rmtree(tmpdir)
-    logging.info('Created {} from {}'.format(jpgfile, gcs_pattern))
+    logging.info('Created {} from {}'.format(jpgfile, os.path.basename(local_file)))
+
     return jpgfile
 
 

@@ -6,3 +6,4 @@ sudo pip install matplotlib
 sudo apt-get install python-tk
 sudo pip install pillow
 sudo pip install google-cloud-dataflow
+sudo pip install google-cloud-storage
