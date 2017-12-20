@@ -63,8 +63,7 @@ def plot_image(ncfilename, outfile, clat, clon):
 
         # plotting to jpg file
         fig = plt.figure()
-        plt.imshow(ref, vmin=0.0, vmax=1.0, cmap='gist_ncar_r') # or 'Greys_r' without color
-        fig.savefig(outfile)
+        plt.imsave(outfile, ref, vmin=0.0, vmax=1.0, cmap='gist_ncar_r') # or 'Greys_r' without color
         plt.close('all')
         return outfile
     return None
@@ -107,4 +106,3 @@ def do_locally():
 
 if __name__ == '__main__':
     do_locally()
-e
