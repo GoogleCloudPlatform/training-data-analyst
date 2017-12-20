@@ -1,5 +1,18 @@
 #!/usr/bin/env python
 
+"""
+Copyright Google Inc. 2017
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 def copy_fromgcs(gcs_pattern, destdir):
    import os.path
    import subprocess
@@ -12,6 +25,11 @@ def copy_fromgcs(gcs_pattern, destdir):
       basename = os.path.basename(filenames[0])
       return os.path.join(destdir, basename)
    return None
+
+def copy_togcs(localfile, gcs_path):
+   import subprocess
+   copy_command = 'gsutil cp {} {}'.format(localfile, gcs_path)
+   subprocess.check_call(copy_command.split())
 
 def crop_image(nc, data, clat, clon):
    import numpy as np
@@ -68,41 +86,86 @@ def plot_image(ncfilename, outfile, clat, clon):
         return outfile
     return None
 
-
-def do_locally():
-    import tempfile
-    import shutil,os
-    import numpy as np
+def goes_to_jpeg(line, outdir=None):
     from datetime import datetime
+    import os, shutil, tempfile, subprocess
 
-    outdir = 'image'
+    fields = line.split(',')
+    dt = datetime.strptime(fields[6], '%Y-%m-%d %H:%M:%S')
+    dayno = dt.timetuple().tm_yday
+    lat = float(fields[8])
+    lon = float(fields[9])
+
+    # copy 11-micron band (C14) to local disk
+    # See: https://www.goes-r.gov/education/ABI-bands-quick-info.html
+    gcs_pattern = 'gs://gcp-public-data-goes-16/ABI-L1b-RadF/{0}/{1:03d}/{2:02d}/*C14*_s{0}{1:03d}{2:02d}*'.format(dt.year, dayno, dt.hour)
+    tmpdir = tempfile.mkdtemp()
+    local_file = copy_fromgcs(gcs_pattern, tmpdir)
+
+    # create image in temporary dir, then move over
+    jpgfile = '{}/ir_{}{}{}.jpg'.format(tmpdir, dt.year, dayno, dt.hour)
+    jpgfile = plot_image(local_file, jpgfile, lat, lon)
+
+    # move over
+    if len(outdir) > 3 and outdir[:3] == 'gs:':
+        jpgfile = copy_togcs(jpgfile, '{}/{}'.format(outdir, os.path.basename(jpgfile)))
+    else:
+        subprocess.check_call(['mv', jpgfile, outdir])
+        jpgfile = '{}/{}'.format(outdir, os.path.basename(jpgfile))
+
+    # cleanup
+    shutil.rmtree(tmpdir)
+    return jpgfile
+
+
+def create_snapshots_one_by_one(outdir):
+    import shutil,os
     shutil.rmtree(outdir, ignore_errors=True)
     os.mkdir(outdir)
-
     with open('MARIA.csv', 'r') as ifp:
      for line in ifp:
-       fields = line.split(',')
-       dt = datetime.strptime(fields[6], '%Y-%m-%d %H:%M:%S')
-       dayno = dt.timetuple().tm_yday
-       lat = float(fields[8])
-       lon = float(fields[9])
-
-       # copy 11-micron band (C14) to local disk
-       # See: https://www.goes-r.gov/education/ABI-bands-quick-info.html
-       gcs_pattern = 'gs://gcp-public-data-goes-16/ABI-L1b-RadF/{0}/{1:03d}/{2:02d}/*C14*_s{0}{1:03d}{2:02d}*'.format(dt.year, dayno, dt.hour)
-       #gcs_pattern = 'gs://gcp-public-data-goes-16/ABI-L1b-RadC/{0}/{1:03d}/{2:02d}/*C14*_s{0}{1:03d}{2:02d}*'.format(dt.year, dayno, dt.hour)
-       tmpdir = tempfile.mkdtemp()
-       local_file = copy_fromgcs(gcs_pattern, tmpdir)
-
-       # create image
-       jpgfile = '{}/ir_{}{}{}.jpg'.format(outdir, dt.year, dayno, dt.hour)
-       jpgfile = plot_image(local_file, jpgfile, lat, lon)
-       
-       # cleanup
-       shutil.rmtree(tmpdir)
-
+       jpgfile = goes_to_jpeg(line, outdir)
        break  # take out this  to process all the timestamps ...
 
 
+def create_snapshots_on_cloud(bucket, project):
+   import datetime, os
+   import apache_beam as beam
+
+   input_file = 'gs://{}/maria/input/maria.csv'.format(bucket)
+   copy_togcs('MARIA.csv', input_file)
+
+   OUTPUT_DIR = 'gs://{}/maria/'.format(bucket)
+   options = {
+        'staging_location': os.path.join(OUTPUT_DIR, 'tmp', 'staging'),
+        'temp_location': os.path.join(OUTPUT_DIR, 'tmp'),
+        'job_name': 'maria-' + datetime.datetime.now().strftime('%y%m%d-%H%M%S'),
+        'project': project,
+        'max_num_workers': 12,
+        'requirements_file': 'requirements.txt',
+        'teardown_policy': 'TEARDOWN_ALWAYS',
+        'no_save_main_session': True
+   }
+   opts = beam.pipeline.PipelineOptions(flags=[], **options)
+   p = beam.Pipeline('DataflowRunner', options=opts)
+   (p
+      | 'lines' >> beam.io.ReadFromText(input_file)
+      | 'to_jpg' >> beam.Map(lambda line: goes_to_jpg(line))
+   )
+   p.run().wait_until_finish()
+
+
 if __name__ == '__main__':
-    do_locally()
+   import argparse
+   parser = argparse.ArgumentParser(description='Plot the landfall of Hurricane Maria')
+   parser.add_argument('--bucket', default='', help='Specify GCS bucket to run on cloud')
+   parser.add_argument('--project', default='', help='Specify GCP project to bill')
+   parser.add_argument('--outdir', default='image', help='output dir if local')
+   
+   opts = parser.parse_args()
+   if len(opts.bucket) > 0:
+      create_snapshots_on_cloud(opts.bucket, opts.project)
+   else:
+      create_snapshots_one_by_one(opts.outdir)
+
+
