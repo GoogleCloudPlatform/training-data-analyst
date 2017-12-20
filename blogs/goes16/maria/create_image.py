@@ -55,7 +55,7 @@ def create_snapshots_on_cloud(bucket, project, runner):
       job.wait_until_finish()
 
 if __name__ == '__main__':
-   import argparse
+   import argparse, logging
    parser = argparse.ArgumentParser(description='Plot the landfall of Hurricane Maria')
    parser.add_argument('--bucket', default='', help='Specify GCS bucket to run on cloud')
    parser.add_argument('--project', default='', help='Specify GCP project to bill')
@@ -64,8 +64,10 @@ if __name__ == '__main__':
    opts = parser.parse_args()
    runner = 'DataflowRunner' # run on Cloud
    #runner = 'DirectRunner' # run Beam on local machine, but write outputs to cloud
+   logging.basicConfig(level=getattr(logging, 'INFO', None))
 
    if len(opts.bucket) > 0:
+      logging.info('Running on cloud ...')
       create_snapshots_on_cloud(opts.bucket, opts.project, runner)
    else:
       create_snapshots_one_by_one(opts.outdir)
