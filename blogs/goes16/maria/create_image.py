@@ -38,7 +38,6 @@ def crop_image(nc, data, clat, clon):
    old_grid = pr.geometry.AreaDefinition('geos','goes_conus','geos', 
        {'proj':'geos', 'h':str(ht_0), 'lon_0':str(lon_0) ,'a':'6378169.0', 'b':'6356584.0'},
        nx, ny, extents)
-   print(old_grid)
 
    # now do remapping
    return pr.kd_tree.resample_nearest(old_grid, data, new_grid, radius_of_influence=50000)
@@ -56,22 +55,22 @@ def plot_image(ncfilename, outfile, clat, clon):
         ref = (rad * np.pi * 0.3) / 663.274497
         ref = np.minimum( np.maximum(ref, 0.0), 1.0 )
 
-        print('The image has values between {} and {}'.format(np.min(ref), np.max(ref)))
-
         # crop to area of interest
         ref = crop_image(nc, ref, clat, clon)
-        print('The cropped image has values between {} and {}'.format(np.min(ref), np.max(ref)))
+        
+        # do gamma correction to stretch the values
+        ref = np.sqrt(ref)
 
         # plotting to jpg file
         fig = plt.figure()
-        plt.imshow(ref, vmin=0.0, vmax=0.2, cmap=plt.cm.hot)
+        plt.imshow(ref, vmin=0.0, vmax=1.0, cmap='gist_ncar_r') # or 'Greys_r' without color
         fig.savefig(outfile)
         plt.close('all')
         return outfile
     return None
 
 
-if __name__ == '__main__':
+def do_locally():
     import tempfile
     import shutil,os
     import numpy as np
@@ -80,13 +79,10 @@ if __name__ == '__main__':
     outdir = 'image'
     shutil.rmtree(outdir, ignore_errors=True)
     os.mkdir(outdir)
-    tmpdir = tempfile.mkdtemp()
-    print('Writing temporary files to {}'.format(tmpdir))
 
     with open('MARIA.csv', 'r') as ifp:
      for line in ifp:
        fields = line.split(',')
-       # print '***'.join(fields)
        dt = datetime.strptime(fields[6], '%Y-%m-%d %H:%M:%S')
        dayno = dt.timetuple().tm_yday
        lat = float(fields[8])
@@ -96,14 +92,19 @@ if __name__ == '__main__':
        # See: https://www.goes-r.gov/education/ABI-bands-quick-info.html
        gcs_pattern = 'gs://gcp-public-data-goes-16/ABI-L1b-RadF/{0}/{1:03d}/{2:02d}/*C14*_s{0}{1:03d}{2:02d}*'.format(dt.year, dayno, dt.hour)
        #gcs_pattern = 'gs://gcp-public-data-goes-16/ABI-L1b-RadC/{0}/{1:03d}/{2:02d}/*C14*_s{0}{1:03d}{2:02d}*'.format(dt.year, dayno, dt.hour)
+       tmpdir = tempfile.mkdtemp()
        local_file = copy_fromgcs(gcs_pattern, tmpdir)
 
        # create image
        jpgfile = '{}/ir_{}{}{}.jpg'.format(outdir, dt.year, dayno, dt.hour)
        jpgfile = plot_image(local_file, jpgfile, lat, lon)
+       
+       # cleanup
+       shutil.rmtree(tmpdir)
 
-       break
+       break  # take out this  to process all the timestamps ...
 
-    # cleanup
-    shutil.rmtree(tmpdir)
-    exit(-1)
+
+if __name__ == '__main__':
+    do_locally()
+e
