@@ -13,26 +13,46 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-def copy_fromgcs(gcs_pattern, destdir):
+def list_gcs(bucket, gcs_prefix, gcs_patterns):
+   import google.cloud.storage as gcs
+   bucket = gcs.Client().get_bucket(bucket)
+   blobs = bucket.list_blobs(prefix=gcs_prefix, delimiter='/')
+   result = []
+   if gcs_patterns == None or len(gcs_patterns) == 0:
+      for b in blobs:
+          result.append(b)
+   else:
+      for b in blobs:
+          match = True
+          for pattern in gcs_patterns:
+              if not pattern in b.path:
+                 match = False
+          if match:
+              result.append(b)
+   return result
+
+def copy_fromgcs(bucket, gcs_prefix, gcs_patterns, destdir):
    import os.path
-   import subprocess
    import logging
-   list_command = 'gsutil ls {}'.format(gcs_pattern)
-   filenames = subprocess.check_output(list_command.split())
-   filenames = str(filenames).split()
-   if len(filenames) > 0:
-      copy_command = 'gsutil cp {} {}'.format(filenames[0], destdir)
-      subprocess.check_call(copy_command.split())
-      basename = os.path.basename(filenames[0])
-      logging.info('{} caused download of {}'.format(copy_command, basename))
-      return os.path.join(destdir, basename)
+
+   blobs = list_gcs(bucket, gcs_prefix, gcs_patterns)
+   if len(blobs) > 0:
+      basename = os.path.basename(blobs[0].path.replace('%2F','/'))
+      logging.info('Downloading {}'.format(basename))
+      dest = os.path.join(destdir, basename)
+      blobs[0].download_to_filename(dest)
+      return dest
    return None
 
-def copy_togcs(localfile, gcs_path):
-   import subprocess, logging
-   copy_command = 'gsutil cp {} {}'.format(localfile, gcs_path)
-   subprocess.check_call(copy_command.split())
-   logging.info('{} uploaded to {}'.format(localfile, gcs_path))
+def copy_togcs(localfile, bucket, blob_name):
+   import logging
+   import google.cloud.storage as gcs
+   bucket = gcs.Client().get_bucket(bucket)
+   blob = bucket.blob(blob_name)
+   blob.upload_from_filename(localfile)
+   logging.info('{} uploaded to gs://{}/{}'.format(localfile,
+        bucket, blob_name))
+   return blob
 
 def crop_image(nc, data, clat, clon):
    import logging
@@ -92,7 +112,7 @@ def plot_image(ncfilename, outfile, clat, clon):
         return outfile
     return None
 
-def goes_to_jpeg(line, outdir):
+def goes_to_jpeg(line, bucket, outdir):
     from datetime import datetime
     import os, shutil, tempfile, subprocess, logging
 
@@ -104,17 +124,20 @@ def goes_to_jpeg(line, outdir):
 
     # copy 11-micron band (C14) to local disk
     # See: https://www.goes-r.gov/education/ABI-bands-quick-info.html
-    gcs_pattern = 'gs://gcp-public-data-goes-16/ABI-L1b-RadF/{0}/{1:03d}/{2:02d}/*C14*_s{0}{1:03d}{2:02d}*'.format(dt.year, dayno, dt.hour)
+    gcs_prefix = 'ABI-L1b-RadF/{0}/{1:03d}/{2:02d}/*C14*_s{0}{1:03d}{2:02d}*'.format(dt.year, dayno, dt.hour)
+    gcs_patterns = ['C14',
+          's{0}{1:03d}{2:02d}'.format(dt.year, dayno, dt.hour)]
     tmpdir = tempfile.mkdtemp()
-    local_file = copy_fromgcs(gcs_pattern, tmpdir)
+    local_file = copy_fromgcs('gcp-public-data-goes', gcs_prefix,
+                              gcs_patterns, tmpdir)
 
     # create image in temporary dir, then move over
     jpgfile = '{}/ir_{}{}{}.jpg'.format(tmpdir, dt.year, dayno, dt.hour)
     jpgfile = plot_image(local_file, jpgfile, lat, lon)
 
     # move over
-    if len(outdir) > 3 and outdir[:3] == 'gs:':
-        jpgfile = copy_togcs(jpgfile, '{}/{}'.format(outdir, os.path.basename(jpgfile)))
+    if bucket != None:
+        jpgfile = copy_togcs(jpgfile, bucket, '{}/{}'.format(outdir, os.path.basename(jpgfile)))
     else:
         subprocess.check_call(['mv', jpgfile, outdir])
         jpgfile = '{}/{}'.format(outdir, os.path.basename(jpgfile))

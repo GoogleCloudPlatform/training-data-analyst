@@ -20,7 +20,7 @@ def create_snapshots_one_by_one(outdir):
     os.mkdir(outdir)
     with open('MARIA.csv', 'r') as ifp:
      for line in ifp:
-       jpgfile = g2j.goes_to_jpeg(line, outdir)
+       jpgfile = g2j.goes_to_jpeg(line, None, outdir)
        break  # take out this  to process all the timestamps ...
 
 
@@ -29,8 +29,8 @@ def create_snapshots_on_cloud(bucket, project, runner):
    import apache_beam as beam
    import goes_to_jpeg as g2j
 
-   input_file = 'gs://{}/maria/input/maria.csv'.format(bucket)
-   g2j.copy_togcs('MARIA.csv', input_file)
+   input_file = 'maria/input/maria.csv'
+   g2j.copy_togcs('MARIA.csv', bucket, input_file)
 
    OUTPUT_DIR = 'gs://{}/maria/'.format(bucket)
    options = {
@@ -39,7 +39,6 @@ def create_snapshots_on_cloud(bucket, project, runner):
         'job_name': 'maria-' + datetime.datetime.now().strftime('%y%m%d-%H%M%S'),
         'project': project,
         'max_num_workers': 12,
-        #'requirements_file': 'requirements.txt',
         'setup_file': './setup.py',
         'teardown_policy': 'TEARDOWN_ALWAYS',
         'no_save_main_session': True
@@ -47,7 +46,8 @@ def create_snapshots_on_cloud(bucket, project, runner):
    opts = beam.pipeline.PipelineOptions(flags=[], **options)
    p = beam.Pipeline(runner, options=opts)
    (p
-      | 'lines' >> beam.io.ReadFromText(input_file)
+      | 'lines' >> beam.io.ReadFromText(
+                           'gs://{}/{}'.format(bucket, input_file))
       | 'to_jpg' >> beam.Map(lambda line: g2j.goes_to_jpeg(line, 'gs://{}/maria/images'.format(bucket)))
    )
 
@@ -62,11 +62,12 @@ if __name__ == '__main__':
    parser.add_argument('--bucket', default='', help='Specify GCS bucket to run on cloud')
    parser.add_argument('--project', default='', help='Specify GCP project to bill')
    parser.add_argument('--outdir', default='image', help='output dir if local')
+   parser.add_argument('--oncloud', default=False, help='Run locally or on cloud?')
    
    opts = parser.parse_args()
+   runner = opts.oncloud?  'DataflowRunner' : 'DirectRunner'
    if len(opts.bucket) > 0:
-      create_snapshots_on_cloud(opts.bucket, opts.project, 'DirectRunner')
+      create_snapshots_on_cloud(opts.bucket, opts.project, runner)
    else:
       create_snapshots_one_by_one(opts.outdir)
-
 
