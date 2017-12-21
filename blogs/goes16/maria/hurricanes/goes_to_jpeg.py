@@ -116,6 +116,7 @@ def plot_image(ncfilename, outfile, clat, clon):
 def goes_to_jpeg(line, bucket, outdir):
     from datetime import datetime
     import os, shutil, tempfile, subprocess, logging
+    import os.path
 
     fields = line.split(',')
     dt = datetime.strptime(fields[6], '%Y-%m-%d %H:%M:%S')
@@ -135,16 +136,17 @@ def goes_to_jpeg(line, bucket, outdir):
     logging.info('Creating image from {} near {},{}'.format(os.path.basename(local_file), lat, lon))
 
     # create image in temporary dir, then move over
-    jpgfile = '{}/ir_{}{}{}.jpg'.format(tmpdir, dt.year, dayno, dt.hour)
+    jpgfile = os.path.join(tmpdir, 'ir_{}{}{}.jpg'.format(dt.year, dayno, dt.hour))
     jpgfile = plot_image(local_file, jpgfile, lat, lon)
     logging.info('Created {} from {}'.format(os.path.basename(jpgfile), os.path.basename(local_file)))
 
     # move over
     if bucket != None:
-        jpgfile = copy_togcs(jpgfile, bucket, '{}/{}'.format(outdir, os.path.basename(jpgfile)))
+        copy_togcs(jpgfile, bucket, os.path.join(outdir, os.path.basename(jpgfile)))
+        jpgfile = 'gs://{}/{}'.format(bucket, os.path.join(outdir, os.path.basename(jpgfile)))
     else:
         subprocess.check_call(['mv', jpgfile, outdir])
-        jpgfile = '{}/{}'.format(outdir, os.path.basename(jpgfile))
+        jpgfile = os.path.join(outdir, os.path.basename(jpgfile))
 
     # cleanup
     shutil.rmtree(tmpdir)
