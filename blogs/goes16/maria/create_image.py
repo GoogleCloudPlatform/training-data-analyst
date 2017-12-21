@@ -15,7 +15,7 @@ limitations under the License.
 
 def create_snapshots_one_by_one(outdir):
     import shutil,os
-    import goes_to_jpeg as g2j
+    import hurricanes.goes_to_jpeg as g2j
     shutil.rmtree(outdir, ignore_errors=True)
     os.mkdir(outdir)
     with open('MARIA.csv', 'r') as ifp:
@@ -27,7 +27,7 @@ def create_snapshots_one_by_one(outdir):
 def create_snapshots_on_cloud(bucket, project, runner):
    import datetime, os
    import apache_beam as beam
-   import goes_to_jpeg as g2j
+   import hurricanes.goes_to_jpeg as g2j
 
    input_file = 'maria/input/maria.csv'
    g2j.copy_togcs('MARIA.csv', bucket, input_file)

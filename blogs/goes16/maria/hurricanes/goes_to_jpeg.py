@@ -45,14 +45,14 @@ def copy_fromgcs(bucket, gcs_prefix, gcs_patterns, destdir):
    logging.error('No matching files found for gs://{}/{}* containing {}'.format(bucket, gcs_prefix, gcs_patterns))
    return None
 
-def copy_togcs(localfile, bucket, blob_name):
+def copy_togcs(localfile, bucket_name, blob_name):
    import logging
    import google.cloud.storage as gcs
-   bucket = gcs.Client().get_bucket(bucket)
+   bucket = gcs.Client().get_bucket(bucket_name)
    blob = bucket.blob(blob_name)
    blob.upload_from_filename(localfile)
    logging.info('{} uploaded to gs://{}/{}'.format(localfile,
-        bucket, blob_name))
+        bucket_name, blob_name))
    return blob
 
 def crop_image(nc, data, clat, clon):
