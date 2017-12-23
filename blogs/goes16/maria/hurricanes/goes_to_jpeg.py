@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+GOES_PUBLIC_BUCKET='gcp-public-data-goes-16'
+
 def list_gcs(bucket, gcs_prefix, gcs_patterns):
    import google.cloud.storage as gcs
    bucket = gcs.Client().get_bucket(bucket)
@@ -31,19 +33,17 @@ def list_gcs(bucket, gcs_prefix, gcs_patterns):
               result.append(b)
    return result
 
-def copy_fromgcs(bucket, gcs_prefix, gcs_patterns, destdir):
+def copy_fromgcs(bucket, objectId, destdir):
    import os.path
    import logging
-
-   blobs = list_gcs(bucket, gcs_prefix, gcs_patterns)
-   if len(blobs) > 0:
-      basename = os.path.basename(blobs[0].path.replace('%2F','/'))
-      logging.info('Downloading {}'.format(basename))
-      dest = os.path.join(destdir, basename)
-      blobs[0].download_to_filename(dest)
-      return dest
-   logging.error('No matching files found for gs://{}/{}* containing {}'.format(bucket, gcs_prefix, gcs_patterns))
-   return None
+   import google.cloud.storage as gcs
+   bucket = gcs.Client().get_bucket(bucket)
+   blob = bucket.blob(objectId)
+   basename = os.path.basename(objectId)
+   logging.info('Downloading {}'.format(basename))
+   dest = os.path.join(destdir, basename)
+   blob.download_to_filename(dest)
+   return dest
 
 def copy_togcs(localfile, bucket_name, blob_name):
    import logging
@@ -113,43 +113,54 @@ def plot_image(ncfilename, outfile, clat, clon):
         return outfile
     return None
 
-def goes_to_jpeg(line, bucket, outdir):
+def get_objectId_at(dt, product='ABI-L1b-RadF', channel='C14'):
+   import os, logging
+   # get first 11-micron band (C14) at this hour
+   # See: https://www.goes-r.gov/education/ABI-bands-quick-info.html
+   logging.info('Looking for data collected on {}'.format(dt))
+   dayno = dt.timetuple().tm_yday
+   gcs_prefix = '{}/{}/{:03d}/{:02d}/'.format(product, dt.year, dayno, dt.hour)
+   gcs_patterns = [channel,
+          's{}{:03d}{:02d}'.format(dt.year, dayno, dt.hour)]
+   blobs = list_gcs(GOES_PUBLIC_BUCKET, gcs_prefix, gcs_patterns)
+   if len(blobs) > 0:
+      objectId = blobs[0].path.replace('%2F','/').replace('/b/{}/o/'.format(GOES_PUBLIC_BUCKET),'')
+      basename = os.path.basename(objectId)
+      logging.info('Found {} for {}'.format(objectId, dt))
+      return objectId
+   logging.error('No matching files found for gs://{}/{}* containing {}'.format(bucket, gcs_prefix, gcs_patterns))
+   return None
+
+def parse_line(line):
     from datetime import datetime
-    import os, shutil, tempfile, subprocess, logging
-
     fields = line.split(',')
-    dt = datetime.strptime(fields[6], '%Y-%m-%d %H:%M:%S')
-    dayno = dt.timetuple().tm_yday
-    lat = float(fields[8])
-    lon = float(fields[9])
-    logging.info('Looking for data collected on {} near {},{}'.format(dt, lat, lon))
+    timestamp = fields[6]
+    dt = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+    return dt, float(fields[8]), float(fields[9])
 
-    # copy 11-micron band (C14) to local disk
-    # See: https://www.goes-r.gov/education/ABI-bands-quick-info.html
-    gcs_prefix = 'ABI-L1b-RadF/{0}/{1:03d}/{2:02d}/'.format(dt.year, dayno, dt.hour)
-    gcs_patterns = ['C14',
-          's{0}{1:03d}{2:02d}'.format(dt.year, dayno, dt.hour)]
+def goes_to_jpeg(objectId, lat, lon, outbucket, outfilename):
+    import os, shutil, tempfile, subprocess, logging
+    import os.path
+
     tmpdir = tempfile.mkdtemp()
-    local_file = copy_fromgcs('gcp-public-data-goes-16', gcs_prefix,
-                              gcs_patterns, tmpdir)
+    local_file = copy_fromgcs('gcp-public-data-goes-16', objectId, tmpdir)
     logging.info('Creating image from {} near {},{}'.format(os.path.basename(local_file), lat, lon))
 
     # create image in temporary dir, then move over
-    jpgfile = '{}/ir_{}{}{}.jpg'.format(tmpdir, dt.year, dayno, dt.hour)
+    jpgfile = os.path.join(tmpdir, os.path.basename(outfilename))
     jpgfile = plot_image(local_file, jpgfile, lat, lon)
     logging.info('Created {} from {}'.format(os.path.basename(jpgfile), os.path.basename(local_file)))
 
     # move over
-    if bucket != None:
-        jpgfile = copy_togcs(jpgfile, bucket, '{}/{}'.format(outdir, os.path.basename(jpgfile)))
+    if outbucket != None:
+        copy_togcs(jpgfile, outbucket, outfilename)
+        outfilename = 'gs://{}/{}'.format(outbucket, outfilename)
     else:
-        subprocess.check_call(['mv', jpgfile, outdir])
-        jpgfile = '{}/{}'.format(outdir, os.path.basename(jpgfile))
+        subprocess.check_call(['mv', jpgfile, outfilename])
 
     # cleanup
     shutil.rmtree(tmpdir)
-    logging.info('Created {} from {}'.format(jpgfile, os.path.basename(local_file)))
+    logging.info('Created {} from {}'.format(outfilename, os.path.basename(local_file)))
 
-    return jpgfile
-
+    return outfilename
 

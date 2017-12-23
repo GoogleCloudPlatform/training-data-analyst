@@ -20,7 +20,13 @@ def create_snapshots_one_by_one(outdir):
     os.mkdir(outdir)
     with open('MARIA.csv', 'r') as ifp:
      for line in ifp:
-       jpgfile = g2j.goes_to_jpeg(line, None, outdir)
+       dt, lat, lon = g2j.parse_line(line)
+       objectId = g2j.get_objectId_at(dt)
+       outfilename = os.path.join(
+                   outdir, 
+                   'ir_{}{:02d}{:02d}{:02d}{:02d}.jpg'.format(
+                       dt.year, dt.month, dt.day, dt.hour, dt.second))
+       jpgfile = g2j.goes_to_jpeg(objectId, lat, lon, None, outfilename)
        break  # take out this  to process all the timestamps ...
 
 
@@ -48,7 +54,14 @@ def create_snapshots_on_cloud(bucket, project, runner):
    (p
         | 'lines' >> beam.io.ReadFromText(
                            'gs://{}/{}'.format(bucket, input_file))
-        | 'to_jpg' >> beam.Map(lambda line: g2j.goes_to_jpeg(line, bucket, 'maria/images'))
+        | 'parse' >> beam.Map(lambda line: g2j.parse_line(line))
+        | 'to_jpg' >> beam.Map(lambda (dt,lat,lon): 
+            g2j.goes_to_jpeg(
+                g2j.get_objectId_at(dt), 
+                lat, lon, 
+                bucket, 
+                'maria/images/ir_{}{:02d}{:02d}{:02d}{:02d}.jpg'.format(
+                       dt.year, dt.month, dt.day, dt.hour, dt.second)))
    )
    job = p.run()
    if runner == 'DirectRunner':
