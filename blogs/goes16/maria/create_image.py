@@ -62,7 +62,7 @@ WHERE
    opts = beam.pipeline.PipelineOptions(flags=[], **options)
    p = beam.Pipeline(runner, options=opts)
    (p
-        | 'get_tracks' >> beam.io.Read(beam.io.BigQuerySource(query=query))
+        | 'get_tracks' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True))
         | 'loc_at_time' >> beam.Map(lambda rowdict: (
                                      g2j.parse_timestamp(rowdict['iso_time']),
                                      rowdict['latitude'],
