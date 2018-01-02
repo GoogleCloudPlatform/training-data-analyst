@@ -133,8 +133,7 @@ def get_objectId_at(dt, product='ABI-L1b-RadF', channel='C14'):
 
 def parse_timestamp(timestamp):
     from datetime import datetime
-    timestamp = timestamp.replace(" UTC", "") # strip out timezone if it exists
-    dt = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+    dt = datetime.strptime(timestamp[:19], '%Y-%m-%d %H:%M:%S')
     return dt
 
 def parse_line(line):
