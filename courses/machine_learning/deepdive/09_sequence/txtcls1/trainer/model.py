@@ -35,6 +35,7 @@ N_WORDS = -1
 
 # hardcoded into graph
 BATCH_SIZE = 32
+EMBEDDING_SIZE = 10
 
 # describe your data
 TARGETS = ['nytimes', 'github', 'techcrunch']
@@ -44,10 +45,10 @@ LABEL_COLUMN = 'source'
 DEFAULTS = [['null'], ['null']]
 PADWORD = 'ZYXW'
 
-def init(bucket, num_steps):
+def init(params):
   global BUCKET, TRAIN_STEPS, WORD_VOCAB_FILE, N_WORDS
-  BUCKET = bucket
-  TRAIN_STEPS = num_steps
+  BUCKET = params.pop('bucket')
+  TRAIN_STEPS = params.pop('train_steps')
   WORD_VOCAB_FILE = 'gs://{}/txtcls1/vocab_words'.format(BUCKET)
   N_WORDS = save_vocab('gs://{}/txtcls1/train.csv'.format(BUCKET), 'title', WORD_VOCAB_FILE);
 
@@ -107,16 +108,10 @@ def read_dataset(prefix, batch_size=BATCH_SIZE):
   return _input_fn
 
 # embedding parameters
-EMBEDDING_SIZE = 10
-
-# CNN model parameters
-WINDOW_SIZE = EMBEDDING_SIZE
-STRIDE = int(WINDOW_SIZE/2)
-def cnn_model(features, labels, mode, params):
+def get_embedding(titles):
     table = lookup.index_table_from_file(vocabulary_file=WORD_VOCAB_FILE, num_oov_buckets=1, default_value=-1)
     
     # string operations
-    titles = tf.squeeze(features['title'], [1])
     words = tf.string_split(titles)
     densewords = tf.sparse_tensor_to_dense(words, default_value=PADWORD)
     numbers = table.lookup(densewords)
@@ -128,6 +123,15 @@ def cnn_model(features, labels, mode, params):
     # layer to take the words and convert them into vectors (embeddings)
     embeds = tf.contrib.layers.embed_sequence(sliced, vocab_size=N_WORDS, embed_dim=EMBEDDING_SIZE)
     print('words_embed={}'.format(embeds)) # (?, 20, 10)
+    return embeds
+
+# CNN model parameters
+WINDOW_SIZE = EMBEDDING_SIZE
+STRIDE = int(WINDOW_SIZE/2)
+def cnn_model(features, labels, mode, params):
+    titles = tf.squeeze(features['title'], [1])
+
+    embeds = get_embedding(titles) # (?, 20, 10)
     
     # now do convolution
     conv = tf.contrib.layers.conv2d(embeds, 1, WINDOW_SIZE, stride=STRIDE, padding='SAME') # (?, 4, 1)

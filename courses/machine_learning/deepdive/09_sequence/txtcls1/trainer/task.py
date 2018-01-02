@@ -56,9 +56,7 @@ if __name__ == '__main__':
   arguments.pop('job-dir', None)
 
   output_dir = arguments.pop('output_dir')
-  model.init(arguments.pop('bucket'),
-             arguments.pop('train_steps')
-            )
+  model.init(arguments)
 
   # Append trial_id to path if we are doing hptuning
   # This code can be removed if you are not using hyperparameter tuning
