@@ -46,7 +46,7 @@ FROM
 WHERE
   name LIKE '%{0}%'
   AND season = '{1}'
-   """.format(named_hurricane, hurricane_year)
+   """.format(named_hurricane.upper(), hurricane_year)
 
    OUTPUT_DIR = 'gs://{}/maria/'.format(bucket)
    options = {
