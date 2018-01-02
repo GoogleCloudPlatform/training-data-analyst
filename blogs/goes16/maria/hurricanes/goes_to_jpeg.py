@@ -131,12 +131,15 @@ def get_objectId_at(dt, product='ABI-L1b-RadF', channel='C14'):
    logging.error('No matching files found for gs://{}/{}* containing {}'.format(bucket, gcs_prefix, gcs_patterns))
    return None
 
-def parse_line(line):
+def parse_timestamp(timestamp):
     from datetime import datetime
-    fields = line.split(',')
-    timestamp = fields[6]
+    timestamp = timestamp.replace(" UTC", "") # strip out timezone if it exists
     dt = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
-    return dt, float(fields[8]), float(fields[9])
+    return dt
+
+def parse_line(line):
+    fields = line.split(',')
+    return parse_timestamp(fields[6]), float(fields[8]), float(fields[9])
 
 def goes_to_jpeg(objectId, lat, lon, outbucket, outfilename):
     import os, shutil, tempfile, subprocess, logging

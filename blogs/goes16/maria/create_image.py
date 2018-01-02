@@ -13,12 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-def create_snapshots_one_by_one(outdir):
+def create_snapshots_one_by_one(outdir, hurricane_file):
     import shutil,os
     import hurricanes.goes_to_jpeg as g2j
     shutil.rmtree(outdir, ignore_errors=True)
     os.mkdir(outdir)
-    with open('MARIA.csv', 'r') as ifp:
+    with open(hurricane_file, 'r') as ifp:
      for line in ifp:
        dt, lat, lon = g2j.parse_line(line)
        objectId = g2j.get_objectId_at(dt)
@@ -30,13 +30,23 @@ def create_snapshots_one_by_one(outdir):
        break  # take out this  to process all the timestamps ...
 
 
-def create_snapshots_on_cloud(bucket, project, runner):
+def create_snapshots_on_cloud(bucket, project, runner, named_hurricane, hurricane_year):
    import datetime, os
    import apache_beam as beam
    import hurricanes.goes_to_jpeg as g2j
 
-   input_file = 'maria/input/maria.csv'
-   g2j.copy_togcs('MARIA.csv', bucket, input_file)
+   query = """
+SELECT
+  latitude,
+  longitude,
+  iso_time,
+  dist2land
+FROM
+  `bigquery-public-data.noaa_hurricanes.hurricanes`
+WHERE
+  name LIKE '%{0}%'
+  AND season = '{1}'
+   """.format(named_hurricane, hurricane_year)
 
    OUTPUT_DIR = 'gs://{}/maria/'.format(bucket)
    options = {
@@ -52,9 +62,11 @@ def create_snapshots_on_cloud(bucket, project, runner):
    opts = beam.pipeline.PipelineOptions(flags=[], **options)
    p = beam.Pipeline(runner, options=opts)
    (p
-        | 'lines' >> beam.io.ReadFromText(
-                           'gs://{}/{}'.format(bucket, input_file))
-        | 'parse' >> beam.Map(lambda line: g2j.parse_line(line))
+        | 'get_tracks' >> beam.io.Read(beam.io.BigQuerySource(query=query))
+        | 'loc_at_time' >> beam.Map(lambda rowdict: (
+                                     g2j.parse_timestamp(rowdict['iso_time']),
+                                     rowdict['latitude'],
+                                     rowdict['longitude']))
         | 'to_jpg' >> beam.Map(lambda (dt,lat,lon): 
             g2j.goes_to_jpeg(
                 g2j.get_objectId_at(dt), 
@@ -73,6 +85,8 @@ if __name__ == '__main__':
    parser.add_argument('--bucket', default='', help='Specify GCS bucket to run on cloud')
    parser.add_argument('--project', default='', help='Specify GCP project to bill')
    parser.add_argument('--outdir', default='image', help='output dir if local')
+   parser.add_argument('--hurricane', default='maria', help='name of hurricane')
+   parser.add_argument('--year', default='2017', help='year of named hurricane')
    
    opts = parser.parse_args()
    runner = 'DataflowRunner' # run on Cloud
@@ -81,7 +95,7 @@ if __name__ == '__main__':
 
    if len(opts.bucket) > 0:
       logging.info('Running on cloud ...')
-      create_snapshots_on_cloud(opts.bucket, opts.project, runner)
+      create_snapshots_on_cloud(opts.bucket, opts.project, runner, opts.hurricane, opts.year)
    else:
-      create_snapshots_one_by_one(opts.outdir)
+      create_snapshots_one_by_one(opts.outdir, 'MARIA.csv')
 
