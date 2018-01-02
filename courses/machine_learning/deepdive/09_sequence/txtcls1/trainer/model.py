@@ -97,7 +97,7 @@ def read_dataset(prefix, batch_size=BATCH_SIZE):
     features = dict(zip(CSV_COLUMNS, columns))
     label = features.pop(LABEL_COLUMN)
 
-    # make labelss numeric
+    # make labels numeric
     table = tf.contrib.lookup.index_table_from_tensor(
                    mapping=tf.constant(TARGETS), num_oov_buckets=0, default_value=-1)
     labels = table.lookup(label)
@@ -106,8 +106,10 @@ def read_dataset(prefix, batch_size=BATCH_SIZE):
   
   return _input_fn
 
-# CNN model parameters
+# embedding parameters
 EMBEDDING_SIZE = 10
+
+# CNN model parameters
 WINDOW_SIZE = EMBEDDING_SIZE
 STRIDE = int(WINDOW_SIZE/2)
 def cnn_model(features, labels, mode, params):
@@ -183,7 +185,8 @@ def get_valid(batch_size):
   return read_dataset('eval', batch_size=batch_size)
 
 from tensorflow.contrib.learn.python.learn.utils import saved_model_export_utils
-def experiment_fn(output_dir):
+def make_experiment_fn(output_dir, hparams):
+  def experiment_fn(output_dir):
     # run experiment
     save_freq = max(1, min(200, TRAIN_STEPS/10))
     eval_freq = max(1, min(2000, TRAIN_STEPS/5))
@@ -203,4 +206,5 @@ def experiment_fn(output_dir):
         )],
         train_steps = TRAIN_STEPS
     )
+  return experiment_fn
 
