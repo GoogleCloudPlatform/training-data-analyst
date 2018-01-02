@@ -3,3 +3,5 @@ eval.csv
 training
 data
 trained
+outputdir
+vocab.*
