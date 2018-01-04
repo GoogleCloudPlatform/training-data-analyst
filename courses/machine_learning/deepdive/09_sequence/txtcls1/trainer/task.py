@@ -43,6 +43,11 @@ if __name__ == '__main__':
       default=1000
   )
   parser.add_argument(
+      '--glove_embedding',
+      help='Pretrained embedding file. If omitted, will learn from training dataset',
+      default=''
+  )
+  parser.add_argument(
       '--job-dir',
       help='this model ignores this field, but it is required by gcloud',
       default='junk'
