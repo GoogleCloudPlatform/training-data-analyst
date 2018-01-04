@@ -5,3 +5,5 @@ data
 trained
 outputdir
 vocab.*
+*.zip
+*.txt.gz

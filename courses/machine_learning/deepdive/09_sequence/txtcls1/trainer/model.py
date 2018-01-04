@@ -32,10 +32,11 @@ tf.logging.set_verbosity(tf.logging.INFO)
 # variables set by init()
 WORD_VOCAB_FILE = None 
 N_WORDS = -1
-PRETRAINED_EMBEDDING = None
 
 # hardcoded into graph
 BATCH_SIZE = 32
+EMBEDDING_VARIABLE = 'wordid_to_embed'
+EMBEDDINGS = None
 
 # describe your data
 TARGETS = ['nytimes', 'github', 'techcrunch']
@@ -74,21 +75,18 @@ class Word2Vec:
 
     self.embeddings = np.array(self.embeddings)
     print('Loaded {}D vectors for {} words from {}'.format(self.embed_dim(), self.vocab_size(), filename))
-    # will be set in init(sess)
-    self.table = None
-    self.wordid_to_embed = None
 
-  # this method is called from a SessionRunHook, so that it has access to the session
-  def init(sess):
-    # variables needed by get_embedding ...
+    # will be set in init(sess)
     self.table = tf.contrib.lookup.index_table_from_tensor(
-                    tf.convert_to_tensor(self.vocab[:-1]), num_oov_buckets=1)
-    self.wordid_to_embed = tf.Variable(tf.constant(0.0, shape=[self.vocab_size(), self.embed_dim()]),
-                                  trainable=False, name="embedding")
-    embedding_placeholder = tf.placeholder(tf.float32, [self.vocab_size(), self.embed_dim()])
-    embedding_init = self.wordid_to_embed.assign(embedding_placeholder)
-    sess.run(embedding_init, feed_dict={embedding_placeholder: self.embeddings})
-    print('Loaded pretrained embedding into tensorflow graph')
+               tf.convert_to_tensor(self.vocab[:-1]), num_oov_buckets=1)
+    self.wordid_to_embed = tf.get_variable(
+               shape=[self.vocab_size(), self.embed_dim()],
+               trainable=False,
+               name=EMBEDDING_VARIABLE)
+    self.embedding_placeholder = tf.placeholder(
+               tf.float32, [self.vocab_size(), self.embed_dim()],
+               name=EMBEDDING_VARIABLE + "_ph")
+
 
   def get_embedding(self, lines):
     words = tf.string_split(lines)
@@ -102,7 +100,7 @@ class Word2Vec:
     
 
 def init(hparams):
-  global WORD_VOCAB_FILE, N_WORDS, PRETRAINED_EMBEDDING
+  global WORD_VOCAB_FILE, N_WORDS
   if len(hparams['glove_embedding']) == 0:
      # no pre-trained embedding, so learn it from the dataset itself
      BUCKET = hparams['bucket']
@@ -112,7 +110,6 @@ def init(hparams):
   else:
      # use pretrained embedding
      print('Will use pretrained embeddings from {}'.format(hparams['glove_embedding']))
-     PRETRAINED_EMBEDDING = Word2Vec(hparams['glove_embedding'])
    
 def save_vocab(trainfile, txtcolname, outfilename):
   if trainfile.startswith('gs://'):
@@ -195,8 +192,10 @@ def cnn_model(features, labels, mode, params):
        EMBEDDING_SIZE = 10
        embeds = get_embedding(params, titles, EMBEDDING_SIZE) # (?, MAX_DOCUMENT_LENGTH, EMBEDDING_SIZE)
     else:
-       embeds = PRETRAINED_EMBEDDING.get_embedding(titles)
-       EMBEDDING_SIZE = PRETRAINED_EMBEDDING.embed_dim()
+       wv = Word2Vec(params['glove_embedding'])
+       embeds = wv.get_embedding(titles)
+       EMBEDDING_SIZE = wv.embed_dim()
+       EMBEDDINGS = wv.embeddings
     
     # now do convolution
     WINDOW_SIZE = EMBEDDING_SIZE
@@ -256,14 +255,15 @@ def get_valid(hparams, batch_size):
   return read_dataset(hparams, 'eval', batch_size=batch_size)
 
 
-def init_embedding_hooks(hparams):
-  if len(hparams['glove_embedding']) == 0:
-     return None
-
-  class InitEmbeddingHook(tf.train.SessionRunHook):
-    def after_create_session(self, session, coord):
-      PRETRAINED_EMBEDDING.init(session)       
-  return [InitEmbeddingHook()]
+class InitEmbeddingHook(tf.train.SessionRunHook):
+  def after_create_session(self, session, coord):
+    if EMBEDDINGS != None:
+      embedding_var = tf.get_variable(EMBEDDING_VARIABLE)
+      embedding_placeholder = tf.get_default_graph().get_tensor_by_name(EMBEDDING_VARIABLE + "_ph")
+      embedding_init = embedding_var.assign(embedding_placeholder)
+      session.run(embedding_init, feed_dict={embedding_placeholder: EMBEDDINGS})
+    else:
+      print("No embedding to initialize")
 
 from tensorflow.contrib.learn.python.learn.utils import saved_model_export_utils
 def make_experiment_fn(output_dir, hparams):
@@ -288,8 +288,8 @@ def make_experiment_fn(output_dir, hparams):
             exports_to_keep=1
         )],
         train_steps = TRAIN_STEPS,
-        train_monitors = init_embedding_hooks(hparams),
-        eval_hooks = init_embedding_hooks(hparams)
+        train_monitors = [ InitEmbeddingHook() ],
+        eval_hooks = None
     )
   return experiment_fn
 
