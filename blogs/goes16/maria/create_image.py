@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-def create_snapshots_one_by_one(outdir, hurricane_file):
+def create_local_snapshots(outdir, hurricane_file):
     import shutil,os
     import hurricanes.goes_to_jpeg as g2j
     shutil.rmtree(outdir, ignore_errors=True)
@@ -29,26 +29,39 @@ def create_snapshots_one_by_one(outdir, hurricane_file):
        jpgfile = g2j.goes_to_jpeg(objectId, lat, lon, None, outfilename)
        break  # take out this  to process all the timestamps ...
 
-
-def create_snapshots_on_cloud(bucket, project, runner, named_hurricane, hurricane_year):
-   import datetime, os
-   import apache_beam as beam
-   import hurricanes.goes_to_jpeg as g2j
-
-   query = """
+def create_query(opts):    
+    query = """
 SELECT
+  name,
   latitude,
   longitude,
   iso_time,
   dist2land
 FROM
   `bigquery-public-data.noaa_hurricanes.hurricanes`
-WHERE
-  name LIKE '%{0}%'
-  AND season = '{1}'
-   """.format(named_hurricane.upper(), hurricane_year)
+             """
+    
+    clause = "WHERE season = '{}' ".format(opts.year)
 
-   OUTPUT_DIR = 'gs://{}/maria/'.format(bucket)
+    if len(opts.hurricane) > 0:
+        clause += " AND name LIKE '%{}%' ".format(opts.hurricane.upper())
+    elif len(opts.basin) > 0:
+        clause += " AND basin = '{}' ".format(opts.basin.upper())
+    else:
+        raise ValueError("Need to specify either a hurricane or a basin")
+
+    return query + clause
+
+
+
+def create_snapshots_on_cloud(bucket, project, runner, opts):
+   import datetime, os
+   import apache_beam as beam
+   import hurricanes.goes_to_jpeg as g2j
+
+   query = create_query(opts)
+
+   OUTPUT_DIR = 'gs://{}/hurricane/'.format(bucket)
    options = {
         'staging_location': os.path.join(OUTPUT_DIR, 'tmp', 'staging'),
         'temp_location': os.path.join(OUTPUT_DIR, 'tmp'),
@@ -65,15 +78,16 @@ WHERE
         | 'get_tracks' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True))
         | 'loc_at_time' >> beam.Map(lambda rowdict: (
                                      g2j.parse_timestamp(rowdict['iso_time']),
+                                     rowdict['name'].lower(),
                                      rowdict['latitude'],
                                      rowdict['longitude']))
-        | 'to_jpg' >> beam.Map(lambda (dt,lat,lon): 
+        | 'to_jpg' >> beam.Map(lambda (dt,name,lat,lon): 
             g2j.goes_to_jpeg(
                 g2j.get_objectId_at(dt), 
                 lat, lon, 
                 bucket, 
-                'maria/images/ir_{}{:02d}{:02d}{:02d}{:02d}.jpg'.format(
-                       dt.year, dt.month, dt.day, dt.hour, dt.second)))
+                'hurricane/images/{}/ir_{}{:02d}{:02d}{:02d}{:02d}.jpg'.format(
+                       name, dt.year, dt.month, dt.day, dt.hour, dt.second)))
    )
    job = p.run()
    if runner == 'DirectRunner':
@@ -84,9 +98,10 @@ if __name__ == '__main__':
    parser = argparse.ArgumentParser(description='Plot the landfall of Hurricane Maria')
    parser.add_argument('--bucket', default='', help='Specify GCS bucket to run on cloud')
    parser.add_argument('--project', default='', help='Specify GCP project to bill')
-   parser.add_argument('--outdir', default='image', help='output dir if local')
-   parser.add_argument('--hurricane', default='maria', help='name of hurricane')
-   parser.add_argument('--year', default='2017', help='year of named hurricane')
+   parser.add_argument('--outdir', default='', help='output dir if local')
+   parser.add_argument('--hurricane', default='', help='name of hurricane; if empty, uses basin')
+   parser.add_argument('--basin', default='', help='name of basin, e.g NA for North-Atlantic')
+   parser.add_argument('--year', required=True, help='year of named hurricane, e.g. 2017')
    
    opts = parser.parse_args()
    runner = 'DataflowRunner' # run on Cloud
@@ -94,8 +109,12 @@ if __name__ == '__main__':
    logging.basicConfig(level=getattr(logging, 'INFO', None))
 
    if len(opts.bucket) > 0:
+      if len(opts.project) == 0:
+         raise ValueError("Please specify billed project")
       logging.info('Running on cloud ...')
-      create_snapshots_on_cloud(opts.bucket, opts.project, runner, opts.hurricane, opts.year)
+      create_snapshots_on_cloud(opts.bucket, opts.project, runner, opts)
+   elif len(opts.outdir) > 0:
+      create_local_snapshots(opts.outdir, 'MARIA.csv')
    else:
-      create_snapshots_one_by_one(opts.outdir, 'MARIA.csv')
+      raise ValueError("Need to specify either outdir or bucket")
 

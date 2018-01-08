@@ -125,11 +125,11 @@ def get_objectId_at(dt, product='ABI-L1b-RadF', channel='C14'):
    blobs = list_gcs(GOES_PUBLIC_BUCKET, gcs_prefix, gcs_patterns)
    if len(blobs) > 0:
       objectId = blobs[0].path.replace('%2F','/').replace('/b/{}/o/'.format(GOES_PUBLIC_BUCKET),'')
-      basename = os.path.basename(objectId)
       logging.info('Found {} for {}'.format(objectId, dt))
       return objectId
-   logging.error('No matching files found for gs://{}/{}* containing {}'.format(bucket, gcs_prefix, gcs_patterns))
-   return None
+   else:
+      logging.error('No matching files found for gs://{}/{}* containing {}'.format(GOES_PUBLIC_BUCKET, gcs_prefix, gcs_patterns))
+      return None
 
 def parse_timestamp(timestamp):
     from datetime import datetime
@@ -143,6 +143,12 @@ def parse_line(line):
 def goes_to_jpeg(objectId, lat, lon, outbucket, outfilename):
     import os, shutil, tempfile, subprocess, logging
     import os.path
+
+    # if get_objectId_at fails, it returns None
+    if objectId == None:
+        logging.error('Skipping GOES object creation since no GCS file specified')
+        return
+
 
     tmpdir = tempfile.mkdtemp()
     local_file = copy_fromgcs('gcp-public-data-goes-16', objectId, tmpdir)
