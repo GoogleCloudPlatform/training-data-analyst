@@ -43,13 +43,16 @@ def create_snapshots_around_latlon(bucket, project, runner, lat, lon):
         'max_num_workers': 3,
         'setup_file': './setup.py',
         'teardown_policy': 'TEARDOWN_ALWAYS',
-        'no_save_main_session': True
+        'no_save_main_session': True,
+        'streaming': True
    }
    opts = beam.pipeline.PipelineOptions(flags=[], **options)
    p = beam.Pipeline(runner, options=opts)
    (p
-        | 'events' >> beam.io.Read(beam.io.PubSubSource(
-                           '/topics/gcp-public-data---goes-16/gcp-public-data-goes-16'))
+        | 'events' >> beam.io.ReadStringsFromPubSub(
+                           'projects/{}/topics/{}'.format(
+                                   'gcp-public-data---goes-16',
+                                   'gcp-public-data-goes-16'))
         | 'filter' >> beam.FlatMap(lambda message: only_infrared(message))
         | 'to_jpg' >> beam.Map(lambda objectid: 
             g2j.goes_to_jpeg(
@@ -70,8 +73,8 @@ if __name__ == '__main__':
    parser.add_argument('--lon', type=float, default=-122.33, help='longitude of region center')
    
    opts = parser.parse_args()
-   #runner = 'DataflowRunner' # run on Cloud
-   runner = 'DirectRunner' # run Beam on local machine, but write outputs to cloud
+   runner = 'DataflowRunner' # run on Cloud
+   #runner = 'DirectRunner' # run Beam on local machine, but write outputs to cloud
    logging.basicConfig(level=getattr(logging, 'INFO', None))
 
    create_snapshots_around_latlon(opts.bucket, opts.project, runner, opts.lat, opts.lon)
