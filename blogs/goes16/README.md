@@ -95,10 +95,12 @@ Monitor progress in the Dataflow section of the GCP web console and stop the job
  
 ## Processing files routinely with Python-Dataflow
 
-This repo also contains [an example of how you can write a Apache Beam pipeline](./maria/create_seattle.py) to create a subscription, monitor the topic, and do some processing of the files. The key code is:
+This repo also contains [an example of how you can write a Apache Beam pipeline](./maria/create_seattle.py) to create a subscription, monitor the topic, and do some processing of the files. The key code is for the pipeline to read from Pub/Sub rather than BigQuery or a text file:
+
   ```
-  beam.io.Read(beam.io.PubSubSource(
-                           '/topics/gcp-public-data---goes-16/gcp-public-data-goes-16'))
+  beam.io.ReadStringsFromPubSub('projects/{}/topics/{}'.format(
+                                  'gcp-public-data---goes-16',
+                                   'gcp-public-data-goes-16'))
   ```
 
 * Here's an example of creating png images of the IR channel around a specific lat-lon in real-time
