@@ -1,3 +1,5 @@
 *.tgz
 ende
 t2t_data
+t2t
+trained_model
