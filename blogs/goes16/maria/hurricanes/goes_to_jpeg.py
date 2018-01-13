@@ -172,3 +172,17 @@ def goes_to_jpeg(objectId, lat, lon, outbucket, outfilename):
 
     return outfilename
 
+
+def only_infrared(message):
+  import json, logging
+  try:
+    # message is a string in json format, so we need to parse it as json
+    #logging.debug(message)
+    result = json.loads(message)
+    # e.g. ABI-L2-CMIPF/2017/306/21/OR_ABI-L2-CMIPF-M4C01_G16_s20173062105222_e20173062110023_c20173062110102.nc
+    if 'C14_G16' in result['name']:
+        yield result['name'] #filename
+  except:
+    import sys
+    logging.warn(sys.exc_info()[0])
+    pass

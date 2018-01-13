@@ -13,22 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-def only_infrared(message):
-  try:
-    # eg. bucketId=gcp-public-data-goes-16 eventType=OBJECT_FINALIZE ...
-    pieces = message.trim().split()
-    result = {}
-    for keyvalue in pieces:
-        key,value = keyvalue.split('=')
-        result[key] = value
-    # e.g. ABI-L2-CMIPF/2017/306/21/OR_ABI-L2-CMIPF-M4C01_G16_s20173062105222_e20173062110023_c20173062110102.nc
-    if 'C14_G16' in result['objectId']:
-        yield result['objectId'] #filename
-  except:
-    import sys
-    logging.warn(sys.exc_info()[0])
-    pass
-
 def create_snapshots_around_latlon(bucket, project, runner, lat, lon):
    import datetime, os
    import apache_beam as beam
@@ -53,7 +37,7 @@ def create_snapshots_around_latlon(bucket, project, runner, lat, lon):
                            'projects/{}/topics/{}'.format(
                                    'gcp-public-data---goes-16',
                                    'gcp-public-data-goes-16'))
-        | 'filter' >> beam.FlatMap(lambda message: only_infrared(message))
+        | 'filter' >> beam.FlatMap(lambda message: g2j.only_infrared(message))
         | 'to_jpg' >> beam.Map(lambda objectid: 
             g2j.goes_to_jpeg(
                 objectid, lat, lon, bucket,
