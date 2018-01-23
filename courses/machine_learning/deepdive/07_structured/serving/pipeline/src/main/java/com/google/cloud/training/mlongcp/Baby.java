@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.google.cloud.training.aslmlimmersion;
+package com.google.cloud.training.mlongcp;
 
 import java.util.Arrays;
 
@@ -28,7 +28,7 @@ import org.apache.beam.sdk.coders.DefaultCoder;
 @DefaultCoder(AvroCoder.class)
 public class Baby {
   public enum INPUTCOLS {
-    weight_pounds,is_male,mother_age,mother_race,plurality,gestation_weeks,mother_married,cigarette_use,alcohol_use,key;
+    weight_pounds,is_male,mother_age,plurality,gestation_weeks,key;
   }
 
   private String[] fields;

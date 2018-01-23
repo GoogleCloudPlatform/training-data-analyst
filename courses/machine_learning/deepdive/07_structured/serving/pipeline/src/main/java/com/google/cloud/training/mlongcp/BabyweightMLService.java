@@ -1,4 +1,4 @@
-package com.google.cloud.training.aslmlimmersion;
+package com.google.cloud.training.mlongcp;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -18,30 +18,26 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.util.ExponentialBackOff;
-import com.google.cloud.training.aslmlimmersion.Baby.INPUTCOLS;
+import com.google.cloud.training.mlongcp.Baby.INPUTCOLS;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class BabyweightMLService {
   private static final Logger LOG = LoggerFactory.getLogger(BabyweightMLService.class);
-  private static final String PROJECT = "asl-ml-immersion";
+  private static final String PROJECT = "cloud-training-demos";
   private static String       MODEL   = "babyweight";
-  private static String       VERSION = "v1";
+  private static String       VERSION = "ml_on_gcp";
 
   static class Instance {
-    String is_male,mother_race,mother_married,cigarette_use,alcohol_use;
-    float mother_age, plurality, gestation_weeks; 
+    String is_male, plurality;
+    float mother_age, gestation_weeks; 
     
     Instance() {}
     Instance(Baby f) {
       this.is_male = f.getField(Baby.INPUTCOLS.is_male);
       this.mother_age = f.getFieldAsFloat(Baby.INPUTCOLS.mother_age);
-      this.mother_race = f.getField(Baby.INPUTCOLS.mother_race);
-      this.plurality = f.getFieldAsFloat(Baby.INPUTCOLS.plurality);
+      this.plurality = f.getField(Baby.INPUTCOLS.plurality);
       this.gestation_weeks = f.getFieldAsFloat(Baby.INPUTCOLS.gestation_weeks);
-      this.mother_married = f.getField(Baby.INPUTCOLS.mother_married);
-      this.cigarette_use = f.getField(Baby.INPUTCOLS.cigarette_use);
-      this.alcohol_use = f.getField(Baby.INPUTCOLS.alcohol_use);
     }
   }
 
@@ -50,7 +46,7 @@ public class BabyweightMLService {
   }
 
   static class Prediction {
-    double outputs;
+    List<Double> predictions;
   }
 
   static class Response {
@@ -60,7 +56,7 @@ public class BabyweightMLService {
       double[] result = new double[predictions.size()];
       for (int i=0; i < result.length; ++i) {
         Prediction pred = predictions.get(i);
-        result[i] = pred.outputs;
+        result[i] = pred.predictions.get(0);
       }
       return result;
     }
@@ -143,19 +139,15 @@ public class BabyweightMLService {
     
   }
 
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws Exception {   
     // create request
     Request request = new Request();
 
     Instance instance = new Instance();
     instance.is_male = "True";
     instance.mother_age = 26;
-    instance.mother_race = "White";
-    instance.plurality = 2;
+    instance.plurality = "Twins(2)";
     instance.gestation_weeks = 37;
-    instance.mother_married = "True";
-    instance.cigarette_use = "False";
-    instance.alcohol_use = "False";
 
     request.instances.add(instance);
 
@@ -163,7 +155,7 @@ public class BabyweightMLService {
     Response resp = sendRequest(request);
     System.out.println(resp.getPredictedBabyWeights()[0]);
 
-    Baby f = Baby.fromCsv("7.27084540076,True,28,White,1,40.0,True,,,somekey");
+    Baby f = Baby.fromCsv("5.4233716452,True,13,Single(1),37.0,124458947937444850");
     System.out.println("predicted=" + predict(f, -1) + " actual=" + f.getFieldAsFloat(INPUTCOLS.weight_pounds));
   }
 

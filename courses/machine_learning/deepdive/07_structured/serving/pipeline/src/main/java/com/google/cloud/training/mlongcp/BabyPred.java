@@ -1,4 +1,4 @@
-package com.google.cloud.training.aslmlimmersion;
+package com.google.cloud.training.mlongcp;
 
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;

@@ -1,4 +1,4 @@
-package com.google.cloud.training.aslmlimmersion;
+package com.google.cloud.training.mlongcp;
 
 import java.text.DecimalFormat;
 
@@ -8,7 +8,7 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 
-import com.google.cloud.training.aslmlimmersion.AddPrediction.MyOptions;
+import com.google.cloud.training.mlongcp.AddPrediction.MyOptions;
 
 @SuppressWarnings("serial")
 public class TextInputOutput extends InputOutput {

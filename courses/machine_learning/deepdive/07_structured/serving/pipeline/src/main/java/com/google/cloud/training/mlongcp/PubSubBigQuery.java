@@ -1,4 +1,4 @@
-package com.google.cloud.training.aslmlimmersion;
+package com.google.cloud.training.mlongcp;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +13,8 @@ import org.apache.beam.sdk.values.PCollection;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
-import com.google.cloud.training.aslmlimmersion.AddPrediction.MyOptions;
-import com.google.cloud.training.aslmlimmersion.Baby.INPUTCOLS;
+import com.google.cloud.training.mlongcp.AddPrediction.MyOptions;
+import com.google.cloud.training.mlongcp.Baby.INPUTCOLS;
 
 @SuppressWarnings("serial")
 public class PubSubBigQuery extends InputOutput {
