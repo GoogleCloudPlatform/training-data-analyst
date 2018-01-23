@@ -23,25 +23,6 @@
     <md-card>
       <md-card-content>
         <div layout="row" layout-align="space-between center">
-
-          <span>Mother's race</span>
-          <md-select ng-model="data.mother_race" placeholder="Select">
-            <md-option value="American Indian">American Indian</md-option>
-            <md-option value="Asian Indian">Asian Indian</md-option>
-            <md-option value="Black">Black</md-option>
-            <md-option value="Chinese">Chinese</md-option>
-            <md-option value="Filipino">Filipino</md-option>
-            <md-option value="Hawaiian">Hawaiian</md-option>
-            <md-option value="Japanese">Japanese</md-option>
-            <md-option value="Korean">Korean</md-option>
-            <md-option value="Samaon">Samaon</md-option>
-            <md-option value="Vietnamese">Vietnamese</md-option>
-            <md-option value="White">White</md-option>
-            <md-option value="Unknown">Unknown</md-option>
-          </md-select>
-        </div>
-
-        <div layout="row" layout-align="space-between center">
           <span>Mother's age</span>
           <md-slider-container>
               {: data.mother_age :}&nbsp;
@@ -64,9 +45,9 @@
         <div layout="row" layout-align="space-between center">
           <span>Plurality</span>
           <md-select ng-model="data.plurality" placeholder="Select">
-            <md-option value="1">One</md-option>
-            <md-option value="2">Two</md-option>
-            <md-option value="3">Three</md-option>
+            <md-option value="1">Single</md-option>
+            <md-option value="2">Twins</md-option>
+            <md-option value="3">Triplets</md-option>
           </md-select>
         </div>
 
@@ -75,25 +56,8 @@
           <md-radio-group ng-model="data.baby_gender" layout="row">
             <md-radio-button value="male">Male</md-radio-button>
             <md-radio-button value="female">Female</md-radio-button>
+            <md-radio-button value="unknown">Unknown</md-radio-button>
           </md-radio-group>
-        </div>
-
-        <div layout="row" layout-align="space-between center">
-          <span>Unmarried</span>
-          <md-checkbox ng-model="data.unmarried" aria-label="Checkbox 1">
-          </md-checkbox>
-        </div>
-
-        <div layout="row" layout-align="space-between center">
-          <span>Cigarette use</span>
-          <md-checkbox ng-model="data.cigarette_use" aria-label="Checkbox 1">
-          </md-checkbox>
-        </div>
-
-        <div layout="row" layout-align="space-between center">
-          <span>Alcohol use</span>
-          <md-checkbox ng-model="data.alcohol_use" aria-label="Checkbox 1">
-          </md-checkbox>
         </div>
       </md-card-content>
       <md-card-actions layout="row" layout-align="end center">

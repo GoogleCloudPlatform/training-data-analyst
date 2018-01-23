@@ -49,15 +49,16 @@ if __name__ == '__main__':
       default=512
   )
   parser.add_argument(
-      '--nbuckets',
+      '--nembeds',
       help='Embedding size of a cross of 3 key real-valued parameters',
       type=int,
-      default=10
+      default=3
   )
   parser.add_argument(
       '--nnsize',
-      help='Hidden layer sizes to use for DNN feature columns -- provide space-separated layers',
-      default='64 32'
+      help='Hidden layer size to use for first layer of DNN feature columns -- provide the first layer size; successive layers are decayed by 1/4 until the layer is smaller than 10. For example, if 64 is provided, the DNN will be [64 16 4]',
+      type=int,
+      default='64'
   )
   parser.add_argument(
       '--pattern',
@@ -83,8 +84,11 @@ if __name__ == '__main__':
   model.TRAIN_STEPS = (arguments.pop('train_examples') * 1000) / model.BATCH_SIZE
   print ("Will train for {} steps using batch_size={}".format(model.TRAIN_STEPS, model.BATCH_SIZE))
   model.PATTERN = arguments.pop('pattern')
-  model.NBUCKETS= arguments.pop('nbuckets')
-  model.NNSIZE = [ int(p) for p in arguments.pop('nnsize').split(' ')]
+  model.NEMBEDS= arguments.pop('nembeds')
+  model.NNSIZE = [ arguments.pop('nnsize') ]
+  while model.NNSIZE[-1] > 10:
+    model.NNSIZE.append( model.NNSIZE[-1]//4 )
+  print ("Will use DNN size of {}".format(model.NNSIZE))
 
   # Append trial_id to path if we are doing hptuning
   # This code can be removed if you are not using hyperparameter tuning
@@ -96,4 +100,5 @@ if __name__ == '__main__':
   )
 
   # Run the training job
-  learn_runner.run(model.experiment_fn, output_dir)
+  #learn_runner.run(model.experiment_fn, output_dir)
+  model.train_and_evaluate(output_dir)
