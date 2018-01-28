@@ -28,29 +28,24 @@ CSV_COLUMNS = ['fare_amount', 'pickuplon','pickuplat','dropofflon','dropofflat',
 LABEL_COLUMN = 'fare_amount'
 DEFAULTS = [[0.0], [-74.0], [40.0], [-74.0], [40.7], [1.0], ['nokey']]
 
-def read_dataset(filename, batch_size=512, mode=tf.estimator.ModeKeys.TRAIN):
+def read_dataset(filename, mode, batch_size=512):
   def _input_fn():
+    def decode_csv(value_column):
+      columns = tf.decode_csv(value_column, record_defaults=DEFAULTS)
+      features = dict(zip(CSV_COLUMNS, columns))
+      label = features.pop(LABEL_COLUMN)
+      return features, label
+    
+    dataset = tf.data.TextLineDataset(filename).map(decode_csv)
     if mode == tf.estimator.ModeKeys.TRAIN:
         num_epochs = None # indefinitely
+        dataset = dataset.shuffle(buffer_size=10*batch_size)
     else:
         num_epochs = 1 # end-of-input after this
-        
-    input_file_names = tf.train.match_filenames_once(filename)
-    filename_queue = tf.train.string_input_producer(
-        input_file_names, num_epochs=num_epochs, shuffle=True)
-    reader = tf.TextLineReader()
-    _, value = reader.read_up_to(filename_queue, num_records=batch_size)
-    if mode == tf.estimator.ModeKeys.TRAIN:
-          value = tf.train.shuffle_batch([value], batch_size, capacity=10*batch_size, 
-                                         min_after_dequeue=batch_size, enqueue_many=True, 
-                                         allow_smaller_final_batch=False)
-    
-    value_column = tf.expand_dims(value, -1)
-    columns = tf.decode_csv(value_column, record_defaults=DEFAULTS)
-    features = dict(zip(CSV_COLUMNS, columns))
-    label = features.pop(LABEL_COLUMN)
-    return features, label
-
+ 
+    dataset = dataset.repeat(num_epochs).batch(batch_size)
+    return dataset.make_one_shot_iterator().get_next()
+  
   return _input_fn
 
 
