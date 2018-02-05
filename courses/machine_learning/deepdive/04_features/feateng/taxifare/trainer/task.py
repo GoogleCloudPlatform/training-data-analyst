@@ -15,11 +15,14 @@
 """Example implementation of code to run on the Cloud ML service.
 """
 
+import traceback
 import argparse
 import json
 import os
 
 import model
+
+import tensorflow as tf
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -36,9 +39,16 @@ if __name__ == '__main__':
         default=512
     )
     parser.add_argument(
+        '--eval_batch_size',
+        help='Batch size for evaluation steps',
+        type=int,
+        default=512
+    )
+    parser.add_argument(
         '--train_steps',
         help="""\
-      Steps to run the training job for.\
+      Steps to run the training job for. If --num-epochs is not specified,
+      this must be. Otherwise the training job will run indefinitely.\
       """,
         type=int
     )
@@ -55,8 +65,14 @@ if __name__ == '__main__':
     )
     # Training arguments
     parser.add_argument(
+        '--nbuckets',
+        help='Number of buckets into which to discretize lats and lons',
+        default=10,
+        type=int
+    )
+    parser.add_argument(
         '--hidden_units',
-        help='List of hidden layer sizes to use for DNN feature columns',
+        help='Hidden layer sizes to use for DNN feature columns -- provide space-separated layers',
         nargs='+',
         type=int,
         default=[128, 32, 4]
@@ -81,9 +97,14 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--min_eval_frequency',
-        help='Seconds between evaluations',
-        default=300,
+        help='Minimum number of training steps between evaluations',
+        default=1,
         type=int
+    )
+    parser.add_argument(
+        '--format',
+        help='Is the input data format csv or tfrecord?',
+        default='csv',
     )
 
     args = parser.parse_args()
@@ -94,14 +115,18 @@ if __name__ == '__main__':
     arguments.pop('job-dir', None)
 
     output_dir = arguments['output_dir']
+
     # Append trial_id to path if we are doing hptuning
     # This code can be removed if you are not using hyperparameter tuning
     output_dir = os.path.join(
         output_dir,
         json.loads(
             os.environ.get('TF_CONFIG', '{}')
-        ).get('task', {}).get('trail', '')
+        ).get('task', {}).get('trial', '')
     )
 
-    # Run the training job
-    model.train_and_evaluate(arguments)
+    # Run the training job:
+    try:
+        model.train_and_evaluate(arguments)
+    except:
+        traceback.print_exc()
