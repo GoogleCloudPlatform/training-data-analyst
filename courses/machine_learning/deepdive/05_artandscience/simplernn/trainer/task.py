@@ -30,43 +30,43 @@ if __name__ == '__main__':
     # Input Arguments
     parser.add_argument(
         '--train_data_paths',
-        help='GCS or local path to training data',
-        required=True
+        help = 'GCS or local path to training data',
+        required = True
     )
     parser.add_argument(
         '--eval_data_paths',
-        help='GCS or local path to evaluation data',
-        required=True
+        help = 'GCS or local path to evaluation data',
+        required = True
     )
     parser.add_argument(
         '--output_dir',
-        help='GCS location to write checkpoints and export models',
-        required=True
+        help = 'GCS location to write checkpoints and export models',
+        required = True
     )
     parser.add_argument(
         '--job-dir',
-        help='this model ignores this field, but it is required by gcloud',
-        default='junk'
+        help = 'this model ignores this field, but it is required by gcloud',
+        default = 'junk'
     )
 
-    # Experiment arguments
+    # Eval arguments
     parser.add_argument(
         '--eval_delay_secs',
-        help='How long to wait before running first evaluation',
-        default=10,
-        type=int
+        help = 'How long to wait before running first evaluation',
+        default = 10,
+        type = int
     )
     parser.add_argument(
         '--min_eval_frequency',
-        help='Minimum number of training steps between evaluations',
-        default=1,
-        type=int
+        help = 'Minimum number of training steps between evaluations',
+        default = 1,
+        type = int
     )
 
     args = parser.parse_args()
     arguments = args.__dict__
 
-    # unused args provided by service
+    # Unused args provided by service
     arguments.pop('job_dir', None)
     arguments.pop('job-dir', None)
 
@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
     # Run the training job
     try:
-        shutil.rmtree(output_dir, ignore_errors=True) # start fresh each time
+        shutil.rmtree(output_dir, ignore_errors = True) # start fresh each time
         model.train_and_evaluate(output_dir)
     except:
         traceback.print_exc()
