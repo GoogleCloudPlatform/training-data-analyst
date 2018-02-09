@@ -24,30 +24,28 @@ SEQ_LEN = 10
 DEFAULTS = [[0.0] for x in xrange(0, SEQ_LEN)]
 BATCH_SIZE = 20
 TIMESERIES_COL = 'rawdata'
-N_OUTPUTS = 1  # in each sequence, column index 0-8 are features, and column index 9 is label
+# In each sequence, column index 0 to N_INPUTS - 1 are features, and column index N_INPUTS to SEQ_LEN are labels
+N_OUTPUTS = 1
 N_INPUTS = SEQ_LEN - N_OUTPUTS
 
 # Read data and convert to needed format
 def read_dataset(filename, mode, batch_size = 512):
     def _input_fn():
-        repeat_count = 100 if mode == tf.contrib.learn.ModeKeys.TRAIN else 1
-
         # Provide the ability to decode a CSV
         def decode_csv(line):
-            # all_data is a list of tensors
+            # all_data is a list of scalar tensors
             all_data = tf.decode_csv(line, record_defaults = DEFAULTS)
-            inputs = all_data[:len(all_data) - N_OUTPUTS]  # first len(all_date) - N_OUTPUTS values
-            label = all_data[len(all_data) - N_OUTPUTS:] # last N_OUTPUTS values
+            inputs = all_data[:len(all_data) - N_OUTPUTS]  # first N_INPUTS values
+            labels = all_data[len(all_data) - N_OUTPUTS:] # last N_OUTPUTS values
 
-            # From list of tensors to tensor with one more dimension
-            inputs = tf.expand_dims(inputs, -1)
-            inputs = tf.concat(inputs, axis = 1)
-            features = {TIMESERIES_COL: tf.squeeze(inputs)}
-            label = tf.concat(label, axis = 1)
-            label = tf.expand_dims(label, -1)
+            # Convert each list of rank R tensors to one rank R+1 tensor
+            inputs = tf.stack(inputs, axis = 0)
+            labels = tf.stack(labels, axis = 0)
 
-            d = features, label
-            return d
+            # Convert input R+1 tensor into a feature dictionary of one R+1 tensor
+            features = {TIMESERIES_COL: inputs}
+
+            return features, labels
 
         # Create list of files that match pattern
         file_list = tf.gfile.Glob(filename)
@@ -93,7 +91,7 @@ def simple_rnn(features, labels, mode):
         loss = tf.losses.mean_squared_error(labels, predictions)
         train_op = tf.contrib.layers.optimize_loss(
             loss = loss,
-            global_step = tf.contrib.framework.get_global_step(),
+            global_step = tf.train.get_global_step(),
             learning_rate = 0.01,
             optimizer = "SGD")
         eval_metric_ops = {
@@ -136,7 +134,7 @@ def serving_input_fn():
         key: tf.expand_dims(tensor, -1)
         for key, tensor in feature_placeholders.items()
     }
-    features[TIMESERIES_COL] = tf.squeeze(features[TIMESERIES_COL], axis=[2])
+    features[TIMESERIES_COL] = tf.squeeze(features[TIMESERIES_COL], axis = [2])
 
     return tf.estimator.export.ServingInputReceiver(features, feature_placeholders)
 
