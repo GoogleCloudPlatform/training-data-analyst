@@ -27,8 +27,8 @@ from tensorflow.contrib.learn.python.learn import learn_runner
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument(
-      '--train_path',
-      help='Path to data, either local or on GCS',
+      '--input_path',
+      help='Path to data, either local or on GCS. We will append /users_for_item or /items_for_user',
       required=True
   )
   parser.add_argument(
@@ -55,20 +55,14 @@ if __name__ == '__main__':
       default=10
   )
   parser.add_argument(
-      '--n_users',
+      '--nusers',
       help='Total number of users. WALS expects userId to be indexed 0,1,2,... ',
       type=int,
       required=True
   )
   parser.add_argument(
-      '--n_items',
+      '--nitems',
       help='Total number of items. WALS expects itemId to be indexed 0,1,2,... ',
-      type=int,
-      required=True
-  )
-  parser.add_argument(
-      '--n_interactions',
-      help='Total number of interactions. This is the number of entries in your training dataset ',
       type=int,
       required=True
   )
