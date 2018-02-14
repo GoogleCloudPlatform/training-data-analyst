@@ -67,6 +67,12 @@ if __name__ == '__main__':
       required=True
   )
   parser.add_argument(
+      '--topk',
+      help='In batch prediction, how many top items should we emit for each user?',
+      type=int,
+      default=3
+  )
+  parser.add_argument(
       '--job-dir',
       help='this model ignores this field, but it is required by gcloud',
       default='junk'
