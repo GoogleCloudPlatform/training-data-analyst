@@ -1,4 +1,4 @@
-package com.google.cloud.training.aslmlimmersion;
+package com.google.cloud.training.mlongcp;
 
 import java.io.Serializable;
 
@@ -11,7 +11,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.cloud.training.aslmlimmersion.AddPrediction.MyOptions;
+import com.google.cloud.training.mlongcp.AddPrediction.MyOptions;
 
 @SuppressWarnings("serial")
 public abstract class InputOutput implements Serializable {

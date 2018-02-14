@@ -72,21 +72,26 @@ class Word2Vec:
     
     self.vocab.append('') # for out-of-value words
     self.embeddings.append(np.ones_like(self.embeddings[1]))
-
     self.embeddings = np.array(self.embeddings)
     print('Loaded {}D vectors for {} words from {}'.format(self.embed_dim(), self.vocab_size(), filename))
 
-    # will be set in init(sess)
+
+class EmbeddingLookup:
+  def __init__(self, wv):
     self.table = tf.contrib.lookup.index_table_from_tensor(
-               tf.convert_to_tensor(self.vocab[:-1]), num_oov_buckets=1)
-    self.wordid_to_embed = tf.get_variable(
-               shape=[self.vocab_size(), self.embed_dim()],
+               tf.convert_to_tensor(wv.vocab[:-1]), num_oov_buckets=1)
+    with tf.variable_scope("embedding", reuse=tf.AUTO_REUSE):
+      self.wordid_to_embed = tf.get_variable(
+               shape=[wv.vocab_size(), wv.embed_dim()],
                trainable=False,
                name=EMBEDDING_VARIABLE)
-    self.embedding_placeholder = tf.placeholder(
-               tf.float32, [self.vocab_size(), self.embed_dim()],
+    embedding_placeholder = tf.placeholder(
+               tf.float32, [wv.vocab_size(), wv.embed_dim()],
                name=EMBEDDING_VARIABLE + "_ph")
-
+    embedding_init = tf.assign(
+               self.wordid_to_embed, 
+               embedding_placeholder,
+               name=EMBEDDING_VARIABLE + "_init")
 
   def get_embedding(self, lines):
     words = tf.string_split(lines)
@@ -97,10 +102,19 @@ class Word2Vec:
     sliced = tf.slice(padded, [0,0], [-1, MAX_DOCUMENT_LENGTH])
     embeds = tf.nn.embedding_lookup(self.wordid_to_embed, sliced)
     return embeds
-    
+
+  @staticmethod
+  def feed(session, wv):
+    embedding_placeholder = tf.get_default_graph().get_tensor_by_name(
+               EMBEDDING_VARIABLE + "_ph:0")
+    embedding_init = tf.get_default_graph().get_tensor_by_name(
+               EMBEDDING_VARIABLE + "_init:0")
+    session.run(embedding_init,
+                feed_dict={embedding_placeholder: wv.embeddings})
+    print('Loaded embedding data into embedding variable')
 
 def init(hparams):
-  global WORD_VOCAB_FILE, N_WORDS
+  global WORD_VOCAB_FILE, N_WORDS, EMBEDDINGS
   if len(hparams['glove_embedding']) == 0:
      # no pre-trained embedding, so learn it from the dataset itself
      BUCKET = hparams['bucket']
@@ -110,6 +124,7 @@ def init(hparams):
   else:
      # use pretrained embedding
      print('Will use pretrained embeddings from {}'.format(hparams['glove_embedding']))
+     EMBEDDINGS = Word2Vec(hparams['glove_embedding'])
    
 def save_vocab(trainfile, txtcolname, outfilename):
   if trainfile.startswith('gs://'):
@@ -192,18 +207,25 @@ def cnn_model(features, labels, mode, params):
        EMBEDDING_SIZE = 10
        embeds = get_embedding(params, titles, EMBEDDING_SIZE) # (?, MAX_DOCUMENT_LENGTH, EMBEDDING_SIZE)
     else:
-       wv = Word2Vec(params['glove_embedding'])
-       embeds = wv.get_embedding(titles)
-       EMBEDDING_SIZE = wv.embed_dim()
-       EMBEDDINGS = wv.embeddings
+       lookup = EmbeddingLookup(EMBEDDINGS)
+       embeds = lookup.get_embedding(titles)
+       EMBEDDING_SIZE = EMBEDDINGS.embed_dim()
     
-    # now do convolution
-    WINDOW_SIZE = EMBEDDING_SIZE
-    STRIDE = int(WINDOW_SIZE/2)
-    conv = tf.contrib.layers.conv2d(embeds, 1, WINDOW_SIZE, stride=STRIDE, padding='SAME') # (?, 4, 1)
-    conv = tf.nn.relu(conv) # (?, 4, 1)
-    words = tf.squeeze(conv, [2]) # (?, 4)
-    #print('words_conv={}'.format(words)) # (?, 4)
+    # We'll create N_FILTERS to process sets of N_WORDS at a time
+    N_FILTERS = EMBEDDING_SIZE//2
+    N_WORDS = 5
+    conv = tf.layers.conv1d(embeds, N_FILTERS, 
+                            kernel_size=N_WORDS, padding='SAME')
+    conv = tf.nn.relu(conv) # (?, 20, 5)
+    #print('conv1={}'.format(conv))
+   
+    # second layer will create weighted sum of entire document
+    conv = tf.layers.conv1d(conv, 1, kernel_size=MAX_DOCUMENT_LENGTH, padding='SAME')
+    conv = tf.nn.relu(conv) # (?, 20, 1)
+    #print('conv2={}'.format(conv))
+ 
+    words = tf.squeeze(conv, [2]) # (?, 20)
+    #print('words_conv={}'.format(words)) # (?, 20)
 
     n_classes = len(TARGETS)
 
@@ -258,10 +280,7 @@ def get_valid(hparams, batch_size):
 class InitEmbeddingHook(tf.train.SessionRunHook):
   def after_create_session(self, session, coord):
     if EMBEDDINGS != None:
-      embedding_var = tf.get_variable(EMBEDDING_VARIABLE)
-      embedding_placeholder = tf.get_default_graph().get_tensor_by_name(EMBEDDING_VARIABLE + "_ph")
-      embedding_init = embedding_var.assign(embedding_placeholder)
-      session.run(embedding_init, feed_dict={embedding_placeholder: EMBEDDINGS})
+      EmbeddingLookup.feed(session, EMBEDDINGS)
     else:
       print("No embedding to initialize")
 

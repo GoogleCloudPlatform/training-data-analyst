@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.google.cloud.training.aslmlimmersion;
+package com.google.cloud.training.mlongcp;
 
 import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;

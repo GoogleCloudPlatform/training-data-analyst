@@ -42,7 +42,7 @@ def get_prediction(features):
   input_data = {'instances': [features]}
   parent = 'projects/%s/models/%s' % (project, model_name)
   prediction = api.projects().predict(body=input_data, name=parent).execute()
-  return prediction['predictions'][0]['outputs']
+  return prediction['predictions'][0]['predictions'][0]
 
 
 @app.route('/')
@@ -57,27 +57,28 @@ def input_form():
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
-  def bool2str(val):
-    if val:
-      return 'True'
-    return 'False'
+  def gender2str(val):
+    genders = {'unknown': 'Unknown', 'male': 'True', 'female': 'False'}
+    return genders[val]
+
+  def plurality2str(val):
+    pluralities = {'1': 'Single(1)', '2': 'Twins(2)', '3': 'Triplets(3)'}
+    if features['is_male'] == 'Unknown' and int(val) > 1:
+      return 'Multiple(2+)'
+    return pluralities[val]
 
   data = json.loads(request.data.decode())
-  mandatory_items = ['baby_gender', 'mother_age', 'mother_race',
+  mandatory_items = ['baby_gender', 'mother_age',
                      'plurality', 'gestation_weeks']
   for item in mandatory_items:
     if item not in data.keys():
       return jsonify({'result': 'Set all items.'})
 
   features = {}
-  features['is_male'] = bool2str(data['baby_gender'] == 'male')
+  features['is_male'] = gender2str(data['baby_gender'])
   features['mother_age'] = float(data['mother_age'])
-  features['mother_race'] = data['mother_race']
-  features['plurality'] = float(data['plurality'])
+  features['plurality'] = plurality2str(data['plurality'])
   features['gestation_weeks'] = float(data['gestation_weeks'])
-  features['mother_married'] = bool2str('unmarried' not in data.keys())
-  features['cigarette_use'] = bool2str('cigarette_use' in data.keys())
-  features['alcohol_use'] = bool2str('alcohol_use' in data.keys())
 
   prediction = get_prediction(features)
   return jsonify({'result': '{:.2f} lbs.'.format(prediction)})

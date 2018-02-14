@@ -125,11 +125,11 @@ def get_objectId_at(dt, product='ABI-L1b-RadF', channel='C14'):
    blobs = list_gcs(GOES_PUBLIC_BUCKET, gcs_prefix, gcs_patterns)
    if len(blobs) > 0:
       objectId = blobs[0].path.replace('%2F','/').replace('/b/{}/o/'.format(GOES_PUBLIC_BUCKET),'')
-      basename = os.path.basename(objectId)
       logging.info('Found {} for {}'.format(objectId, dt))
       return objectId
-   logging.error('No matching files found for gs://{}/{}* containing {}'.format(bucket, gcs_prefix, gcs_patterns))
-   return None
+   else:
+      logging.error('No matching files found for gs://{}/{}* containing {}'.format(GOES_PUBLIC_BUCKET, gcs_prefix, gcs_patterns))
+      return None
 
 def parse_timestamp(timestamp):
     from datetime import datetime
@@ -143,6 +143,12 @@ def parse_line(line):
 def goes_to_jpeg(objectId, lat, lon, outbucket, outfilename):
     import os, shutil, tempfile, subprocess, logging
     import os.path
+
+    # if get_objectId_at fails, it returns None
+    if objectId == None:
+        logging.error('Skipping GOES object creation since no GCS file specified')
+        return
+
 
     tmpdir = tempfile.mkdtemp()
     local_file = copy_fromgcs('gcp-public-data-goes-16', objectId, tmpdir)
@@ -166,3 +172,17 @@ def goes_to_jpeg(objectId, lat, lon, outbucket, outfilename):
 
     return outfilename
 
+
+def only_infrared(message):
+  import json, logging
+  try:
+    # message is a string in json format, so we need to parse it as json
+    #logging.debug(message)
+    result = json.loads(message)
+    # e.g. ABI-L2-CMIPF/2017/306/21/OR_ABI-L2-CMIPF-M4C01_G16_s20173062105222_e20173062110023_c20173062110102.nc
+    if 'C14_G16' in result['name']:
+        yield result['name'] #filename
+  except:
+    import sys
+    logging.warn(sys.exc_info()[0])
+    pass

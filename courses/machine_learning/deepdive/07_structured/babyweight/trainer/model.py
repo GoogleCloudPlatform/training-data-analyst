@@ -21,131 +21,122 @@ from __future__ import print_function
 import shutil
 import numpy as np
 import tensorflow as tf
-import tensorflow.contrib.learn as tflearn
-import tensorflow.contrib.layers as tflayers
-from tensorflow.contrib.learn.python.learn import learn_runner
-import tensorflow.contrib.metrics as metrics
-
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
 BUCKET = None  # set from task.py
 PATTERN = 'of' # gets all files
-TRAIN_STEPS = 10000
-CSV_COLUMNS = 'weight_pounds,is_male,mother_age,mother_race,plurality,gestation_weeks,mother_married,cigarette_use,alcohol_use,key'.split(',')
+
+# Determine CSV, label, and key columns
+CSV_COLUMNS = 'weight_pounds,is_male,mother_age,plurality,gestation_weeks,key'.split(',')
 LABEL_COLUMN = 'weight_pounds'
 KEY_COLUMN = 'key'
-DEFAULTS = [[0.0], ['null'], [0.0], ['null'], [0.0], [0.0], ['null'], ['null'], ['null'], ['nokey']]
-BATCH_SIZE=512
-NBUCKETS=10
-NNSIZE=[64, 32]
 
-def read_dataset(prefix):
-  # use prefix to create filename
-  filename = 'gs://{}/babyweight/preproc/{}*{}*'.format(BUCKET, prefix, PATTERN)
-  print(filename)
-  if prefix == 'train':
-    mode = tf.contrib.learn.ModeKeys.TRAIN
-  else:
-    mode = tf.contrib.learn.ModeKeys.EVAL
-    
-  # the actual input function passed to TensorFlow
-  def _input_fn():
-    # could be a path to one file or a file pattern.
-    input_file_names = tf.train.match_filenames_once(filename)
-    filename_queue = tf.train.string_input_producer(
-        input_file_names, shuffle=True)
+# Set default values for each CSV column
+DEFAULTS = [[0.0], ['null'], [0.0], ['null'], [0.0], ['nokey']]
+
+# Define some hyperparameters
+TRAIN_STEPS = 10000
+BATCH_SIZE = 512
+NEMBEDS = 3
+NNSIZE = [64, 16, 4]
+
+# Create an input function reading a file using the Dataset API
+# Then provide the results to the Estimator API
+def read_dataset(prefix, mode, batch_size = 512):
+    def _input_fn():
+        def decode_csv(value_column):
+            columns = tf.decode_csv(value_column, record_defaults=DEFAULTS)
+            features = dict(zip(CSV_COLUMNS, columns))
+            label = features.pop(LABEL_COLUMN)
+            return features, label
+        
+        # Use prefix to create file path
+        file_path = 'gs://{}/babyweight/preproc/{}*{}*'.format(BUCKET, prefix, PATTERN)
+
+        # Create list of files that match pattern
+        file_list = tf.gfile.Glob(file_path)
+
+        # Create dataset from file list
+        dataset = (tf.data.TextLineDataset(file_list)  # Read text file
+                    .map(decode_csv))  # Transform each elem by applying decode_csv fn
+      
+        if mode == tf.estimator.ModeKeys.TRAIN:
+            num_epochs = None # indefinitely
+            dataset = dataset.shuffle(buffer_size = 10 * batch_size)
+        else:
+            num_epochs = 1 # end-of-input after this
  
-    # read CSV
-    reader = tf.TextLineReader()
-    _, value = reader.read_up_to(filename_queue, num_records=BATCH_SIZE)
-    value_column = tf.expand_dims(value, -1)
-    columns = tf.decode_csv(value_column, record_defaults=DEFAULTS)
-    features = dict(zip(CSV_COLUMNS, columns))
-    features.pop(KEY_COLUMN)
-    label = features.pop(LABEL_COLUMN)
-    return features, label
-  
-  return _input_fn
+        dataset = dataset.repeat(num_epochs).batch(batch_size)
+        return dataset.make_one_shot_iterator().get_next()
+    return _input_fn
 
+# Define feature columns
 def get_wide_deep():
-  # define column types
-  races = ['White', 'Black', 'American Indian', 'Chinese', 
-           'Japanese', 'Hawaiian', 'Filipino', 'Unknown',
-           'Asian Indian', 'Korean', 'Samaon', 'Vietnamese']
-  is_male,mother_age,mother_race,plurality,gestation_weeks,mother_married,cigarette_use,alcohol_use = \
-   [ \
-    tflayers.sparse_column_with_keys('is_male', keys=['True', 'False']),
-    tflayers.real_valued_column('mother_age'),
-    tflayers.sparse_column_with_keys('mother_race', keys=races),
-    tflayers.real_valued_column('plurality'),
-    tflayers.real_valued_column('gestation_weeks'),
-    tflayers.sparse_column_with_keys('mother_married', keys=['True', 'False']),
-    tflayers.sparse_column_with_keys('cigarette_use', keys=['True', 'False', 'None']),
-    tflayers.sparse_column_with_keys('alcohol_use', keys=['True', 'False', 'None'])
-    ]
+    # Define column types
+    is_male,mother_age,plurality,gestation_weeks = \
+        [\
+            tf.feature_column.categorical_column_with_vocabulary_list('is_male', 
+                        ['True', 'False', 'Unknown']),
+            tf.feature_column.numeric_column('mother_age'),
+            tf.feature_column.categorical_column_with_vocabulary_list('plurality',
+                        ['Single(1)', 'Twins(2)', 'Triplets(3)',
+                         'Quadruplets(4)', 'Quintuplets(5)','Multiple(2+)']),
+            tf.feature_column.numeric_column('gestation_weeks')
+        ]
 
-  # transformations
-  plurality_b = tflayers.bucketized_column(plurality, boundaries=np.arange(0.5, 5.5, 1.0).tolist())
-  mother_age_b = tflayers.bucketized_column(mother_age, boundaries=np.arange(10, 40, 5).tolist())
-  gestation_b = tflayers.bucketized_column(gestation_weeks, boundaries=[25, 30, 35, 38, 40])
-  mother_race_e = tflayers.embedding_column(mother_race, 3)
-  crosses = tflayers.crossed_column([mother_age_b, plurality_b, gestation_b], hash_bucket_size=NBUCKETS)
+    # Discretize
+    age_buckets = tf.feature_column.bucketized_column(mother_age, 
+                        boundaries=np.arange(15,45,1).tolist())
+    gestation_buckets = tf.feature_column.bucketized_column(gestation_weeks, 
+                        boundaries=np.arange(17,47,1).tolist())
+      
+    # Sparse columns are wide, have a linear relationship with the output
+    wide = [is_male,
+            plurality,
+            age_buckets,
+            gestation_buckets]
+    
+    # Feature cross all the wide columns and embed into a lower dimension
+    crossed = tf.feature_column.crossed_column(wide, hash_bucket_size=20000)
+    embed = tf.feature_column.embedding_column(crossed, NEMBEDS)
+    
+    # Continuous columns are deep, have a complex relationship with the output
+    deep = [mother_age,
+            gestation_weeks,
+            embed]
+    return wide, deep
 
-  # which columns are wide (sparse, linear relationship to output) and which are deep (complex relationship to output?)  
-  wide = [is_male, mother_race, 
-          plurality_b, mother_age_b, gestation_b, crosses,
-          mother_married, cigarette_use, alcohol_use]
-  deep = [\
-                mother_age,
-                plurality,
-                gestation_weeks,
-                mother_race_e
-               ]
-  return wide, deep
-
-
+# Create serving input function to be able to serve predictions later using provided inputs
 def serving_input_fn():
     feature_placeholders = {
-      'is_male': tf.placeholder(tf.string, [None]),
-      'mother_age': tf.placeholder(tf.float32, [None]),
-      'mother_race': tf.placeholder(tf.string, [None]),
-      'plurality': tf.placeholder(tf.float32, [None]),
-      'gestation_weeks': tf.placeholder(tf.float32, [None]),
-      'mother_married': tf.placeholder(tf.string, [None]),
-      'cigarette_use': tf.placeholder(tf.string, [None]),
-      'alcohol_use': tf.placeholder(tf.string, [None])
+        'is_male': tf.placeholder(tf.string, [None]),
+        'mother_age': tf.placeholder(tf.float32, [None]),
+        'plurality': tf.placeholder(tf.string, [None]),
+        'gestation_weeks': tf.placeholder(tf.float32, [None])
     }
     features = {
-      key: tf.expand_dims(tensor, -1)
-      for key, tensor in feature_placeholders.items()
+        key: tf.expand_dims(tensor, -1)
+        for key, tensor in feature_placeholders.items()
     }
-    return tflearn.utils.input_fn_utils.InputFnOps(
-      features,
-      None,
-      feature_placeholders)
+    return tf.estimator.export.ServingInputReceiver(features, feature_placeholders)
 
-
-from tensorflow.contrib.learn.python.learn.utils import saved_model_export_utils
-def experiment_fn(output_dir):
+# Create estimator to train and evaluate
+def train_and_evaluate(output_dir):
     wide, deep = get_wide_deep()
-    return tflearn.Experiment(
-        tflearn.DNNLinearCombinedRegressor(model_dir=output_dir,
-                                           linear_feature_columns=wide,
-                                           dnn_feature_columns=deep,
-                                           dnn_hidden_units=NNSIZE),
-        train_input_fn=read_dataset('train'),
-        eval_input_fn=read_dataset('eval'),
-        eval_metrics={
-            'rmse': tflearn.MetricSpec(
-                metric_fn=metrics.streaming_root_mean_squared_error
-            )
-        },
-        export_strategies=[saved_model_export_utils.make_export_strategy(
-            serving_input_fn,
-            default_output_alternative_key=None,
-            exports_to_keep=1
-        )],
-        min_eval_frequency=1000,
-        train_steps=TRAIN_STEPS
-    )
+    estimator = tf.estimator.DNNLinearCombinedRegressor(
+        model_dir = output_dir,
+        linear_feature_columns = wide,
+        dnn_feature_columns = deep,
+        dnn_hidden_units = NNSIZE)
+    train_spec = tf.estimator.TrainSpec(
+        input_fn = read_dataset('train', mode = tf.estimator.ModeKeys.TRAIN, BATCH_SIZE),
+        max_steps = TRAIN_STEPS)
+    exporter = tf.estimator.LatestExporter('exporter', serving_input_fn)
+    eval_spec = tf.estimator.EvalSpec(
+        input_fn = read_dataset('eval', mode = tf.estimator.ModeKeys.EVAL, BATCH_SIZE),
+        steps = None,
+        start_delay_secs = 60, # start evaluating after N seconds
+        throttle_secs = 300,  # evaluate every N seconds
+        exporters = exporter)
+    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
