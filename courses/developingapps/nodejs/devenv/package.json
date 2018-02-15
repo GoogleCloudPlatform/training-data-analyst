@@ -6,7 +6,7 @@
   "private": true,
   "license": "Apache-2.0",
   "dependencies": {
-    "@google-cloud/compute": "~0.8.0"
+    "@google-cloud/compute": "~0.9"
   },
   "engines": {
     "node": ">=4.3.2"
