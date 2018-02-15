@@ -26,6 +26,11 @@ from tensorflow.contrib.factorization import WALSMatrixFactorization
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
+import os
+import tensorflow as tf
+from tensorflow.python.lib.io import file_io
+from tensorflow.contrib.factorization import WALSMatrixFactorization
+  
 def read_dataset(mode, args):
   def decode_example(protos, vocab_size):
     features = {'key': tf.FixedLenFeature([1], tf.int64),
@@ -60,32 +65,37 @@ def read_dataset(mode, args):
     }
     return features, None
   
-  def input_rows():
+  def input_cols():
     return parse_tfrecords('users_for_item', args['nusers'])
   
   return _input_fn
 
-
-def create_serving_input_fn(args):
-  def serving_input_fn():
-    feature_ph = {
-        'userId': tf.placeholder(tf.int64, 1)
-    }
-    # we will have to project all items for this user and initial rating doesn't matter
-    nusers = 1
-    nitems = args['nitems']
-    items = tf.range(nitems, dtype=tf.int64)
-    users = feature_ph['userId'] * tf.ones(nitems, dtype=tf.int64)
-    ratings = 0.1 * tf.ones_like(users, dtype=tf.float32)
-    input_rows = tf.stack( [users, items], axis=1 )
-    input_cols = tf.stack( [items, users], axis=1 )
-    features = {
-      WALSMatrixFactorization.INPUT_ROWS: tf.SparseTensor(input_rows, ratings, (nusers, nitems)),
-      WALSMatrixFactorization.INPUT_COLS: tf.SparseTensor(input_cols, ratings, (nitems, nusers)),
-      WALSMatrixFactorization.PROJECT_ROW: tf.constant(True)
-    }
-    return tf.contrib.learn.InputFnOps(features, None, feature_ph)
-  return serving_input_fn
+def find_top_k(user, item_factors, k):
+  all_items = tf.matmul(tf.expand_dims(user, 0), tf.transpose(item_factors))
+  topk = tf.nn.top_k(all_items, k=k)
+  return tf.cast(topk.indices, dtype=tf.int64)
+    
+def batch_predict(args):
+  import numpy as np
+  with tf.Session() as sess:
+    estimator = tf.contrib.factorization.WALSMatrixFactorization(
+                         num_rows=args['nusers'], num_cols=args['nitems'],
+                         embedding_dimension=args['n_embeds'],
+                         model_dir=args['output_dir'])
+    # this is how you would get the row factors for out-of-vocab user data
+    #row_factors = list(estimator.get_projections(input_fn=read_dataset(tf.estimator.ModeKeys.EVAL, args)))
+    #user_factors = tf.convert_to_tensor(np.array(row_factors))
+    
+    # but for in-vocab data, the row factors are already in the checkpoint
+    user_factors = tf.convert_to_tensor(estimator.get_row_factors()[0]) # (nusers, nembeds)
+    # in either case, we have to assume catalog doesn't change, so col_factors are read in
+    item_factors = tf.convert_to_tensor(estimator.get_col_factors()[0])# (nitems, nembeds)
+    
+    # for each user, find the top K items
+    topk = tf.squeeze(tf.map_fn(lambda user: find_top_k(user, item_factors, args['topk']), user_factors, dtype=tf.int64))
+    with file_io.FileIO(os.path.join(args['output_dir'], 'batch_pred.txt'), mode='w') as f:
+      for best_items_for_user in topk.eval():
+        f.write(','.join(str(x) for x in best_items_for_user) + '\n')
 
 def train_and_evaluate(args):
     train_steps = int(0.5 + (1.0 * args['num_epochs'] * args['nusers']) / args['batch_size'])
@@ -101,10 +111,11 @@ def train_and_evaluate(args):
             eval_input_fn=read_dataset(tf.estimator.ModeKeys.EVAL, args),
             train_steps=train_steps,
             eval_steps=1,
-            min_eval_frequency=steps_in_epoch,
-            export_strategies=tf.contrib.learn.utils.saved_model_export_utils.make_export_strategy(serving_input_fn=create_serving_input_fn(args))
-    )
+            min_eval_frequency=steps_in_epoch
+        )
 
     from tensorflow.contrib.learn.python.learn import learn_runner
     learn_runner.run(experiment_fn, args['output_dir'])
+    
+    batch_predict(args)
 
