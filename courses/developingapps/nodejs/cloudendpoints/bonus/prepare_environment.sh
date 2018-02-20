@@ -42,13 +42,13 @@ gcloud spanner instances create quiz-instance --config=regional-us-central1 --de
 gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CREATE TABLE Feedback ( feedbackId STRING(100) NOT NULL, email STRING(100), quiz STRING(20), feedback STRING(MAX), rating INT64, score FLOAT64, timestamp INT64 ) PRIMARY KEY (feedbackId);"
 
 echo "Enabling Cloud Functions API"
-gcloud beta service-management enable cloudfunctions.googleapis.com
+gcloud beta services enable cloudfunctions.googleapis.com
 echo "Creating Cloud Function"
 gcloud beta functions deploy process-feedback --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 
 echo "Creating Cloud Endpoint"
 sed -i "s/GCLOUD_PROJECT/$GCLOUD_PROJECT/g" ./endpoint/quiz-api.json
-gcloud service-management deploy ./endpoint/quiz-api.json
+gcloud endpoints services deploy ./endpoint/quiz-api.json
 
 echo "Copying source to Compute Engine"
 gcloud compute scp --force-key-file-overwrite --quiet --recurse ./endpoint/quiz-api endpoint-host:~/ --zone us-central1-a
