@@ -71,16 +71,7 @@ if __name__ == '__main__':
         help = 'this model ignores this field, but it is required by gcloud',
         default = 'junk'
     )
-    parser.add_argument(
-        '--pattern',
-        help='Specify a pattern that has to be in input files. For example 00001-of will process only one shard',
-        default='of'
-    )
-    parser.add_argument(
-        '--job-dir',
-        help='this model ignores this field, but it is required by gcloud',
-        default='junk'
-    )
+   
 
     args = parser.parse_args()
     arguments = args.__dict__
