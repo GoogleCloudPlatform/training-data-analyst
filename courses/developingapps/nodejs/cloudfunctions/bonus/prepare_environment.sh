@@ -36,7 +36,7 @@ gcloud spanner instances create quiz-instance --config=regional-us-central1 --de
 gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CREATE TABLE Feedback ( feedbackId STRING(100) NOT NULL, email STRING(100), quiz STRING(20), feedback STRING(MAX), rating INT64, score FLOAT64, timestamp INT64 ) PRIMARY KEY (feedbackId); CREATE TABLE Answers (answerId STRING(100) NOT NULL, id INT64, email STRING(60), quiz STRING(20), answer INT64, correct INT64, timestamp INT64) PRIMARY KEY (answerId DESC);"
 
 echo "Enabling Cloud Functions API"
-gcloud beta service-management enable cloudfunctions.googleapis.com
+gcloud beta services enable cloudfunctions.googleapis.com
 
 echo "Creating Cloud Functions"
 gcloud beta functions deploy process-feedback --trigger-topic feedback --source ./functions/feedback --stage-bucket $GCLOUD_BUCKET --entry-point subscribe

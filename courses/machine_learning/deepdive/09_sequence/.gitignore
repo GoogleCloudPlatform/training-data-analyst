@@ -14,3 +14,4 @@ trained_model
 poetrydata.tgz
 four_gpus.json
 t2t_cmle
+tensor2tensor
