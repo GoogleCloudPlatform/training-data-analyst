@@ -37,13 +37,14 @@ DEFAULTS = [[0.0], ['null'], [0.0], ['null'], [0.0], ['nokey']]
 
 # Define some hyperparameters
 TRAIN_STEPS = 10000
+EVAL_STEPS = None
 BATCH_SIZE = 512
 NEMBEDS = 3
 NNSIZE = [64, 16, 4]
 
 # Create an input function reading a file using the Dataset API
 # Then provide the results to the Estimator API
-def read_dataset(prefix, mode, batch_size = 512):
+def read_dataset(prefix, mode, batch_size):
     def _input_fn():
         def decode_csv(value_column):
             columns = tf.decode_csv(value_column, record_defaults=DEFAULTS)
@@ -130,12 +131,12 @@ def train_and_evaluate(output_dir):
         dnn_feature_columns = deep,
         dnn_hidden_units = NNSIZE)
     train_spec = tf.estimator.TrainSpec(
-        input_fn = read_dataset('train', mode = tf.estimator.ModeKeys.TRAIN, BATCH_SIZE),
+        input_fn = read_dataset('train', tf.estimator.ModeKeys.TRAIN, BATCH_SIZE),
         max_steps = TRAIN_STEPS)
-    exporter = tf.estimator.LatestExporter('exporter', serving_input_fn)
+    exporter = tf.estimator.LatestExporter('exporter', serving_input_fn, exports_to_keep=None)
     eval_spec = tf.estimator.EvalSpec(
-        input_fn = read_dataset('eval', mode = tf.estimator.ModeKeys.EVAL, BATCH_SIZE),
-        steps = None,
+        input_fn = read_dataset('eval', tf.estimator.ModeKeys.EVAL, BATCH_SIZE),
+        steps = EVAL_STEPS,
         start_delay_secs = 60, # start evaluating after N seconds
         throttle_secs = 300,  # evaluate every N seconds
         exporters = exporter)

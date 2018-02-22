@@ -56,9 +56,9 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--nnsize',
-        help='Hidden layer sizes to use for DNN feature columns -- provide space-separated layers',
-        nargs='+',
-        type=int,
+        help = 'Hidden layer sizes to use for DNN feature columns -- provide space-separated layers',
+        nargs = '+',
+        type = int,
         default=[128, 32, 4]
     )
     parser.add_argument(
@@ -72,14 +72,10 @@ if __name__ == '__main__':
         default = 'junk'
     )
     parser.add_argument(
-        '--pattern',
-        help='Specify a pattern that has to be in input files. For example 00001-of will process only one shard',
-        default='of'
-    )
-    parser.add_argument(
-        '--job-dir',
-        help='this model ignores this field, but it is required by gcloud',
-        default='junk'
+        '--eval_steps',
+        help = 'Positive number of steps for which to evaluate model. Default to None, which means to evaluate until input_fn raises an end-of-input exception',
+        type = int,       
+        default = None
     )
 
     args = parser.parse_args()
@@ -93,6 +89,7 @@ if __name__ == '__main__':
     model.BUCKET     = arguments.pop('bucket')
     model.BATCH_SIZE = arguments.pop('batch_size')
     model.TRAIN_STEPS = (arguments.pop('train_examples') * 1000) / model.BATCH_SIZE
+    model.EVAL_STEPS = arguments.pop('eval_steps')    
     print ("Will train for {} steps using batch_size={}".format(model.TRAIN_STEPS, model.BATCH_SIZE))
     model.PATTERN = arguments.pop('pattern')
     model.NEMBEDS= arguments.pop('nembeds')
