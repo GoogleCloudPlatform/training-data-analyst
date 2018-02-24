@@ -13,17 +13,32 @@ Code for the following courses is included in this repo:
 
 https://cloud.google.com/training/courses/data-ml-fundamentals
 
-CPB100
+[GCP Big Data & Machine Learning Fundamentals](CPB100)
 
 
 ### Data Engineering on Google Cloud Platform
   
 https://cloud.google.com/training/courses/data-engineering
 
-1. courses/data_analysis  (Module: Serverless Data Analysis)
-2. courses/unstructured (Module: Leveraging unstructured data)
-3. courses/machine_learning (Module: Serverless Machine Learning)
-4. courses/streaming (Module: Resilient streaming systems)
+1. [Serverless Data Analysis](courses/data_analysis)
+2. [Leveraging unstructured data](courses/unstructured)
+3. [Serverless Machine Learning](courses/machine_learning)
+4. [Resilient streaming systems](courses/streaming)
+
+### Machine Learning on Google Cloud Platform (& Advanced ML on GCP)
+
+https://www.coursera.org/learn/google-machine-learning
+
+1. [How Google Does ML](courses/machine_learning/deepdive/01_googleml)
+2. [Launching into ML](courses/machine_learning/deepdive/02_generalization)
+2. [Introduction to TensorFlow](courses/machine_learning/deepdive/03_tensorflow)
+2. [Feature Engineering](courses/machine_learning/deepdive/04_features)
+2. [Art and Science of ML](courses/machine_learning/deepdive/05_artandscience)
+2. [End-to-end machine learning on Structured Data](courses/machine_learning/deepdive/07_structured)
+2. [Image Classification Models in TensorFlow](courses/machine_learning/deepdive/08_image)
+2. [Sequence Models for Time-Series and Text problems](courses/machine_learning/deepdive/09_sequence)
+2. [Recommendation Engines using TensorFlow](courses/machine_learning/deepdive/10_recommend)
+
 
 
 ### Blog posts
