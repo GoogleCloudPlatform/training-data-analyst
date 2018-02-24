@@ -199,5 +199,5 @@ def train_and_evaluate(args):
     from tensorflow.contrib.learn.python.learn import learn_runner
     learn_runner.run(experiment_fn, args['output_dir'])
     
-    #batch_predict(args)
+    batch_predict(args)
 
