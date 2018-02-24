@@ -31,13 +31,14 @@ https://www.coursera.org/learn/google-machine-learning
 
 1. [How Google Does ML](courses/machine_learning/deepdive/01_googleml)
 2. [Launching into ML](courses/machine_learning/deepdive/02_generalization)
-2. [Introduction to TensorFlow](courses/machine_learning/deepdive/03_tensorflow)
-2. [Feature Engineering](courses/machine_learning/deepdive/04_features)
-2. [Art and Science of ML](courses/machine_learning/deepdive/05_artandscience)
-2. [End-to-end machine learning on Structured Data](courses/machine_learning/deepdive/07_structured)
-2. [Image Classification Models in TensorFlow](courses/machine_learning/deepdive/08_image)
-2. [Sequence Models for Time-Series and Text problems](courses/machine_learning/deepdive/09_sequence)
-2. [Recommendation Engines using TensorFlow](courses/machine_learning/deepdive/10_recommend)
+3. [Introduction to TensorFlow](courses/machine_learning/deepdive/03_tensorflow)
+4. [Feature Engineering](courses/machine_learning/deepdive/04_features)
+5. [Art and Science of ML](courses/machine_learning/deepdive/05_artandscience)
+6. Production ML models
+7. [End-to-end machine learning on Structured Data](courses/machine_learning/deepdive/07_structured)
+8. [Image Classification Models in TensorFlow](courses/machine_learning/deepdive/08_image)
+9. [Sequence Models for Time-Series and Text problems](courses/machine_learning/deepdive/09_sequence)
+10. [Recommendation Engines using TensorFlow](courses/machine_learning/deepdive/10_recommend)
 
 
 
