@@ -6,6 +6,7 @@ install_ksonnet() {
 }
 
 install_kubeflow() {
+  rm -rf my-kubeflow
   ks init my-kubeflow
   cd my-kubeflow
   ks registry add kubeflow github.com/kubeflow/kubeflow/tree/master/kubeflow
@@ -30,14 +31,18 @@ deploy_model() {
   cd my-kubeflow
   MODEL_COMPONENT="servePoetry"
   MODEL_NAME="poetry"
-  MODEL_PATH=$(gsutil ls gs://cloud-training-demos-ml/poetry/model/export/Servo | tail -1)
+  MODEL_PATH=$(gsutil ls gs://cloud-training-demos-ml/poetry/model_full/export/Servo | tail -1)
   echo "Deploying $MODEL_NAME from $MODEL_PATH"
-  #ks generate tf-serving ${MODEL_COMPONENT} --name=${MODEL_NAME} --namespace=${KF_NAMESPACE} --model_path=${MODEL_PATH}
+  ks generate tf-serving ${MODEL_COMPONENT} --name=${MODEL_NAME} --namespace=${KF_NAMESPACE} --model_path=${MODEL_PATH}
   ks apply ${KF_ENV} -c ${MODEL_COMPONENT}
   cd ..
 }
 
-
+send_request() {
+  CLUSTER_IP=$(kubectl get svc poetry -n=${KF_NAMESPACE} | awk '{print $3}' | tail -1)
+  echo "Sending request to $CLUSTER_IP"
+  curl -i -X POST -H 'Content-Type: application/json' -d '{"input": "all day long my heart trembles like a leaf"}' https://${CLUSTER_IP}:9000/
+}
 
 if [ -z "$GITHUB_TOKEN" ]; then
    echo "Please get a personal authorization token form GitHub. Otherwise, you'll run into rate limiting"
@@ -52,4 +57,5 @@ export KF_ENV=cloud
 #install_ksonnet
 #install_kubeflow
 #create_kubeflow_core
-deploy_model
+#deploy_model
+send_request
