@@ -24,6 +24,7 @@
       model_server_image: "gcr.io/kubeflow/model-server:1.0",
       name: "poetry",
       namespace: "poetry",
+      ipName: "mlpoetry-ingress",
     },
   },
 }
