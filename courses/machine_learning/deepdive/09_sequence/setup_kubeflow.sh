@@ -38,8 +38,26 @@ deploy_model() {
   cd ..
 }
 
+setup_ingress() {
+  cd my-kubeflow
+  kubectl expose deployment poetry --type NodePort
+  #gcloud compute addresses create mlpoetry-ingress --global  
+  cat > /tmp/tfserving.yaml << EOF
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: tfservingIngress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "mlpoetry-ingress"
+spec:
+  backend:
+    serviceName: poetry.poetry
+    servicePort: 8000
+EOF
+  #kubectl create -f /tmp/tfserving.yaml
+}
+
 send_request() {
-  CLUSTER_IP=$(kubectl get svc poetry -n=${KF_NAMESPACE} | awk '{print $3}' | tail -1)
   echo "Sending request to $CLUSTER_IP"
   curl -i -X POST -H 'Content-Type: application/json' -d '{"input": "all day long my heart trembles like a leaf"}' https://${CLUSTER_IP}:9000/
 }
@@ -58,4 +76,5 @@ export KF_ENV=cloud
 #install_kubeflow
 #create_kubeflow_core
 #deploy_model
-send_request
+setup_ingress
+#send_request
