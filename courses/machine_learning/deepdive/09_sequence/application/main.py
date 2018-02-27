@@ -28,16 +28,17 @@ from oauth2client.client import GoogleCredentials
 
 credentials = GoogleCredentials.get_application_default()
 api = discovery.build('ml', 'v1', credentials=credentials)
-project = os.getenv('PROJECT_ID')
-model_name = os.getenv('MODEL_NAME')
-version_name = os.getenv('VERSION_NAME')
-model_loc = os.getenv('MODEL_DIR')
-problem_name = os.getenv('PROBLEM_NAME')
-t2t_usr_dir = os.getenv('T2T_USR_DIR')
-hparams_name = os.getenv('HPARAMS')
-data_dir = os.getenv('DATADIR')
 
 app = Flask(__name__)
+
+project = os.getenv('PROJECT_ID', 'cloud-training-demos')
+model_name = os.getenv('MODEL_NAME', 'poetry')
+version_name = os.getenv('VERSION_NAME', 'v1')
+model_loc = os.getenv('MODEL_DIR', 'gs://cloud-training-demos-ml/poetry/model/export/Servo/1519253545/')
+problem_name = os.getenv('PROBLEM_NAME', 'poetry_line_problem')
+t2t_usr_dir = os.getenv('T2T_USR_DIR', os.path.join(app.instance_path, 'poetry/trainer'))
+hparams_name = os.getenv('HPARAMS', 'transformer_poetry')
+data_dir = os.getenv('DATADIR', 'gs://cloud-training-demos-ml/poetry/data')
 
 def get_prediction(features):
   input_data = {'instances': [features]}
@@ -78,9 +79,12 @@ import tensorflow as tf
 
 input_encoder = None
 output_decoder = None
+fname = None
 def init():
+   global input_encoder, output_decoder, fname
    tf.logging.set_verbosity(tf.logging.INFO)
    usr_dir.import_usr_dir(t2t_usr_dir)
+   print(t2t_usr_dir)
    problem = registry.problem(problem_name)
    hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser(data_dir))
    problem.get_hparams(hparams)
@@ -101,7 +105,8 @@ def encode_as_tfexample(inputs):
    features = {
      fname: tf.train.Feature(int64_list=tf.train.Int64List(value=input_ids))
    }
-   return tf.train.Example(features=tf.train.Features(feature=features))
+   ex = tf.train.Example(features=tf.train.Features(feature=features))
+   return ex.SerializeToString()
 
 @app.errorhandler(500)
 def server_error(e):
