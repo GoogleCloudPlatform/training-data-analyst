@@ -20,7 +20,7 @@
     },
     servePoetry: {
       http_proxy_image: "gcr.io/kubeflow/http-proxy:1.0",
-      model_path: "gs://cloud-training-demos-ml/poetry/model_full/export/Servo/1519499403/",
+      model_path: "gs://cloud-training-demos-ml/poetry/model_full/export/poetry/",
       model_server_image: "gcr.io/kubeflow/model-server:1.0",
       name: "poetry",
       namespace: "poetry",

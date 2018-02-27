@@ -63,10 +63,11 @@ def predict():
   data = json.loads(request.data.decode())
   features = {}
   tfrecord = encode_as_tfexample(data['first_line']).SerializeToString()
-  features['input'] = tfrecord # base64.b64encode(tfrecord)
+  features['input'] = {'b64': base64.b64encode(tfrecord)}
   prediction = get_prediction(features)
-  # FIXME: decode prediction from TF Serving
-  return jsonify({'result': prediction})
+  decoded = decode( prediction['predictions'][0]['outputs'] )
+  result = decoded.split('<EOS>')[0]
+  return jsonify({'result': result})
 
 
 
@@ -107,6 +108,9 @@ def encode_as_tfexample(inputs):
      fname: tf.train.Feature(int64_list=tf.train.Int64List(value=input_ids))
    }
    return tf.train.Example(features=tf.train.Features(feature=features))
+
+def decode(output_ids):
+  return output_decoder.decode(output_ids)
 
 @app.errorhandler(500)
 def server_error(e):

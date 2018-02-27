@@ -6,9 +6,9 @@ install_ksonnet() {
 }
 
 install_kubeflow() {
-  rm -rf my-kubeflow
-  ks init my-kubeflow
-  cd my-kubeflow
+  rm -rf kubeflow-app
+  ks init kubeflow-app
+  cd kubeflow-app
   ks registry add kubeflow github.com/kubeflow/kubeflow/tree/master/kubeflow
   ks pkg install kubeflow/core
   ks pkg install kubeflow/tf-serving
@@ -17,7 +17,7 @@ install_kubeflow() {
 }
 
 create_kubeflow_core() {
-  cd my-kubeflow
+  cd kubeflow-app
   kubectl create namespace ${KF_NAMESPACE}
   ks generate core kubeflow-core --name=kubeflow-core --namespace=${KF_NAMESPACE}
   ks env add nocloud
@@ -28,18 +28,18 @@ create_kubeflow_core() {
 }
 
 deploy_model() {
-  cd my-kubeflow
+  cd kubeflow-app
   MODEL_COMPONENT="servePoetry"
   MODEL_NAME="poetry"
-  MODEL_PATH=$(gsutil ls gs://cloud-training-demos-ml/poetry/model_full/export/Servo | tail -1)
+  MODEL_PATH=gs://cloud-training-demos-ml/poetry/model_full/export/poetry
   echo "Deploying $MODEL_NAME from $MODEL_PATH"
-  ks generate tf-serving ${MODEL_COMPONENT} --name=${MODEL_NAME} --namespace=${KF_NAMESPACE} --model_path=${MODEL_PATH}
+  #ks generate tf-serving ${MODEL_COMPONENT} --name=${MODEL_NAME} --namespace=${KF_NAMESPACE} --model_path=${MODEL_PATH}
   ks apply ${KF_ENV} -c ${MODEL_COMPONENT}
   cd ..
 }
 
 setup_ingress() {
-  cd my-kubeflow
+  cd kubeflow-app
   kubectl expose deployment poetry --type NodePort
   #gcloud compute addresses create mlpoetry-ingress --global  
   cat > /tmp/tfserving.yaml << EOF
@@ -75,6 +75,6 @@ export KF_ENV=cloud
 #install_ksonnet
 #install_kubeflow
 #create_kubeflow_core
-#deploy_model
-setup_ingress
+deploy_model
+#setup_ingress
 #send_request
