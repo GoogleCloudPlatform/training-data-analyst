@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import base64
 import json
 import os
 
@@ -62,7 +62,8 @@ def input_form():
 def predict():
   data = json.loads(request.data.decode())
   features = {}
-  features['input'] = encode_as_tfexample(data['first_line'])
+  tfrecord = encode_as_tfexample(data['first_line']).SerializeToString()
+  features['input'] = tfrecord # base64.b64encode(tfrecord)
   prediction = get_prediction(features)
   # FIXME: decode prediction from TF Serving
   return jsonify({'result': prediction})
@@ -105,8 +106,7 @@ def encode_as_tfexample(inputs):
    features = {
      fname: tf.train.Feature(int64_list=tf.train.Int64List(value=input_ids))
    }
-   ex = tf.train.Example(features=tf.train.Features(feature=features))
-   return ex.SerializeToString()
+   return tf.train.Example(features=tf.train.Features(feature=features))
 
 @app.errorhandler(500)
 def server_error(e):
