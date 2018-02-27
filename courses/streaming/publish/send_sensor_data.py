@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2017 Google Inc.
+# Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,14 +25,12 @@ TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 TOPIC = 'sandiego'
 INPUT = 'sensor_obs2008.csv.gz'
 
-def publish(topic, events):
+def publish(publisher, topic, events):
    numobs = len(events)
    if numobs > 0:
-      with topic.batch() as batch:
-         logging.info('Publishing {} events from {}'.
-                    format(numobs, get_timestamp(events[0])))
-         for event_data in events:
-              batch.publish(event_data)
+       logging.info('Publishing {} events from {}'.format(numobs, get_timestamp(events[0])))
+       for event_data in events:
+         publisher.publish(topic,event_data.encode())
 
 def get_timestamp(line):
    # look at first field of row
@@ -56,7 +54,7 @@ def simulate(topic, ifp, firstObsTime, programStart, speedFactor):
        # how much time should we sleep?
        if compute_sleep_secs(obs_time) > 1:
           # notify the accumulated topublish
-          publish(topic, topublish) # notify accumulated messages
+          publish(publisher, topic, topublish) # notify accumulated messages
           topublish = list() # empty out list
 
           # recompute sleep, since notification takes a while
@@ -67,7 +65,7 @@ def simulate(topic, ifp, firstObsTime, programStart, speedFactor):
        topublish.append(event_data)
 
    # left-over records; notify again
-   publish(topic, topublish)
+   publish(publisher, topic, topublish)
 
 def peek_timestamp(ifp):
    # peek ahead to next line, get timestamp and go back
@@ -80,22 +78,24 @@ def peek_timestamp(ifp):
 if __name__ == '__main__':
    parser = argparse.ArgumentParser(description='Send sensor data to Cloud Pub/Sub in small groups, simulating real-time behavior')
    parser.add_argument('--speedFactor', help='Example: 60 implies 1 hour of data sent to Cloud Pub/Sub in 1 minute', required=True, type=float)
+   parser.add_argument('--project', help='Example: --project $DEVSHELL_PROJECT_ID', required=True)
    args = parser.parse_args()
 
    # create Pub/Sub notification topic
    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
-   psclient = pubsub.Client()
-   topic = psclient.topic(TOPIC)
-   if not topic.exists():
-      logging.info('Creating pub/sub topic {}'.format(TOPIC))
-      topic.create()
-   else:
+   publisher = pubsub.PublisherClient()
+   event_type = publisher.topic_path(args.project,TOPIC)
+   try:
+      publisher.get_topic(event_type)
       logging.info('Reusing pub/sub topic {}'.format(TOPIC))
- 
+   except:
+      publisher.create_topic(event_type)
+      logging.info('Creating pub/sub topic {}'.format(TOPIC))
+
    # notify about each line in the input file
    programStartTime = datetime.datetime.utcnow() 
    with gzip.open(INPUT, 'rb') as ifp:
       header = ifp.readline()  # skip header
       firstObsTime = peek_timestamp(ifp)
       logging.info('Sending sensor data from {}'.format(firstObsTime))
-      simulate(topic, ifp, firstObsTime, programStartTime, args.speedFactor)
+      simulate(event_type, ifp, firstObsTime, programStartTime, args.speedFactor)
