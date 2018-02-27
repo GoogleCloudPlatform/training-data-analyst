@@ -1,0 +1,18 @@
+apiVersion: "0.1"
+gitVersion:
+  commitSha: 1a6fc9d0e19e456b784ba1c23c03ec47648819d0
+  refSpec: master
+kind: ksonnet.io/registry
+libraries:
+  argo:
+    path: argo
+    version: master
+  core:
+    path: core
+    version: master
+  tf-job:
+    path: tf-job
+    version: master
+  tf-serving:
+    path: tf-serving
+    version: master
