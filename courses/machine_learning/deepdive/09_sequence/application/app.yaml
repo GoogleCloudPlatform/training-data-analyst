@@ -8,7 +8,6 @@ handlers:
   script: main.app
 - url: /.*
   script: main.app
-  login: required
 
 env_variables:
   MODEL_NAME: poetry
