@@ -26,18 +26,16 @@ from flask import url_for
 from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
-from google.appengine.api import app_identity
-
 credentials = GoogleCredentials.get_application_default()
 api = discovery.build('ml', 'v1', credentials=credentials)
-project = app_identity.get_application_id()
-model_name = os.getenv('MODEL_NAME', 'poetry')
-version_name = os.getenv('VERSION_NAME', 'v1')
-model_loc = os.getenv('MODEL_DIR', 'gs://cloud-training-demos-ml/poetry/model/export/Servo/1519253545/')
-problem_name = os.getenv('PROBLEM_NAME', 'poetry_line_problem')
-t2t_usr_dir = os.getenv('T2T_USR_DIR', 'poetry')
-hparams_name = os.getenv('HPARAMS', 'transformer_poetry')
-data_dir = os.getenv('DATADIR', 'gs://cloud-training-demos-ml/poetry/data')
+project = os.getenv('PROJECT_ID')
+model_name = os.getenv('MODEL_NAME')
+version_name = os.getenv('VERSION_NAME')
+model_loc = os.getenv('MODEL_DIR')
+problem_name = os.getenv('PROBLEM_NAME')
+t2t_usr_dir = os.getenv('T2T_USR_DIR')
+hparams_name = os.getenv('HPARAMS')
+data_dir = os.getenv('DATADIR')
 
 app = Flask(__name__)
 
@@ -104,4 +102,16 @@ def encode_as_tfexample(inputs):
      fname: tf.train.Feature(int64_list=tf.train.Int64List(value=input_ids))
    }
    return tf.train.Example(features=tf.train.Features(feature=features))
- 
+
+@app.errorhandler(500)
+def server_error(e):
+    logging.exception('An error occurred during a request.')
+    return """
+    An internal error occurred: <pre>{}</pre>
+    See logs for full stacktrace.
+    """.format(e), 500
+
+if __name__ == '__main__':
+    # This is used when running locally. Gunicorn is used to run the
+    # application on Google App Engine. See entrypoint in app.yaml.
+    app.run(host='127.0.0.1', port=8080, debug=True)

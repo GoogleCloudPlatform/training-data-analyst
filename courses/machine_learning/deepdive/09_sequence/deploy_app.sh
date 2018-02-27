@@ -1,9 +1,10 @@
 #!/bin/bash
 
 cd application
-pip install -r requirements.txt -t lib
-gcloud app create
-gcloud app deploy
+#gcloud app create
+gcloud app deploy --quiet --stop-previous-version app.yaml
 
 PROJECT=$(gcloud config get-value project)
-echo "Visit https://PROJECT-ID.appspot.com/  e.g. https://${PROJECT}.appspot.com"
+
+echo "Visit https://mlpoetry-dot-${PROJECT}.appspot.com"
+
