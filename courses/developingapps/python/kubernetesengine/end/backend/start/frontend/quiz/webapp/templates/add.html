@@ -1,0 +1,63 @@
+{% extends 'master.html' %}
+{% block head %}
+	<title>Quiz - Node.js</title>
+{% endblock %}
+
+{% block content %}
+	<h3>{{ action }} question</h3>
+	<form enctype="multipart/form-data" method="post">
+		<div class="form-group">
+			<label for="author">Author</label><input class="form-control" id="author" name="author" type="text" value={{ question.author }}>
+		</div>
+		<div class="form-group">
+			<label for="quiz">Quiz</label><select class="form-control" id="quiz" name="quiz" value={{ question.quiz }}>
+				<option value="gcp">
+					-- Select Category --
+				</option>
+				<option value="gcp">
+					Google Cloud Platform
+				</option>
+				<option value="people">
+					People
+				</option>
+				<option value="places">
+					Places
+				</option>
+			</select>
+		</div>
+		<div class="form-group">
+			<label for="title">Title</label><input class="form-control" id="title" name="title" type="text" value={{ question.title }}>
+		</div>
+		<div class="form-group hidden">
+			<label for="imageUrl">ImageUrl</label><input class="form-control" id="imageUrl" name="imageUrl" type="hidden" value={{ question.imageUrl }}>
+		</div>
+		<div class="form-group">
+			<label for="image">Image</label><input class="form-control" id="image" name="image" type="file">
+		</div>
+		<div class="form-group">
+			<label for="answer1">Answer 1</label>
+			<div class="input-group">
+				<span class="input-group-addon"><input name="correctAnswer" type="radio" value="1"></span><input class="form-control" id="answer1" name="answer1" type="text" value={{ question.answer1 }}>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="answer2">Answer 2</label>
+			<div class="input-group">
+				<span class="input-group-addon"><input name="correctAnswer" type="radio" value="2"></span><input class="form-control" id="answer2" name="answer2" type="text" value={{ question.answer2 }}>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="answer3">Answer 3</label>
+			<div class="input-group">
+				<span class="input-group-addon"><input name="correctAnswer" type="radio" value="3"></span><input class="form-control" id="answer3" name="answer3" type="text" value={{ question.answer3 }}>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="answer4">Answer 4</label>
+			<div class="input-group">
+				<span class="input-group-addon"><input name="correctAnswer" type="radio" value="4"></span><input class="form-control" id="answer4" name="answer4" type="text" value={{ question.answer4 }}>
+			</div>
+		</div>
+		<div class="form-group"></div><button class="btn btn-success" type="submit">Save</button>
+	</form>
+{% endblock %}
