@@ -23,6 +23,7 @@ from flask import jsonify
 from flask import render_template
 from flask import request
 from flask import url_for
+import logging
 from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
@@ -36,7 +37,7 @@ model_name = os.getenv('MODEL_NAME', 'poetry')
 version_name = os.getenv('VERSION_NAME', 'v1')
 model_loc = os.getenv('MODEL_DIR', 'gs://cloud-training-demos-ml/poetry/model/export/Servo/1519253545/')
 problem_name = os.getenv('PROBLEM_NAME', 'poetry_line_problem')
-t2t_usr_dir = os.getenv('T2T_USR_DIR', os.path.join(app.instance_path, 'poetry/trainer'))
+t2t_usr_dir = os.getenv('T2T_USR_DIR', 'instance/poetry/trainer')
 hparams_name = os.getenv('HPARAMS', 'transformer_poetry')
 data_dir = os.getenv('DATADIR', 'gs://cloud-training-demos-ml/poetry/data')
 
@@ -44,14 +45,12 @@ def get_prediction(features):
   input_data = {'instances': [features]}
   parent = 'projects/%s/models/%s/versions/%s' % (project, model_name, version_name)
   prediction = api.projects().predict(body=input_data, name=parent).execute()
-  #return prediction['predictions'][0]['predictions'][0]
   return prediction
 
 
 @app.route('/')
 def index():
-  return render_template('index.html')
-
+  return render_template('form.html')
 
 @app.route('/form')
 def input_form():
@@ -85,6 +84,7 @@ fname = None
 def init():
    global input_encoder, output_decoder, fname
    tf.logging.set_verbosity(tf.logging.INFO)
+   tf.logging.info("Trying to import poetry/trainer from {}".format(t2t_usr_dir))
    usr_dir.import_usr_dir(t2t_usr_dir)
    print(t2t_usr_dir)
    problem = registry.problem(problem_name)

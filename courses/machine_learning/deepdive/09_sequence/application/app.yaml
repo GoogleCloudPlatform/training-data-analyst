@@ -15,6 +15,6 @@ env_variables:
   VERSION_NAME: v1
   MODEL_DIR: gs://cloud-training-demos-ml/poetry/model/export/Servo/1519253545/
   PROBLEM_NAME: poetry_line_problem
-  T2T_USR_DIR: poetry/trainer
+  T2T_USR_DIR: instance/poetry/trainer
   HPARAMS: transformer_poetry
   DATADIR: gs://cloud-training-demos-ml/poetry/data
