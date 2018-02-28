@@ -13,7 +13,6 @@ env_variables:
   MODEL_NAME: poetry
   PROJECT_ID: cloud-training-demos
   VERSION_NAME: v1
-  MODEL_DIR: gs://cloud-training-demos-ml/poetry/model/export/Servo/1519253545/
   PROBLEM_NAME: poetry_line_problem
   T2T_USR_DIR: instance/poetry/trainer
   HPARAMS: transformer_poetry
