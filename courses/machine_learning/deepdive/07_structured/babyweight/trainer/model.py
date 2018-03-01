@@ -122,6 +122,12 @@ def serving_input_fn():
     }
     return tf.estimator.export.ServingInputReceiver(features, feature_placeholders)
 
+# create metric for hyperparameter tuning
+def my_rmse(labels, predictions):
+    pred_values = predictions['predictions']
+    return {'rmse': tf.metrics.root_mean_squared_error(labels, pred_values)}
+
+
 # Create estimator to train and evaluate
 def train_and_evaluate(output_dir):
     wide, deep = get_wide_deep()
@@ -130,6 +136,9 @@ def train_and_evaluate(output_dir):
         linear_feature_columns = wide,
         dnn_feature_columns = deep,
         dnn_hidden_units = NNSIZE)
+    
+    estimator = tf.contrib.estimator.add_metrics(estimator, my_rmse)
+
     train_spec = tf.estimator.TrainSpec(
         input_fn = read_dataset('train', tf.estimator.ModeKeys.TRAIN, BATCH_SIZE),
         max_steps = TRAIN_STEPS)
