@@ -161,7 +161,7 @@ def read_dataset(filename, mode, batch_size = 512):
 
 # Create estimator train and evaluate function
 def train_and_evaluate(args):
-    estimator = build_estimator(args['output_dir'], args['nbuckets'], args['hidden_units'])
+    estimator = build_estimator(args['output_dir'], args['nbuckets'], args['hidden_units'].split(' '))
     train_spec = tf.estimator.TrainSpec(
         input_fn = read_dataset(
             filename = args['train_data_paths'],
