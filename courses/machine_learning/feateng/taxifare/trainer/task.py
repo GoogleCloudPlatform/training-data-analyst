@@ -46,11 +46,9 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--train_steps',
-        help = """\
-      Steps to run the training job for. If --num-epochs is not specified,
-      this must be. Otherwise the training job will run indefinitely.\
-      """,
-        type = int
+        help = 'Steps to run the training job for',
+        type = int,
+        default = 5000
     )
     parser.add_argument(
         '--eval_steps',
@@ -73,9 +71,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--hidden_units',
         help = 'Hidden layer sizes to use for DNN feature columns -- provide space-separated layers',
-        nargs = '+',
-        type = int,
-        default = [128, 32, 4]
+        type = str,
+        default = "128 32 4"
     )
     parser.add_argument(
         '--output_dir',
@@ -87,7 +84,6 @@ if __name__ == '__main__':
         help = 'this model ignores this field, but it is required by gcloud',
         default = 'junk'
     )
-
     # Eval arguments
     parser.add_argument(
         '--eval_delay_secs',
