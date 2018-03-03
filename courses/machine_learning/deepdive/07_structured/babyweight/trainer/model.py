@@ -144,7 +144,7 @@ def train_and_evaluate(output_dir):
         max_steps = TRAIN_STEPS)
     exporter = tf.estimator.LatestExporter('exporter', serving_input_fn, exports_to_keep=None)
     eval_spec = tf.estimator.EvalSpec(
-        input_fn = read_dataset('eval', tf.estimator.ModeKeys.EVAL, BATCH_SIZE),
+        input_fn = read_dataset('eval', tf.estimator.ModeKeys.EVAL, 2**15),  # no need to batch in eval
         steps = EVAL_STEPS,
         start_delay_secs = 60, # start evaluating after N seconds
         throttle_secs = 300,  # evaluate every N seconds
