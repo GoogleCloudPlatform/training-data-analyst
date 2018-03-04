@@ -114,7 +114,8 @@ def serving_input_fn():
         'is_male': tf.placeholder(tf.string, [None]),
         'mother_age': tf.placeholder(tf.float32, [None]),
         'plurality': tf.placeholder(tf.string, [None]),
-        'gestation_weeks': tf.placeholder(tf.float32, [None])
+        'gestation_weeks': tf.placeholder(tf.float32, [None]),
+        KEY_COLUMN: tf.placeholder_with_default(tf.constant(['nokey']), [None])
     }
     features = {
         key: tf.expand_dims(tensor, -1)
@@ -127,6 +128,23 @@ def my_rmse(labels, predictions):
     pred_values = predictions['predictions']
     return {'rmse': tf.metrics.root_mean_squared_error(labels, pred_values)}
 
+# forward to key-column to export
+def forward_key_to_export(estimator):
+    estimator = tf.contrib.estimator.forward_features(estimator, KEY_COLUMN)
+    # return estimator
+
+    ## This shouldn't be necessary (I've filed issue: )
+    config = estimator.config
+    def model_fn2(features, labels, mode):
+      estimatorSpec = estimator._call_model_fn(features, labels, mode, config=config)
+      if estimatorSpec.export_outputs:
+         estimatorSpec.export_outputs['predict'] = \
+           tf.estimator.export.PredictOutput(estimatorSpec.predictions)
+         estimatorSpec.export_outputs['serving_default'] = \
+           tf.estimator.export.PredictOutput(estimatorSpec.predictions)
+      return estimatorSpec
+    return tf.estimator.Estimator(model_fn=model_fn2, config=config)
+    ##
 
 # Create estimator to train and evaluate
 def train_and_evaluate(output_dir):
@@ -138,6 +156,7 @@ def train_and_evaluate(output_dir):
         dnn_hidden_units = NNSIZE)
     
     estimator = tf.contrib.estimator.add_metrics(estimator, my_rmse)
+    estimator = forward_key_to_export(estimator)
 
     train_spec = tf.estimator.TrainSpec(
         input_fn = read_dataset('train', tf.estimator.ModeKeys.TRAIN, BATCH_SIZE),
