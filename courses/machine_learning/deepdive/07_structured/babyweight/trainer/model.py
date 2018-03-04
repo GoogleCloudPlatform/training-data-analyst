@@ -133,15 +133,14 @@ def forward_key_to_export(estimator):
     estimator = tf.contrib.estimator.forward_features(estimator, KEY_COLUMN)
     # return estimator
 
-    ## This shouldn't be necessary (I've filed issue: )
+    ## This shouldn't be necessary (I've filed CL/187793590 to update extenders.py with this code)
     config = estimator.config
     def model_fn2(features, labels, mode):
       estimatorSpec = estimator._call_model_fn(features, labels, mode, config=config)
       if estimatorSpec.export_outputs:
-         estimatorSpec.export_outputs['predict'] = \
-           tf.estimator.export.PredictOutput(estimatorSpec.predictions)
-         estimatorSpec.export_outputs['serving_default'] = \
-           tf.estimator.export.PredictOutput(estimatorSpec.predictions)
+        for ekey in ['predict', 'serving_default']:
+          estimatorSpec.export_outputs[ekey] = \
+            tf.estimator.export.PredictOutput(estimatorSpec.predictions)
       return estimatorSpec
     return tf.estimator.Estimator(model_fn=model_fn2, config=config)
     ##
