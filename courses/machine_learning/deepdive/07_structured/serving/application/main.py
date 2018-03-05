@@ -76,6 +76,7 @@ def predict():
       return jsonify({'result': 'Set all items.'})
 
   features = {}
+  features['key'] = 'nokey'
   features['is_male'] = gender2str(data['baby_gender'])
   features['mother_age'] = float(data['mother_age'])
   features['plurality'] = plurality2str(data['plurality'])
