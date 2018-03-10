@@ -95,11 +95,15 @@ def build_estimator(model_dir, nbuckets, hidden_units):
         latdiff, londiff, euclidean
     ]
     
-    return tf.estimator.DNNLinearCombinedRegressor(
+    estimator = tf.estimator.DNNLinearCombinedRegressor(
         model_dir = model_dir,
         linear_feature_columns = wide_columns,
         dnn_feature_columns = deep_columns,
         dnn_hidden_units = hidden_units)
+
+    # add extra evaluation metric for hyperparameter tuning
+    estimator = tf.contrib.estimator.add_metrics(estimator, add_eval_metrics)
+    return estimator
 
 # Create feature engineering function that will be used in the input and serving input functions
 def add_engineered(features):
@@ -174,7 +178,7 @@ def train_and_evaluate(args):
             filename = args['eval_data_paths'],
             mode = tf.estimator.ModeKeys.EVAL,
             batch_size = args['eval_batch_size']),
-        steps = None,
+        steps = 100,
         exporters = exporter)
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
@@ -213,8 +217,9 @@ def generate_tfrecord_input_fn(data_paths, num_epochs = None, batch_size = 512, 
     # Return a function to input the features into the model from a data path.
     return get_input_features
 
-def get_eval_metrics():
+def add_eval_metrics(labels, predictions):
+    pred_values = predictions['predictions']
     return {
-        'rmse': tflearn.MetricSpec(metric_fn=metrics.streaming_root_mean_squared_error),
-        'training/hptuning/metric': tflearn.MetricSpec(metric_fn=metrics.streaming_root_mean_squared_error),
+        'rmse': tf.metrics.root_mean_squared_error(labels, pred_values)
     }
+
