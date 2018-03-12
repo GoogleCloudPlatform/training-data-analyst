@@ -139,8 +139,11 @@ def forward_key_to_export(estimator):
       estimatorSpec = estimator._call_model_fn(features, labels, mode, config=config)
       if estimatorSpec.export_outputs:
         for ekey in ['predict', 'serving_default']:
-          estimatorSpec.export_outputs[ekey] = \
-            tf.estimator.export.PredictOutput(estimatorSpec.predictions)
+          if (ekey in estimatorSpec.export_outputs and
+              isinstance(estimatorSpec.export_outputs[ekey],
+                         tf.estimator.export.PredictOutput)):
+               estimatorSpec.export_outputs[ekey] = \
+                 tf.estimator.export.PredictOutput(estimatorSpec.predictions)
       return estimatorSpec
     return tf.estimator.Estimator(model_fn=model_fn2, config=config)
     ##
