@@ -108,12 +108,12 @@ def build_estimator(model_dir, nbuckets, hidden_units):
 def make_serving_input_fn(args):
     raw_metadata = metadata_io.read_metadata(
         os.path.join(args['metadata_path'], 'rawdata_metadata'))
-    transform_savedmodel = (
-        os.path.join(args['metadata_path'], 'transform_fn/saved_model.pb'))
-    return input_fn_maker.build_parsing_transforming_serving_input_fn(
+    transform_savedmodel_dir = (
+        os.path.join(args['metadata_path'], 'transform_fn'))
+    return input_fn_maker.build_parsing_transforming_serving_input_receiver_fn(
       raw_metadata,
-      transform_savedmodel,
-      raw_label_keys = [LABEL_COLUMN])
+      transform_savedmodel_dir,
+      exclude_raw_keys = [LABEL_COLUMN])
 
 # Create input function to load data into datasets
 def read_dataset(args, mode):
