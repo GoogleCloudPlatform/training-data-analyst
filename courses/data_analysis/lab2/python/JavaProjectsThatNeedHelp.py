@@ -104,18 +104,18 @@ def needs_help(pcoll):
     | 'DropZero' >> beam.Filter(lambda packages: packages[1]>0 ) )
 
 
-# Calculate the final composite score 
-# 
-#    For each package that needs help
-#    If the package is in the popularity dictionary, retrieve the popularity count  
+# Calculate the final composite score
+#
+#    For each package that is popular
+#    If the package is in the needs help dictionary, retrieve the popularity count
 #    Multiply to get compositescore
 #      - Using log() because these measures are subject to tournament effects
 #
 
-def compositeScore(help,popular):
-    for element in help:
-      if popular.get(element[0]):
-         composite = math.log(popular.get(element[0])) * math.log(element[1])
+def compositeScore(popular, help):
+    for element in popular:
+      if help.get(element[0]):
+         composite = math.log(help.get(element[0])) * math.log(element[1])
          if composite > 0:
            yield (element[0], composite)
 
