@@ -21,7 +21,7 @@ from __future__ import print_function
 import numpy as np
 import os
 import tensorflow as tf
-from tensorflow_transform.saved import input_fn_maker
+from tensorflow_transform.saved import input_fn_maker, saved_transform_io
 from tensorflow_transform.tf_metadata import metadata_io
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -105,7 +105,7 @@ def build_estimator(model_dir, nbuckets, hidden_units):
         dnn_hidden_units = hidden_units)
 
 # Create serving input function to be able to serve predictions
-def make_serving_input_fn(args):
+def make_serving_input_fn_for_base64_json(args):
     raw_metadata = metadata_io.read_metadata(
         os.path.join(args['metadata_path'], 'rawdata_metadata'))
     transform_savedmodel_dir = (
@@ -114,6 +114,29 @@ def make_serving_input_fn(args):
       raw_metadata,
       transform_savedmodel_dir,
       exclude_raw_keys = [LABEL_COLUMN])
+
+def make_serving_input_fn(args):
+  transform_savedmodel_dir = (
+        os.path.join(args['metadata_path'], 'transform_fn'))
+
+  def _input_fn():
+    # placeholders for all the raw inputs
+    feature_placeholders = {
+      column_name: tf.placeholder(tf.float32, [None]) for column_name in 'pickuplon,pickuplat,dropofflat,dropofflon'.split(',')
+    }
+    feature_placeholders['passengers'] = tf.placeholder(tf.int64, [None])
+    feature_placeholders['dayofweek'] = tf.placeholder(tf.string, [None])
+    feature_placeholders['hourofday'] = tf.placeholder(tf.int64, [None])
+    feature_placeholders['key'] = tf.placeholder(tf.string, [None])
+
+    # transform using the saved model in transform_fn
+    _, features = saved_transform_io.partially_apply_saved_transform(
+      transform_savedmodel_dir,
+      feature_placeholders
+    )
+    return tf.estimator.export.ServingInputReceiver(features, feature_placeholders)
+
+  return _input_fn
 
 # Create input function to load data into datasets
 def read_dataset(args, mode):
