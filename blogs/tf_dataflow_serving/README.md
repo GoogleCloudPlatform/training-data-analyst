@@ -41,4 +41,47 @@
 ### Stream (Source Pubs/Sub -> Sink: BigQuery)
 1. Calling a local TF Model with-in Dataflow Streaming Pipeline
 2. Calling CMLE for each data point in Dataflow Streaming Pipeline
-3. Micro-batching data points and send them to CMLE in Dataflow Streaming Pipeline
+### Stream + Micro-batching (Source Pubs/Sub -> Sink: BigQuery)
+1. Batching data points then send them to CMLE in Dataflow Streaming Pipeline
+2. Batching data points then send them to TF Model with-in in Dataflow Streaming Pipeline
+
+
+## Results
+
+| Batch               |              | DF then Batch CMLE | DF + Online CMLE Prediction | TF Model in DF |
+|---------------------|--------------|--------------------|-----------------------------|----------------|
+| Dataset = 10k Rows  | Running Time |                    |                             |                |
+|                     | Cost         |                    |                             |                |
+| Dataset = 100k Rows | Running Time |                    |                             |                |
+|                     | Cost         |                    |                             |                |
+| Dataset = 1M Rows   | Running Time |                    |                             |                |
+|                     | Cost         |                    |                             |                |
+
+
+| Stream |    Dataset = 5K Rows, Frequency = 10MPS           | DF + Online CMLE | TF Model in DF |
+|--------|--------------|------------------|----------------|
+|     | Running Time |                  |                |
+|        | Min. Latency |                  |                |
+|        | Max. Latency |                  |                |
+|        | Avg. Latency |                  |                |
+|        | Cost         |                  |                |
+
+
+
+| Stream + Micro-batches           | Dataset = 5K Rows, Frequency = 10MPS | DF + Online CMLE | TF Model in DF |
+|------------------|--------------------------------------|------------------|----------------|
+| Batch Size = 10  | Running Time                         |                  |                |
+|                  | Min. Latency                         |                  |                |
+|                  | Max. Latency                         |                  |                |
+|                  | Avg. Latency                         |                  |                |
+|                  | Cost                                 |                  |                |
+| Batch Size = 150 | Running Time                         |                  |                |
+|                  | Min. Latency                         |                  |                |
+|                  | Max Latency                          |                  |                |
+|                  | Avg. Latency                         |                  |                |
+|                  | Cost                                 |                  |                |
+| Batch Size = 500 | Running Time                         |                  |                |
+|                  | Min. Latency                         |                  |                |
+|                  | Max. Latency                         |                  |                |
+|                  | Avg. Latency                         |                  |                |
+|                  | Cost                                 |                  |                |
