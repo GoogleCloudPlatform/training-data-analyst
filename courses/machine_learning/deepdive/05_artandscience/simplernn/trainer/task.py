@@ -48,6 +48,11 @@ if __name__ == '__main__':
         help = 'this model ignores this field, but it is required by gcloud',
         default = 'junk'
     )
+    parser.add_argument(
+        '--keras',
+        help = 'Use the Keras variant',
+        action = 'store_true'
+    )
 
     # Eval arguments
     parser.add_argument(
@@ -84,6 +89,6 @@ if __name__ == '__main__':
     # Run the training job
     try:
         shutil.rmtree(output_dir, ignore_errors = True) # start fresh each time
-        model.train_and_evaluate(output_dir)
+        model.train_and_evaluate(output_dir, arguments['keras'])
     except:
         traceback.print_exc()
