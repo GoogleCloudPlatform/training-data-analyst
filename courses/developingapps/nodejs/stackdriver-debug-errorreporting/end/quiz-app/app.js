@@ -13,14 +13,14 @@
 
 'use strict';
 require('@google-cloud/debug-agent').start({ allowExpressions: true });
-const ErrorReporting = require('@google-cloud/error-reporting');
+const ErrorReporting = require(
+       '@google-cloud/error-reporting').ErrorReporting;
+
 const path = require('path');
 const express = require('express');
 const config = require('./config');
 
-const errorReporting = ErrorReporting({
-  projectId: config.get('GCLOUD_PROJECT')
-});
+const errorReporting = ErrorReporting();
 const app = express();
 
 // Static files
