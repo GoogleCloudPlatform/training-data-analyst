@@ -27,12 +27,11 @@ WIDTH=28
 NCLASSES=10
 
 def linear_model(img, mode, hparams):
-  X = tf.reshape(img, [-1, HEIGHT*WIDTH]) # flattened
-  #W = tf.Variable(tf.zeros([HEIGHT*WIDTH, NCLASSES]))
-  #b = tf.Variable(tf.zeros([NCLASSES]))
-  W = tf.Variable(tf.truncated_normal([HEIGHT*WIDTH, NCLASSES], stddev=0.1))
-  b = tf.Variable(tf.truncated_normal([NCLASSES], stddev=0.1))
-  ylogits = tf.matmul(X, W) + b
+  X = tf.reshape(img,[-1,HEIGHT*WIDTH]) #flatten
+  W = tf.get_variable("W", [HEIGHT*WIDTH,NCLASSES], 
+                      initializer = tf.truncated_normal_initializer(stddev=0.1,seed = 1))
+  b = tf.get_variable("b",NCLASSES, initializer = tf.zeros_initializer)
+  ylogits = tf.matmul(X,W)+b
   return ylogits, NCLASSES
 
 def dnn_model(img, mode, hparams):
