@@ -100,7 +100,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--format',
         help = 'Is the input data format csv or tfrecord?',
-        default = 'csv',
+        default = 'csv'
     )
 
     args = parser.parse_args()
@@ -110,16 +110,14 @@ if __name__ == '__main__':
     arguments.pop('job_dir', None)
     arguments.pop('job-dir', None)
 
-    output_dir = arguments['output_dir']
-
     # Append trial_id to path if we are doing hptuning
     # This code can be removed if you are not using hyperparameter tuning
-    output_dir = os.path.join(
-        output_dir,
+    arguments['output_dir'] = os.path.join(
+        arguments['output_dir'],
         json.loads(
             os.environ.get('TF_CONFIG', '{}')
         ).get('task', {}).get('trial', '')
-    )
+    ) 
 
     # Run the training job:
     try:
