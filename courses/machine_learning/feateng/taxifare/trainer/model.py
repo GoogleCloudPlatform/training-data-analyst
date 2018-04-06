@@ -56,7 +56,7 @@ def build_estimator(model_dir, nbuckets, hidden_units):
   """
 
     # Input columns
-    (dayofweek, hourofday, latdiff, londiff, euclidean, plon, plat, dlon, dlat, pcount) = INPUT_COLUMNS
+    (dayofweek, hourofday, plon, plat, dlon, dlat, pcount, latdiff, londiff, euclidean) = INPUT_COLUMNS
 
     # Bucketize the lats & lons
     latbuckets = np.linspace(38.0, 42.0, nbuckets).tolist()
