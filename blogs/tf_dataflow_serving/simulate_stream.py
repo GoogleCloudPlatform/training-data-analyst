@@ -2,17 +2,16 @@ from google.cloud import pubsub
 from random import randint
 from datetime import datetime
 import json
-import time
 
 
 PROJECT = 'ksalama-gcp-playground'
 TOPIC = 'babyweights'
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-SAMPLE_SIZE = 5000
+SAMPLE_SIZE = 100
+#MESSAGES_PER_SEC = 50
 
 
-instances = [
-      {
+instance = {
         'is_male': 'True',
         'mother_age': 26.0,
         'mother_race': 'Asian Indian',
@@ -21,38 +20,7 @@ instances = [
         'mother_married': 'True',
         'cigarette_use': 'False',
         'alcohol_use': 'False'
-      },
-      {
-        'is_male': 'False',
-        'mother_age': 29.0,
-        'mother_race': 'Asian Indian',
-        'plurality': 1.0,
-        'gestation_weeks': 38,
-        'mother_married': 'True',
-        'cigarette_use': 'False',
-        'alcohol_use': 'False'
-      },
-      {
-        'is_male': 'True',
-        'mother_age': 26.0,
-        'mother_race': 'White',
-        'plurality': 1.0,
-        'gestation_weeks': 39,
-        'mother_married': 'True',
-        'cigarette_use': 'False',
-        'alcohol_use': 'False'
-      },
-      {
-        'is_male': 'True',
-        'mother_age': 26.0,
-        'mother_race': 'White',
-        'plurality': 2.0,
-        'gestation_weeks': 37,
-        'mother_married': 'True',
-        'cigarette_use': 'False',
-        'alcohol_use': 'True'
       }
-  ]
 
 
 def create_pubsub_topic():
@@ -77,33 +45,49 @@ def create_pubsub_topic():
 def simulate_stream_data():
 
     topic = create_pubsub_topic()
-    sleep_time = 0.05
+    # sleep_time = 1.0/MESSAGES_PER_SEC
 
     print("Data points to send: {}".format(SAMPLE_SIZE))
     print("PubSub topic: {}".format(TOPIC))
-    print("Sleep time between each data point: {} seconds".format(sleep_time))
+    # print("Messages per second: {}".format(MESSAGES_PER_SEC))
+    # print("Sleep time between each data point: {} seconds".format(sleep_time))
 
-    for i in range(SAMPLE_SIZE):
+    def _send_message():
 
-        index = randint(0, len(instances)-1)
-        instance = instances[index]
-
-        source_timestamp = datetime.now().strftime(TIME_FORMAT)
+        source_timestamp = datetime.utcnow().strftime(TIME_FORMAT)
         source_id = str(abs(hash(str(instance) + str(source_timestamp))) % (10 ** 10))
 
         instance['source_id'] = source_id
         instance['source_timestamp'] = source_timestamp
 
         message = json.dumps(instance)
+
         topic.publish(message=message, source_id=source_id, source_timestamp=source_timestamp)
 
-        time.sleep(sleep_time)
+    time_start = datetime.utcnow()
+    print(".......................................")
+    print("Simulation started at {}".format(time_start.strftime("%H:%M:%S")))
+    print(".......................................")
 
-        if i % 100 == 0:
-            print("{} data points were sent to: {}. Last Message was: {}".format(i+1, topic.full_name, message))
-            print("")
+    for i in range(SAMPLE_SIZE):
 
-    print("Done!")
+        _send_message()
+
+        # time.sleep(sleep_time)
+
+        # if (i+1) % 10 == 0:
+        #     print("{} data points were sent to: {}.".format(i+1, topic.full_name))
+        #     print()
+        #     print("")
+
+    time_end = datetime.utcnow()
+
+    print(".......................................")
+    print("Simulation finished at {}".format(time_end.strftime("%H:%M:%S")))
+    print(".......................................")
+    time_elapsed = time_end - time_start
+    print("Simulation elapsed time: {} seconds".format(time_elapsed.total_seconds()))
+    print("Average frequency: {} per second".format(round(SAMPLE_SIZE/time_elapsed.total_seconds(), 2)))
 
 
 if __name__ == '__main__':
