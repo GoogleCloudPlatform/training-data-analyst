@@ -8,7 +8,7 @@ from model import inference
 from datetime import datetime
 
 
-INFERENCE_TYPE = 'local'  # local' | 'cmle'
+INFERENCE_TYPE = 'cmle'  # local' | 'cmle'
 
 instance = [
     {

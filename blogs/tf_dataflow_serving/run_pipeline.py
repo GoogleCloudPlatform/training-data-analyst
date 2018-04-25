@@ -5,23 +5,23 @@ from pipelines import batch_process, stream_process
 from datetime import datetime
 
 
-SAMPLE_SIZE = 100000
+SAMPLE_SIZE = 10000000
 
-EXPERIMENT = 'stream-m-batches'  # batch | stream-m-batches | stream | batch-predict
+EXPERIMENT = 'stream'  # batch | stream-m-batches | stream | batch-predict
 
 RUNNER = 'DataflowRunner'  # 'DirectRunner' | 'DataflowRunner'
 PROJECT = 'ksalama-gcp-playground'
 BUCKET = 'ksalama-gcs-cloudml'
-INFERENCE_TYPE = 'cmle'  # local'| 'cmle' | 'None'
+INFERENCE_TYPE = 'local'  # local'| 'cmle' | 'None'
 PUBSUB_TOPIC='babyweights'
 
 
 local_dir = 'local_data'
-gcs_dir = 'gs://{0}/data/babyweight/tf-data-out'.format(BUCKET)
+gcs_dir = 'gs://{0}/data/babyweight/experiments'.format(BUCKET)
 
 output_dir = local_dir if RUNNER == 'DirectRunner' else gcs_dir
 
-sink_location = os.path.join(output_dir, 'data-estimates')
+sink_location = os.path.join(output_dir, 'outputs')
 
 pubsub_topic = "projects/{}/topics/{}".format(PROJECT, PUBSUB_TOPIC)
 
@@ -32,11 +32,15 @@ print('Launching Beam job {} - {} ... hang on'.format(RUNNER, job_name))
 
 
 args = {
-    #'region': 'europe-west1',
+    'region': 'europe-west1',
     'staging_location': os.path.join(gcs_dir, 'tmp', 'staging'),
     'temp_location': os.path.join(gcs_dir, 'tmp'),
     'job_name': job_name,
     'project': PROJECT,
+    'worker_machine_type': 'n1-standard-1',
+    # 'autoscaling_algorithm':'NONE',
+     'num_workers': 1,
+    # 'max_num_workers': 20,
     'teardown_policy': 'TEARDOWN_ALWAYS',
     'no_save_main_session': True,
     'setup_file': './setup.py',

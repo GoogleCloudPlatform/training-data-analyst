@@ -8,6 +8,17 @@ HEADER = ['weight_pounds', 'is_male', 'mother_age', 'mother_race', 'plurality',
           'cigarette_use', 'alcohol_use']
 
 
+def get_sample_size_desc(sample_size):
+    desc = '({}{} Rows)'
+    if sample_size >= 1000000:
+        desc = desc.format(sample_size/1000000.0,'M')
+    elif sample_size >= 1000:
+        desc = desc.format(sample_size /1000.0, 'K')
+    else:
+        desc = desc.format(sample_size, '')
+    return desc
+
+
 def bq_query(sample_size):
     """
     Generate a BigQuery SELECT query from publicdata.samples.natality dataset
@@ -164,13 +175,17 @@ def to_csv(instance):
 
 def run_pipeline(inference_type, sample_size, sink_location, runner, args=None):
 
+    sink_location = sink_location + "/data-estimates"
+
+    sample_size_desc = get_sample_size_desc(sample_size)
+
     options = beam.pipeline.PipelineOptions(flags=[], **args)
 
     pipeline = beam.Pipeline(runner, options=options)
 
     (
             pipeline
-            | 'Read from BigQuery' >> beam.io.Read(beam.io.BigQuerySource(query=bq_query(sample_size), use_standard_sql=True))
+            | 'Read from BigQuery {}'.format(sample_size_desc) >> beam.io.Read(beam.io.BigQuerySource(query=bq_query(sample_size), use_standard_sql=True))
             | 'Process BQ Row' >> beam.Map(process_row)
             | 'Estimate Targets - {}'.format(inference_type) >> beam.Map(lambda instance: estimate(instance, inference_type))
             | 'Convert to CSV' >> beam.Map(to_csv)
@@ -183,13 +198,18 @@ def run_pipeline(inference_type, sample_size, sink_location, runner, args=None):
 
 
 def run_pipeline_with_batch_predict(sample_size, sink_location, runner, args=None):
+
+    sink_location = sink_location + "/data-prep"
+
+    sample_size_desc = get_sample_size_desc(sample_size)
+
     options = beam.pipeline.PipelineOptions(flags=[], **args)
 
     pipeline = beam.Pipeline(runner, options=options)
 
     (
             pipeline
-            | 'Read from BigQuery' >> beam.io.Read(beam.io.BigQuerySource(query=bq_query(sample_size), use_standard_sql=True))
+            | 'Read from BigQuery {}'.format(sample_size_desc) >> beam.io.Read(beam.io.BigQuerySource(query=bq_query(sample_size), use_standard_sql=True))
             | 'Convert to Json line' >> beam.Map(to_json_line)
             | 'Write to Sink ' >> beam.io.Write(beam.io.WriteToText(sink_location, file_name_suffix='.dat'))
     )
