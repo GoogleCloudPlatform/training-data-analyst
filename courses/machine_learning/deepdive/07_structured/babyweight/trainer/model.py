@@ -139,8 +139,11 @@ def forward_key_to_export(estimator):
       estimatorSpec = estimator._call_model_fn(features, labels, mode, config=config)
       if estimatorSpec.export_outputs:
         for ekey in ['predict', 'serving_default']:
-          estimatorSpec.export_outputs[ekey] = \
-            tf.estimator.export.PredictOutput(estimatorSpec.predictions)
+          if (ekey in estimatorSpec.export_outputs and
+              isinstance(estimatorSpec.export_outputs[ekey],
+                         tf.estimator.export.PredictOutput)):
+               estimatorSpec.export_outputs[ekey] = \
+                 tf.estimator.export.PredictOutput(estimatorSpec.predictions)
       return estimatorSpec
     return tf.estimator.Estimator(model_fn=model_fn2, config=config)
     ##
@@ -148,11 +151,15 @@ def forward_key_to_export(estimator):
 # Create estimator to train and evaluate
 def train_and_evaluate(output_dir):
     wide, deep = get_wide_deep()
+    EVAL_INTERVAL = 300 # seconds
+    run_config = tf.estimator.RunConfig(save_checkpoints_secs = EVAL_INTERVAL,
+                                        keep_checkpoint_max = 3)
     estimator = tf.estimator.DNNLinearCombinedRegressor(
         model_dir = output_dir,
         linear_feature_columns = wide,
         dnn_feature_columns = deep,
-        dnn_hidden_units = NNSIZE)
+        dnn_hidden_units = NNSIZE,
+        config = run_config)
     
     estimator = tf.contrib.estimator.add_metrics(estimator, my_rmse)
     estimator = forward_key_to_export(estimator)
@@ -165,6 +172,6 @@ def train_and_evaluate(output_dir):
         input_fn = read_dataset('eval', tf.estimator.ModeKeys.EVAL, 2**15),  # no need to batch in eval
         steps = EVAL_STEPS,
         start_delay_secs = 60, # start evaluating after N seconds
-        throttle_secs = 300,  # evaluate every N seconds
+        throttle_secs = EVAL_INTERVAL,  # evaluate every N seconds
         exporters = exporter)
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)

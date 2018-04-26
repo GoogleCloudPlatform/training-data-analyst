@@ -1,0 +1,5 @@
+tensorflow==1.4
+google-cloud-dataflow
+protobuf
+six==1.10
+google-api-python-client

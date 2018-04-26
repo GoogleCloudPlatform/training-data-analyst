@@ -26,26 +26,6 @@ import model
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
-def make_train_input_fn(mnist, hparams):
-  def input_fn():
-    batch_size = hparams['train_batch_size']
-    features, labels = tf.train.shuffle_batch(
-                             [tf.constant(mnist.train.images), tf.constant(mnist.train.labels)],
-                             batch_size=batch_size, 
-                             capacity=50*batch_size,
-                             min_after_dequeue=20*batch_size,
-                             enqueue_many=True)
-    features = {'image': features}
-    return features, labels
-  return input_fn
-
-def make_eval_input_fn(mnist):
-  def input_fn():
-    features, labels = tf.constant(mnist.test.images), tf.constant(mnist.test.labels)
-    features = {'image': features}
-    return features, labels
-  return input_fn
-
 def image_classifier(features, labels, mode, params):
   model_func = getattr(model, '{}_model'.format(params['model']))  # linear, dnn, cnn1, cnn2, etc.
   ylogits, nclasses = model_func(features['image'], mode, params)
@@ -53,8 +33,8 @@ def image_classifier(features, labels, mode, params):
   probabilities = tf.nn.softmax(ylogits)
   classes = tf.cast(tf.argmax(probabilities, 1), tf.uint8)
   if mode == tf.estimator.ModeKeys.TRAIN or mode == tf.estimator.ModeKeys.EVAL:
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ylogits, labels=tf.one_hot(labels, nclasses)))
-    evalmetrics =  {'accuracy': tf.metrics.accuracy(classes, labels)}
+    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=ylogits, labels=labels))
+    evalmetrics =  {'accuracy': tf.metrics.accuracy(classes, tf.argmax(labels, 1))}
     if mode == tf.estimator.ModeKeys.TRAIN:
       # this is needed for batch normalization, but has no effect otherwise
       update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -77,27 +57,20 @@ def image_classifier(features, labels, mode, params):
         export_outputs={'classes': tf.estimator.export.PredictOutput({"probabilities": probabilities, "classes": classes})}
     )
 
-def create_custom_estimator(output_dir, hparams):
-  save_freq = max(1, min(100, hparams['train_steps']/100))
-  training_config = tf.contrib.learn.RunConfig(save_checkpoints_secs=None,
-                                               save_checkpoints_steps=save_freq)
-  return tf.estimator.Estimator(model_fn=image_classifier, model_dir=output_dir, 
-                                config=training_config, params=hparams)
-
-def make_experiment_fn(output_dir, data_dir, hparams):
-  def experiment_fn(output_dir):
-    mnist = input_data.read_data_sets(data_dir, reshape=False)  
-    eval_freq = max(1, min(2000, hparams['train_steps']/5))
-    return tf.contrib.learn.Experiment(
-      estimator=create_custom_estimator(output_dir, hparams),
-      train_input_fn=make_train_input_fn(mnist, hparams),
-      eval_input_fn=make_eval_input_fn(mnist),
-      train_steps=hparams['train_steps'],
-      eval_steps=1,
-      min_eval_frequency=eval_freq,
-      export_strategies=tf.contrib.learn.utils.saved_model_export_utils.make_export_strategy(serving_input_fn=model.serving_input_fn)
-    )
-  return experiment_fn
+def train_and_evaluate(output_dir, hparams):
+  EVAL_INTERVAL = 60
+  estimator = tf.estimator.Estimator(model_fn = image_classifier,
+                                     params = hparams,
+                                     config= tf.estimator.RunConfig(save_checkpoints_secs = EVAL_INTERVAL),
+                                     model_dir = output_dir)
+  train_spec = tf.estimator.TrainSpec(input_fn = train_input_fn,
+                                    max_steps = hparams['train_steps'])
+  exporter = tf.estimator.LatestExporter('Servo', model.serving_input_fn)
+  eval_spec = tf.estimator.EvalSpec(input_fn = eval_input_fn,
+                                  steps = None,
+                                  exporters = exporter,
+                                  throttle_secs = EVAL_INTERVAL)
+  tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -171,6 +144,25 @@ if __name__ == '__main__':
      hparams['train_steps'] = (10000 * 512) // hparams['train_batch_size']
      print "Training for {} steps".format(hparams['train_steps'])
   
+  mnist = input_data.read_data_sets('mnist/data', one_hot=True, reshape=False)
+
+  train_input_fn = tf.estimator.inputs.numpy_input_fn(
+    x={'image':mnist.train.images},
+    y=mnist.train.labels,
+    batch_size=100,
+    num_epochs=None,
+    shuffle=True,
+    queue_capacity=5000
+  )
+
+  eval_input_fn = tf.estimator.inputs.numpy_input_fn(
+    x={'image':mnist.test.images},
+    y=mnist.test.labels,
+    batch_size=100,
+    num_epochs=1,
+    shuffle=False,
+    queue_capacity=5000
+  )
   # Run the training job
-  tf.contrib.learn.learn_runner.run(make_experiment_fn(output_dir, 'mnist/data', hparams), output_dir)
+  train_and_evaluate(output_dir, hparams)
 
