@@ -11,7 +11,7 @@ PROJECT = 'ksalama-gcp-playground'
 DATASET = 'playground_ds'
 TABLE = 'babyweight_estimates'
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-WINDOW_SIZE = 5
+WINDOW_SIZE = 1
 
 schema_definition = {
     'source_id':'INTEGER',
@@ -64,7 +64,7 @@ def estimate(messages, inference_type):
         instance['estimated_weight'] = estimated_weights[i]
         instance['source_id'] = source_ids[i]
         instance['source_timestamp'] = source_timestamps[i]
-        instance['predict_timestamp'] = datetime.now().strftime(TIME_FORMAT)
+        instance['predict_timestamp'] = datetime.utcnow().strftime(TIME_FORMAT)
 
     logging.info(instances)
 
@@ -97,7 +97,7 @@ def run_pipeline_with_micro_batches(inference_type, pubsub_topic, runner, args=N
     (
             pipeline
             | 'Read from PubSub' >> beam.io.ReadStringsFromPubSub(topic=pubsub_topic)
-            | 'Windowing into Micro-batches' >> beam.WindowInto(FixedWindows(size=WINDOW_SIZE))
+            | 'Micro-batch - Window Size: {} Seconds'.format(WINDOW_SIZE) >> beam.WindowInto(FixedWindows(size=WINDOW_SIZE))
             | 'Estimate Targets - {}'.format(inference_type) >> beam.FlatMap(lambda messages: estimate(messages, inference_type))
             | 'Write to BigQuery' >> beam.io.WriteToBigQuery(project=PROJECT, dataset=DATASET, table=TABLE, schema=schema,
                                                              create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED)
