@@ -1,2 +1,15 @@
 #!/bin/bash
-mvn compile exec:java -Dexec.mainClass=com.google.cloud.bigtable.training.Ex0 -Dbigtable.project=<your project id> -Dbigtable.instance=<your instance id> -Dbigtable.table=Ex0Table
+
+if [ "$#" -lt 1 ]; then
+    echo "Usage: ./build.sh  Ex0  [...]"
+    exit
+fi
+
+PROJECT=$(gcloud config get-value project)
+CBT_INSTANCE=datasme-cbt
+#PACKAGE=com.google.cloud.bigtable.training
+PACKAGE=com.google.cloud.bigtable.training.solutions
+EXERCISE=$1
+shift
+
+mvn compile exec:java -Dexec.mainClass=${PACKAGE}.${EXERCISE} -Dbigtable.project=$PROJECT -Dbigtable.instance=$CBT_INSTANCE -Dbigtable.table=${EXERCISE}Table -Dexec.args="$@" -Dexec.cleanupDaemonThreads=false

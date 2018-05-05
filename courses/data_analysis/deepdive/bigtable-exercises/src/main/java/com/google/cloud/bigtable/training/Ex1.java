@@ -16,19 +16,21 @@
 
 package com.google.cloud.bigtable.training;
 
-import java.time.Duration;
 import com.google.cloud.bigtable.hbase.BigtableConfiguration;
 import com.google.cloud.bigtable.training.common.DataGenerator;
+import com.google.cloud.bigtable.training.common.ThreadPoolWriter;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableExistsException;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.util.Bytes;
 import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.google.cloud.bigtable.training.common.ThreadPoolWriter;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.BufferedMutator;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.Table;
 
 /**
  * Exercise 1 - write some data to Bigtable.
@@ -69,6 +71,7 @@ public class Ex1 {
           // TODO 1c: Comment out SinglePut, implement and uncomment MultiPut
           // Hint: We are writing with multiple threads to keep Bigtable as busy as possible.
           // Try storing the batches in a ThreadLocal and passing that as an additional parameter to MultiPut.
+	  // ThreadLocal<List<Put>> puts = ThreadLocal.withInitial(() -> new ArrayList<>());
           // MultiPut(table, writer, point);
 
           // TODO 1d: Comment out MultiPut, implement and uncomment WriteWithBufferedMutator.
@@ -107,35 +110,46 @@ public class Ex1 {
     // You can also delete and recreate this table using the cbt tool as needed.
   }
 
+  // TODO 1b: Construct a row key out of the metric name, service and timestamp that efficiently
+  //          distributes the data across nodes
+  private static String getRowKey(Map<String, Object> point) {
+    String metric = point.get(DataGenerator.METRIC_FIELD).toString();
+    String service = point.get(DataGenerator.SERVICE_ID_FIELD).toString();
+    String ts = point.get(DataGenerator.TIMESTAMP_FIELD).toString();
+    return String.join("#", metric, service, ts);
+  }
+
+  private static Put getPut(Map<String, Object> point) {
+    Put put = new Put(Bytes.toBytes(getRowKey(point)));
+    put.addColumn(Bytes.toBytes("data"), Bytes.toBytes("value"),
+            Bytes.toBytes(point.get(DataGenerator.VALUE_FIELD).toString()));
+    Map<String, String> tags = (Map<String, String>) point.get(DataGenerator.TAGS_FIELD);
+    if (tags != null) {
+      for (String tag : tags.keySet()) {
+        put.addColumn(Bytes.toBytes("tags"), Bytes.toBytes(tag), Bytes.toBytes(tags.get(tag)));
+      }
+    }
+    return put;
+  }
+
   private static void SinglePut(final Table table, ThreadPoolWriter writer, Map<String, Object> point) throws Exception {
-    // TODO 1b: For each data point, write a single row into Bigtable.
-    // Field names are defined in DataGenerator as public constants.
-    // Construct a row key out of the metric name, service and timestamp that efficiently distributes
-    // the data across nodes.
-    // For each wrote, write the value to column family "data", column "value".
-    // Put each tag in the "tags" column family with a column named after the key in the map
-    // and the corresponding map value as the cell value.
-    // Catch and log any Exceptions that are thrown.
+    // TODO 1c: For each data point, write a single row into Bigtable.
     // Experiment with the number of threads in the writer to see how Bigtable scales with concurrent writes.
     writer.execute(() -> {
-      // Your code to write a row here.
-      String service = point.get(DataGenerator.SERVICE_ID_FIELD).toString();
-      Map<String, String> tags = (Map<String, String>) point.get(DataGenerator.TAGS_FIELD);
-      // etc
-
-    }, Long.parseLong(point.get(DataGenerator.TIMESTAMP_FIELD).toString()));
+      // Your code here
+    }, point);
   }
 
   private static void MultiPut(final Table table, ThreadPoolWriter writer, Map<String, Object> point) throws Exception {
-    // TODO 1c: This time, instead of doing one Put at a time, write in batches using a List of PutsEx1.
+    // TODO 1d: This time, instead of doing one Put at a time, write in batches using a List of PutsEx1.
     // Experiment with different batch sizes to see the performance differences.
     int batchSize = 10;
     writer.execute(() -> {
       // Your code here
-    }, Long.parseLong(point.get(DataGenerator.TIMESTAMP_FIELD).toString()));
+    }, point);
   }
 
   private static void WriteWithBufferedMutator(BufferedMutator bm, Map<String, Object> point) throws Exception {
-
+    // TODO 1e: Use BufferedMutator
   }
 }
