@@ -11,9 +11,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 #}
 
-
-
-
+outputs:
+- name: QL Region
+  value: {{ properties["region"] }}
+- name: QL Zone
+  value: {{ properties["zone"] }}
+ 
 resources:
 # Creates the f1-micro training-vm
 #  VM is tagged with "trainingaccess" for firewall rules
