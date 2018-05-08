@@ -120,7 +120,7 @@ def simple_rnn(features, labels, mode):
     predictions_dict = {"predicted": predictions}
     
     # 4. Create export outputs
-    export_outputs = {"regression_export_outputs": tf.estimator.export.RegressionOutput(value = predictions)}
+    export_outputs = {"predict_export_outputs": tf.estimator.export.PredictOutput(outputs = predictions)}
 
     # 4. Return EstimatorSpec
     return tf.estimator.EstimatorSpec(
