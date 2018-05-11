@@ -1,4 +1,4 @@
-name: deepvariant_pipeline
+name: dv_rice
 inputParameters:
 - name: PROJECT_ID
 - name: OUTPUT_BUCKET
@@ -12,11 +12,21 @@ docker:
   cmd: |
     ./opt/deepvariant_runner/bin/gcp_deepvariant_runner \
       --project "${PROJECT_ID}" \
-      --zones 'us-*' \
+      --zones us-west1-b us-east1-d \
       --docker_image "${DOCKER_IMAGE}" \
+      --docker_image_gpu "${DOCKER_IMAGE_GPU}" \
+      --gpu \
       --outfile "${OUTPUT_BUCKET}"/"${OUTPUT_FILE_NAME}" \
       --staging "${OUTPUT_BUCKET}"/"${STAGING_FOLDER_NAME}" \
       --model "${MODEL}" \
-      --bam gs://deepvariant/quickstart-testdata/NA12878_S1.chr20.10_10p1mb.bam \
-      --ref gs://deepvariant/quickstart-testdata/ucsc.hg19.chr20.unittest.fasta.gz \
-      --regions "chr20:10,000,000-10,010,000"
+      --bam "${INPUT_BAM}" \
+      --ref "${INPUT_REF}" \
+      --shards 512 \
+      --make_examples_workers 16 \
+      --make_examples_cores_per_worker 32 \
+      --make_examples_ram_per_worker_gb 60 \
+      --make_examples_disk_per_worker_gb 200 \
+      --call_variants_workers 16 \
+      --call_variants_cores_per_worker 8 \
+      --call_variants_ram_per_worker_gb 30 \
+      --call_variants_disk_per_worker_gb 50
