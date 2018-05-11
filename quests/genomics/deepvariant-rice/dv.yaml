@@ -1,0 +1,22 @@
+name: deepvariant_pipeline
+inputParameters:
+- name: PROJECT_ID
+- name: OUTPUT_BUCKET
+- name: MODEL
+- name: DOCKER_IMAGE
+- name: DOCKER_IMAGE_GPU
+- name: STAGING_FOLDER_NAME
+- name: OUTPUT_FILE_NAME
+docker:
+  imageName: gcr.io/deepvariant-docker/deepvariant_runner
+  cmd: |
+    ./opt/deepvariant_runner/bin/gcp_deepvariant_runner \
+      --project "${PROJECT_ID}" \
+      --zones 'us-*' \
+      --docker_image "${DOCKER_IMAGE}" \
+      --outfile "${OUTPUT_BUCKET}"/"${OUTPUT_FILE_NAME}" \
+      --staging "${OUTPUT_BUCKET}"/"${STAGING_FOLDER_NAME}" \
+      --model "${MODEL}" \
+      --bam gs://deepvariant/quickstart-testdata/NA12878_S1.chr20.10_10p1mb.bam \
+      --ref gs://deepvariant/quickstart-testdata/ucsc.hg19.chr20.unittest.fasta.gz \
+      --regions "chr20:10,000,000-10,010,000"
