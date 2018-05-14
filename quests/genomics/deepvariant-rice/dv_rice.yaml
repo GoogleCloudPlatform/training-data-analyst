@@ -2,17 +2,20 @@ name: dv_rice
 inputParameters:
 - name: PROJECT_ID
 - name: OUTPUT_BUCKET
+- name: ZONES
 - name: MODEL
 - name: DOCKER_IMAGE
 - name: DOCKER_IMAGE_GPU
 - name: STAGING_FOLDER_NAME
 - name: OUTPUT_FILE_NAME
+- name: INPUT_REF
+- name: INPUT_BAM
 docker:
   imageName: gcr.io/deepvariant-docker/deepvariant_runner
   cmd: |
     ./opt/deepvariant_runner/bin/gcp_deepvariant_runner \
       --project "${PROJECT_ID}" \
-      --zones us-west1-b us-east1-d \
+      --zones "${ZONES}" \
       --docker_image "${DOCKER_IMAGE}" \
       --docker_image_gpu "${DOCKER_IMAGE_GPU}" \
       --gpu \
