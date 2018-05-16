@@ -17,6 +17,7 @@
 package com.google.cloud.bigtable.training.common;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -44,6 +45,20 @@ public class ThreadPoolWriter {
     if (c % 1000 == 0) {
       System.out.println("Inserted row " + c + " at timestamp " + new Date(timestamp));
     }
+  }
+
+  /** helper function that adds error handling and parsing */
+  public interface RunnableThatThrows {
+    void run() throws java.io.IOException;
+  }
+  public void execute(RunnableThatThrows r, Map<String, Object> point) {
+    this.execute(() -> {
+      try {
+        r.run();
+      } catch (java.io.IOException e) {
+	e.printStackTrace();
+      }
+    }, Long.parseLong(point.get(DataGenerator.TIMESTAMP_FIELD).toString()));
   }
 
   public void shutdownAndWait() throws InterruptedException {

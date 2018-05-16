@@ -51,7 +51,6 @@ public class Ex1Solution {
 
     try (Connection connection = BigtableConfiguration.connect(projectId, instanceId)) {
 
-      // TODO 1a: Implement CreateTable
       CreateTable(connection, tableName);
 
       final Table table = connection.getTable(TableName.valueOf(tableName));
@@ -60,10 +59,10 @@ public class Ex1Solution {
       final AtomicInteger rowCount = new AtomicInteger();
       long startTime = System.currentTimeMillis();
 
-      // For 1c
+      // For 1d
       ThreadLocal<List<Put>> puts = ThreadLocal.withInitial(() -> new ArrayList<>());
 
-      // For 1d
+      // For 1e
       BufferedMutatorParams params = new BufferedMutatorParams(TableName.valueOf(tableName))
               .listener((e, bufferedMutator) -> System.out.println(e.getMessage()));
       BufferedMutator bufferedMutator = connection.getBufferedMutator(params);
@@ -75,12 +74,12 @@ public class Ex1Solution {
           // TODO 1b: Implement SinglePut
           SinglePut(table, writer, point);
 
-          // TODO 1c: Comment out SinglePut, implement and uncomment MultiPut.
+          // TODO 1d: Comment out SinglePut, implement and uncomment MultiPut.
           // Hint: We are writing with multiple threads to keep Bigtable as busy as possible.
           // Try storing the batches in a ThreadLocal and passing that as an additional parameter to MultiPut.
           // MultiPut(table, writer, point, puts);
 
-          // TODO 1d: Comment out MultiPut, implement and uncomment WriteWithBufferedMutator.
+          // TODO 1e: Comment out MultiPut, implement and uncomment WriteWithBufferedMutator.
           // You will need to create a BufferedMutator in the appropriate place and take care to close() it when finished.
           // You might want to figure out how to listen for Exceptions from the BufferedMutator for
           // debugging purposes if something goes wrong.
@@ -163,37 +162,29 @@ public class Ex1Solution {
     // For each wrote, write the value to column family "data", column "value".
     // Put each tag in the "tags" column family with a column named after the key in the map
     // and the corresponding map value as the cell value.
-    // Catch and log any Exceptions that are thrown.
     // Experiment with the number of threads in the writer to see how Bigtable scales with concurrent writes.
     writer.execute(() -> {
       // Your code to write a row here.
-      try {
         table.put(getPut(point));
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }, Long.parseLong(point.get(DataGenerator.TIMESTAMP_FIELD).toString()));
+    }, point);
   }
 
   private static void MultiPut(final Table table, ThreadPoolWriter writer, Map<String, Object> point, ThreadLocal<List<Put>> puts)
           throws Exception {
-    // TODO 1c: This time, instead of doing one Put at a time, write in batches using a List of PutsEx1.
+    // TODO 1d: This time, instead of doing one Put at a time, write in batches using a List of PutsEx1.
     // Experiment with different batch sizes to see the performance differences.
     int batchSize = 10;
     writer.execute(() -> {
       puts.get().add(getPut(point));
       if (puts.get().size() == batchSize) {
-        try {
-          table.put(puts.get());
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
+        table.put(puts.get());
         puts.get().clear();
       }
-    }, Long.parseLong(point.get(DataGenerator.TIMESTAMP_FIELD).toString()));
+    }, point);
   }
 
   private static void WriteWithBufferedMutator(BufferedMutator bm, Map<String, Object> point) throws Exception {
+    // TODO: 1e
     bm.mutate(getPut(point));
   }
 }

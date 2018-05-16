@@ -86,12 +86,8 @@ public class Ex0 {
             Bytes.toBytes("It worked!"));
 
         writer.execute(() -> {
-          try {
-            table.put(put);
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-        }, Long.parseLong(point.get(DataGenerator.TIMESTAMP_FIELD).toString()));
+          table.put(put);
+        }, point);
 
       });
 
