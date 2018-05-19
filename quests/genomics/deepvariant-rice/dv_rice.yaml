@@ -26,7 +26,7 @@ docker:
       --ref "${INPUT_REF}" \
       --shards 512 \
       --make_examples_workers 16 \
-      --make_examples_cores_per_worker 32 \
+      --make_examples_cores_per_worker 8 \
       --make_examples_ram_per_worker_gb 60 \
       --make_examples_disk_per_worker_gb 200 \
       --call_variants_workers 16 \
