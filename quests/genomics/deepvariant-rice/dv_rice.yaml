@@ -8,6 +8,7 @@ inputParameters:
 - name: DOCKER_IMAGE_GPU
 - name: STAGING_FOLDER_NAME
 - name: OUTPUT_FILE_NAME
+- name: SAMPLE_NAME 
 - name: INPUT_REF
 - name: INPUT_BAM
 docker:
@@ -22,8 +23,9 @@ docker:
       --outfile "${OUTPUT_BUCKET}"/"${OUTPUT_FILE_NAME}" \
       --staging "${OUTPUT_BUCKET}"/"${STAGING_FOLDER_NAME}" \
       --model "${MODEL}" \
-      --bam "${INPUT_BAM}" \
+      --sample_name "${SAMPLE_NAME}" \
       --ref "${INPUT_REF}" \
+      --bam "${INPUT_BAM}" \
       --shards 512 \
       --make_examples_workers 16 \
       --make_examples_cores_per_worker 8 \

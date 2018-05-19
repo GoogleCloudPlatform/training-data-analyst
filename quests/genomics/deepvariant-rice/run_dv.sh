@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ "$#" -ne 4 ]; then
-    echo "Usage: ./run_dv.sh  zone  yaml_file  reference_genome    bam_file"
-    echo "   eg: ./run_dv.sh  us-central1-b  ./dv_rice.yaml  gs://rice-3k/reference/Os-Nipponbare-Reference-IRGSP-1.0/Os-Nipponbare-Reference-IRGSP-1.0.fa  gs://rice-3k/PRJEB6180/aligned-Os-Nipponbare-Reference-IRGSP-1.0/ERS467753.bam" 
+if [ "$#" -ne 5 ]; then
+    echo "Usage: ./run_dv.sh  zone  yaml_file sample_name reference_genome    bam_file"
+    echo "   eg: ./run_dv.sh  us-central1-b  ./dv_rice.yaml ERS467753 gs://rice-3k/reference/Os-Nipponbare-Reference-IRGSP-1.0/Os-Nipponbare-Reference-IRGSP-1.0.fa  gs://rice-3k/PRJEB6180/aligned-Os-Nipponbare-Reference-IRGSP-1.0/ERS467753.bam" 
     exit
 fi
 
@@ -12,8 +12,9 @@ set -euo pipefail
 ZONE=$1
 YAML=$2
 PREFIX=$(basename $YAML | sed 's/.yaml//g')   # e.g. dv_rice
-INPUT_REF=$3
-INPUT_BAM=$4
+SAMPLE_NAME=$3
+INPUT_REF=$4
+INPUT_BAM=$5
 PROJECT_ID=$(gcloud config get-value project)
 STAGING_FOLDER_NAME=staging
 OUTPUT_FILE_NAME=output.vcf
@@ -21,7 +22,8 @@ OUTPUT_FILE_NAME=output.vcf
 # Make a unique output bucket
 OUTPUT_BUCKET=gs://${PROJECT_ID}-${PREFIX}-$(date +%s)  # hopefully unique
 REGION=$(echo $ZONE | sed 's/..$//')
-gsutil mb -c regional -l $REGION $OUTPUT_BUCKET
+#gsutil mb -c regional -l $REGION $OUTPUT_BUCKET
+gsutil mb $OUTPUT_BUCKET
 
 #echo "INPUT_REF=$INPUT_REF"
 #echo "INPUT_BAM=$INPUT_BAM"
@@ -48,8 +50,15 @@ gcloud alpha genomics pipelines run \
       DOCKER_IMAGE="${DOCKER_IMAGE}", \
       DOCKER_IMAGE_GPU="${DOCKER_IMAGE_GPU}", \
       STAGING_FOLDER_NAME="${STAGING_FOLDER_NAME}"/staging, \
-      INPUT_REF=$INPUT_REF, \
-      INPUT_BAM=$INPUT_BAM, \
+      SAMPLE_NAME="${SAMPLE_NAME}", \
+      INPUT_REF="${INPUT_REF}", \
+      INPUT_BAM="${INPUT_BAM}", \
       ZONES=$ZONE, \
       OUTPUT_FILE_NAME="${OUTPUT_FILE_NAME}" \
       | tr -d '[:space:]'`
+
+
+
+echo "Check the status using: "
+echo "   gcloud alpha genomics operations describe  operations/...."
+
