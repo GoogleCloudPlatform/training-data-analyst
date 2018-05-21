@@ -2,7 +2,7 @@
 
 if [ "$#" -ne 5 ]; then
     echo "Usage: ./run_dv.sh  zone  yaml_file sample_name reference_genome    bam_file"
-    echo "   eg: ./run_dv.sh  us-central1-b  ./dv_rice.yaml ERS467753 gs://rice-3k/reference/Os-Nipponbare-Reference-IRGSP-1.0/Os-Nipponbare-Reference-IRGSP-1.0.fa  gs://rice-3k/PRJEB6180/aligned-Os-Nipponbare-Reference-IRGSP-1.0/ERS467753.bam" 
+    echo "       See ./run_dv_rice.sh for an example ..."
     exit
 fi
 

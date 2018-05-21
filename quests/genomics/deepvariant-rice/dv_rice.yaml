@@ -23,7 +23,6 @@ docker:
       --outfile "${OUTPUT_BUCKET}"/"${OUTPUT_FILE_NAME}" \
       --staging "${OUTPUT_BUCKET}"/"${STAGING_FOLDER_NAME}" \
       --model "${MODEL}" \
-      --sample_name "${SAMPLE_NAME}" \
       --ref "${INPUT_REF}" \
       --bam "${INPUT_BAM}" \
       --shards 512 \
@@ -35,3 +34,5 @@ docker:
       --call_variants_cores_per_worker 8 \
       --call_variants_ram_per_worker_gb 30 \
       --call_variants_disk_per_worker_gb 50
+
+      #      --sample_name "${SAMPLE_NAME}" \
