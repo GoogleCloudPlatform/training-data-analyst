@@ -19,17 +19,17 @@ fi
 
 ZONE=$1
 
-# these are inputs to the VCF
-YAML=vcf_bq.yaml
+# Hardcoded inputs. Change as necessary
 BIGQUERY_DATASET=rice3k
 BIGQUERY_TABLE=ERS467753
-PROJECT_ID=$(gcloud config get-value project)
 INPUT_VCF='gs://cloud-training-demos/genomics/rice_*.vcf'
 
 # Create the BigQuery dataset
 bq_safe_mk $BIGQUERY_DATASET
 
 # Make a unique output bucket
+YAML=vcf_bq.yaml
+PROJECT_ID=$(gcloud config get-value project)
 STAGING_BUCKET=gs://${PROJECT_ID}-${BIGQUERY_DATASET}-$(date +%s)
 gsutil mb $STAGING_BUCKET
 echo "Temporary files will be put into in $STAGING_BUCKET"
