@@ -30,6 +30,23 @@ if __name__ == '__main__':
         required = True
     )
     parser.add_argument(
+        '--maxDepth',
+        help = 'Depth of trees',
+        type = int,
+        default = 5
+    )
+    parser.add_argument(
+        '--numTrees',
+        help = 'Number of trees',
+        type = int,
+        default = 100
+    )
+    parser.add_argument(
+        '--projectId',
+        help = 'ID (not name) of your project',
+        required = True
+    )
+    parser.add_argument(
         '--job-dir',
         help = 'this model ignores this field, but it is required by gcloud',
         default = 'junk'
@@ -37,7 +54,14 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     arguments = args.__dict__
-    estimator = model.train_and_evaluate(arguments['frac'])
+    
+    model.PROJECT = arguments['projectId']
+    model.KEYDIR  = 'trainer'
+    
+    estimator = model.train_and_evaluate(arguments['frac'],
+                                         arguments['maxDepth'],
+                                         arguments['numTrees']
+                                        )
     loc = model.save_model(estimator, 
                            'gs://{}/babyweight/sklearn'.format(arguments['bucket']), 'babyweight')
     print("Saved model to {}".format(loc))

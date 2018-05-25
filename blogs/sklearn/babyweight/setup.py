@@ -21,7 +21,10 @@ setup(name='trainer',
       author_email='nobody@google.com',
       license='Apache2',
       packages=['trainer'],
+      package_data={'': ['privatekey.json']},
       install_requires=[
-          'datalab',
+          'pandas-gbq==0.3.0',
+          'urllib3',
+          'google-cloud-bigquery'
       ],
       zip_safe=False)

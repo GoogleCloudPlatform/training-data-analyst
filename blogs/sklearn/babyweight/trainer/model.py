@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+PROJECT = None
+KEYDIR  = 'trainer'
+
 def create_queries():
   query_all = """
   WITH with_ultrasound AS (
@@ -70,7 +73,18 @@ def create_queries():
   eval_query  = "{} WHERE MOD(hashmonth, 4) = 3".format(query_all)
   return train_query, eval_query
 
-def create_dataframes(frac = None):
+def query_to_dataframe(query):
+  import pandas as pd
+  import pkgutil, json
+  privatekey = pkgutil.get_data(KEYDIR, 'privatekey.json')
+  print(privatekey[:200])
+  return pd.read_gbq(query, 
+                     project_id=PROJECT, 
+                     dialect='standard',
+                     private_key=privatekey,
+                     verbose=False)
+
+def create_dataframes(frac):  
   # small dataset for testing
   if frac > 0 and frac < 1:
     sample = " AND RAND() < {}".format(frac)
@@ -80,10 +94,9 @@ def create_dataframes(frac = None):
   train_query, eval_query = create_queries()
   train_query = "{} {}".format(train_query, sample)
   eval_query =  "{} {}".format(eval_query, sample)
-  
-  import google.datalab.bigquery as bq
-  train_df = bq.Query(train_query).execute().result().to_dataframe()
-  eval_df  = bq.Query(eval_query).execute().result().to_dataframe()
+
+  train_df = query_to_dataframe(train_query)
+  eval_df = query_to_dataframe(eval_query)
   return train_df, eval_df
 
 def input_fn(indf):
@@ -102,18 +115,22 @@ def input_fn(indf):
   features = pd.get_dummies(df)
   return features, label
 
-def train_and_evaluate(frac=0.001):
+def train_and_evaluate(frac, max_depth=5, n_estimators=100):
+  import numpy as np
+
   # get data
   train_df, eval_df = create_dataframes(frac)
   train_x, train_y = input_fn(train_df)
   # train
   from sklearn.ensemble import RandomForestRegressor
-  estimator = RandomForestRegressor(max_depth=5, n_estimators=100, random_state=0)
+  estimator = RandomForestRegressor(max_depth=max_depth, n_estimators=n_estimators, random_state=0)
   estimator.fit(train_x, train_y)
   # evaluate
   eval_x, eval_y = input_fn(eval_df)
-  print("Eval score={}".format(estimator.score(eval_x, eval_y)))
-  return estimator# main
+  eval_pred = estimator.predict(eval_x)
+  rmse = np.sqrt(np.mean((eval_pred-eval_y)*(eval_pred-eval_y)))
+  print("Eval rmse={}".format(rmse))
+  return estimator
 
 def save_model(estimator, gcspath, name):
   from sklearn.externals import joblib
