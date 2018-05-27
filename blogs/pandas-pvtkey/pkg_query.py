@@ -8,8 +8,7 @@ def query_to_dataframe(query):
   return pd.read_gbq(query,
                      project_id='cloud-training-demos',
                      dialect='standard',
-                     private_key=privatekey,
-                     verbose=False)
+                     private_key=privatekey)
 
 query = """
 SELECT

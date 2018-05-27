@@ -4,8 +4,7 @@ def query_to_dataframe(query):
   import pandas as pd
   return pd.read_gbq(query,
                      project_id='cloud-training-demos',
-                     dialect='standard',
-                     verbose=False)
+                     dialect='standard')
 
 query = """
 SELECT
