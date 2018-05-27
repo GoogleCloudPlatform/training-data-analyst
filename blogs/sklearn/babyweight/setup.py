@@ -23,7 +23,7 @@ setup(name='trainer',
       packages=['trainer'],
       package_data={'': ['privatekey.json']},
       install_requires=[
-          'pandas-gbq==0.3.0',
+          'pandas-gbq==0.4.1',
           'urllib3',
           'google-cloud-bigquery'
       ],

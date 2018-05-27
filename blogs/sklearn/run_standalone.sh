@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#sudo pip install pandas-gbq=0.3.0  sklearn scipy
+#sudo pip install pandas-gbq=0.4.1 sklearn scipy
 
 BUCKET=cloud-training-demos-ml
 PROJECT=cloud-training-demos
