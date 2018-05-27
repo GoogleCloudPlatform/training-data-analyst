@@ -71,40 +71,20 @@ Note that, if the sink is, for example, BQ or Cloud SQL, the "DF then Batch CMLE
 to read data from GCS, transform (if needed) and load the data to such a sink, 
 while "TF Model in DF" would just need to change the sink.
 
-| Stream    (1K Messages)                 |              | DF + Online CMLE | TF Model in DF |
-|-----------------------------------------|--------------|------------------|----------------|
-|  10 Messages Per Sec      (1 node)      | Running Time |                  |                |
-|                                         | Min. Latency |                  |                |
-|                                         | Max. Latency |                  |                |
-|                                         | Avg. Latency |                  |                |
-|                                         | Cost         |                  |                |
-|  100 Messages Per Sec    (5 nodes)      | Running Time |                  |                |
-|                                         | Min. Latency |                  |                |
-|                                         | Max. Latency |                  |                |
-|                                         | Avg. Latency |                  |                |
-|                                         | Cost         |                  |                |
-|  1000 Messages Per Sec   (10 nodes)     | Running Time |                  |                |
-|                                         | Min. Latency |                  |                |
-|                                         | Max. Latency |                  |                |
-|                                         | Avg. Latency |                  |                |
-|                                         | Cost         |                  |                |
+| Stream                           |              | DF + Online CMLE | T DF + Online CMLE + W | TF Model in DF |
+|----------------------------------|--------------|------------------|------------------------|----------------|
+|   10k Msgs - 50 Msg Per Sec      | Total Time   |                  |                        |                | 
+|                                  | Avg. Latency |                  |                        |                | 
+|                                  | Cost         |                  |                        |                | 
+|  10k Msgs - 100 Msg Per Sec      | Total Time   |                  |                        |                | 
+|                                  | Avg. Latency |                  |                        |                | 
+|                                  | Cost         |                  |                        |                | 
+|  10K Msgs - 500 Msg Per Sec      | Total Time   |                  |                        |                | 
+|                                  | Avg. Latency |                  |                        |                | 
+|                                  | Cost         |                  |                        |                |
 
 
+Note that, latency is computed as the difference between the message submission time to pubsub, 
+and the time the prediction was produced
 
-| Stream + Micro-batches           | Dataset = 5K Rows, Frequency = 10 Messages Per Sec | DF + Online CMLE | TF Model in DF |
-|------------------|--------------------------------------|------------------|----------------|
-| Batch Size = 10  | Running Time                         |                  |                |
-|                  | Min. Latency                         |                  |                |
-|                  | Max. Latency                         |                  |                |
-|                  | Avg. Latency                         |                  |                |
-|                  | Cost                                 |                  |                |
-| Batch Size = 150 | Running Time                         |                  |                |
-|                  | Min. Latency                         |                  |                |
-|                  | Max Latency                          |                  |                |
-|                  | Avg. Latency                         |                  |                |
-|                  | Cost                                 |                  |                |
-| Batch Size = 500 | Running Time                         |                  |                |
-|                  | Min. Latency                         |                  |                |
-|                  | Max. Latency                         |                  |                |
-|                  | Avg. Latency                         |                  |                |
-|                  | Cost                                 |                  |                |
+Note that, the window size is 1 second.                   
