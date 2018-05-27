@@ -108,7 +108,7 @@ def input_fn(indf):
   df["plurality"] = df["plurality"].astype(pd.api.types.CategoricalDtype(
                   categories=["Single","Multiple","1","2","3","4","5"]))
   df["is_male"] = df["is_male"].astype(pd.api.types.CategoricalDtype(
-                  categories=["Unknown","0","1"]))
+                  categories=["Unknown","false","true"]))
   # features, label
   label = df['label']
   del df['label']
@@ -135,7 +135,7 @@ def train_and_evaluate(frac, max_depth=5, n_estimators=100):
 def save_model(estimator, gcspath, name):
   from sklearn.externals import joblib
   import os, subprocess, datetime
-  model = '{}.joblib'.format(name)
+  model = 'model.joblib'
   joblib.dump(estimator, model)
   model_path = os.path.join(gcspath, datetime.datetime.now().strftime(
     'export_%Y%m%d_%H%M%S'), model)
