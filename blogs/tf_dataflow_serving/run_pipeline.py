@@ -3,88 +3,95 @@ import shutil
 import logging
 from pipelines import batch_process, stream_process
 from datetime import datetime
+import experiment
+import argparse
 
 
-SAMPLE_SIZE = 10000000
+def run_experiment(args):
 
-EXPERIMENT = 'stream'  # batch | stream-m-batches | stream | batch-predict
+    if experiment.PARAMS.experiment_type == 'batch':
 
-RUNNER = 'DataflowRunner'  # 'DirectRunner' | 'DataflowRunner'
-PROJECT = 'ksalama-gcp-playground'
-BUCKET = 'ksalama-gcs-cloudml'
-INFERENCE_TYPE = 'local'  # local'| 'cmle' | 'None'
-PUBSUB_TOPIC='babyweights'
+        batch_process.run_pipeline(inference_type=experiment.PARAMS.inference_type,
+                                   sample_size=experiment.PARAMS.batch_size,
+                                   sink_location=experiment.PARAMS.sink_dir,
+                                   runner=experiment.PARAMS.runner,
+                                   args=args)
 
+    elif experiment.PARAMS.experiment_type == 'batch-predict':
 
-local_dir = 'local_data'
-gcs_dir = 'gs://{0}/data/babyweight/experiments'.format(BUCKET)
+        batch_process.run_pipeline_with_batch_predict(sample_size=experiment.PARAMS.batch_sample_size,
+                                                      sink_location=experiment.PARAMS.sink_dir,
+                                                      runner=experiment.PARAMS.runner,
+                                                      args=args
+        )
 
-output_dir = local_dir if RUNNER == 'DirectRunner' else gcs_dir
+    elif experiment.PARAMS.experiment_type == 'stream':
 
-sink_location = os.path.join(output_dir, 'outputs')
+        stream_process.run_pipeline(inference_type=experiment.PARAMS.inference_type,
+                                    project=experiment.PARAMS.project_id,
+                                    pubsub_topic=experiment.PARAMS.pubsub_topic,
+                                    pubsub_subscription=experiment.PARAMS.pubsub_subscription,
+                                    bq_dataset=experiment.PARAMS.bq_dataset,
+                                    bq_table=experiment.PARAMS.bq_table,
+                                    runner=experiment.PARAMS.runner,
+                                    args=args)
 
-pubsub_topic = "projects/{}/topics/{}".format(PROJECT, PUBSUB_TOPIC)
+    elif experiment.PARAMS.experiment_type == 'stream-m-batches':
 
-shutil.rmtree(output_dir, ignore_errors=True)
-
-job_name = 'tf-predict-{}-{}-{}'.format(INFERENCE_TYPE, EXPERIMENT,datetime.now().strftime('%y%m%d-%H%M%S'))
-print('Launching Beam job {} - {} ... hang on'.format(RUNNER, job_name))
-
-
-args = {
-    'region': 'europe-west1',
-    'staging_location': os.path.join(gcs_dir, 'tmp', 'staging'),
-    'temp_location': os.path.join(gcs_dir, 'tmp'),
-    'job_name': job_name,
-    'project': PROJECT,
-    'worker_machine_type': 'n1-standard-1',
-    # 'autoscaling_algorithm':'NONE',
-     'num_workers': 1,
-    # 'max_num_workers': 20,
-    'teardown_policy': 'TEARDOWN_ALWAYS',
-    'no_save_main_session': True,
-    'setup_file': './setup.py',
-    'streaming': EXPERIMENT in ['stream','stream-m-batches'],
-}
+        stream_process.run_pipeline_with_micro_batches(inference_type=experiment.PARAMS.inference_type,
+                                    project=experiment.PARAMS.project_id,
+                                    pubsub_topic=experiment.PARAMS.pubsub_topic,
+                                    pubsub_subscription=experiment.PARAMS.pubsub_subscription,
+                                    bq_dataset=experiment.PARAMS.bq_dataset,
+                                    bq_table=experiment.PARAMS.bq_table,
+                                    window_size=experiment.PARAMS.window_size,
+                                    runner=experiment.PARAMS.runner,
+                                    args=args)
 
 
 if __name__ == '__main__':
 
+    args_parser = argparse.ArgumentParser()
+    experiment.initialise_hyper_params(args_parser)
+
+    print ''
+    print 'Experiment Parameters:'
+    print experiment.PARAMS
+    print ''
+
+    if experiment.PARAMS.runner == 'DirectRunner':
+        shutil.rmtree(experiment.PARAMS.sink_dir, ignore_errors=True)
+
+    job_name = 'tf-predict-{}-{}-{}'.format(experiment.PARAMS.inference_type,
+                                            experiment.PARAMS.experiment_type,
+                                            datetime.now().strftime('%Y%m%d-%H%M%S')
+                                            )
+
+    print('Launching Beam job {} - {} ... hang on'.format(experiment.PARAMS.runner, job_name))
+
+    dataflow_args = {
+        'region': 'europe-west1',
+        'staging_location': os.path.join(experiment.PARAMS.sink_dir, 'tmp', 'staging'),
+        'temp_location': os.path.join(experiment.PARAMS.sink_dir, 'tmp'),
+        'job_name': job_name,
+        'project': experiment.PARAMS.project_id,
+        #'num_workers': 1, # set to fix number of workers and disable autoscaling
+        'max_num_workers': 20,
+        'setup_file': './setup.py',
+        'streaming': experiment.PARAMS.experiment_type in ['stream', 'stream-m-batches'],
+    }
+
     logging.getLogger().setLevel(logging.INFO)
 
     time_start = datetime.utcnow()
-    print("Job started at {}".format(time_start.strftime("%H:%M:%S")))
+    print("Job started at {}".format(time_start.strftime('%Y-%m-%d %H:%M:%S')))
     print(".......................................")
 
-    if EXPERIMENT == 'batch':
-        batch_process.run_pipeline(inference_type=INFERENCE_TYPE,
-                                   sample_size=SAMPLE_SIZE,
-                                   sink_location=sink_location,
-                                   runner=RUNNER,
-                                   args=args)
-
-    elif EXPERIMENT == 'batch-predict':
-        batch_process.run_pipeline_with_batch_predict(
-                               sample_size=SAMPLE_SIZE,
-                               sink_location=sink_location,
-                               runner=RUNNER,
-                               args=args)
-
-    elif EXPERIMENT == 'stream':
-        stream_process.run_pipeline(inference_type=INFERENCE_TYPE,
-                                    pubsub_topic=pubsub_topic,
-                                    runner='DataflowRunner',
-                                    args=args)
-
-    elif EXPERIMENT == 'stream-m-batches':
-        stream_process.run_pipeline_with_micro_batches(inference_type=INFERENCE_TYPE,
-                                    pubsub_topic=pubsub_topic,
-                                    runner='DataflowRunner',
-                                    args=args)
+    run_experiment(dataflow_args)
 
     time_end = datetime.utcnow()
     print(".......................................")
-    print("Job finished at {}".format(time_end.strftime("%H:%M:%S")))
+    print("Job finished at {}".format(time_end.strftime('%Y-%m-%d %H:%M:%S')))
     print("")
     time_elapsed = time_end - time_start
     print("Job elapsed time: {} seconds".format(time_elapsed.total_seconds()))

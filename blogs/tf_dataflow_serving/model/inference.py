@@ -47,10 +47,9 @@ def init_api():
     global cmle_api
 
     if cmle_api is None:
-        credentials = GoogleCredentials.get_application_default()
-        cmle_api = discovery.build('ml', 'v1', credentials=credentials,
+        cmle_api = discovery.build('ml', 'v1',
                               discoveryServiceUrl='https://storage.googleapis.com/cloud-ml/discovery/ml_v1_discovery.json',
-                              cache_discovery=False)
+                              cache_discovery=True)
 
 
 def estimate_local(instances):
