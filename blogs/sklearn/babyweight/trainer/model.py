@@ -81,8 +81,7 @@ def query_to_dataframe(query):
   return pd.read_gbq(query, 
                      project_id=PROJECT, 
                      dialect='standard',
-                     private_key=privatekey,
-                     verbose=False)
+                     private_key=privatekey)
 
 def create_dataframes(frac):  
   # small dataset for testing
