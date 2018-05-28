@@ -48,8 +48,8 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--job-dir',
-        help = 'this model ignores this field, but it is required by gcloud',
-        default = 'junk'
+        help = 'output directory for model, automatically provided by gcloud',
+        required = True
     )
     
     args = parser.parse_args()
@@ -58,12 +58,22 @@ if __name__ == '__main__':
     model.PROJECT = arguments['projectId']
     model.KEYDIR  = 'trainer'
     
-    estimator = model.train_and_evaluate(arguments['frac'],
+    estimator, rmse = model.train_and_evaluate(arguments['frac'],
                                          arguments['maxDepth'],
                                          arguments['numTrees']
                                         )
     loc = model.save_model(estimator, 
-                           'gs://{}/babyweight/sklearn'.format(arguments['bucket']), 'babyweight')
+                           arguments['job_dir'], 'babyweight')
     print("Saved model to {}".format(loc))
+    
+    # this is for hyperparameter tuning
+    from tensorflow.core.framework.summary_pb2 import Summary
+    import tensorflow as tf
+    with tf.Session() as sess:
+      summary = Summary(value=[Summary.Value(tag='rmse', simple_value=rmse)])
+      eval_path = os.path.join(arguments['job_dir'], 'rmse')
+      summary_writer = tf.summary.FileWriter(eval_path)
+      summary_writer.add_summary(summary)
+      summary_writer.flush()
 
 # done

@@ -129,7 +129,7 @@ def train_and_evaluate(frac, max_depth=5, n_estimators=100):
   eval_pred = estimator.predict(eval_x)
   rmse = np.sqrt(np.mean((eval_pred-eval_y)*(eval_pred-eval_y)))
   print("Eval rmse={}".format(rmse))
-  return estimator
+  return estimator, rmse
 
 def save_model(estimator, gcspath, name):
   from sklearn.externals import joblib
