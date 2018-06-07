@@ -1,0 +1,45 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: queue-master
+  labels:
+    name: queue-master
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: queue-master
+    spec:
+      containers:
+      - name: queue-master
+        image: weaveworksdemos/queue-master:0.3.1
+        env:
+         {{- if .Values.zipkin.enabled }}
+         - name: ZIPKIN
+           value: {{ .Values.zipkin.url }}
+         {{- end }}
+         - name: JAVA_OPTS
+           value: {{ .Values.java.options }}
+        resources:
+          limits:
+            cpu: 300m
+            memory: 1000Mi
+          requests:
+            cpu: 300m
+            memory: 1000Mi
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 300
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 180
+          periodSeconds: 3

@@ -1,0 +1,35 @@
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  labels:
+    tier: monitoring
+    name: fluentd
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: fluentd
+  template:
+    metadata:
+      labels:
+        name: fluentd
+    spec:
+      serviceAccountName: fluentd
+      containers:
+       - image: weaveworksdemos/log-server
+         name: fluentd
+         env:
+         - name: FLUENTD_CONF
+           value: elk.conf
+         volumeMounts:
+         - name: varlibdockercontainers
+           mountPath: /var/lib/docker/containers
+           readOnly: true
+      volumes:
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      nodeSelector:
+        beta.kubernetes.io/os: linux

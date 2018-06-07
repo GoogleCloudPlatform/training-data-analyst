@@ -1,0 +1,20 @@
+{{- if .Values.loadtest.enabled }}
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: load-test
+  labels:
+    name: load-test
+spec:
+  replicas: {{ .Values.loadtest.replicas }}
+  template:
+    metadata:
+      labels:
+        name: load-test
+    spec:
+      containers:
+      - name: load-test
+        image: weaveworksdemos/load-test
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do locust --host http://front-end.sock-shop.svc.cluster.local -f /config/locustfile.py --clients 5 --hatch-rate 5 --num-request 100 --no-web; done"]
+{{- end }}

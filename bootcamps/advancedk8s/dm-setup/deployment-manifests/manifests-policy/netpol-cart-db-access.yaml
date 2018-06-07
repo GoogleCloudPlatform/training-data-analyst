@@ -1,0 +1,19 @@
+---
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  name: carts-db-access
+  namespace: sock-shop
+spec:
+  podSelector:
+    matchLabels:
+      name: carts-db
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              name: cart
+      ports:
+        - protocol: TCP
+          port: 27017
+

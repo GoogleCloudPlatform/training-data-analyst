@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grafana-import-dashboards
+  namespace: monitoring
+  labels:
+    app: grafana
+    component: import-dashboards
+spec:
+  template:
+    metadata:
+      name: grafana-import-dashboards
+      labels:
+        app: grafana
+        component: import-dashboards
+      annotations:
+        pod.beta.kubernetes.io/init-containers: '[
+          {
+            "name": "wait-for-endpoints",
+            "image": "giantswarm/tiny-tools",
+            "imagePullPolicy": "IfNotPresent",
+            "command": ["fish", "-c", "echo \"waiting for endpoints...\"; while true; set endpoints (curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt --header \"Authorization: Bearer \"(cat /var/run/secrets/kubernetes.io/serviceaccount/token) https://kubernetes.default.svc/api/v1/namespaces/monitoring/endpoints/grafana); echo $endpoints | jq \".\"; if test (echo $endpoints | jq -r \".subsets[].addresses | length\") -gt 0; exit 0; end; echo \"waiting...\";sleep 1; end"],
+            "args": ["monitoring", "grafana"]
+          }
+        ]'
+    spec:
+      containers:
+      - name: grafana-import-dashboards
+        image: giantswarm/tiny-tools
+        command: ["/bin/sh", "-c"]
+        workingDir: /opt/grafana-import-dashboards
+        args:
+          - >
+            for file in *-datasource.json ; do
+              if [ -e "$file" ] ; then
+                echo "importing $file" &&
+                curl --silent --fail --show-error \
+                  --request POST http://admin:admin@grafana/api/datasources \
+                  --header "Content-Type: application/json" \
+                  --header "Accept: application/json" \
+                  --data-binary "@$file" ;
+                echo "" ;
+              fi
+            done ;
+            for file in *-dashboard.json ; do
+              if [ -e "$file" ] ; then
+                echo "importing $file" &&
+                curl --silent --fail --show-error \
+                  --request POST http://admin:admin@grafana/api/dashboards/import \
+                  --header "Content-Type: application/json" \
+                  --header "Accept: application/json" \
+                  --data-binary "@$file" ;
+                echo "" ;
+              fi
+            done ;
+        volumeMounts:
+        - name: config-volume
+          mountPath: /opt/grafana-import-dashboards
+      restartPolicy: Never
+      volumes:
+      - name: config-volume
+        configMap:
+          name: grafana-import-dashboards
