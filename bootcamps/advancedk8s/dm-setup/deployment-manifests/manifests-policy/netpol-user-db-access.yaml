@@ -1,0 +1,18 @@
+---
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  name: user-db-access
+  namespace: sock-shop
+spec:
+  podSelector:
+    matchLabels:
+      name: user-db
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              name: user
+      ports:
+        - protocol: TCP
+          port: 27017

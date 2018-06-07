@@ -1,0 +1,14 @@
+---
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  name: cortex-access
+  namespace: sock-shop
+spec:
+  podSelector:
+    matchLabels:
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              name: cortex

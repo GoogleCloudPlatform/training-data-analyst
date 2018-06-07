@@ -1,0 +1,70 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: node-directory-size-metrics
+  namespace: monitoring
+  annotations:
+    description: |
+      This `DaemonSet` provides metrics in Prometheus format about disk usage on the nodes.
+      The container `read-du` reads in sizes of all directories below /mnt and writes that to `/tmp/metrics`. It only reports directories larger then `100M` for now.
+      The other container `caddy` just hands out the contents of that file on request via `http` on `/metrics` at port `9102` which are the defaults for Prometheus.
+      These are scheduled on every node in the Kubernetes cluster.
+      To choose directories from the node to check, just mount them on the `read-du` container below `/mnt`.
+spec:
+  template:
+    metadata:
+      labels:
+        app: node-directory-size-metrics
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9102'
+        description: |
+          This `Pod` provides metrics in Prometheus format about disk usage on the node.
+          The container `read-du` reads in sizes of all directories below /mnt and writes that to `/tmp/metrics`. It only reports directories larger then `100M` for now.
+          The other container `caddy` just hands out the contents of that file on request on `/metrics` at port `9102` which are the defaults for Prometheus.
+          This `Pod` is scheduled on every node in the Kubernetes cluster.
+          To choose directories from the node to check just mount them on `read-du` below `/mnt`.
+    spec:
+      containers:
+      - name: read-du
+        image: giantswarm/tiny-tools
+        imagePullPolicy: Always
+        # FIXME threshold via env var
+        # The
+        command:
+        - fish
+        - --command
+        - |
+          while true
+            for directory in (du --bytes --separate-dirs --threshold=100M /mnt)
+              echo $directory | read size path
+              echo "node_directory_size_bytes{path=\"$path\"} $size" \
+                >> /tmp/metrics-temp
+            end
+            mv /tmp/metrics-temp /tmp/metrics
+            sleep 300
+          end
+        volumeMounts:
+        - name: host-fs-var
+          mountPath: /mnt/var
+          readOnly: true
+        - name: metrics
+          mountPath: /tmp
+      - name: caddy
+        image: dockermuenster/caddy:0.9.3
+        command:
+        - "caddy"
+        - "-port=9102"
+        - "-root=/var/www"
+        ports:
+        - containerPort: 9102
+        volumeMounts:
+        - name: metrics
+          mountPath: /var/www
+      volumes:
+      - name: host-fs-var
+        hostPath:
+          path: /var
+      - name: metrics
+        emptyDir:
+          medium: Memory

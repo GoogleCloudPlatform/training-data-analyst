@@ -1,0 +1,22 @@
+---
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  name: rabbitmq-access
+  namespace: sock-shop
+spec:
+  podSelector:
+    matchLabels:
+      name: rabbitmq
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              name: shipping
+        - podSelector:
+            matchLabels:
+              name: queue-master
+      ports:
+        - protocol: TCP
+          port: 5672
+

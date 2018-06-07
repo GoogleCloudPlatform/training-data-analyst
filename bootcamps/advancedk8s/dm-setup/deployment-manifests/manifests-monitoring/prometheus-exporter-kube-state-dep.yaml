@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kube-state-metrics-deployment
+  namespace: monitoring
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kube-state-metrics
+    spec:
+      containers:
+      - name: kube-state-metrics
+        image: gcr.io/google_containers/kube-state-metrics:v0.4.1
+        ports:
+        - containerPort: 8080
+      nodeSelector:
+        beta.kubernetes.io/os: linux
