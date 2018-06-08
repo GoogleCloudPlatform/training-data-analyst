@@ -1,0 +1,34 @@
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: global-lb-nginx
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        imagePullPolicy: Always
+        image: nginx
+#        command: ["mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.disabled"]
+        ports:
+          - name: http
+            containerPort: 80
+            hostPort: 80
+          - name: http-alt
+            containerPort: 8080
+            hostPort: 8080
+        volumeMounts:
+          - name: nginx
+            mountPath: /etc/nginx/nginx.conf
+            subPath: nginx.conf
+          - name: nginx
+            mountPath: /etc/nginx/conf.d/load-balancer.conf
+            subPath: load-balancer.conf 
+      volumes:
+        - name: nginx
+          configMap:
+            name: nginx
