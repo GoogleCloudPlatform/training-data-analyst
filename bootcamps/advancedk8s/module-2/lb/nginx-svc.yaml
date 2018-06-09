@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: global-lb-nginx
+spec:
+  type: LoadBalancer
+  selector:
+    app: nginx
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  - name: https
+    port: 443
+    targetPort: https
