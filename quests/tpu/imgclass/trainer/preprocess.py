@@ -118,7 +118,12 @@ def convert_to_example(line, categories):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--inputCsv',
+        '--trainCsv',
+        help = 'Path to input.  Each line of input has two fields  image-file-name and label separated by a comma',
+        required = True
+    )
+    parser.add_argument(
+        '--validationCsv',
         help = 'Path to input.  Each line of input has two fields  image-file-name and label separated by a comma',
         required = True
     )
@@ -135,11 +140,6 @@ if __name__ == '__main__':
     parser.add_argument(
         '--outputDir',
         help = 'Top-level directory for TF Records',
-        required = True
-    )
-    parser.add_argument(
-        '--outputPrefix',
-        help = 'This has to be train or validation, as it is hardcoded into amoebanet code',
         required = True
     )
     
@@ -160,7 +160,6 @@ if __name__ == '__main__':
        RUNNER = 'DirectRunner'
        shutil.rmtree(OUTPUT_DIR, ignore_errors=True)
        os.makedirs(OUTPUT_DIR)
-    OUTPUT_PREFIX = arguments['outputPrefix']
 
     # read list of labels
     with tf.gfile.FastGFile(arguments['labelsFile'], 'r') as f:
@@ -184,11 +183,12 @@ if __name__ == '__main__':
 
     with beam.Pipeline(RUNNER, options=opts) as p:
        # BEAM tasks
-       (p 
-          | 'read_csv' >> beam.io.ReadFromText( arguments['inputCsv'] )
-          | 'convert'  >> beam.FlatMap(lambda line: convert_to_example(line, LABELS))
-          | 'write_tfr' >> beam.io.WriteToText(
-                 os.path.join(OUTPUT_DIR, OUTPUT_PREFIX))
-       )
+       for step in ['train', 'validation']:
+          (p 
+            | '{}_read_csv'.format(step) >> beam.io.ReadFromText( arguments['{}Csv'.format(step)] )
+            | '{}_convert'.format(step)  >> beam.FlatMap(lambda line: convert_to_example(line, LABELS))
+            | '{}_write_tfr'.format(step) >> beam.io.WriteToText(
+                 os.path.join(OUTPUT_DIR, step))
+         )
 
 
