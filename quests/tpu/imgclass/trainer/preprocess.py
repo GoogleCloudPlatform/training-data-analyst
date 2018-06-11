@@ -113,7 +113,7 @@ def convert_to_example(line, categories):
        image_buffer, height, width = _get_image_data(filename, coder)
        del coder
        example = _convert_to_example(filename, image_buffer, categories.index(label), label, height, width)
-       yield example
+       yield example.SerializeToString()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -187,8 +187,8 @@ if __name__ == '__main__':
           (p 
             | '{}_read_csv'.format(step) >> beam.io.ReadFromText( arguments['{}Csv'.format(step)] )
             | '{}_convert'.format(step)  >> beam.FlatMap(lambda line: convert_to_example(line, LABELS))
-            | '{}_write_tfr'.format(step) >> beam.io.WriteToText(
-                 os.path.join(OUTPUT_DIR, step))
-         )
+            | '{}_write_tfr'.format(step) >> beam.io.tfrecordio.WriteToTFRecord(
+                 os.path.join(OUTPUT_DIR, step), file_name_suffix='.gz')
+          )
 
 
