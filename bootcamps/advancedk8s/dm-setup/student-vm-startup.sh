@@ -58,6 +58,18 @@ EOF
 git clone https://github.com/ahmetb/kubectx
 cp kubectx/kube* /usr/local/bin
 
+# Install docker
+sudo apt-get update
+sudo apt-get -y install apt-transport-https ca-certificates curl gnupg2 software-properties-common
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+sudo apt-key fingerprint 0EBFCD88
+sudo add-apt-repository 
+"deb [arch=amd64] https://download.docker.com/linux/debian 
+$(lsb_release -cs) 
+stable"
+sudo apt-get update
+sudo apt-get -y install docker-ce
+
 # Install kube ps1
 cd $HOME
 git clone https://github.com/jonmosco/kube-ps1.git
