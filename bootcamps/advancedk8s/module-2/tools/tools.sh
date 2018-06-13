@@ -13,6 +13,9 @@ curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_
 chmod 700 get_helm.sh
 ./get_helm.sh
 
+# Install hey
+go get -u github.com/rakyll/hey
+
 # Install kube ps1
 git clone https://github.com/jonmosco/kube-ps1.git
 echo 'source $HOME/kube-ps1/kube-ps1.sh' >> ~/.bashrc
