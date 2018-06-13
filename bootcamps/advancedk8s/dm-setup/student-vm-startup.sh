@@ -58,6 +58,14 @@ EOF
 git clone https://github.com/ahmetb/kubectx
 cp kubectx/kube* /usr/local/bin
 
+# Install kube ps1
+cd $HOME
+git clone https://github.com/jonmosco/kube-ps1.git
+echo 'source $HOME/kube-ps1/kube-ps1.sh' >> ~/.bashrc
+export VAR="PS1='[\W \$(kube_ps1)]\$ '"
+echo $VAR >> ~/.bashrc
+source $HOME/.bashrc
+
 # Prometheus resources to install in the clusters
 wget -O prom-rbac.yml https://storage.googleapis.com/stackdriver-prometheus-documentation/rbac-setup.yml
 wget https://storage.googleapis.com/stackdriver-prometheus-documentation/prometheus-service.yml
@@ -137,7 +145,7 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     gcloud projects add-iam-policy-binding ${PROJECT} --role roles/storage.admin --member serviceAccount:${SPINNAKER_SA_EMAIL}
     gcloud iam service-accounts keys create spinnaker-key.json --iam-account ${SPINNAKER_SA_EMAIL}
     export BUCKET=${PROJECT}-${DEPLOYMENT_NAME}
-    gsutil mb -c regional -l us-west1 gs://${BUCKET}
+    gsutil mb -c regional -l us-central1 gs://${BUCKET}
 
     # Use upstream once this PR is merged: https://github.com/kubernetes/charts/pull/5456
     git clone https://github.com/viglesiasce/charts -b mcs
@@ -155,7 +163,7 @@ kubeConfig:
   secretName: my-kubeconfig
   secretKey: config
   contexts:
-  - gke_${PROJECT}_us-west1-c_${DEPLOYMENT_NAME}-west
+  - gke_${PROJECT}_us-central1-f_${DEPLOYMENT_NAME}-central
   - gke_${PROJECT}_us-east4-b_${DEPLOYMENT_NAME}-east
 gcs:
   enabled: true
@@ -164,6 +172,10 @@ gcs:
 
 # Disable minio the default
 minio:
+  enabled: false
+
+# Disable jenkins
+jenkins:
   enabled: false
 
 # Configure your Docker registries here
@@ -175,4 +187,13 @@ accounts:
   email: 1234@5678.com
 EOF
     helm install -n adv-k8s charts/stable/spinnaker -f spinnaker-config.yaml --timeout 600
+    
+export GKE_EAST=$(gcloud container clusters list --zone us-east4-b --format='value(name)')
+export GKE_CENTRAL=$(gcloud container clusters list --zone us-central1-f --format='value(name)')
+export GKE_SPINNAKER=$(gcloud container clusters list --zone us-central1-f --format='value(name)')
+export PROJECT=$(gcloud info --format='value(config.project)')
+kubectx gke-spinnaker="gke_"$PROJECT"_us-central1-f_"$GKE_SPINNAKER
+kubectx gke-east="gke_"$PROJECT"_us-east4-b_"$GKE_EAST
+kubectx gke-central="gke_"$PROJECT"_us-central1-f_"$GKE_CENTRAL
+
 done
