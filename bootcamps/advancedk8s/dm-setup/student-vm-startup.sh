@@ -58,6 +58,14 @@ EOF
 git clone https://github.com/ahmetb/kubectx
 cp kubectx/kube* /usr/local/bin
 
+# Install kube ps1
+cd $HOME
+git clone https://github.com/jonmosco/kube-ps1.git
+echo 'source $HOME/kube-ps1/kube-ps1.sh' >> ~/.bashrc
+export VAR="PS1='[\W \$(kube_ps1)]\$ '"
+echo $VAR >> ~/.bashrc
+source $HOME/.bashrc
+
 # Prometheus resources to install in the clusters
 wget -O prom-rbac.yml https://storage.googleapis.com/stackdriver-prometheus-documentation/rbac-setup.yml
 wget https://storage.googleapis.com/stackdriver-prometheus-documentation/prometheus-service.yml
@@ -76,6 +84,8 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
 
     # Get credentials for setting client as admin
     gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
+    export PROJECT=$(gcloud info --format='value(config.project)')
+    kubectx gke-${CLUSTER_INFO_ARRAY[1]:3:-3}="gke_"$PROJECT"_"${CLUSTER_INFO_ARRAY[1]}_${CLUSTER_INFO_ARRAY[0]}
     kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client
     # Needed for Spinnaker to be able to authenticate to the API
     export CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE=True
@@ -121,6 +131,8 @@ SPINNAKER_CLUSTERS=$(gcloud container clusters list --format 'csv[no-heading](na
 for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     CLUSTER_INFO_ARRAY=(${CLUSTER_INFO//,/ })
     gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
+    export PROJECT=$(gcloud info --format='value(config.project)')
+    kubectx gke-spinnaker="gke_"$PROJECT"_"${CLUSTER_INFO_ARRAY[1]}_${CLUSTER_INFO_ARRAY[0]}
     kubectl apply -f tiller-rbac.yaml
     helm init --service-account tiller
     # Wait for tiller to be running
@@ -137,7 +149,7 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     gcloud projects add-iam-policy-binding ${PROJECT} --role roles/storage.admin --member serviceAccount:${SPINNAKER_SA_EMAIL}
     gcloud iam service-accounts keys create spinnaker-key.json --iam-account ${SPINNAKER_SA_EMAIL}
     export BUCKET=${PROJECT}-${DEPLOYMENT_NAME}
-    gsutil mb -c regional -l us-west1 gs://${BUCKET}
+    gsutil mb -c regional -l us-central1 gs://${BUCKET}
 
     # Use upstream once this PR is merged: https://github.com/kubernetes/charts/pull/5456
     git clone https://github.com/viglesiasce/charts -b mcs
@@ -155,17 +167,19 @@ kubeConfig:
   secretName: my-kubeconfig
   secretKey: config
   contexts:
-  - gke_${PROJECT}_us-west1-c_${DEPLOYMENT_NAME}-west
+  - gke_${PROJECT}_us-central1-f_${DEPLOYMENT_NAME}-central
   - gke_${PROJECT}_us-east4-b_${DEPLOYMENT_NAME}-east
 gcs:
   enabled: true
   project: ${PROJECT}
   jsonKey: '${SA_JSON}'
-
 # Disable minio the default
 minio:
   enabled: false
-
+  
+# Disable jenkins
+jenkins:
+  enabled: false
 # Configure your Docker registries here
 accounts:
 - name: gcr
