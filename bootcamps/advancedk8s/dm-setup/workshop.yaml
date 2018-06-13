@@ -42,7 +42,7 @@ resources:
 - name: spinnaker
   type: cluster.jinja
   properties:
-    zone: us-west1-b
+    zone: us-central1-f
     purpose: spinnaker
 - name: student-vm
   type: student-vm.jinja
@@ -52,4 +52,4 @@ resources:
     - east
     - west
   properties:
-    zone: us-west1-b
+    zone: us-central11-f
