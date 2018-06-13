@@ -1,0 +1,12 @@
+---
+apiVersion: "extensions/v1beta1"
+kind: "Ingress"
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: "istio"
+  name: "myapp-gke-west-ingress"
+  namespace: "default"
+spec:
+  backend:
+    serviceName: "myapp-gke-west-lb"
+    servicePort: 80

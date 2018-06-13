@@ -25,6 +25,6 @@ setup(name='trainer',
       install_requires=[
           'pandas-gbq==0.3.0',
           'urllib3',
-          'google-cloud-bigquery'
+          'google-cloud-bigquery==0.29.0'
       ],
       zip_safe=False)

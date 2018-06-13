@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: loadtest
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: load-test
+  labels:
+    name: load-test
+  namespace: loadtest
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        name: load-test
+    spec:
+      containers:
+      - name: load-test
+        image: weaveworksdemos/load-test:0.1.1
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do locust --host http://front-end.sock-shop.svc.cluster.local -f /config/locustfile.py --clients 5 --hatch-rate 5 --num-request 100 --no-web; done"]
+      nodeSelector:
+        beta.kubernetes.io/os: linux

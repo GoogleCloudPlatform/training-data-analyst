@@ -1,0 +1,18 @@
+---
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  name: payment-access
+  namespace: sock-shop
+spec:
+  podSelector:
+    matchLabels:
+      name: payment
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              name: orders
+      ports:
+        - protocol: TCP
+          port: 80

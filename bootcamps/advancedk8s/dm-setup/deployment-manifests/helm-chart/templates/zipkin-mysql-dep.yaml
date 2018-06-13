@@ -1,0 +1,21 @@
+{{- if .Values.zipkin.enabled -}}
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: zipkin-mysql
+  labels:
+    name: zipkin-mysql
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: zipkin-mysql
+    spec:
+      containers:
+      - name: zipkin-mysql
+        image: openzipkin/zipkin-mysql:1.20.0
+        ports:
+        - name: mysql
+          containerPort: 3306
+{{- end -}}

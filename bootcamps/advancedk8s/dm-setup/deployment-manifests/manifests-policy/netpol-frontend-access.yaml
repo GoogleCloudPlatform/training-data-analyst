@@ -1,0 +1,14 @@
+---
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  name: front-end-access
+  namespace: sock-shop
+spec:
+  podSelector:
+    matchLabels:
+      name: front-end
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8079

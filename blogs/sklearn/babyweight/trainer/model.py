@@ -81,8 +81,7 @@ def query_to_dataframe(query):
   return pd.read_gbq(query, 
                      project_id=PROJECT, 
                      dialect='standard',
-                     private_key=privatekey,
-                     verbose=False)
+                     private_key=privatekey)
 
 def create_dataframes(frac):  
   # small dataset for testing
@@ -108,7 +107,7 @@ def input_fn(indf):
   df["plurality"] = df["plurality"].astype(pd.api.types.CategoricalDtype(
                   categories=["Single","Multiple","1","2","3","4","5"]))
   df["is_male"] = df["is_male"].astype(pd.api.types.CategoricalDtype(
-                  categories=["Unknown","0","1"]))
+                  categories=["Unknown","false","true"]))
   # features, label
   label = df['label']
   del df['label']
@@ -130,12 +129,12 @@ def train_and_evaluate(frac, max_depth=5, n_estimators=100):
   eval_pred = estimator.predict(eval_x)
   rmse = np.sqrt(np.mean((eval_pred-eval_y)*(eval_pred-eval_y)))
   print("Eval rmse={}".format(rmse))
-  return estimator
+  return estimator, rmse
 
 def save_model(estimator, gcspath, name):
   from sklearn.externals import joblib
   import os, subprocess, datetime
-  model = '{}.joblib'.format(name)
+  model = 'model.joblib'
   joblib.dump(estimator, model)
   model_path = os.path.join(gcspath, datetime.datetime.now().strftime(
     'export_%Y%m%d_%H%M%S'), model)

@@ -1,0 +1,21 @@
+---
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  name: cart-access
+  namespace: sock-shop
+spec:
+  podSelector:
+    matchLabels:
+      name: cart
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              name: front-end
+        - podSelector:
+            matchLabels:
+              name: orders
+      ports:
+        - protocol: TCP
+          port: 80
