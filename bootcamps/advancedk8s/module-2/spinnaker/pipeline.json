@@ -61,14 +61,14 @@
             "revisionHistoryLimit": 2
           },
           "dnsPolicy": "ClusterFirst",
-          "freeFormDetails": "gke-west",
+          "freeFormDetails": "gke-central",
           "initContainers": [],
           "interestingHealthProviderNames": [
             "KubernetesContainer",
             "KubernetesPod"
           ],
           "loadBalancers": [
-            "myapp-gke-west-lb"
+            "myapp-gke-central-lb"
           ],
           "namespace": "default",
           "nodeSelector": {},
@@ -86,7 +86,7 @@
           "volumeSources": []
         }
       ],
-      "name": "Deploy Canary to GKE-West Cluster",
+      "name": "Deploy Canary to GKE-Central Cluster",
       "refId": "1",
       "requisiteStageRefIds": [],
       "type": "deploy"
@@ -215,7 +215,7 @@
       ],
       "dnsPolicy": "ClusterFirst",
       "labels": {},
-      "name": "Test Canary on GKE-West",
+      "name": "Test Canary on GKE-Central",
       "namespace": "default",
       "refId": "3",
       "requisiteStageRefIds": [
@@ -338,14 +338,14 @@
             "revisionHistoryLimit": 2
           },
           "dnsPolicy": "ClusterFirst",
-          "freeFormDetails": "gke-west",
+          "freeFormDetails": "gke-central",
           "initContainers": [],
           "interestingHealthProviderNames": [
             "KubernetesContainer",
             "KubernetesPod"
           ],
           "loadBalancers": [
-            "myapp-gke-west-lb"
+            "myapp-gke-central-lb"
           ],
           "namespace": "default",
           "nodeSelector": {},
@@ -363,7 +363,7 @@
           "volumeSources": []
         }
       ],
-      "name": "Deploy on GKE-West Production",
+      "name": "Deploy on GKE-Central Production",
       "refId": "6",
       "requisiteStageRefIds": [
         "5"
