@@ -161,10 +161,10 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     gsutil mb -c regional -l us-central1 gs://${BUCKET}
 
     # Use upstream once this PR is merged: https://github.com/kubernetes/charts/pull/5456
-    git clone https://github.com/viglesiasce/charts -b mcs
-    pushd charts/stable/spinnaker
-    helm dep build
-    popd
+ #   git clone https://github.com/viglesiasce/charts -b mcs
+ #   pushd charts/stable/spinnaker
+ #   helm dep build
+ #   popd
 
     kubectl create secret generic --from-file=config=${HOME}/.kube/config my-kubeconfig
 
@@ -197,5 +197,5 @@ accounts:
   password: '${SA_JSON}'
   email: 1234@5678.com
 EOF
-    helm install -n adv-k8s charts/stable/spinnaker -f spinnaker-config.yaml --timeout 600
+    helm install -n cd stable/spinnaker -f spinnaker-config.yaml --timeout 600
 done
