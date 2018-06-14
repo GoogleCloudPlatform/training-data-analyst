@@ -1,0 +1,57 @@
+{#
+Copyright 2018 Google Inc. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+#}
+
+outputs:
+- name: QL Region
+  value: {{ properties["region"] }}
+- name: QL Zone
+  value: {{ properties["zone"] }}
+ 
+resources:
+# Creates the f1-micro training-vm
+#  VM is tagged with "trainingaccess" for firewall rules
+- type: compute.v1.instance
+  name: "training-vm"
+  properties:
+    tags:
+      items: [ "trainingaccess" ]
+    zone: {{ properties["zone"] }}
+    machineType: https://www.googleapis.com/compute/v1/projects/{{ env["project"] }}/zones/{{ properties["zone"] }}/machineTypes/f1-micro
+    metadata:
+      items:
+      - key: startup-script-url
+        value: gs://cloud-training/initscripts/init-script-001.sh
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        diskName: "training-vm-bootdisk"
+        sourceImage: https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/family/debian-9
+    networkInterfaces:
+    - network: https://www.googleapis.com/compute/v1/projects/{{ env["project"] }}/global/networks/default
+      # Access Config required to give the instance a public IP address
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+    serviceAccounts:
+    - email:  {{ env["project_number"] }}-compute@developer.gserviceaccount.com
+      scopes: [ "https://www.googleapis.com/auth/cloud-platform" ]
+# Creates a bucket named same as the ProjectID
+- name: {{ env["project"] }}
+  type: storage.v1.bucket
+  properties:
+    storageClass: REGIONAL
+    location: {{ properties["region"] }}
+

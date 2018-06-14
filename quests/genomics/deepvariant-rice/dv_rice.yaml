@@ -1,0 +1,38 @@
+name: dv_rice
+inputParameters:
+- name: PROJECT_ID
+- name: OUTPUT_BUCKET
+- name: ZONES
+- name: MODEL
+- name: DOCKER_IMAGE
+- name: DOCKER_IMAGE_GPU
+- name: STAGING_FOLDER_NAME
+- name: OUTPUT_FILE_NAME
+- name: SAMPLE_NAME 
+- name: INPUT_REF
+- name: INPUT_BAM
+docker:
+  imageName: gcr.io/deepvariant-docker/deepvariant_runner
+  cmd: |
+    ./opt/deepvariant_runner/bin/gcp_deepvariant_runner \
+      --project "${PROJECT_ID}" \
+      --zones "${ZONES}" \
+      --docker_image "${DOCKER_IMAGE}" \
+      --docker_image_gpu "${DOCKER_IMAGE_GPU}" \
+      --gpu \
+      --outfile "${OUTPUT_BUCKET}"/"${OUTPUT_FILE_NAME}" \
+      --staging "${OUTPUT_BUCKET}"/"${STAGING_FOLDER_NAME}" \
+      --model "${MODEL}" \
+      --ref "${INPUT_REF}" \
+      --bam "${INPUT_BAM}" \
+      --shards 512 \
+      --make_examples_workers 16 \
+      --make_examples_cores_per_worker 8 \
+      --make_examples_ram_per_worker_gb 60 \
+      --make_examples_disk_per_worker_gb 200 \
+      --call_variants_workers 16 \
+      --call_variants_cores_per_worker 8 \
+      --call_variants_ram_per_worker_gb 30 \
+      --call_variants_disk_per_worker_gb 50
+
+      #      --sample_name "${SAMPLE_NAME}" \

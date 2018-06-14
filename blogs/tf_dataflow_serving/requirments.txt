@@ -1,0 +1,3 @@
+tensorflow>=1.4
+google-cloud-dataflow==2.3
+google-api-python-client

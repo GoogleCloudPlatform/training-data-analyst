@@ -1,0 +1,6 @@
+Flask==0.12.2
+gunicorn==19.7.1
+numpy==1.14.1
+tensorflow==1.5
+tensor2tensor
+google-api-python-client
