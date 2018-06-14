@@ -188,5 +188,5 @@ accounts:
   password: '${SA_JSON}'
   email: 1234@5678.com
 EOF
-    helm install -n cd stable/spinnaker -f spinnaker-config.yaml --timeout 600
+    helm install -n adv-k8s stable/spinnaker -f spinnaker-config.yaml --timeout 600
 done
