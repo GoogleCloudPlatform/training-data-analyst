@@ -4,7 +4,7 @@ metadata:
   name: myapp-routerules-100p
 spec:
   destination:
-    name: myapp-gke-west-lb
+    name: myapp-gke-central-lb
     domain: svc.cluster.local
   route:
   - labels:
