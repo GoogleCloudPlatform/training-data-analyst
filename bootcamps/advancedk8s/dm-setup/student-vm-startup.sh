@@ -176,10 +176,11 @@ gcs:
 # Disable minio the default
 minio:
   enabled: false
-  
+
 # Disable jenkins
 jenkins:
   enabled: false
+
 # Configure your Docker registries here
 accounts:
 - name: gcr
