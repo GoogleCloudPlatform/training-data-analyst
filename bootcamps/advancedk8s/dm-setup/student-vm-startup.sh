@@ -84,6 +84,8 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
 
     # Get credentials for setting client as admin
     gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
+    export PROJECT=$(gcloud info --format='value(config.project)')
+    kubectx gke-${CLUSTER_INFO_ARRAY[1]:3:-3}="gke_"$PROJECT"_"${CLUSTER_INFO_ARRAY[1]}_${CLUSTER_INFO_ARRAY[0]}
     kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client
     # Needed for Spinnaker to be able to authenticate to the API
     export CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE=True
@@ -129,6 +131,8 @@ SPINNAKER_CLUSTERS=$(gcloud container clusters list --format 'csv[no-heading](na
 for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     CLUSTER_INFO_ARRAY=(${CLUSTER_INFO//,/ })
     gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
+    export PROJECT=$(gcloud info --format='value(config.project)')
+    kubectx gke-spinnaker="gke_"$PROJECT"_"${CLUSTER_INFO_ARRAY[1]}_${CLUSTER_INFO_ARRAY[0]}
     kubectl apply -f tiller-rbac.yaml
     helm init --service-account tiller
     # Wait for tiller to be running
@@ -148,10 +152,10 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     gsutil mb -c regional -l us-central1 gs://${BUCKET}
 
     # Use upstream once this PR is merged: https://github.com/kubernetes/charts/pull/5456
-    git clone https://github.com/viglesiasce/charts -b mcs
-    pushd charts/stable/spinnaker
-    helm dep build
-    popd
+ #   git clone https://github.com/viglesiasce/charts -b mcs
+ #   pushd charts/stable/spinnaker
+ #   helm dep build
+ #   popd
 
     kubectl create secret generic --from-file=config=${HOME}/.kube/config my-kubeconfig
 
@@ -169,7 +173,6 @@ gcs:
   enabled: true
   project: ${PROJECT}
   jsonKey: '${SA_JSON}'
-
 # Disable minio the default
 minio:
   enabled: false
@@ -186,14 +189,5 @@ accounts:
   password: '${SA_JSON}'
   email: 1234@5678.com
 EOF
-    helm install -n adv-k8s charts/stable/spinnaker -f spinnaker-config.yaml --timeout 600
-    
-export GKE_EAST=$(gcloud container clusters list --zone us-east4-b --format='value(name)')
-export GKE_CENTRAL=$(gcloud container clusters list --zone us-central1-f --format='value(name)')
-export GKE_SPINNAKER=$(gcloud container clusters list --zone us-central1-f --format='value(name)')
-export PROJECT=$(gcloud info --format='value(config.project)')
-kubectx gke-spinnaker="gke_"$PROJECT"_us-central1-f_"$GKE_SPINNAKER
-kubectx gke-east="gke_"$PROJECT"_us-east4-b_"$GKE_EAST
-kubectx gke-central="gke_"$PROJECT"_us-central1-f_"$GKE_CENTRAL
-
+    helm install -n adv-k8s stable/spinnaker -f spinnaker-config.yaml --timeout 600
 done

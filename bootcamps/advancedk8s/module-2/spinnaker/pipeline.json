@@ -10,13 +10,13 @@
     {
       "clusters": [
         {
-          "account": "gke_PROJECT_ZONE_WEST_GKE_WEST",
+          "account": "gke_PROJECT_ZONE_ONE_GKE_ONE",
           "application": "myapp",
           "cloudProvider": "kubernetes",
           "containers": [
             {
               "args": [
-                "-name=myapp-canary-gke-west-$(VOLUME)"
+                "-name=myapp-canary-gke-central-$(VOLUME)"
               ],
               "command": [],
               "envFrom": [],
@@ -61,14 +61,14 @@
             "revisionHistoryLimit": 2
           },
           "dnsPolicy": "ClusterFirst",
-          "freeFormDetails": "gke-west",
+          "freeFormDetails": "gke-central",
           "initContainers": [],
           "interestingHealthProviderNames": [
             "KubernetesContainer",
             "KubernetesPod"
           ],
           "loadBalancers": [
-            "myapp-gke-west-lb"
+            "myapp-gke-central-lb"
           ],
           "namespace": "default",
           "nodeSelector": {},
@@ -86,7 +86,7 @@
           "volumeSources": []
         }
       ],
-      "name": "Deploy Canary to GKE-West Cluster",
+      "name": "Deploy Canary to GKE-Central Cluster",
       "refId": "1",
       "requisiteStageRefIds": [],
       "type": "deploy"
@@ -94,7 +94,7 @@
     {
       "clusters": [
         {
-          "account": "gke_PROJECT_ZONE_EAST_GKE_EAST",
+          "account": "gke_PROJECT_ZONE_TWO_GKE_TWO",
           "application": "myapp",
           "cloudProvider": "kubernetes",
           "containers": [
@@ -176,7 +176,7 @@
       "type": "deploy"
     },
     {
-      "account": "gke_PROJECT_ZONE_WEST_GKE_WEST",
+      "account": "gke_PROJECT_ZONE_ONE_GKE_ONE",
       "annotations": {
         "sidecar.istio.io/inject": "false"
       },
@@ -188,7 +188,7 @@
           "args": [],
           "command": [
             "curl",
-            "http://myapp-gke-west-lb:80"
+            "http://myapp-gke-central-lb:80"
           ],
           "envFrom": [],
           "envVars": [],
@@ -215,7 +215,7 @@
       ],
       "dnsPolicy": "ClusterFirst",
       "labels": {},
-      "name": "Test Canary on GKE-West",
+      "name": "Test Canary on GKE-Central",
       "namespace": "default",
       "refId": "3",
       "requisiteStageRefIds": [
@@ -224,7 +224,7 @@
       "type": "runJob"
     },
     {
-      "account": "gke_PROJECT_ZONE_EAST_GKE_EAST",
+      "account": "gke_PROJECT_ZONE_TWO_GKE_TWO",
       "annotations": {
         "sidecar.istio.io/inject": "false"
       },
@@ -287,13 +287,13 @@
     {
       "clusters": [
         {
-          "account": "gke_PROJECT_ZONE_WEST_GKE_WEST",
+          "account": "gke_PROJECT_ZONE_ONE_GKE_ONE",
           "application": "myapp",
           "cloudProvider": "kubernetes",
           "containers": [
             {
               "args": [
-                "-name=myapp-prod-gke-west-$(VOLUME)"
+                "-name=myapp-prod-gke-central-$(VOLUME)"
               ],
               "command": [],
               "envFrom": [],
@@ -338,14 +338,14 @@
             "revisionHistoryLimit": 2
           },
           "dnsPolicy": "ClusterFirst",
-          "freeFormDetails": "gke-west",
+          "freeFormDetails": "gke-central",
           "initContainers": [],
           "interestingHealthProviderNames": [
             "KubernetesContainer",
             "KubernetesPod"
           ],
           "loadBalancers": [
-            "myapp-gke-west-lb"
+            "myapp-gke-central-lb"
           ],
           "namespace": "default",
           "nodeSelector": {},
@@ -363,7 +363,7 @@
           "volumeSources": []
         }
       ],
-      "name": "Deploy on GKE-West Production",
+      "name": "Deploy on GKE-Central Production",
       "refId": "6",
       "requisiteStageRefIds": [
         "5"
@@ -373,7 +373,7 @@
     {
       "clusters": [
         {
-          "account": "gke_PROJECT_ZONE_EAST_GKE_EAST",
+          "account": "gke_PROJECT_ZONE_TWO_GKE_TWO",
           "application": "myapp",
           "cloudProvider": "kubernetes",
           "containers": [
