@@ -1,8 +1,0 @@
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: prometheus
-  namespace: monitoring
-  labels:
-    app: prometheus
