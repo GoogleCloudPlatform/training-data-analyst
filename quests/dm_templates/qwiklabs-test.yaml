@@ -1,0 +1,21 @@
+imports:
+- path: qwiklabs.jinja
+
+# Simulation YAML file
+#  Similar to the one that is internal to Qwiklabs
+#
+resources:
+- name: qwiklabs
+  type: qwiklabs.jinja
+  properties:
+    zone: us-east1-c
+    region: us-east1
+    userName: googlestudent
+    userPassword: googlestudent
+    sshPubKey: A123412341234
+    # NOTE: randomize this Uuid if you get namespace
+    #       conflicts when testing (e.g. duplicate bucket name)
+    qwiklabsUuid: ql-1e433efb3de8
+
+
+

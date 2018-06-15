@@ -41,7 +41,7 @@ time_start = datetime.utcnow()
 print("Inference started at {}".format(time_start.strftime("%H:%M:%S")))
 print(".......................................")
 
-for i in range(5):
+for i in range(10):
     if INFERENCE_TYPE == 'local':
         output = inference.estimate_local(instance)
     else:

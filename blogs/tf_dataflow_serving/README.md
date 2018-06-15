@@ -23,9 +23,8 @@
     2. **predict-batch-cmle.sh** command-line script to submit a "Batch Predict" job to Cloud ML Engine (to be executed by **run_pipeline_with_batch_predict** function in **batch_process.py** module).
     3. **bq_stats.sql** SQL script to query the stats of the streamed data into BigQuery
 5. **Root Files**
-    1. **run_pipeline.py** executes a pipeline based on given parameters:
-        1. EXPERIMENT: <"batch" | "batch-predict" | "stream" | "stream-m-batches" >
-        2. INFERENCE_TYPE: <"local" | "cmle" | "NA">
+    1. **experiment.py** defines and initialises the parameters for the pipeline.
+    1. **run_pipeline.py** executes a pipeline based on given parameters.
     2. **simulate_stream.py** sends data points to a specified pubsub topic
     3. **setup.py**
     4. **requirements.txt**
@@ -45,66 +44,4 @@
 1. Batching data points then send them to CMLE in Dataflow Streaming Pipeline
 2. Batching data points then send them to TF Model with-in in Dataflow Streaming Pipeline
 
-
-## Results
-
- . Max Workers in Dataflow = 20 
- . Max Workers in Cloud ML Engine = 20
-
-| Batch |                 | DF then Batch CMLE | DF + Online CMLE Prediction | TF Model in DF |
-|---------------------|-----------------|--------------------|-----------------------------|----------------|
-| Dataset = 10k Rows  | Running Time    |  (DF) + (MLE) =                  |      19 min 21 sec            |                |
-|                     | Total vCPU Time |  (DF) + (MLE) =                 |      3.633 hr + CMLE           |                |
-|                     | Cost            |  (DF) + (MLE) =                  |                               |                |
-| Dataset = 100k Rows | Running Time    |  (DF) + (MLE) =                  |  Quota Limits after 1 hr      |                |
-|                     | Total vCPU Time |  (DF) + (MLE) =                 |       8.119 hr + CMLE          |                |
-|                     | Cost            |  (DF) + (MLE) =                  |                               |                |
-| Dataset = 1M Rows   | Running Time    |  (DF) + (MLE) =                  |        NA                     |                |
-|                     | Total vCPU Time |  (DF) + (MLE) =                 |        NA                      |                |
-|                     | Cost            |  (DF) + (MLE) =                  |        NA                     |                |
-| Dataset = 10M Rows  | Running Time    |  (DF) + (MLE) =                  |        NA                     |                |
-|                     | Total vCPU Time |  (DF) + (MLE) =                  |        NA                     |                |
-|                     | Cost            |  (DF) + (MLE) =                  |        NA                     |                |
-
-
-Note that, if the sink is, for example, BQ or Cloud SQL, the "DF then Batch CMLE" approach would need another step 
-to read data from GCS, transform (if needed) and load the data to such a sink, 
-while "TF Model in DF" would just need to change the sink.
-
-| Stream    (1K Messages)                 |              | DF + Online CMLE | TF Model in DF |
-|-----------------------------------------|--------------|------------------|----------------|
-|  10 Messages Per Sec      (1 node)      | Running Time |                  |                |
-|                                         | Min. Latency |                  |                |
-|                                         | Max. Latency |                  |                |
-|                                         | Avg. Latency |                  |                |
-|                                         | Cost         |                  |                |
-|  100 Messages Per Sec    (5 nodes)      | Running Time |                  |                |
-|                                         | Min. Latency |                  |                |
-|                                         | Max. Latency |                  |                |
-|                                         | Avg. Latency |                  |                |
-|                                         | Cost         |                  |                |
-|  1000 Messages Per Sec   (10 nodes)     | Running Time |                  |                |
-|                                         | Min. Latency |                  |                |
-|                                         | Max. Latency |                  |                |
-|                                         | Avg. Latency |                  |                |
-|                                         | Cost         |                  |                |
-
-
-
-| Stream + Micro-batches           | Dataset = 5K Rows, Frequency = 10 Messages Per Sec | DF + Online CMLE | TF Model in DF |
-|------------------|--------------------------------------|------------------|----------------|
-| Batch Size = 10  | Running Time                         |                  |                |
-|                  | Min. Latency                         |                  |                |
-|                  | Max. Latency                         |                  |                |
-|                  | Avg. Latency                         |                  |                |
-|                  | Cost                                 |                  |                |
-| Batch Size = 150 | Running Time                         |                  |                |
-|                  | Min. Latency                         |                  |                |
-|                  | Max Latency                          |                  |                |
-|                  | Avg. Latency                         |                  |                |
-|                  | Cost                                 |                  |                |
-| Batch Size = 500 | Running Time                         |                  |                |
-|                  | Min. Latency                         |                  |                |
-|                  | Max. Latency                         |                  |                |
-|                  | Avg. Latency                         |                  |                |
-|                  | Cost                                 |                  |                |
+                
