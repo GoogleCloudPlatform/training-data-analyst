@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sudo apt-get update
-sudo apt-get --fix-missing install python-mpltoolkits.basemap python-numpy python-matplotlib
+sudo apt-get -y -qq --fix-missing install python-mpltoolkits.basemap python-numpy python-matplotlib
 
 # Copyright 2016 Google Inc.
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
