@@ -22,10 +22,11 @@ def startsWith(line, term):
 
 def splitPackageName(packageName):
    """e.g. given com.example.appname.library.widgetname
-           returns com
-	           com.example
-                   com.example.appname
-      etc.
+           returns 
+	   ['com',
+	    'com.example',
+	    'com.example.appname',
+	    ...]
    """
    result = []
    end = packageName.find('.')
