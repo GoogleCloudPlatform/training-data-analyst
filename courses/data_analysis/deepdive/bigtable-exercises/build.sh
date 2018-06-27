@@ -14,4 +14,4 @@ PACKAGE=com.google.cloud.bigtable.training
 EXERCISE=$1
 shift
 
-mvn compile exec:java -Dexec.mainClass=${PACKAGE}.${EXERCISE} -Dbigtable.project=$PROJECT -Dbigtable.instance=$CBT_INSTANCE -Dbigtable.table=${EXERCISE}Table -Dexec.args="$@" -Dexec.cleanupDaemonThreads=false
+mvn compile exec:java -Dexec.mainClass=${PACKAGE}.${EXERCISE} -Dbigtable.project=$PROJECT -Dbigtable.instance=$CBT_INSTANCE -Dbigtable.table=Ex0Table -Dexec.args="$@" -Dexec.cleanupDaemonThreads=false
