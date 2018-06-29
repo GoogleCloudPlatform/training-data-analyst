@@ -34,16 +34,15 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   with tf.gfile.FastGFile(args.jpeg, 'r') as ifp:
-   credentials = GoogleCredentials.get_application_default()
-   api = discovery.build('ml', 'v1', credentials=credentials,
+    credentials = GoogleCredentials.get_application_default()
+    api = discovery.build('ml', 'v1', credentials=credentials,
                discoveryServiceUrl='https://storage.googleapis.com/cloud-ml/discovery/ml_v1_discovery.json')
 
-  request_data = {'instances':
+    request_data = {'instances':
       [
          {"image_bytes": {"b64": base64.b64encode(ifp.read())}}
       ]
-  }
-  parent = 'projects/%s/models/%s/versions/%s' % (args.project, 'flowers', 'resnet')
-  response = api.projects().predict(body=request_data, name=parent).execute()
-  print("response={0}".format(response))
-
+    }
+    parent = 'projects/%s/models/%s/versions/%s' % (args.project, 'flowers', 'resnet')
+    response = api.projects().predict(body=request_data, name=parent).execute()
+    print("response={0}".format(response))
