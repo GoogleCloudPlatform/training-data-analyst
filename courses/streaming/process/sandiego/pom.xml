@@ -61,7 +61,7 @@
 	<dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-discovery</artifactId>
-      <version>v1-rev58-1.22.0</version>
+      <version>v1-rev64-1.23.0</version>
     </dependency>
 
     <!-- slf4j API frontend binding with JUL backend -->
