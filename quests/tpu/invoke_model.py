@@ -43,7 +43,7 @@ if __name__ == '__main__':
          {"image_bytes": {"b64": base64.b64encode(ifp.read())}}
       ]
   }
-  parent = 'projects/%s/models/%s/versions/%s' % (PROJECT, 'flowers', 'resnet')
+  parent = 'projects/%s/models/%s/versions/%s' % (args.project, 'flowers', 'resnet')
   response = api.projects().predict(body=request_data, name=parent).execute()
   print("response={0}".format(response))
 
