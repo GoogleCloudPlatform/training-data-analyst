@@ -55,7 +55,8 @@ with DAG('gcp_example_solution', default_args=default_args,
           {'name': 'total_score', 'type': 'integer', 'mode': 'nullable'},
           {'name': 'timestamp', 'type': 'integer', 'mode': 'nullable'},
           {'name': 'window_start', 'type': 'string', 'mode': 'nullable'},
-      ])
+      ],
+      write_disposition='WRITE_TRUNCATE')
 
   # Run example query (http://shortn/_BdF1UTEYOb) and save result to the
   # destination table.
@@ -70,6 +71,7 @@ with DAG('gcp_example_solution', default_args=default_args,
         LIMIT 100;
       """,
       destination_dataset_table='{0}.gcp_example_query_result'
-      .format(BQ_DATASET_NAME))
+      .format(BQ_DATASET_NAME),
+      write_disposition='WRITE_TRUNCATE')
 
   t1 >> t2 >> t3
