@@ -43,7 +43,7 @@ public class ThreadPoolWriter {
     executor.execute(r);
     int c = count.incrementAndGet();
     if (c % 1000 == 0) {
-      System.out.println("Inserted row " + c + " at timestamp " + new Date(timestamp));
+      System.out.println("Inserted row " + c + " at " + new Date());
     }
   }
 
@@ -51,14 +51,14 @@ public class ThreadPoolWriter {
   public interface RunnableThatThrows {
     void run() throws java.io.IOException;
   }
-  public void execute(RunnableThatThrows r, Map<String, Object> point) {
+  public void execute(RunnableThatThrows r, Map<String, String> point) {
     this.execute(() -> {
       try {
         r.run();
       } catch (java.io.IOException e) {
 	e.printStackTrace();
       }
-    }, Long.parseLong(point.get(DataGenerator.TIMESTAMP_FIELD).toString()));
+    }, Long.parseLong(point.get("time").toString()));
   }
 
   public void shutdownAndWait() throws InterruptedException {
