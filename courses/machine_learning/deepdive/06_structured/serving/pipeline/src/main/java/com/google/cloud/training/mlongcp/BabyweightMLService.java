@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,11 +30,12 @@ public class BabyweightMLService {
   private static String       VERSION = "ml_on_gcp";
 
   static class Instance {
-    String is_male, plurality;
+    String key, is_male, plurality;
     float mother_age, gestation_weeks; 
     
     Instance() {}
     Instance(Baby f) {
+      this.key = "" + UUID.randomUUID();
       this.is_male = f.getField(Baby.INPUTCOLS.is_male);
       this.mother_age = f.getFieldAsFloat(Baby.INPUTCOLS.mother_age);
       this.plurality = f.getField(Baby.INPUTCOLS.plurality);
@@ -144,6 +146,7 @@ public class BabyweightMLService {
     Request request = new Request();
 
     Instance instance = new Instance();
+    instance.key = "notused";
     instance.is_male = "True";
     instance.mother_age = 26;
     instance.plurality = "Twins(2)";
