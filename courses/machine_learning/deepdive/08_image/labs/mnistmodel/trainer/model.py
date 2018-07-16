@@ -32,24 +32,12 @@ def linear_model(img, mode, hparams):
   return ylogits, NCLASSES
 
 def dnn_model(img, mode, hparams):
-  X = tf.reshape(img, [-1, HEIGHT*WIDTH]) #flatten
-  h1 = tf.layers.dense(X, 300, activation=tf.nn.relu)
-  h2 = tf.layers.dense(h1,100, activation=tf.nn.relu)
-  h3 = tf.layers.dense(h2, 30, activation=tf.nn.relu)
-  ylogits = tf.layers.dense(h3, NCLASSES, activation=None)
-  return ylogits, NCLASSES
+  #TODO: Implement DNN model with three hiddenlayers
+  pass
 
 def dnn_dropout_model(img, mode, hparams):
-  dprob = hparams.get('dprob', 0.1)
-
-  X = tf.reshape(img, [-1, HEIGHT*WIDTH]) #flatten
-  h1 = tf.layers.dense(X, 300, activation=tf.nn.relu)
-  h2 = tf.layers.dense(h1,100, activation=tf.nn.relu)
-  h3 = tf.layers.dense(h2, 30, activation=tf.nn.relu)
-  h3d = tf.layers.dropout(h3, rate=dprob, training=(
-      mode == tf.estimator.ModeKeys.TRAIN)) #only dropout when training
-  ylogits = tf.layers.dense(h3d, NCLASSES, activation=None)
-  return ylogits, NCLASSES
+  #TODO: Implement DNN model and apply dropout to the last hidden layer
+  pass
 
 def cnn_model(img, mode, hparams):
   ksize1 = hparams.get('ksize1', 5)
@@ -62,33 +50,17 @@ def cnn_model(img, mode, hparams):
                           kernel_size=ksize1, strides=1, # ?x28x28x10
                           padding='same', activation=tf.nn.relu)
   p1 = tf.layers.max_pooling2d(c1,pool_size=2, strides=2) # ?x14x14x10
-  c2 = tf.layers.conv2d(p1, filters=nfil2,
-                          kernel_size=ksize2, strides=1, 
-                          padding='same', activation=tf.nn.relu)
-  p2 = tf.layers.max_pooling2d(c2,pool_size=2, strides=2) # ?x7x7x20
+  c2 = None #TODO: apply a second convolution to the output of p1
+  p2 = None #TODO: apply a pooling layer with pool_size=2 and strides=2
   
   outlen = p2.shape[1]*p2.shape[2]*p2.shape[3] #980
   p2flat = tf.reshape(p2, [-1, outlen]) # flattened
 
-  #apply batch normalization
-  if hparams['batch_norm']:
-    h3 = tf.layers.dense(p2flat, 300, activation=None)
-    h3 = tf.layers.batch_normalization(
-        h3, training=(mode == tf.estimator.ModeKeys.TRAIN)) #only batchnorm when training
-    h3 = tf.nn.relu(h3)
-  else:  
-    h3 = tf.layers.dense(p2flat, 300, activation=tf.nn.relu)
-  
-  #apply dropout
-  h3d = tf.layers.dropout(h3, rate=dprob, training=(mode == tf.estimator.ModeKeys.TRAIN))
+  h3 = tf.layers.dense(p2flat, 300, activation=tf.nn.relu) 
+  h3d = tf.layers.dropout(
+      h3, rate=dprob, training=(mode == tf.estimator.ModeKeys.TRAIN))
 
   ylogits = tf.layers.dense(h3d, NCLASSES, activation=None)
-  
-  #apply batch normalization once more
-  if hparams['batch_norm']:
-     ylogits = tf.layers.batch_normalization(
-         ylogits, training=(mode == tf.estimator.ModeKeys.TRAIN))
-
   return ylogits, NCLASSES
 
 def serving_input_fn():
