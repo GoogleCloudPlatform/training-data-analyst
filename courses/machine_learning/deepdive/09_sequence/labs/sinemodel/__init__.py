@@ -11,21 +11,4 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from setuptools import find_packages
-from setuptools import setup
-
-REQUIRED_PACKAGES = [
-]
-
-setup(
-    name='sinemodel',
-    version='0.1',
-    author = 'Google',
-    author_email = 'lak@google.com',
-    install_requires=REQUIRED_PACKAGES,
-    packages=find_packages(),
-    include_package_data=True,
-    description='Simple RNN example',
-    requires=[]
-)
+# ==============================================================================
