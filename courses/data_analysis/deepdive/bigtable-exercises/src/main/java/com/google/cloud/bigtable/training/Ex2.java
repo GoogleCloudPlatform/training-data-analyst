@@ -16,128 +16,113 @@
 
 package com.google.cloud.bigtable.training;
 
-import com.google.cloud.bigtable.hbase.BigtableConfiguration;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.*;
+import com.google.cloud.bigtable.dataflow.CloudBigtableIO;
+import com.google.cloud.bigtable.dataflow.CloudBigtableOptions;
+import com.google.cloud.bigtable.dataflow.CloudBigtableScanConfiguration;
+import com.google.cloud.bigtable.dataflow.CloudBigtableTableConfiguration;
+import com.google.cloud.bigtable.training.solutions.Ex2Solution;
+import com.google.cloud.dataflow.sdk.Pipeline;
+import com.google.cloud.dataflow.sdk.io.Read;
+import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
+import com.google.cloud.dataflow.sdk.transforms.Count;
+import com.google.cloud.dataflow.sdk.transforms.DoFn;
+import com.google.cloud.dataflow.sdk.transforms.ParDo;
+import com.google.cloud.dataflow.sdk.transforms.windowing.FixedWindows;
+import com.google.cloud.dataflow.sdk.transforms.windowing.Window;
+import com.google.cloud.dataflow.sdk.values.KV;
+import com.google.cloud.dataflow.sdk.values.PCollection;
+import org.apache.hadoop.hbase.client.Mutation;
 
-import java.io.IOException;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.joda.time.Instant;
 
 /**
- * Exercise 2 - A command-line tool to read monitoring data from Bigtable.
+ * Write a simple dataflow job that reads data from Bigtable, counts actions per minute,
+ * and writes the counts back into bigtable.
  *
- * Example invocation:
- *
- * mvn compile exec:java -Dexec.mainClass=com.google.cloud.bigtable.training.Ex2 \
- *    -Dbigtable.project=<your project> \
- *    -Dbigtable.instance=<your instance> \
- *    -Dbigtable.table=<table name from Ex1> \
- *    -Dexec.args="service-1 qps avg 0 now" \
- *    -Dexec.cleanupDaemonThreads=false
- *
+ --project=PROJECT
+ --bigtableProjectId=PROJECT
+ --bigtableInstanceId=INSTANCE
+ --bigtableTableId=TABLE FROM PREVIOUS EXERCISE
+ --runner=BlockingDataflowPipelineRunner
+ --stagingLocation=STAGING AREA
+ --inputFile=gs://cloud-bigtable-training/actions_subset.csv
  */
+
 public class Ex2 {
-    public enum Function {
-        SUM,
-        AVG, // Note: This is a simple average of all data points returned
-        MAX
+
+  static class ExtractItemTimestamp extends DoFn<Result, String> {
+    @Override
+    public void processElement(ProcessContext c) {
+      c.outputWithTimestamp("elem", new Instant(c.element().rawCells()[0].getTimestamp()));
     }
+  }
 
-    public static void main(String[] args) throws Exception {
-        String projectId = System.getProperty("bigtable.project");
-        String instanceId = System.getProperty("bigtable.instance");
-        String tableName = System.getProperty("bigtable.table");
+  static class PersistAggregation extends DoFn<KV<String, Long>, Mutation> {
 
-        if (args.length < 5) {
-            System.err.println("Invalid command. Usage:");
-            System.err.println("Ex2 <service> <metric> <avg|sum|max> <start timestamp> <end timestamp|now>");
-            System.exit(1);
-        }
+    @Override
+    public void processElement(ProcessContext c) {
+      long count = c.element().getValue();
+      Instant timestamp = c.timestamp();
+      DateTime hour = timestamp.toDateTime().hourOfDay().roundFloorCopy();
 
-        String service = args[0];
-        String metric = args[1];
-        String functionName = args[2].toLowerCase();
-        Function function = null;
-        switch (functionName) {
-            case "sum":
-                function = Function.SUM;
-                break;
-            case "avg":
-                function = Function.AVG;
-                break;
-            case "max":
-                function = Function.MAX;
-                break;
-            default:
-                System.err.println("Invalid function: " + functionName);
-                System.exit(1);
-        }
+      Put put = new Put(Bytes.toBytes("hourly#" + Long.toString(hour.toInstant().getMillis())),
+          timestamp.getMillis());
+      byte[] family = Bytes.toBytes("rollups");
 
-        // Try from 0 to "now" to avoid looking up timestamps
-        long from = Long.parseLong(args[3]);
-        long to = args[4].equalsIgnoreCase("now") ? System.currentTimeMillis() : Long.parseLong(args[4]);
-
-        try (Connection connection = BigtableConfiguration.connect(projectId, instanceId)) {
-            Table table = connection.getTable(TableName.valueOf(tableName));
-
-            doQuery(table, service, metric, function, from, to);
-
-        } catch (IOException e) {
-            System.err.println("Exception while running Ex2: " + e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
-        }
+      // Put everything in one column. Data will be sorted within this column by timestamp
+      // which is what we want!
+      // Note that to keep all these values around indefinitely we would need to adjust the
+      // GC policy on this column family using the cbt tool.
+      put.addColumn(family, Bytes.toBytes(""), Bytes.toBytes(Long.toString(count)));
+      c.output(put);
     }
+  }
 
-    /**
-     * @param table     the table to query
-     * @param service   the service id
-     * @param metric    the metric id
-     * @param function  the function to apply to the returned data
-     * @param startTime the (inclusive) starting timestamp
-     * @param endTime   the (exclusive) ending timestamp
-     */
-    private static void doQuery(Table table, String service, String metric, Function function,
-                                long startTime, long endTime) throws Exception {
-        String startRowKey = service + "#" + metric + "#" + startTime;
-        String endRowKey = service + "#" + metric + "#" + endTime;
+  public interface BigtableCsvOptions extends CloudBigtableOptions {
 
-        // TODO: 1a Create Scan to scan between startRowKey and endRowKey
-        Scan scan = null;
+    String getInputFile();
 
-        ResultScanner scanner = table.getScanner(scan);
-        try {
-            double total = 0;
-            int rows = 0;
-            double max = Double.MIN_VALUE;
-            for (Result r = scanner.next(); r != null; r = scanner.next()) {
-                // TODO: 1b Get the value of the data:value column
-		double value = 0;
-                System.out.println(new String(r.getRow()) + " " + value);
-                rows++;
-                switch (function) {
-                    case AVG:
-                    case SUM:
-                        total += value;
-                        break;
-                    case MAX:
-                        max = Math.max(max, value);
-                        break;
-                }
-            }
-            switch (function) {
-                case AVG:
-                    System.out.println("The avg is " + total / rows);
-                    break;
-                case SUM:
-                    System.out.println("The sum is " + total);
-                    break;
-                case MAX:
-                    System.out.println("The max is " + max);
-                    break;
-            }
-        } finally {
-            scanner.close();
-        }
-    }
+    void setInputFile(String location);
+  }
 
+
+  public static void main(String[] args) {
+    Ex2Solution.BigtableCsvOptions options =
+        PipelineOptionsFactory.fromArgs(args).withValidation().as(Ex2Solution.BigtableCsvOptions.class);
+    CloudBigtableTableConfiguration config =
+        CloudBigtableTableConfiguration.fromCBTOptions(options);
+
+    Scan scan = new Scan();
+    // TODO: Do a scan of rows being with "action"
+
+    CloudBigtableScanConfiguration scanConfiguration =
+        new CloudBigtableScanConfiguration.Builder()
+            .withProjectId(options.getBigtableProjectId())
+            .withInstanceId(options.getBigtableInstanceId())
+            .withTableId(options.getBigtableTableId())
+            .withScan(scan)
+            .build();
+
+    Pipeline p = Pipeline.create(options);
+
+    CloudBigtableIO.initializeForWrite(p);
+
+    PCollection<String> windowedItems = p.apply(Read.from(CloudBigtableIO.read(scanConfiguration)))
+        .apply(ParDo.of(new Ex2.ExtractItemTimestamp()))
+        .apply(
+            Window.into(FixedWindows.of(Duration.standardMinutes(1))));
+    PCollection<KV<String, Long>> itemsPerMinute = windowedItems.apply(Count.perElement());
+
+    PCollection<Mutation> mutations = itemsPerMinute.apply(ParDo.of(new Ex2.PersistAggregation()));
+    mutations.apply(CloudBigtableIO.writeToTable(config));
+
+    // Run the pipeline.
+    p.run();
+  }
 }

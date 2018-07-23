@@ -25,6 +25,7 @@ setup(name='trainer',
       install_requires=[
           'pandas-gbq==0.3.0',
           'urllib3',
-          'google-cloud-bigquery==0.29.0'
+          'google-cloud-bigquery==0.29.0',
+          'cloudml-hypertune',  # Required for hyperparameter tuning.
       ],
       zip_safe=False)

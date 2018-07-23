@@ -75,8 +75,8 @@ if __name__ == '__main__':
         'temp_location': os.path.join(experiment.PARAMS.sink_dir, 'tmp'),
         'job_name': job_name,
         'project': experiment.PARAMS.project_id,
-        #'num_workers': 1, # set to fix number of workers and disable autoscaling
-        'max_num_workers': 20,
+        'num_workers': 5, # set to fix number of workers and disable autoscaling
+        #'max_num_workers': 20,
         'setup_file': './setup.py',
         'streaming': experiment.PARAMS.experiment_type in ['stream', 'stream-m-batches'],
     }

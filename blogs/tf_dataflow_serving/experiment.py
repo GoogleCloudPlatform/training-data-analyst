@@ -23,7 +23,7 @@ def initialise_hyper_params(args_parser):
     args_parser.add_argument(
         '--runner',
         help="""
-        Can be either: DirectRunner or Dataflow Runner\
+        Can be either: DirectRunner or DataflowRunner\
         """,
         default='DirectRunner',
     )

@@ -131,7 +131,7 @@ public class GcsUntar implements AutoCloseable {
         .createArchiveInputStream("tar", is);
     TarArchiveEntry entry = null;
     while ((entry = (TarArchiveEntry) debInputStream.getNextEntry()) != null) {
-      final File outputFile = new File(outputDir, entry.getName());
+      final File outputFile = getOutputFile(outputDir, entry);
       if (entry.isDirectory()) {
         if (!outputFile.exists()) {
           if (!outputFile.mkdirs()) {
@@ -149,6 +149,20 @@ public class GcsUntar implements AutoCloseable {
     debInputStream.close();
 
     return untaredFiles.toArray(new File[0]);
+  }
+
+  private static File getOutputFile(final File outputDir, TarArchiveEntry entry) 
+      throws IOException, ArchiveException {
+    // Guard against zip-slip-vulnerability: 
+    // https://snyk.io/research/zip-slip-vulnerability#what-action-should-you-take
+    final String canonicalDestinationDir = outputDir.getCanonicalPath();
+    final File outputFile = new File(outputDir, entry.getName());
+    final String canonicalDestinationFile = outputFile.getCanonicalPath();
+    if (!canonicalDestinationFile.startsWith(canonicalDestinationDir)) {
+      throw new ArchiveException("Entry " + entry.getName() + " is outside destination directory. " + 
+          "See https://snyk.io/research/zip-slip-vulnerability");
+    }
+    return outputFile;
   }
 
   @Override

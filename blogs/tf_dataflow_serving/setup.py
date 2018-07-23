@@ -1,6 +1,7 @@
 import setuptools
 
 requirements = []
+
 setuptools.setup(
     name='TF-DATAFLOW-DEMO',
     version='v1',

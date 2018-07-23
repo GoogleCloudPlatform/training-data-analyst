@@ -35,8 +35,8 @@ INPUT_COLUMNS = [
     tf.feature_column.categorical_column_with_identity('hourofday', num_buckets = 24),
 
     # Numeric columns
-    tf.feature_column.numeric_column('pickuplon'),
     tf.feature_column.numeric_column('pickuplat'),
+    tf.feature_column.numeric_column('pickuplon'),
     tf.feature_column.numeric_column('dropofflat'),
     tf.feature_column.numeric_column('dropofflon'),
     tf.feature_column.numeric_column('passengers'),
@@ -56,7 +56,7 @@ def build_estimator(model_dir, nbuckets, hidden_units):
   """
 
     # Input columns
-    (dayofweek, hourofday, plon, plat, dlon, dlat, pcount, latdiff, londiff, euclidean) = INPUT_COLUMNS
+    (dayofweek, hourofday, plat, plon, dlat, dlon, pcount, latdiff, londiff, euclidean) = INPUT_COLUMNS
 
     # Bucketize the lats & lons
     latbuckets = np.linspace(38.0, 42.0, nbuckets).tolist()

@@ -14,6 +14,7 @@
 import argparse
 import os
 
+import hypertune
 import model
 
 if __name__ == '__main__':
@@ -67,13 +68,9 @@ if __name__ == '__main__':
     print("Saved model to {}".format(loc))
     
     # this is for hyperparameter tuning
-    from tensorflow.core.framework.summary_pb2 import Summary
-    import tensorflow as tf
-    with tf.Session() as sess:
-      summary = Summary(value=[Summary.Value(tag='rmse', simple_value=rmse)])
-      eval_path = os.path.join(arguments['job_dir'], 'rmse')
-      summary_writer = tf.summary.FileWriter(eval_path)
-      summary_writer.add_summary(summary)
-      summary_writer.flush()
-
+    hpt = hypertune.HyperTune()
+    hpt.report_hyperparameter_tuning_metric(
+        hyperparameter_metric_tag='rmse',
+        metric_value=rmse,
+        global_step=0)
 # done

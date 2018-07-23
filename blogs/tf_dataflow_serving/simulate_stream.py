@@ -1,6 +1,6 @@
 from google.cloud import pubsub
 from datetime import datetime
-import experiment
+
 import json
 import os
 import time
@@ -30,6 +30,7 @@ def send_message(topic, index):
     instance['source_timestamp'] = source_timestamp
     message = json.dumps(instance)
     topic.publish(message=message, source_id=source_id, source_timestamp=source_timestamp)
+    return message
 
 
 def simulate_stream_data():
@@ -54,9 +55,11 @@ def simulate_stream_data():
 
     for index in range(PARAMS.stream_sample_size):
 
-        send_message(topic, index)
+        message = send_message(topic, index)
 
-        print "Message {} was sent".format(index)
+        if PARAMS.show_message:
+            print "Message {} was sent: {}".format(index+1, message)
+            print ""
 
         time.sleep(sleep_time_per_msg)
 
@@ -108,6 +111,12 @@ if __name__ == '__main__':
         """,
         default=10,
         type=int
+    )
+
+    args_parser.add_argument(
+        '--show-message',
+        action='store_true',
+        default=False
     )
 
     PARAMS = args_parser.parse_args()
