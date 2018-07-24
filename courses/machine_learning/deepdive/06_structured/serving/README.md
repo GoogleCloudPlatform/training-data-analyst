@@ -1,5 +1,6 @@
-./deploy.sh
+## To deploy and try out the AppEngine application:
 
-Visit https://<project-name>.appspot.com/
-
-use the form to send a request to the service
+From CloudShell:
+* ./deploy.sh
+* Visit https://<project-name>.appspot.com/
+* Use the form to send a request to the service
