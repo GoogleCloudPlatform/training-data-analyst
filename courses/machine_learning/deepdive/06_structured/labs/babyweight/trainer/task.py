@@ -47,26 +47,17 @@ if __name__ == '__main__':
         help = 'this model ignores this field, but it is required by gcloud',
         default = 'junk'
     )
-
-    args = parser.parse_args()
-    arguments = args.__dict__
-
-    # unused args provided by service
-    arguments.pop('job_dir', None)
-    arguments.pop('job-dir', None)
-
-    output_dir = arguments.pop('output_dir')
-    model.BUCKET     = arguments.pop('bucket')
-    model.BATCH_SIZE = arguments.pop('batch_size')
-
-    # Append trial_id to path if we are doing hptuning
-    # This code can be removed if you are not using hyperparameter tuning
-    output_dir = os.path.join(
-        output_dir,
-        json.loads(
-            os.environ.get('TF_CONFIG', '{}')
-        ).get('task', {}).get('trial', '')
+    parser.add_argument(
+        '--nnsize',
+        help = 'Hidden layer sizes to use for DNN feature columns -- provide space-separated layers',
+        nargs = '+',
+        type = int,
+        default=[128, 32, 4]
+    )
+    parser.add_argument(
+        '--nembeds',
+        help = 'Embedding size of a cross of n key real-valued parameters',
+        type = int,
+        default = 3
     )
 
-    # Run the training job
-    model.train_and_evaluate(output_dir)
