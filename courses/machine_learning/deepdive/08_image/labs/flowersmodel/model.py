@@ -93,14 +93,13 @@ def cnn_model(img, mode, hparams):
 
   return ylogits, NCLASSES
 
-def read_and_preprocess_with_augment(filename, label=None):
-    return read_and_preprocess(filename, label, augment=True)
+def read_and_preprocess_with_augment(image_bytes, label=None):
+    return read_and_preprocess(image_bytes, label, augment=True)
     
-def read_and_preprocess(filename, label=None, augment=False):
-    # decode the image file starting from the filename
+def read_and_preprocess(image_bytes, label=None, augment=False):
+    # decode the image
     # end up with pixel values that are in the -1, 1 range
     
-    image_contents = #TODO: read in contents of filename
     image = #TODO: decode contents into JPEG
     image = #TODO: convert JPEG tensor to floats between 0 and 1
     image = tf.expand_dims(image, 0) # resize_bilinear needs batches
@@ -118,16 +117,20 @@ def read_and_preprocess(filename, label=None, augment=False):
 
 def serving_input_fn():
     # Note: only handles one image at a time 
-    feature_placeholders = {'imageurl': tf.placeholder(tf.string, shape=())}
-    filename = tf.squeeze(feature_placeholders['imageurl']) # make it a scalar
-    image, _ = read_and_preprocess(filename)
+    feature_placeholders = {'image_bytes': 
+                            tf.placeholder(tf.string, shape=())}
+    image, _ = read_and_preprocess(
+        tf.squeeze(feature_placeholders['image_bytes']))
     image['image'] = tf.expand_dims(image['image'],0)
     return tf.estimator.export.ServingInputReceiver(image, feature_placeholders)
 
 def make_input_fn(csv_of_filenames, batch_size, mode, augment=False):
     def _input_fn(): 
         def decode_csv(csv_row):
-            return tf.decode_csv(csv_row, record_defaults = [[''],['']])
+            filename, label = tf.decode_csv(
+                csv_row, record_defaults = [[''],['']])
+            image_bytes = tf.read_file(filename)
+            return image_bytes, label
         
         # Create tf.data.dataset from filename
         dataset = tf.data.TextLineDataset(csv_of_filenames).map(decode_csv)     
