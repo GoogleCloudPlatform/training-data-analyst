@@ -73,7 +73,7 @@ def read_dataset(mode, args):
     cum_range = cum + length_range
 
     # The keys that we have extracted back out of our concatentated SparseTensor
-    gathered_indices = tf.squeeze(tf.gather(bad_indices, cumrange)[:,1])
+    gathered_indices = tf.squeeze(tf.gather(bad_indices, cum_range)[:,1])
 
     # The enumerated row indices of the SparseTensor's indices member
     sparse_indices_range = tf.range(tf.shape(bad_indices, out_type = tf.int64)[0], dtype = tf.int64)
@@ -81,7 +81,7 @@ def read_dataset(mode, args):
     # We want to find here the row indices of the SparseTensor's indices member that are of our actual data and not the concatentated rows
     # So we want to find the intersection of the two sets and then take the opposite of that
     x = sparse_indices_range
-    s = cumrange
+    s = cum_range
 
     # Number of multiples we are going to tile x, which is our sparse_indices_range
     tile_multiples = tf.concat([tf.ones(tf.shape(tf.shape(x)), dtype=tf.int64), tf.shape(s, out_type = tf.int64)], axis = 0)
