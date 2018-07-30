@@ -34,6 +34,10 @@ if __name__ == '__main__':
         required=True
     )
     parser.add_argument(
+        '--embedding_path',
+        help='can be a local path or a GCS url (gs://...)',
+    )
+    parser.add_argument(
         '--num_epochs',
         help='number of times to go through the data, default=10',
         default=10,
