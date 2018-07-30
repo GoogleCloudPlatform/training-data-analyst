@@ -27,20 +27,21 @@ MAX_SEQUENCE_LENGTH = 50
 # Numpy random number seed
 SEED = 123
 
-def download_from_gcs(data_path):
-    search = re.search('gs://(.*?)/(.*)',data_path)
+def download_from_gcs(source,destination):
+    search = re.search('gs://(.*?)/(.*)',source)
     bucket_name = search.group(1)
     blob_name = search.group(2)
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(bucket_name)
-    bucket.blob(blob_name).download_to_filename(blob_name)
-    return blob_name #this is the local path the file was downloaded to
+    bucket.blob(blob_name).download_to_filename(destination)
 
 def load_hacker_news_data(train_data_path,eval_data_path,num_classes):
     if train_data_path.startswith('gs://'):
-        train_data_path = download_from_gcs(train_data_path)    
+        download_from_gcs(train_data_path,destination='train.csv')
+        train_data_path = 'train.csv' 
     if eval_data_path.startswith('gs://'):
-        eval_data_path = download_from_gcs(eval_data_path)
+        download_from_gcs(eval_data_path,destination='eval.csv')
+        eval_data_path = 'eval.csv'
 
     # Parse CSV using pandas
     column_names = ('label', 'text')
