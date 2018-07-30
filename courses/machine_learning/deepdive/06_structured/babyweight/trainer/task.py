@@ -37,22 +37,15 @@ if __name__ == '__main__':
         required = True
     )
     parser.add_argument(
-        '--train_examples',
-        help = 'Number of examples (in thousands) to run the training job over. If this is more than actual # of examples available, it cycles through them. So specifying 1000 here when you have only 100k examples makes this 10 epochs.',
-        type = int,
-        default = 5000
-    )
-    parser.add_argument(
         '--batch_size',
         help = 'Number of examples to compute gradient over.',
         type = int,
         default = 512
     )
     parser.add_argument(
-        '--nembeds',
-        help = 'Embedding size of a cross of n key real-valued parameters',
-        type = int,
-        default = 3
+        '--job-dir',
+        help = 'this model ignores this field, but it is required by gcloud',
+        default = 'junk'
     )
     parser.add_argument(
         '--nnsize',
@@ -62,14 +55,23 @@ if __name__ == '__main__':
         default=[128, 32, 4]
     )
     parser.add_argument(
+        '--nembeds',
+        help = 'Embedding size of a cross of n key real-valued parameters',
+        type = int,
+        default = 3
+    )
+
+    ## TODO 1: add the new arguments here 
+    parser.add_argument(
+        '--train_examples',
+        help = 'Number of examples (in thousands) to run the training job over. If this is more than actual # of examples available, it cycles through them. So specifying 1000 here when you have only 100k examples makes this 10 epochs.',
+        type = int,
+        default = 5000
+    )    
+    parser.add_argument(
         '--pattern',
         help = 'Specify a pattern that has to be in input files. For example 00001-of will process only one shard',
         default = 'of'
-    )
-    parser.add_argument(
-        '--job-dir',
-        help = 'this model ignores this field, but it is required by gcloud',
-        default = 'junk'
     )
     parser.add_argument(
         '--eval_steps',
@@ -77,7 +79,8 @@ if __name__ == '__main__':
         type = int,       
         default = None
     )
-
+        
+    ## parse all arguments
     args = parser.parse_args()
     arguments = args.__dict__
 
@@ -85,6 +88,7 @@ if __name__ == '__main__':
     arguments.pop('job_dir', None)
     arguments.pop('job-dir', None)
 
+    ## assign the arguments to the model variables
     output_dir = arguments.pop('output_dir')
     model.BUCKET     = arguments.pop('bucket')
     model.BATCH_SIZE = arguments.pop('batch_size')
