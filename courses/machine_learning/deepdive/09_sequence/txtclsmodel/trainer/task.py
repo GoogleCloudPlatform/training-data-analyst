@@ -1,23 +1,13 @@
-"""Module to train sequence model.
-
-Vectorizes training and validation texts into sequences and uses that for
-training a sequence model - a sepCNN model. We use sequence model for text
-classification when the ratio of number of samples to number of words per
-sample for the given dataset is very large (>~15K).
-"""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import argparse
-
 from . import model
 
-
 if __name__ == '__main__':
+    # parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default='./data',
-                        help='input data directory')
     parser.add_argument(
         '--output_dir',
         help='GCS location to write checkpoints and export models',
@@ -35,7 +25,8 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--embedding_path',
-        help='can be a local path or a GCS url (gs://...)',
+        help='OPTIONAL: can be a local path or a GCS url (gs://...). \
+              Download from: https://nlp.stanford.edu/projects/glove/',
     )
     parser.add_argument(
         '--num_epochs',
@@ -59,5 +50,6 @@ if __name__ == '__main__':
     args, _ = parser.parse_known_args()
     hparams = args.__dict__
     output_dir = hparams.pop('output_dir')
-
+    
+    # initiate training
     model.train_and_evaluate(output_dir, hparams)
