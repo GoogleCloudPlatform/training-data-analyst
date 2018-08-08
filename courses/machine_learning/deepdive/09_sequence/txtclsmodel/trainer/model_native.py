@@ -220,6 +220,7 @@ Defines the features to be passed to the model during inference
   # Returns: tf.estimator.export.ServingInputReceiver
 """
 
+
 def serving_input_fn():
     feature_placeholder = tf.placeholder(tf.string, [None])
     # 1. Split string tensor into component words
@@ -250,7 +251,7 @@ def serving_input_fn():
 
 
 """
-Takes embedding for generic voabulary and extracts the embeddings
+Takes embedding for generic vocabulary and extracts the embeddings
   matching the current vocabulary
   The pre-trained embedding file is obtained from https://nlp.stanford.edu/projects/glove/
   # Arguments: 
@@ -314,7 +315,8 @@ def train_and_evaluate(output_dir, hparams):
     global VOCAB_FILE_PATH; VOCAB_FILE_PATH = os.path.join(output_dir,'vocab.txt')
     with tf.gfile.Open(VOCAB_FILE_PATH, 'wb') as f:
         for word, index in tokenizer.word_index.items():
-            f.write("{},{}\n".format(word, index))
+            if index < TOP_K: # only save mappings for TOP_K words
+                f.write("{},{}\n".format(word, index))
 
     # Create estimator
     run_config = tf.estimator.RunConfig(save_checkpoints_steps=1000)
