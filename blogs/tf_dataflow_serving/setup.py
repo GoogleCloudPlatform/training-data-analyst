@@ -1,3 +1,4 @@
+#[START load_dependencies]
 import setuptools
 
 requirements = []
@@ -12,3 +13,4 @@ setuptools.setup(
                             'trained/v1/variables/*']
                   },
 )
+#[END load_dependencies]
