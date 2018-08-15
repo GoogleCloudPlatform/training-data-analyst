@@ -8,7 +8,6 @@ import numpy as np
 import re
 import os
 
-from tensorflow.python.keras.preprocessing import sequence
 from tensorflow.python.keras.preprocessing import text
 from tensorflow.python.keras import models
 from tensorflow.python.keras.layers import Dense
@@ -34,8 +33,6 @@ Helper function to download data from Google Cloud Storage
       ONLY, doesn't support folders. (e.g. 'file.csv', NOT 'folder/file.csv')
   # Returns: nothing, downloads file to local disk
 """
-
-
 def download_from_gcs(source, destination):
     search = re.search('gs://(.*?)/(.*)', source)
     bucket_name = search.group(1)
@@ -56,8 +53,6 @@ Parses raw tsv containing hacker news headlines and returns (sentence, integer l
       ((train_sentences, train_labels), (test_sentences, test_labels)):  sentences
         are lists of strings, labels are numpy integer arrays
 """
-
-
 def load_hacker_news_data(train_data_path, eval_data_path):
     if train_data_path.startswith('gs://'):
         download_from_gcs(train_data_path, destination='train.csv')
@@ -80,15 +75,12 @@ Create tf.estimator compatible input function
   # Arguments:
       texts: [strings], list of sentences
       labels: numpy int vector, integer labels for sentences
-      tokenizer: tf.python.keras.preprocessing.text.Tokenizer
-        used to convert sentences to integers
       batch_size: int, number of records to use for each train batch
       mode: tf.estimator.ModeKeys.TRAIN or tf.estimator.ModeKeys.EVAL 
   # Returns:
       tf.estimator.inputs.numpy_input_fn, produces feature and label
         tensors one batch at a time
 """
-
 def input_fn(texts, labels, batch_size, mode):
     print('input_fn: mode: {}'.format(mode))
 
@@ -115,7 +107,6 @@ def input_fn(texts, labels, batch_size, mode):
 
 """
 Given an int tensor, remove 0s then pad to a fixed length representation. 
-  Length is determined by MAX_SEQUENCE_LENGTH. 0s are prepended to reach length
   #Arguments:
     feature: int tensor 
     label: int. not used in function, just passed through
@@ -255,11 +246,11 @@ def keras_estimator(model_dir,
 
 
 """
-Defines the features to be passed to the model during inference 
+Defines the features to be passed to the model during inference
+  Can pass in string text directly. Tokenization done in serving_input_fn 
   # Arguments: none
   # Returns: tf.estimator.export.ServingInputReceiver
 """
-
 def serving_input_fn():
     feature_placeholder = tf.placeholder(tf.string, [None])
     features = {
@@ -279,8 +270,6 @@ Takes embedding for generic vocabulary and extracts the embeddings
   # Returns: numpy matrix of shape (vocabulary, embedding_dim) that contains the embedded
       representation of each word in the vocabulary.
 """
-
-
 def get_embedding_matrix(word_index, embedding_path, embedding_dim):
     # Read the pre-trained embedding file and get word to word vector mappings.
     embedding_matrix_all = {}
@@ -318,8 +307,6 @@ Main orchestrator. Responsible for calling all other functions in model.py
       hparams: dict, command line parameters passed from task.py
   # Returns: nothing, kicks off training and evaluation
 """
-
-
 def train_and_evaluate(output_dir, hparams):
     # Load Data
     ((train_texts, train_labels), (test_texts, test_labels)) = load_hacker_news_data(
@@ -330,6 +317,7 @@ def train_and_evaluate(output_dir, hparams):
     tokenizer.fit_on_texts(train_texts)
 
     # Save vocabulary to file to use during serving time
+    tf.gfile.MkDir(output_dir) # directory must exist before we can use tf.gfile.open
     global VOCAB_FILE_PATH; VOCAB_FILE_PATH = os.path.join(output_dir,'vocab.txt')
     with tf.gfile.Open(VOCAB_FILE_PATH, 'wb') as f:
         f.write("{},0\n".format(PADWORD))  # map padword to 0

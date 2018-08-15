@@ -32,8 +32,6 @@ Helper function to download data from Google Cloud Storage
       ONLY, doesn't support folders. (e.g. 'file.csv', NOT 'folder/file.csv')
   # Returns: nothing, downloads file to local disk
 """
-
-
 def download_from_gcs(source, destination):
     search = re.search('gs://(.*?)/(.*)', source)
     bucket_name = search.group(1)
@@ -54,8 +52,6 @@ Parses raw tsv containing hacker news headlines and returns (sentence, integer l
       ((train_sentences, train_labels), (test_sentences, test_labels)):  sentences
         are lists of strings, labels are numpy integer arrays
 """
-
-
 def load_hacker_news_data(train_data_path, eval_data_path):
     if train_data_path.startswith('gs://'):
         download_from_gcs(train_data_path, destination='train.csv')
@@ -86,8 +82,6 @@ Create tf.estimator compatible input function
       tf.estimator.inputs.numpy_input_fn, produces feature and label
         tensors one batch at a time
 """
-
-
 def input_fn(texts, labels, tokenizer, batch_size, mode):
     print('input_fn: mode: {}'.format(mode))
 
@@ -101,7 +95,7 @@ def input_fn(texts, labels, tokenizer, batch_size, mode):
 
     # default settings for training
     num_epochs = None
-    shuffle = False # our input is already shuffled
+    shuffle = True
 
     # override if this is eval
     if mode == tf.estimator.ModeKeys.EVAL:
@@ -116,7 +110,7 @@ def input_fn(texts, labels, tokenizer, batch_size, mode):
         batch_size=batch_size,
         num_epochs=num_epochs,
         shuffle=shuffle,
-        queue_capacity=5000
+        queue_capacity=50000
     )
 
 
@@ -139,8 +133,6 @@ Builds a separable CNN model using keras and converts to tf.estimator.Estimator
     # Returns
         A tf.estimator.Estimator sepCNN model 
 """
-
-
 def keras_estimator(model_dir,
                     config,
                     learning_rate,
@@ -214,13 +206,11 @@ def keras_estimator(model_dir,
 
 """
 Defines the features to be passed to the model during inference 
+  Expects already tokenized and padded representation of sentences
   # Arguments: none
   # Returns: tf.estimator.export.ServingInputReceiver
 """
-
-
 def serving_input_fn():
-    # expects already tokenized and padded representation of sentences
     feature_placeholder = tf.placeholder(tf.int16, [None, MAX_SEQUENCE_LENGTH])
     features = {
         'embedding_1_input': feature_placeholder
