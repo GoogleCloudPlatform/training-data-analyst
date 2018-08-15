@@ -23,7 +23,7 @@ from google.cloud import storage
 CLASSES = {'github': 0, 'nytimes': 1, 'techcrunch': 2}  # label-to-int mapping
 TOP_K = 20000  # Limit on the number vocabulary size used for tokenization
 MAX_SEQUENCE_LENGTH = 50  # Sentences will be truncated/padded to this length
-VOCAB_FILE_PATH = None # where vocabulary is saved, set in train_and_eval function
+VOCAB_FILE_PATH = None # where vocabulary is saved, dynamically set in train_and_eval function
 PADWORD = 'ZYXW'
 
 """
@@ -89,37 +89,79 @@ Create tf.estimator compatible input function
         tensors one batch at a time
 """
 
-
-def input_fn(texts, labels, tokenizer, batch_size, mode):
+def input_fn(texts, labels, batch_size, mode):
     print('input_fn: mode: {}'.format(mode))
 
-    # Transform text to sequence of integers
-    x = tokenizer.texts_to_sequences(texts)
+    # Convert texts from python strings to tensors
+    x = tf.constant(texts)
 
-    # Fix sequence length to max value. Sequences shorter than the length are
-    # padded in the beginning and sequences longer are truncated
-    # at the beginning.
-    x = sequence.pad_sequences(x, maxlen=MAX_SEQUENCE_LENGTH)
+    # Map text to sequence of word-integers and pad
+    x = vectorize_sentences(x)
 
-    # default settings for training
-    num_epochs = None
-    shuffle = True
+    # Create tf.data.Dataset from tensors
+    dataset = tf.data.Dataset.from_tensor_slices((x, labels))
 
-    # override if this is eval
-    if mode == tf.estimator.ModeKeys.EVAL:
+    # Pad to constant length
+    dataset = dataset.map(pad)
+
+    if mode == tf.estimator.ModeKeys.TRAIN:
+        num_epochs = None #loop indefinitley
+        dataset = dataset.shuffle(buffer_size=50000) # our input is already shuffled so this is redundant
+    else:
         num_epochs = 1
-        shuffle = False
-    print('input_fn: x_shape: {}'.format(x.shape))
-    print('input_fn: y_shape: {}'.format(labels.shape))
 
-    return tf.estimator.inputs.numpy_input_fn(
-        x={'embedding_1_input': x},  # feature name must match internal keras input name
-        y=labels,
-        batch_size=batch_size,
-        num_epochs=num_epochs,
-        shuffle=shuffle,
-        queue_capacity=5000
-    )
+    dataset = dataset.repeat(num_epochs).batch(batch_size)
+    return dataset
+
+"""
+Given an int tensor, remove 0s then pad to a fixed length representation. 
+  Length is determined by MAX_SEQUENCE_LENGTH. 0s are prepended to reach length
+  #Arguments:
+    feature: int tensor 
+    label: int. not used in function, just passed through
+  #Returns:
+    (int tensor, int) tuple.
+"""
+def pad(feature, label):
+    # 1. Remove 0s which represent out of vocabulary words
+    nonzero_indices = tf.where(tf.not_equal(feature, tf.zeros_like(feature)))
+    without_zeros = tf.gather(feature,nonzero_indices)
+    without_zeros = tf.squeeze(without_zeros, axis=1)
+
+    # 2. Prepend 0s till MAX_SEQUENCE_LENGTH
+    padded = tf.pad(without_zeros, [[MAX_SEQUENCE_LENGTH, 0]])  # pad out with zeros
+    padded = padded[-MAX_SEQUENCE_LENGTH:]  # slice to constant length
+    return (padded, label)
+
+
+"""
+Given sentences, return an integer representation
+  # Arguments:
+      sentences: string tensor of shape (?,), contains sentences to vectorize
+  # Returns:
+      Integer representation of the sentence. Word-integer mapping is determined
+        by VOCAB_FILE_PATH. Words out of vocabulary will map to 0
+"""
+def vectorize_sentences(sentences):
+    # 1. Remove punctuation
+    sentences = tf.regex_replace(sentences, '[[:punct:]]', ' ')
+
+    # 2. Split string tensor into component words
+    words = tf.string_split(sentences)
+    words = tf.sparse_tensor_to_dense(words, default_value=PADWORD)
+
+    # 3. Map each word to respective integer
+    table = tf.contrib.lookup.index_table_from_file(
+        vocabulary_file=VOCAB_FILE_PATH,
+        num_oov_buckets=0,
+        vocab_size=None,
+        default_value=0,  # for words not in vocabulary (OOV)
+        key_column_index=0,
+        value_column_index=1,
+        delimiter=',')
+    numbers = table.lookup(words)
+
+    return numbers
 
 
 """
@@ -139,10 +181,8 @@ Builds a separable CNN model using keras and converts to tf.estimator.Estimator
         pre-trained embedding is provided
 
     # Returns
-        A tf.estimator.Estimator sepCNN model 
+        A tf.estimator.Estimator that implements a sepCNN model 
 """
-
-
 def keras_estimator(model_dir,
                     config,
                     learning_rate,
@@ -220,32 +260,10 @@ Defines the features to be passed to the model during inference
   # Returns: tf.estimator.export.ServingInputReceiver
 """
 
-
 def serving_input_fn():
     feature_placeholder = tf.placeholder(tf.string, [None])
-    # 1. Split string tensor into component words
-    words = tf.string_split(feature_placeholder)
-    words = tf.sparse_tensor_to_dense(words, default_value=PADWORD)
-
-    # 2. Map each word to respective integer
-    table = tf.contrib.lookup.index_table_from_file(
-        vocabulary_file=VOCAB_FILE_PATH,
-        num_oov_buckets=0,
-        vocab_size=None,
-        default_value=0,
-        key_column_index=0,
-        value_column_index=1,
-        delimiter=',')
-    numbers = table.lookup(words)
-
-    # 3. Pad to constant length
-    padding = tf.constant([[0, 0],
-                           [MAX_SEQUENCE_LENGTH, 0]])
-    padded = tf.pad(numbers, padding) # pad out with zeros
-    padded = padded[:, -MAX_SEQUENCE_LENGTH:] # slice to constant length
-
     features = {
-        'embedding_1_input': padded
+        'embedding_1_input': vectorize_sentences(feature_placeholder)
     }
     return tf.estimator.export.ServingInputReceiver(features, feature_placeholder)
 
@@ -314,6 +332,7 @@ def train_and_evaluate(output_dir, hparams):
     # Save vocabulary to file to use during serving time
     global VOCAB_FILE_PATH; VOCAB_FILE_PATH = os.path.join(output_dir,'vocab.txt')
     with tf.gfile.Open(VOCAB_FILE_PATH, 'wb') as f:
+        f.write("{},0\n".format(PADWORD))  # map padword to 0
         for word, index in tokenizer.word_index.items():
             if index < TOP_K: # only save mappings for TOP_K words
                 f.write("{},{}\n".format(word, index))
@@ -331,10 +350,9 @@ def train_and_evaluate(output_dir, hparams):
     # Create TrainSpec
     train_steps = hparams['num_epochs'] * len(train_texts) / hparams['batch_size']
     train_spec = tf.estimator.TrainSpec(
-        input_fn=input_fn(
+        input_fn=lambda:input_fn(
             train_texts,
             train_labels,
-            tokenizer,
             hparams['batch_size'],
             mode=tf.estimator.ModeKeys.TRAIN),
         max_steps=train_steps
@@ -343,10 +361,9 @@ def train_and_evaluate(output_dir, hparams):
     # Create EvalSpec
     exporter = tf.estimator.LatestExporter('exporter', serving_input_fn)
     eval_spec = tf.estimator.EvalSpec(
-        input_fn=input_fn(
+        input_fn=lambda:input_fn(
             test_texts,
             test_labels,
-            tokenizer,
             hparams['batch_size'],
             mode=tf.estimator.ModeKeys.EVAL),
         steps=None,

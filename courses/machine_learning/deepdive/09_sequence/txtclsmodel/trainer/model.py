@@ -32,6 +32,8 @@ Helper function to download data from Google Cloud Storage
       ONLY, doesn't support folders. (e.g. 'file.csv', NOT 'folder/file.csv')
   # Returns: nothing, downloads file to local disk
 """
+
+
 def download_from_gcs(source, destination):
     search = re.search('gs://(.*?)/(.*)', source)
     bucket_name = search.group(1)
@@ -52,6 +54,8 @@ Parses raw tsv containing hacker news headlines and returns (sentence, integer l
       ((train_sentences, train_labels), (test_sentences, test_labels)):  sentences
         are lists of strings, labels are numpy integer arrays
 """
+
+
 def load_hacker_news_data(train_data_path, eval_data_path):
     if train_data_path.startswith('gs://'):
         download_from_gcs(train_data_path, destination='train.csv')
@@ -68,6 +72,7 @@ def load_hacker_news_data(train_data_path, eval_data_path):
     return ((list(df_train['text']), np.array(df_train['label'].map(CLASSES))),
             (list(df_eval['text']), np.array(df_eval['label'].map(CLASSES))))
 
+
 """
 Create tf.estimator compatible input function
   # Arguments:
@@ -81,6 +86,8 @@ Create tf.estimator compatible input function
       tf.estimator.inputs.numpy_input_fn, produces feature and label
         tensors one batch at a time
 """
+
+
 def input_fn(texts, labels, tokenizer, batch_size, mode):
     print('input_fn: mode: {}'.format(mode))
 
@@ -94,7 +101,7 @@ def input_fn(texts, labels, tokenizer, batch_size, mode):
 
     # default settings for training
     num_epochs = None
-    shuffle = True
+    shuffle = False # our input is already shuffled
 
     # override if this is eval
     if mode == tf.estimator.ModeKeys.EVAL:
@@ -112,6 +119,7 @@ def input_fn(texts, labels, tokenizer, batch_size, mode):
         queue_capacity=5000
     )
 
+
 """
 Builds a separable CNN model using keras and converts to tf.estimator.Estimator
   # Arguments
@@ -127,10 +135,12 @@ Builds a separable CNN model using keras and converts to tf.estimator.Estimator
         defaults to None which will cause the model to train embedding from scratch
       word_index: dictionary, mapping of vocabulary to integers. used only if
         pre-trained embedding is provided
-      
+
     # Returns
         A tf.estimator.Estimator sepCNN model 
 """
+
+
 def keras_estimator(model_dir,
                     config,
                     learning_rate,
@@ -207,6 +217,8 @@ Defines the features to be passed to the model during inference
   # Arguments: none
   # Returns: tf.estimator.export.ServingInputReceiver
 """
+
+
 def serving_input_fn():
     # expects already tokenized and padded representation of sentences
     feature_placeholder = tf.placeholder(tf.int16, [None, MAX_SEQUENCE_LENGTH])
@@ -214,6 +226,7 @@ def serving_input_fn():
         'embedding_1_input': feature_placeholder
     }
     return tf.estimator.export.ServingInputReceiver(features, feature_placeholder)
+
 
 """
 Takes embedding for generic voabulary and extracts the embeddings
@@ -254,6 +267,7 @@ def get_embedding_matrix(word_index, embedding_path, embedding_dim):
             # words not found in embedding index will be all-zeros.
             embedding_matrix[i] = embedding_vector
     return embedding_matrix
+
 
 """
 Main orchestrator. Responsible for calling all other functions in model.py
