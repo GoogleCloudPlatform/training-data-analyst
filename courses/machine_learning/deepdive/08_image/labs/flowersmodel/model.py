@@ -29,12 +29,12 @@ NUM_CHANNELS = 3
 NCLASSES = 5
 
 def linear_model(img, mode, hparams):
-  X = tf.reshape(img,[-1,HEIGHT*WIDTH]) #flatten
+  X = tf.reshape(img,[-1,HEIGHT*WIDTH*NUM_CHANNELS]) #flatten
   ylogits = tf.layers.dense(X,NCLASSES,activation=None)
   return ylogits, NCLASSES
 
 def dnn_model(img, mode, hparams):
-  X = tf.reshape(img, [-1, HEIGHT*WIDTH]) #flatten
+  X = tf.reshape(img, [-1, HEIGHT*WIDTH*NUM_CHANNELS]) #flatten
   h1 = tf.layers.dense(X, 300, activation=tf.nn.relu)
   h2 = tf.layers.dense(h1,100, activation=tf.nn.relu)
   h3 = tf.layers.dense(h2, 30, activation=tf.nn.relu)
@@ -44,7 +44,7 @@ def dnn_model(img, mode, hparams):
 def dnn_dropout_model(img, mode, hparams):
   dprob = hparams.get('dprob', 0.1)
 
-  X = tf.reshape(img, [-1, HEIGHT*WIDTH]) #flatten
+  X = tf.reshape(img, [-1, HEIGHT*WIDTH*NUM_CHANNELS]) #flatten
   h1 = tf.layers.dense(X, 300, activation=tf.nn.relu)
   h2 = tf.layers.dense(h1,100, activation=tf.nn.relu)
   h3 = tf.layers.dense(h2, 30, activation=tf.nn.relu)
