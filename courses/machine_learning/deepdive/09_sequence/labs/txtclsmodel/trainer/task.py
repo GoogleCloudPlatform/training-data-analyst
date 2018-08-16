@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import argparse
 from . import model
+from . import model_native
 
 if __name__ == '__main__':
     # parse command line arguments
@@ -46,10 +47,18 @@ if __name__ == '__main__':
         default=.001,
         type=float
     )
+    parser.add_argument(
+        '--native',
+        action='store_true',
+        help='use native in-graph pre-processing functions',
+    )
 
     args, _ = parser.parse_known_args()
     hparams = args.__dict__
     output_dir = hparams.pop('output_dir')
     
     # initiate training
-    model.train_and_evaluate(output_dir, hparams)
+    if hparams['native']:
+        model_native.train_and_evaluate(output_dir, hparams)
+    else:
+        model.train_and_evaluate(output_dir, hparams)
