@@ -19,6 +19,8 @@ from tensorflow.python.keras.layers import GlobalAveragePooling1D
 
 from google.cloud import storage
 
+tf.logging.set_verbosity(tf.logging.INFO)
+
 CLASSES = {'github': 0, 'nytimes': 1, 'techcrunch': 2}  # label-to-int mapping
 TOP_K = 20000  # Limit on the number vocabulary size used for tokenization
 MAX_SEQUENCE_LENGTH = 50  # Sentences will be truncated/padded to this length
@@ -82,8 +84,6 @@ Create tf.estimator compatible input function
         tensors one batch at a time
 """
 def input_fn(texts, labels, batch_size, mode):
-    print('input_fn: mode: {}'.format(mode))
-
     # Convert texts from python strings to tensors
     x = tf.constant(texts)
 
