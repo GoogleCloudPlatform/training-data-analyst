@@ -84,8 +84,6 @@ Create tf.estimator compatible input function
         tensors one batch at a time
 """
 def input_fn(texts, labels, batch_size, mode):
-    print('input_fn: mode: {}'.format(mode))
-
     # Convert texts from python strings to tensors
     x = tf.constant(texts)
 

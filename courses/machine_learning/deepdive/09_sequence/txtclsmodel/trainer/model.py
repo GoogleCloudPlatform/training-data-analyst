@@ -85,8 +85,6 @@ Create tf.estimator compatible input function
         tensors one batch at a time
 """
 def input_fn(texts, labels, tokenizer, batch_size, mode):
-    print('input_fn: mode: {}'.format(mode))
-
     # Transform text to sequence of integers
     x = tokenizer.texts_to_sequences(texts)
 
@@ -103,8 +101,6 @@ def input_fn(texts, labels, tokenizer, batch_size, mode):
     if mode == tf.estimator.ModeKeys.EVAL:
         num_epochs = 1
         shuffle = False
-    print('input_fn: x_shape: {}'.format(x.shape))
-    print('input_fn: y_shape: {}'.format(labels.shape))
 
     return tf.estimator.inputs.numpy_input_fn(
         x={'embedding_1_input': x},  # feature name must match internal keras input name
