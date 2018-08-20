@@ -75,10 +75,11 @@ def cnn_model(img, mode, hparams):
 def read_and_preprocess(example_data):
     parsed = tf.parse_single_example(example_data, {
       'image/encoded': tf.FixedLenFeature((), tf.string, ''),
-      'image/class/synset': tf.FixedLenFeature([], tf.string, ''),
+      'image/class/label': tf.FixedLenFeature([], tf.int64, 1),
     })
     image_bytes = tf.reshape(parsed['image/encoded'], shape=[])
-    label = tf.reshape(parsed['image/class/synset'], shape=[])
+    label = tf.cast(
+      tf.reshape(parsed['image/class/label'], shape=[]), dtype=tf.int32) - 1
 
     # end up with pixel values that are in the -1, 1 range
     image = tf.image.decode_jpeg(image_bytes, channels=NUM_CHANNELS)
@@ -106,31 +107,10 @@ def serving_input_fn():
                             tf.placeholder(tf.string, shape=())}
     image, _ = read_and_preprocess(
         tf.squeeze(feature_placeholders['image_bytes']))
-    image['image'] = tf.expand_dims(image['image'],0)
-    return tf.estimator.export.ServingInputReceiver(image, feature_placeholders)
-
-def make_input_fn_old(pattern, mode):
-    def _input_fn(params):
-
-        # Create tf.data.dataset from filename
-        filenames = tf.gfile.Glob(pattern)
-        dataset = tf.data.TFRecordDataset(filenames)
-
-        # augment
-        dataset = dataset.map(read_and_preprocess)
-        batch_size = params['batch_size']  # passed by the TPU Estimator
-
-        if mode == tf.estimator.ModeKeys.TRAIN:
-            num_epochs = None # indefinitely
-            dataset = dataset.shuffle(buffer_size = 10 * batch_size)
-        else:
-            num_epochs = 1 # end-of-input after this
-
-        dataset = dataset.repeat(num_epochs).batch(batch_size)
-        return dataset.make_one_shot_iterator().get_next()
-
-    return _input_fn
-
+    features = {
+      'image': tf.expand_dims(image, 0)
+    }
+    return tf.estimator.export.ServingInputReceiver(features, feature_placeholders)
 
 def make_input_fn(pattern, mode, num_cores=8, transpose_input=False):
   def _set_shapes(batch_size, images, labels):
@@ -145,6 +125,7 @@ def make_input_fn(pattern, mode, num_cores=8, transpose_input=False):
         tf.TensorShape([batch_size, None, None, None])))
       labels.set_shape(labels.get_shape().merge_with(
         tf.TensorShape([batch_size])))
+    return images, labels
 
   def _input_fn(params):
     batch_size = params['batch_size']
@@ -194,29 +175,25 @@ def image_classifier(features, labels, mode, params):
   ylogits, nclasses = cnn_model(image, mode, params)
 
   probabilities = tf.nn.softmax(ylogits)
-  class_int = tf.cast(tf.argmax(probabilities, 1), tf.uint8)
-  class_str = tf.gather(LIST_OF_LABELS, tf.cast(class_int, tf.int32))
+  class_int = tf.cast(tf.argmax(probabilities, 1), tf.int32)
+  class_str = tf.gather(LIST_OF_LABELS, class_int)
   
   if mode == tf.estimator.ModeKeys.TRAIN or mode == tf.estimator.ModeKeys.EVAL:
-    #convert string label to int
-    labels_table = tf.contrib.lookup.index_table_from_tensor(
-      tf.constant(LIST_OF_LABELS))
-    labels = labels_table.lookup(labels)
-    
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
         logits=ylogits, labels=tf.one_hot(labels, nclasses)))
-    evalmetrics =  {'accuracy': tf.metrics.accuracy(class_int, labels)}
+
+    def metric_fn(class_int, labels):
+      return {'accuracy': tf.metrics.accuracy(class_int, labels)}
+    evalmetrics = (metric_fn, [class_int, labels])
+
     if mode == tf.estimator.ModeKeys.TRAIN:
       # this is needed for batch normalization, but has no effect otherwise
       update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
       optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
-      optimizer = tf.contrib.tpu.CrossShardOptimizer(optimizer) # TPU change 1
+      if params['use_tpu']:
+        optimizer = tf.contrib.tpu.CrossShardOptimizer(optimizer) # TPU change 1
       with tf.control_dependencies(update_ops):
-         train_op = tf.contrib.layers.optimize_loss(
-             loss, 
-             tf.train.get_global_step(),
-             learning_rate=params['learning_rate'],
-             optimizer=optimizer)
+         train_op = optimizer.minimize(loss, tf.train.get_global_step())
     else:
       train_op = None
   else:
@@ -246,26 +223,34 @@ def load_global_step_from_checkpoint_dir(checkpoint_dir):
 
 def train_and_evaluate(output_dir, hparams):
   STEPS_PER_EVAL = 1000
-  MAX_STEPS = hparams['train_steps']
+  max_steps = hparams['train_steps']
   eval_batch_size = min(1024, hparams['num_eval_images'])
   eval_batch_size = eval_batch_size - eval_batch_size % 8  # divisible by num_cores
+  tf.logging.info('train_batch_size=%d  eval_batch_size=%d  max_steps=%d',
+                  hparams['train_batch_size'],
+                  eval_batch_size,
+                  max_steps)
 
   # TPU change 3
-  tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
-    hparams['tpu'],
-    zone=hparams['tpu_zone'],
-    project=hparams['project'])
-  config = tf.contrib.tpu.RunConfig(
-    cluster=tpu_cluster_resolver,
-    model_dir=output_dir,
-    save_checkpoints_steps=STEPS_PER_EVAL,
-    tpu_config=tf.contrib.tpu.TPUConfig(
-      iterations_per_loop=STEPS_PER_EVAL,
-      per_host_input_for_training=True))
+  if hparams['use_tpu']:
+    tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
+      hparams['tpu'],
+      zone=hparams['tpu_zone'],
+      project=hparams['project'])
+    config = tf.contrib.tpu.RunConfig(
+      cluster=tpu_cluster_resolver,
+      model_dir=output_dir,
+      save_checkpoints_steps=STEPS_PER_EVAL,
+      tpu_config=tf.contrib.tpu.TPUConfig(
+        iterations_per_loop=STEPS_PER_EVAL,
+        per_host_input_for_training=True))
+  else:
+    config = tf.contrib.tpu.RunConfig()
 
   estimator = tf.contrib.tpu.TPUEstimator(  # TPU change 4
     model_fn=image_classifier,
     config=config,
+    params=hparams,
     model_dir=output_dir,
     train_batch_size=hparams['train_batch_size'],
     eval_batch_size=eval_batch_size,
@@ -283,8 +268,8 @@ def train_and_evaluate(output_dir, hparams):
   steps_per_epoch = hparams['num_train_images'] // hparams['train_batch_size']
   tf.logging.info('Training for %d steps (%.2f epochs in total). Current'
                   ' step %d.',
-                  MAX_STEPS,
-                  MAX_STEPS / steps_per_epoch,
+                  max_steps,
+                  max_steps / steps_per_epoch,
                   current_step)
 
   start_timestamp = time.time()  # This time will include compilation time
@@ -292,7 +277,7 @@ def train_and_evaluate(output_dir, hparams):
   while current_step < hparams['train_steps']:
     # Train for up to steps_per_eval number of steps.
     # At the end of training, a checkpoint will be written to --model_dir.
-    next_checkpoint = min(current_step + STEPS_PER_EVAL, MAX_STEPS)
+    next_checkpoint = min(current_step + STEPS_PER_EVAL, max_steps)
     estimator.train(input_fn=train_input_fn, max_steps=next_checkpoint)
     current_step = next_checkpoint
     tf.logging.info('Finished training up to step %d. Elapsed seconds %d.',
@@ -310,11 +295,11 @@ def train_and_evaluate(output_dir, hparams):
 
   elapsed_time = int(time.time() - start_timestamp)
   tf.logging.info('Finished training up to step %d. Elapsed seconds %d.',
-                  MAX_STEPS, elapsed_time)
+                  max_steps, elapsed_time)
 
 
   # export similar to Cloud ML Engine convention
   tf.logging.info('Starting to export model.')
   estimator.export_savedmodel(
-    export_dir_base=os.path.join(output_dir, 'export/exporter', str(time.time())),
+    export_dir_base=os.path.join(output_dir, 'export/exporter'),
     serving_input_receiver_fn=serving_input_fn)

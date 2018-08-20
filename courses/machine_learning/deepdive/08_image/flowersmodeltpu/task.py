@@ -139,6 +139,7 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
   hparams = args.__dict__
+  print(hparams)
 
   output_dir = hparams.pop('output_dir')
   # Append trial_id to path for hptuning
