@@ -247,7 +247,8 @@ def load_global_step_from_checkpoint_dir(checkpoint_dir):
 def train_and_evaluate(output_dir, hparams):
   STEPS_PER_EVAL = 1000
   MAX_STEPS = hparams['train_steps']
-  eval_batch_size = 1024
+  eval_batch_size = min(1024, hparams['num_eval_images'])
+  eval_batch_size = eval_batch_size - eval_batch_size % 8  # divisible by num_cores
 
   # TPU change 3
   tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
