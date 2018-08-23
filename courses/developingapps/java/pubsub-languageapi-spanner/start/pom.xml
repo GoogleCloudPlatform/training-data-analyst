@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
  * Copyright 2018 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +38,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
         <google.datastore.version>1.6.0</google.datastore.version>
-        <google.pubsub.version>0.24.0-beta</google.pubsub.version>
+        <google.pubsub.version>0.26.0-beta</google.pubsub.version>
         <google.languageapi.version>0.24.0-beta</google.languageapi.version>
         <google.spanner.version>0.24.0-beta</google.spanner.version>
         <google.cloudstorage.version>1.6.0</google.cloudstorage.version>
@@ -117,7 +117,7 @@
     <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-pubsub</artifactId>
-        <version>0.24.0-beta</version>
+        <version>0.26.0-beta</version>
     </dependency>
     <dependency>
         <groupId>com.google.cloud</groupId>
