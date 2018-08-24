@@ -253,10 +253,8 @@ Defines the features to be passed to the model during inference
 """
 def serving_input_fn():
     feature_placeholder = tf.placeholder(tf.string, [None])
-    features = {
-        'embedding_1_input': vectorize_sentences(feature_placeholder)
-    }
-    return tf.estimator.export.ServingInputReceiver(features, feature_placeholder)
+    features = vectorize_sentences(feature_placeholder)
+    return tf.estimator.export.TensorServingInputReceiver(features, feature_placeholder)
 
 
 """

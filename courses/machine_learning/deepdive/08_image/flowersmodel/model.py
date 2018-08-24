@@ -112,7 +112,7 @@ def read_and_preprocess(image_bytes, label=None, augment=False):
        image = tf.image.random_brightness(image, max_delta=63.0/255.0)
        image = tf.image.random_contrast(image, lower=0.2, upper=1.8)
     else:
-       image = tf.image.resize_bilinear(image, [HEIGHT, WIDTH], align_corners=False)
+       image = tf.image.resize_bilinear(image, [HEIGHT, WIDTH, NUM_CHANNELS], align_corners=False)
        image = tf.squeeze(image) #remove batch dimension
         
     #pixel values are in range [0,1], convert to [-1,1]
