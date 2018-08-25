@@ -1,0 +1,3 @@
+[submodule "training-data-analyst"]
+	path = training-data-analyst
+	url = https://github.com/netskink/training-data-analyst.git
