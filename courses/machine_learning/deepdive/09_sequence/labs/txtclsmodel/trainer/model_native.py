@@ -309,7 +309,7 @@ def train_and_evaluate(output_dir, hparams):
                 f.write("{},{}\n".format(word, index))
 
     # Create estimator
-    run_config = tf.estimator.RunConfig(save_checkpoints_steps=1000)
+    run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
     estimator = keras_estimator(
         model_dir=output_dir,
         config=run_config,

@@ -259,7 +259,7 @@ def train_and_evaluate(output_dir, hparams):
     pickle.dump(tokenizer, open('tokenizer.pickled', 'wb'))
 
     # Create estimator
-    run_config = tf.estimator.RunConfig(save_checkpoints_steps=1000)
+    run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
     estimator = # TODO: create estimator
 
     # Create TrainSpec
