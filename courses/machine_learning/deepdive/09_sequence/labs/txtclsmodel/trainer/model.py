@@ -14,7 +14,7 @@ from tensorflow.python.keras import models
 from tensorflow.python.keras.layers import Dense
 from tensorflow.python.keras.layers import Dropout
 from tensorflow.python.keras.layers import Embedding
-from tensorflow.python.keras.layers import SeparableConv1D
+from tensorflow.python.keras.layers import Conv1D
 from tensorflow.python.keras.layers import MaxPooling1D
 from tensorflow.python.keras.layers import GlobalAveragePooling1D
 
@@ -111,13 +111,11 @@ def input_fn(texts, labels, tokenizer, batch_size, mode):
         queue_capacity=50000
     )
 
-
 """
-Builds a separable CNN model using keras and converts to tf.estimator.Estimator
+Builds a CNN model using keras and converts to tf.estimator.Estimator
   # Arguments
       model_dir: string, file path where training files will be written
       config: tf.estimator.RunConfig, specifies properties of tf Estimator
-      blocks: int, number of pairs of sepCNN and pooling blocks in the model.
       filters: int, output dimension of the layers.
       kernel_size: int, length of the convolution window.
       embedding_dim: int, dimension of the embedding vectors.
@@ -129,12 +127,11 @@ Builds a separable CNN model using keras and converts to tf.estimator.Estimator
         pre-trained embedding is provided
 
     # Returns
-        A tf.estimator.Estimator sepCNN model 
+        A tf.estimator.Estimator 
 """
 def keras_estimator(model_dir,
                     config,
                     learning_rate,
-                    blocks=2,
                     filters=64,
                     dropout_rate=0.2,
                     embedding_dim=200,
@@ -162,33 +159,18 @@ def keras_estimator(model_dir,
                             output_dim=embedding_dim,
                             input_length=MAX_SEQUENCE_LENGTH))
 
-    for _ in range(blocks - 1):
-        model.add(Dropout(rate=dropout_rate))
-        model.add(SeparableConv1D(filters=filters,
-                                  kernel_size=kernel_size,
-                                  activation='relu',
-                                  bias_initializer='random_uniform',
-                                  depthwise_initializer='random_uniform',
-                                  padding='same'))
-        model.add(SeparableConv1D(filters=filters,
-                                  kernel_size=kernel_size,
-                                  activation='relu',
-                                  bias_initializer='random_uniform',
-                                  depthwise_initializer='random_uniform',
-                                  padding='same'))
-        model.add(MaxPooling1D(pool_size=pool_size))
-
-    model.add(SeparableConv1D(filters=filters * 2,
+    model.add(Dropout(rate=dropout_rate))
+    model.add(Conv1D(filters=filters,
                               kernel_size=kernel_size,
                               activation='relu',
                               bias_initializer='random_uniform',
-                              depthwise_initializer='random_uniform',
                               padding='same'))
-    model.add(SeparableConv1D(filters=filters * 2,
+
+    model.add(MaxPooling1D(pool_size=pool_size))
+    model.add(Conv1D(filters=filters * 2,
                               kernel_size=kernel_size,
                               activation='relu',
                               bias_initializer='random_uniform',
-                              depthwise_initializer='random_uniform',
                               padding='same'))
     model.add(GlobalAveragePooling1D())
     model.add(Dropout(rate=dropout_rate))
@@ -277,7 +259,7 @@ def train_and_evaluate(output_dir, hparams):
     pickle.dump(tokenizer, open('tokenizer.pickled', 'wb'))
 
     # Create estimator
-    run_config = tf.estimator.RunConfig(save_checkpoints_steps=1000)
+    run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
     estimator = # TODO: create estimator
 
     # Create TrainSpec
