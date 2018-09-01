@@ -18,37 +18,20 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import numpy as np
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
 tf.logging.set_verbosity(tf.logging.INFO)
 
 HEIGHT=28
 WIDTH=28
 NCLASSES=10
 
-def linear_model(img, mode, hparams):
-  X = tf.reshape(img,[-1,HEIGHT*WIDTH]) #flatten
-  ylogits = tf.layers.dense(X,NCLASSES,activation=None)
-  return ylogits, NCLASSES
-
 def dnn_model(img, mode, hparams):
   X = tf.reshape(img, [-1, HEIGHT*WIDTH]) #flatten
-  h1 = tf.layers.dense(X, 300, activation=tf.nn.relu)
-  h2 = tf.layers.dense(h1,100, activation=tf.nn.relu)
-  h3 = tf.layers.dense(h2, 30, activation=tf.nn.relu)
+  h1 = tf.layers.dense(X, 100, activation=tf.nn.relu)
+  h2 = tf.layers.dense(h1, 100, activation=tf.nn.relu)
+  h3 = tf.layers.dense(h2, 100, activation=tf.nn.relu)
   ylogits = tf.layers.dense(h3, NCLASSES, activation=None)
-  return ylogits, NCLASSES
-
-def dnn_dropout_model(img, mode, hparams):
-  dprob = hparams.get('dprob', 0.1)
-
-  X = tf.reshape(img, [-1, HEIGHT*WIDTH]) #flatten
-  h1 = tf.layers.dense(X, 300, activation=tf.nn.relu)
-  h2 = tf.layers.dense(h1,100, activation=tf.nn.relu)
-  h3 = tf.layers.dense(h2, 30, activation=tf.nn.relu)
-  h3d = tf.layers.dropout(h3, rate=dprob, training=(
-      mode == tf.estimator.ModeKeys.TRAIN)) #only dropout when training
-  ylogits = tf.layers.dense(h3d, NCLASSES, activation=None)
   return ylogits, NCLASSES
 
 def cnn_model(img, mode, hparams):
@@ -102,9 +85,7 @@ def serving_input_fn():
 
 def image_classifier(features, labels, mode, params):
   model_functions = {
-      'linear':linear_model,
       'dnn':dnn_model,
-      'dnn_dropout':dnn_dropout_model,
       'cnn':cnn_model}
   model_function = model_functions[params['model']]  
   ylogits, nclasses = model_function(features['image'], mode, params)
@@ -145,11 +126,16 @@ def image_classifier(features, labels, mode, params):
 def train_and_evaluate(output_dir, hparams):
   EVAL_INTERVAL = 60
 
-  mnist = input_data.read_data_sets('mnist/data', one_hot=True, reshape=False)
+  (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.fashion_mnist.load_data()
 
+  train_images = train_images.astype('float32') #.reshape(train_images.shape + (1,))
+  test_images = test_images.astype('float32') #.reshape(test_images.shape + (1,))
+  train_labels = np.eye(10)[train_labels]
+  test_labels = np.eye(10)[test_labels]    
+    
   train_input_fn = tf.estimator.inputs.numpy_input_fn(
-    x={'image':mnist.train.images},
-    y=mnist.train.labels,
+    x={'image': train_images},
+    y=train_labels,
     batch_size=100,
     num_epochs=None,
     shuffle=True,
@@ -157,8 +143,8 @@ def train_and_evaluate(output_dir, hparams):
   )
 
   eval_input_fn = tf.estimator.inputs.numpy_input_fn(
-    x={'image':mnist.test.images},
-    y=mnist.test.labels,
+    x={'image':test_images},
+    y=test_labels,
     batch_size=100,
     num_epochs=1,
     shuffle=False,
