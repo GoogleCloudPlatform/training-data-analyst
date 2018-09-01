@@ -50,12 +50,10 @@ def cnn_model(img, mode, hparams):
   
   outlen = p2.shape[1]*p2.shape[2]*p2.shape[3] #980
   p2flat = tf.reshape(p2, [-1, outlen]) # flattened
-
+  
   h3 = tf.layers.dense(p2flat, 300, activation=tf.nn.relu) 
-  h3d = tf.layers.dropout(
-      h3, rate=dprob, training=(mode == tf.estimator.ModeKeys.TRAIN))
+  ylogits = tf.layers.dense(h3, NCLASSES, activation=None)
 
-  ylogits = tf.layers.dense(h3d, NCLASSES, activation=None)
   return ylogits, NCLASSES
 
 def serving_input_fn():
@@ -112,8 +110,8 @@ def train_and_evaluate(output_dir, hparams):
 
   (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.fashion_mnist.load_data()
 
-  train_images = train_images.astype('float32') #.reshape(train_images.shape + (1,))
-  test_images = test_images.astype('float32') #.reshape(test_images.shape + (1,))
+  train_images = train_images.astype('float32').reshape(train_images.shape + (1,))
+  test_images = test_images.astype('float32').reshape(test_images.shape + (1,))
   train_labels = np.eye(10)[train_labels]
   test_labels = np.eye(10)[test_labels]    
     
