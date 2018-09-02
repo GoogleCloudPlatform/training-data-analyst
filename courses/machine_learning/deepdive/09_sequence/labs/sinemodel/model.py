@@ -57,7 +57,7 @@ def rnn_model(features, mode, params):
   #TODO: finish rnn model
   pass
 
-# 2-layer LSTM
+# 2-layer RNN
 def rnn2_model(features, mode, params):
   x = tf.reshape(features[TIMESERIES_COL], [-1, N_INPUTS, 1])
   #TODO: finish 2-layer rnn model
