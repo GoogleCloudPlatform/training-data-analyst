@@ -103,7 +103,7 @@ def input_fn(texts, labels, tokenizer, batch_size, mode):
         shuffle = False
 
     return tf.estimator.inputs.numpy_input_fn(
-        x={'embedding_1_input': x},  # feature name must match internal keras input name
+        x, 
         y=labels,
         batch_size=batch_size,
         num_epochs=num_epochs,
@@ -192,11 +192,8 @@ Defines the features to be passed to the model during inference
 """
 def serving_input_fn():
     feature_placeholder = tf.placeholder(tf.int16, [None, MAX_SEQUENCE_LENGTH])
-    features = {
-        'embedding_1_input': feature_placeholder
-    }
-    return tf.estimator.export.ServingInputReceiver(features, feature_placeholder)
-
+    features = feature_placeholder  # pass as-is
+    return tf.estimator.export.TensorServingInputReceiver(features, feature_placeholder)
 
 """
 Takes embedding for generic voabulary and extracts the embeddings

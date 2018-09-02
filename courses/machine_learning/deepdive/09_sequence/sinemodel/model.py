@@ -19,7 +19,6 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-import tensorflow.contrib.rnn as rnn
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -71,62 +70,61 @@ def cnn_model(features, mode, params):
     return predictions
 
 
-def lstm_model(features, mode, params):
-    LSTM_SIZE = N_INPUTS // 3  # size of the internal state in each of the cells
+def rnn_model(features, mode, params):
+    CELL_SIZE = N_INPUTS // 3  # size of the internal state in each of the cells
 
     # 1. dynamic_rnn needs 3D shape: [BATCH_SIZE, N_INPUTS, 1]
     x = tf.reshape(features[TIMESERIES_COL], [-1, N_INPUTS, 1])
 
     # 2. configure the RNN
-    lstm_cell = rnn.BasicLSTMCell(LSTM_SIZE, forget_bias=1.0)
-    outputs, _ = tf.nn.dynamic_rnn(lstm_cell, x, dtype=tf.float32)
-    outputs = outputs[:, (N_INPUTS - 1):, :]  # last cell only
+    cell = tf.nn.rnn_cell.GRUCell(CELL_SIZE)
+    outputs, state = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32)
 
-    # 3. flatten lstm output and pass through a dense layer
-    lstm_flat = tf.reshape(outputs, [-1, lstm_cell.output_size])
-    h1 = tf.layers.dense(lstm_flat, N_INPUTS // 2, activation=tf.nn.relu)
+    # 3. pass rnn output through a dense layer
+    h1 = tf.layers.dense(state, N_INPUTS // 2, activation=tf.nn.relu)
     predictions = tf.layers.dense(h1, 1, activation=None)  # (?, 1)
     return predictions
 
 
-# 2-layer LSTM
-def lstm2_model(features, mode, params):
+# 2-layer RNN
+def rnn2_model(features, mode, params):
     # dynamic_rnn needs 3D shape: [BATCH_SIZE, N_INPUTS, 1]
     x = tf.reshape(features[TIMESERIES_COL], [-1, N_INPUTS, 1])
 
     # 2. configure the RNN
-    lstm_cell1 = rnn.BasicLSTMCell(N_INPUTS * 2, forget_bias=1.0)
-    lstm_cell2 = rnn.BasicLSTMCell(N_INPUTS // 2, forget_bias=1.0)
-    lstm_cells = rnn.MultiRNNCell([lstm_cell1, lstm_cell2])
-    outputs, _ = tf.nn.dynamic_rnn(lstm_cells, x, dtype=tf.float32)
-    outputs = outputs[:, (N_INPUTS - 1):, :]  # last one only
-
-    # 3. flatten lstm output and pass through a dense layer
-    lstm_flat = tf.reshape(outputs, [-1, lstm_cells.output_size])
-    h1 = tf.layers.dense(lstm_flat, lstm_cells.output_size // 2, activation=tf.nn.relu)
+    cell1 = tf.nn.rnn_cell.GRUCell(N_INPUTS * 2)
+    cell2 = tf.nn.rnn_cell.GRUCell(N_INPUTS // 2)
+    cells = tf.nn.rnn_cell.MultiRNNCell([cell1, cell2])
+    outputs, state = tf.nn.dynamic_rnn(cells, x, dtype=tf.float32)
+    # 'state' is now a tuple containing the final state of each cell layer
+    # we use state[1] below to extract the final state of the final layer
+    
+    # 3. pass rnn output through a dense layer
+    h1 = tf.layers.dense(state[1], cells.output_size // 2, activation=tf.nn.relu)
     predictions = tf.layers.dense(h1, 1, activation=None)  # (?, 1)
     return predictions
 
 
 # create N-1 predictions
-def lstmN_model(features, mode, params):
+def rnnN_model(features, mode, params):
     # dynamic_rnn needs 3D shape: [BATCH_SIZE, N_INPUTS, 1]
     x = tf.reshape(features[TIMESERIES_COL], [-1, N_INPUTS, 1])
 
     # 2. configure the RNN
-    lstm_cell1 = rnn.BasicLSTMCell(N_INPUTS * 2, forget_bias=1.0)
-    lstm_cell2 = rnn.BasicLSTMCell(N_INPUTS // 2, forget_bias=1.0)
-    lstm_cells = rnn.MultiRNNCell([lstm_cell1, lstm_cell2])
-    outputs, _ = tf.nn.dynamic_rnn(lstm_cells, x, dtype=tf.float32)
-
-    # 3. make lstm output a 2D matrix and pass through a dense layer
-    # so that the dense layer is shared for all outputs
-    lstm_flat = tf.reshape(outputs, [-1, N_INPUTS, lstm_cells.output_size])
-    h1 = tf.layers.dense(lstm_flat, lstm_cells.output_size, activation=tf.nn.relu)
-    h2 = tf.layers.dense(h1, lstm_cells.output_size // 2, activation=tf.nn.relu)
+    cell1 = tf.nn.rnn_cell.GRUCell(N_INPUTS * 2)
+    cell2 = tf.nn.rnn_cell.GRUCell(N_INPUTS // 2)
+    cells = tf.nn.rnn_cell.MultiRNNCell([cell1, cell2])
+    outputs, state = tf.nn.dynamic_rnn(cells, x, dtype=tf.float32)
+    # 'outputs' contains the state of the final layer for every time step
+    # not just the last time step (?,N_INPUTS, final cell size)
+    
+    # 3. pass state for each time step through a DNN, to get a prediction
+    # for each time step 
+    h1 = tf.layers.dense(outputs, cells.output_size, activation=tf.nn.relu)
+    h2 = tf.layers.dense(h1, cells.output_size // 2, activation=tf.nn.relu)
     predictions = tf.layers.dense(h2, 1, activation=None)  # (?, N_INPUTS, 1)
     predictions = tf.reshape(predictions, [-1, N_INPUTS])
-    return predictions
+    return predictions # return prediction for each time step
 
 
 # read data and convert to needed format
@@ -205,9 +203,9 @@ def sequence_regressor(features, labels, mode, params):
         'linear': linear_model,
         'dnn': dnn_model,
         'cnn': cnn_model,
-        'lstm': lstm_model,
-        'lstm2': lstm2_model,
-        'lstmN': lstmN_model}
+        'rnn': rnn_model,
+        'rnn2': rnn2_model,
+        'rnnN': rnnN_model}
     model_function = model_functions[params['model']]
     predictions = model_function(features, mode, params)
 
