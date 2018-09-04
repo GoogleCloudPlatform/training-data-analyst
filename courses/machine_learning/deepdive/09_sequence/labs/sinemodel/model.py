@@ -53,6 +53,7 @@ def cnn_model(features, mode, params):
   pass
 
 def rnn_model(features, mode, params):
+  # 1. dynamic_rnn needs 3D shape: [BATCH_SIZE, N_INPUTS, 1]
   x = tf.reshape(features[TIMESERIES_COL], [-1, N_INPUTS, 1])
   #TODO: finish rnn model
   pass
