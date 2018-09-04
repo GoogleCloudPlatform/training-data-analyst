@@ -45,16 +45,53 @@ def cnn_model(img, mode, hparams):
                           kernel_size=ksize1, strides=1, # ?x28x28x10
                           padding='same', activation=tf.nn.relu)
   p1 = tf.layers.max_pooling2d(c1,pool_size=2, strides=2) # ?x14x14x10
-  c2 = #TODO: apply a second convolution to the output of p1
-  p2 = #TODO: apply a pooling layer with pool_size=2 and strides=2
+
+  #TODO: apply a second convolution to the output of p1
+  #TODO: apply a pooling layer with pool_size=2 and strides=2
   
   outlen = p2.shape[1]*p2.shape[2]*p2.shape[3] #outlen should be 980
   p2flat = tf.reshape(p2, [-1, outlen]) # flattened
   
-  h3 = tf.layers.dense(p2flat, 300, activation=tf.nn.relu) 
-  ylogits = tf.layers.dense(h3, NCLASSES, activation=None)
+  h3 = tf.layers.dense(p2flat, 300, activation=None) #Activation to be added separately after batch normalization
+
+  h3 = tf.layers.batch_normalization(h3, training=(mode == tf.estimator.ModeKeys.TRAIN))
+
+  h3_batch_normed = tf.nn.relu(h3)
+
+  h3_with_dropout = tf.layers.dropout(h3_batch_normed,rate=0.1, 
+                                         training=(mode == tf.estimator.ModeKeys.TRAIN))
+
+  ylogits = tf.layers.dense(h3_with_dropout, NCLASSES, activation=None)
 
   return ylogits, NCLASSES
+
+def cnn_batch_norm_model(img, mode, hparams):
+  ksize1 = hparams.get('ksize1', 5)
+  ksize2 = hparams.get('ksize2', 5)
+  nfil1 = hparams.get('nfil1', 10)
+  nfil2 = hparams.get('nfil2', 20)
+  dprob = hparams.get('dprob', 0.25)
+  
+  c1 = tf.layers.conv2d(img, filters=nfil1,
+                          kernel_size=ksize1, strides=1, # ?x28x28x10
+                          padding='same', activation=tf.nn.relu)
+
+  p1 = tf.layers.max_pooling2d(c1,pool_size=2, strides=2) # ?x14x14x10
+
+  c2 = tf.layers.conv2d(p1, filters=nfil2, kernel_size=ksize2, strides=1,
+                            padding='same', activation=tf.nn.relu) #?x14x14x20
+
+  p2 = tf.layers.max_pooling2d(c2, pool_size=2, strides=2) #?x7x7x20
+  
+  outlen = p2.shape[1]*p2.shape[2]*p2.shape[3] #outlen should be 980
+  p2flat = tf.reshape(p2, [-1, outlen]) # flattened
+  
+  #TODO: create a dense layer and apply batch normalization, ensuring that activation is done once, after batch norming
+
+  #TODO: apply dropout to the batch normed dense layer
+
+  return ylogits, NCLASSES
+
 
 def serving_input_fn():
     #input will be rank 3
@@ -68,7 +105,8 @@ def serving_input_fn():
 def image_classifier(features, labels, mode, params):
   model_functions = {
       'dnn':dnn_model,
-      'cnn':cnn_model}
+      'cnn':cnn_model,
+      'cnn_batch_norm': cnn_batch_norm_model}
   model_function = model_functions[params['model']]  
   ylogits, nclasses = model_function(features['image'], mode, params)
 
