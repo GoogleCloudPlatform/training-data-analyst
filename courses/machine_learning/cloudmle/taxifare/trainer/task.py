@@ -19,7 +19,7 @@ import argparse
 import json
 import os
 
-import model
+from . import model
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
