@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 
-import model
+from . import model
 
 import tensorflow as tf
 
