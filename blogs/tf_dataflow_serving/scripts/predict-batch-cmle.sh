@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#[END cmle_batch_prediction]
+#[START cmle_batch_prediction]
 BUCKET='<BUCKET>'
 DATA_FORMAT="TEXT"
 INPUT_PATHS=gs://${BUCKET}/data/babyweight/experiments/outputs/data-prep-*

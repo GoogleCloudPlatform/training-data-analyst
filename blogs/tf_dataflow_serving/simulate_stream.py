@@ -45,7 +45,7 @@ def simulate_stream_data():
     print("Simulation started at {}".format(time_start.strftime('%Y-%m-%d %H:%M:%S')))
     print(".......................................")
 
-    #[START simulate stream]
+    #[START simulate_stream]
     client = pubsub.Client(project=PARAMS.project_id)
     topic = client.topic(PARAMS.pubsub_topic)
     if not topic.exists():
@@ -64,7 +64,7 @@ def simulate_stream_data():
             print ""
 
         time.sleep(sleep_time_per_msg)
-    #[END simulate stream]
+    #[END simulate_stream]
 
     time_end = datetime.utcnow()
 
