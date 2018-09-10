@@ -2,9 +2,9 @@
 
 #[START deploy_cmle]
 
-PROJECT="<PROJECT_ID" # change to your project name
-REGION="<REGION>"
-BUCKET="<BUCKET>" # change to your bucket name
+PROJECT="[PROJECT_ID]" # change to your project name
+REGION="[REGION]"
+BUCKET="[BUCKET]" # change to your bucket name
 MODEL_NAME="babyweight_estimator" # change to your estimator name
 MODEL_VERSION="v1" # change to your model version
 MODEL_BINARIES=gs://${BUCKET}/models/${MODEL_NAME}

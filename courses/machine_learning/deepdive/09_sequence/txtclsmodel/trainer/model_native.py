@@ -80,7 +80,7 @@ Create tf.estimator compatible input function
       batch_size: int, number of records to use for each train batch
       mode: tf.estimator.ModeKeys.TRAIN or tf.estimator.ModeKeys.EVAL 
   # Returns:
-      tf.estimator.inputs.numpy_input_fn, produces feature and label
+      tf.data.Dataset, produces feature and label
         tensors one batch at a time
 """
 def input_fn(texts, labels, batch_size, mode):
