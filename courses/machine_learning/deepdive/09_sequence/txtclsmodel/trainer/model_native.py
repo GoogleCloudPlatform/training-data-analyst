@@ -297,7 +297,8 @@ def train_and_evaluate(output_dir, hparams):
     tokenizer = text.Tokenizer(num_words=TOP_K)
     tokenizer.fit_on_texts(train_texts)
 
-    # Save vocabulary to file to use during serving time
+    # Generate vocabulary file from tokenizer object to enable
+    # creating a native tensorflow lookup table later (used in vectorize_sentences())
     tf.gfile.MkDir(output_dir) # directory must exist before we can use tf.gfile.open
     global VOCAB_FILE_PATH; VOCAB_FILE_PATH = os.path.join(output_dir,'vocab.txt')
     with tf.gfile.Open(VOCAB_FILE_PATH, 'wb') as f:
