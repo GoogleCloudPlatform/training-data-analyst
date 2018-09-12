@@ -95,11 +95,15 @@ def build_estimator(model_dir, nbuckets, hidden_units):
         latdiff, londiff, euclidean
     ]
     
+    ## setting the checkpoint interval to be much lower for this task
+    run_config = tf.estimator.RunConfig(save_checkpoints_secs = 30, 
+                                        keep_checkpoint_max = 3)
     estimator = tf.estimator.DNNLinearCombinedRegressor(
         model_dir = model_dir,
         linear_feature_columns = wide_columns,
         dnn_feature_columns = deep_columns,
-        dnn_hidden_units = hidden_units)
+        dnn_hidden_units = hidden_units
+        config = run_config)
 
     # add extra evaluation metric for hyperparameter tuning
     estimator = tf.contrib.estimator.add_metrics(estimator, add_eval_metrics)
