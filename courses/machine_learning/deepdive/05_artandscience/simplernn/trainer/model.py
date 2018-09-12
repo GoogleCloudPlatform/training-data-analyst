@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2017 Google Inc. All Rights Reserved.
 #
@@ -21,13 +21,14 @@ import tensorflow.contrib.rnn as rnn
 tf.logging.set_verbosity(tf.logging.INFO)
 
 SEQ_LEN = 10
-DEFAULTS = [[0.0] for x in xrange(0, SEQ_LEN)]
+DEFAULTS = [[0.0] for x in range(0, SEQ_LEN)]
 BATCH_SIZE = 20
 TIMESERIES_INPUT_LAYER = 'rawdata'
 TIMESERIES_COL = '{}_input'.format(TIMESERIES_INPUT_LAYER)
 # In each sequence, column index 0 to N_INPUTS - 1 are features, and column index N_INPUTS to SEQ_LEN are labels
 N_OUTPUTS = 1
 N_INPUTS = SEQ_LEN - N_OUTPUTS
+LSTM_SIZE = 3  # number of hidden layers in each of the LSTM cells
 
 # Read data and convert to needed format
 def read_dataset(filename, mode, batch_size):
@@ -67,8 +68,6 @@ def read_dataset(filename, mode, batch_size):
         return batch_features, batch_labels
     return _input_fn
 
-LSTM_SIZE = 3  # number of hidden layers in each of the LSTM cells
-
 # Create inference model using Keras
 # The model here is a dnn regressor
 def make_keras_estimator(output_dir):
@@ -93,7 +92,7 @@ def simple_rnn(features, labels, mode):
 
     # Slice to keep only the last cell of the RNN
     outputs = outputs[-1]
-    #print 'last outputs={}'.format(outputs)
+    #print('last outputs={}'.format(outputs))
 
     # Output is result of linear activation of last layer of RNN
     weight = tf.Variable(tf.random_normal([LSTM_SIZE, N_OUTPUTS]))
