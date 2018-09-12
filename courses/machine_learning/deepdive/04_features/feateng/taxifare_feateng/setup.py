@@ -19,7 +19,7 @@ REQUIRED_PACKAGES = [
 ]
 
 setup(
-    name='taxifare_feateng',
+    name='trainer',
     version='0.1',
     author = 'Google',
     author_email = 'training-feedback@cloud.google.com',
