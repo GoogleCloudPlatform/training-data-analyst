@@ -48,3 +48,12 @@ courses/machine_learning/deepdive/03_tensorflow/taxi_trained/
 
 # Rather than specifying checkpoint explictly, use an implicit specification.
 .ipynb_checkpoints
+
+# Rather than specifying explict export and trained dirs,
+export
+*trained
+
+# these csv files are created in cloud storage and copied 
+# to the local filesystem
+courses/machine_learning/deepdive/04_features/feateng/sample/*.csv
+
