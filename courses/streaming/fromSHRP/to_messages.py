@@ -26,7 +26,7 @@ def notify(line, colnames, ofp):
    for colname in 'LATITUDE,LONGITUDE,FREEWAY_ID,FREEWAY_DIR'.split(','):
       outcols.append(indict[colname])
    
-   for laneno in xrange(1,9):
+   for laneno in range(1,9):
        lane = str(laneno)
        samples = indict['LANE_' + lane + '_SAMPLES']
        occ = indict['LANE_' + lane + '_OCC']
@@ -50,4 +50,4 @@ if __name__ == '__main__':
       for lineno, line in enumerate(ifp):
          notify(line, colnames, ofp)
          if lineno%10000 == 0:
-            print lineno, line[:10]
+            print(lineno, line[:10])
