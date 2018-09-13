@@ -23,7 +23,7 @@ from google.cloud import pubsub_v1
 subscriber = pubsub_v1.SubscriberClient()
 
 def callback(message):
-  print('Received message: {}'.format(message))
+  print(('Received message: {}'.format(message)))
   message.ack()
 
 # make sure you replace "javier" with your project name 

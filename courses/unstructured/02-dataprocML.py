@@ -33,9 +33,9 @@ sc = SparkContext("local", "Simple App")
 You must set these values for the job to run.
 '''
 APIKEY="your-api-key"   # CHANGE
-print APIKEY
+print(APIKEY)
 PROJECT_ID="your-project-id"  # CHANGE
-print PROJECT_ID 
+print(PROJECT_ID) 
 BUCKET="your-bucket"   # CHANGE
 
 
@@ -86,4 +86,4 @@ results = rdd2.take(50)
 
 
 for item in results:
-  print 'Magnitude= ',item[0],' | Score= ',item[1], ' | Text= ',item[2]
+  print('Magnitude= ',item[0],' | Score= ',item[1], ' | Text= ',item[2])

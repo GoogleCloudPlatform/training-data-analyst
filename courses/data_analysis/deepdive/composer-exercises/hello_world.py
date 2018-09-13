@@ -37,7 +37,7 @@ with DAG('hello_world', default_args=default_args) as dag:
 
   # Dynamic task generation.
   number_of_templated_tasks = 4
-  for i in xrange(number_of_templated_tasks):
+  for i in range(number_of_templated_tasks):
     tmp = BashOperator(
         task_id='templated-%s' % i,
         bash_command=templated_command,

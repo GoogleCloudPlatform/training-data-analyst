@@ -38,7 +38,7 @@ def main(project_id, instance_id, table_id):
     # [END connecting_to_bigtable]
 
     # [START creating_a_table]
-    print('Creating the {} table.'.format(table_id))
+    print(('Creating the {} table.'.format(table_id)))
     table = instance.table(table_id)
     table.create()
     column_family_id = 'cf1'
@@ -80,7 +80,7 @@ def main(project_id, instance_id, table_id):
     key = 'greeting0'
     row = table.read_row(key.encode('utf-8'))
     value = row.cells[column_family_id][column_id][0].value
-    print('\t{}: {}'.format(key, value.decode('utf-8')))
+    print(('\t{}: {}'.format(key, value.decode('utf-8'))))
     # [END getting_a_row]
 
     # [START scanning_all_rows]
@@ -88,15 +88,15 @@ def main(project_id, instance_id, table_id):
     partial_rows = table.read_rows()
     partial_rows.consume_all()
 
-    for row_key, row in partial_rows.rows.items():
+    for row_key, row in list(partial_rows.rows.items()):
         key = row_key.decode('utf-8')
         cell = row.cells[column_family_id][column_id][0]
         value = cell.value.decode('utf-8')
-        print('\t{}: {}'.format(key, value))
+        print(('\t{}: {}'.format(key, value)))
     # [END scanning_all_rows]
 
     # [START deleting_a_table]
-    print('Deleting the {} table.'.format(table_id))
+    print(('Deleting the {} table.'.format(table_id)))
     table.delete()
     # [END deleting_a_table]
 
