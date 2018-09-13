@@ -32,7 +32,7 @@ N_INPUTS = None
 def init(hparams):
     global SEQ_LEN, DEFAULTS, N_INPUTS
     SEQ_LEN = hparams['sequence_length']
-    DEFAULTS = [[0.0] for x in xrange(0, SEQ_LEN)]
+    DEFAULTS = [[0.0] for x in range(0, SEQ_LEN)]
     N_INPUTS = SEQ_LEN - N_OUTPUTS
 
 
