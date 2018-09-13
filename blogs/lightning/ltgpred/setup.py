@@ -107,7 +107,7 @@ class CustomCommands(setuptools.Command):
 # so this dependency will not trigger anything to be installed unless a version
 # restriction is specified.
 REQUIRED_PACKAGES = [
-    'pyresample netcdf4 google-cloud-storage retrying'.split(),
+    'pyresample netcdf4 google-cloud-storage retrying cloudml-hypertune'.split(),
 ]
 
 setuptools.setup(
