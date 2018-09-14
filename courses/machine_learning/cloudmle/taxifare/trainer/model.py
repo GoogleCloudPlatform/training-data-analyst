@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 # Copyright 2017 Google Inc. All Rights Reserved.
 #
@@ -34,7 +34,7 @@ def read_dataset(filename, mode, batch_size = 512):
     def _input_fn():
         def decode_csv(value_column):
             columns = tf.decode_csv(value_column, record_defaults = DEFAULTS)
-            features = dict(zip(CSV_COLUMNS, columns))
+            features = dict(list(zip(CSV_COLUMNS, columns)))
             label = features.pop(LABEL_COLUMN)
             return features, label
     
@@ -77,7 +77,7 @@ def serving_input_fn():
     }
     features = {
         key: tf.expand_dims(tensor, -1)
-        for key, tensor in feature_placeholders.items()
+        for key, tensor in list(feature_placeholders.items())
     }
     return tf.estimator.export.ServingInputReceiver(features, feature_placeholders)
 
