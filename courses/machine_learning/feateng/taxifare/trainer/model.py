@@ -102,7 +102,7 @@ def build_estimator(model_dir, nbuckets, hidden_units):
         model_dir = model_dir,
         linear_feature_columns = wide_columns,
         dnn_feature_columns = deep_columns,
-        dnn_hidden_units = hidden_units
+        dnn_hidden_units = hidden_units,
         config = run_config)
 
     # add extra evaluation metric for hyperparameter tuning
