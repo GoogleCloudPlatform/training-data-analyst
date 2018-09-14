@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2016 Google Inc.
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -8,7 +8,7 @@
 # See https://github.com/GoogleCloudPlatform/datalab-samples/blob/master/basemap/earthquakes.ipynb for a notebook that illustrates this code
 
 import csv
-import urllib.request, urllib.error, urllib.parse
+import requests
 import io
 import numpy as np
 import matplotlib as mpl
@@ -30,8 +30,8 @@ class EarthQuake:
     
 def get_earthquake_data(url):
   # Read CSV earthquake data from USGS
-  response = urllib.request.urlopen(url)
-  csvio = io.StringIO(response.read())
+  response = requests.get(url)
+  csvio = io.StringIO(response.text)
   reader = csv.reader(csvio)
   header = next(reader)
   quakes = [EarthQuake(row) for row in reader]
