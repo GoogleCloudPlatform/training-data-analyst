@@ -28,11 +28,14 @@ INPUT = 'sensor_obs2008.csv.gz'
 def publish(publisher, topic, events):
    numobs = len(events)
    if numobs > 0:
-       logging.info('Publishing {} events from {}'.format(numobs, get_timestamp(events[0])))
+       logging.info('Publishing {0} events from {1}'.format(numobs, get_timestamp(events[0])))
        for event_data in events:
-         publisher.publish(topic,event_data.encode())
+         publisher.publish(topic,event_data)
 
 def get_timestamp(line):
+   ## convert from bytes to str
+   line = line.decode('utf-8')
+
    # look at first field of row
    timestamp = line.split(',')[0]
    return datetime.datetime.strptime(timestamp, TIME_FORMAT)
