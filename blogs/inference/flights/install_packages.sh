@@ -1,1 +1,1 @@
-pip install --user --force 'apache-beam[gcp]'
+sudo pip install --force 'apache-beam[gcp]'

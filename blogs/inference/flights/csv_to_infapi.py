@@ -32,11 +32,14 @@ def createJson(line):
                 'TAXI_OUT', 'TAXI_IN', 'ARR_DELAY', 'CANCELLED']:
        value = featdict[name]
        if name in ['DEP_DELAY', 'TAXI_OUT', 'TAXI_IN', 'ARR_DELAY', 'CANCELLED']:
-          value = float(value)
+         try:
+           value = float(value)
+         except:
+           value = 0
        record = {
           'dataName': name,
           'dataValue': value,
-          'groupId': rowid,
+          'groupId': str(rowid),  #int64 as a string
           'startTime': featdict['DEP_TIME'],
           'endTime': featdict['ARR_TIME'] 
        }
