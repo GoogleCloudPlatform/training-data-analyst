@@ -56,6 +56,6 @@ if __name__ == '__main__':
      (p
         | 'ReadLines' >> beam.io.ReadFromText(options.input)
         | 'Parse' >> beam.FlatMap(lambda line: createJson(line))
-        | 'write' >> beam.io.WriteToText(options.output_prefix)
+        | 'write' >> beam.io.WriteToText(options.output_prefix, num_shards=10)
      )
 

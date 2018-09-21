@@ -9,7 +9,7 @@ BUCKET=$1
 
 ./csv_to_infapi.py \
   --input gs://cloud-training-demos/flights/tzcorr/all_flights* \
-  --output_prefix gs://${BUCKET}/flights/json/flights_data \
+  --output_prefix gs://${BUCKET}/flights/json/sharded/flights_data \
   --runner DataflowRunner \
   --project $(gcloud config get-value project) \
   --staging_location gs://${BUCKET}/temp \
