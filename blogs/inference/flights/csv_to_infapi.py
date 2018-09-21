@@ -27,7 +27,7 @@ def createJson(line):
    for name, value in zip(header, fields):
       featdict[name] = value
 
-   rowid = int(uuid.uuid1()) # make up a rowid since this data doesn't have it
+   rowid = uuid.uuid4().int & (1<<64) - 1 # make up a 64-bit rowid since this data doesn't have it
    for name in ['FL_DATE', 'CARRIER', 'ORIGIN', 'DEST', 'DEP_DELAY', 
                 'TAXI_OUT', 'TAXI_IN', 'ARR_DELAY', 'CANCELLED']:
        value = featdict[name]
