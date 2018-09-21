@@ -40,8 +40,8 @@ def createJson(line):
           'dataName': name,
           'dataValue': value,
           'groupId': str(rowid),  #int64 as a string
-          'startTime': featdict['DEP_TIME'],
-          'endTime': featdict['ARR_TIME'] 
+          'startTime': featdict['DEP_TIME'] + 'Z',
+          'endTime': featdict['ARR_TIME'] + 'Z'
        }
        yield json.dumps(record)
    

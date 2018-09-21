@@ -6,8 +6,8 @@ if [ "$#" -lt 1 ]; then
 fi
 
 BUCKET=$1
-
-./csv_to_infapi.py \
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+python $DIR/csv_to_infapi.py \
   --input gs://cloud-training-demos/flights/tzcorr/all_flights* \
   --output_prefix gs://${BUCKET}/flights/json/sharded/flights_data \
   --runner DataflowRunner \
