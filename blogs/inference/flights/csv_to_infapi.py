@@ -18,7 +18,7 @@ import argparse
 
 def createJson(line):
    import json
-   import uuid
+   import hashlib
 
    header = 'FL_DATE,UNIQUE_CARRIER,AIRLINE_ID,CARRIER,FL_NUM,ORIGIN_AIRPORT_ID,ORIGIN_AIRPORT_SEQ_ID,ORIGIN_CITY_MARKET_ID,ORIGIN,DEST_AIRPORT_ID,DEST_AIRPORT_SEQ_ID,DEST_CITY_MARKET_ID,DEST,CRS_DEP_TIME,DEP_TIME,DEP_DELAY,TAXI_OUT,WHEELS_OFF,WHEELS_ON,TAXI_IN,CRS_ARR_TIME,ARR_TIME,ARR_DELAY,CANCELLED,CANCELLATION_CODE,DIVERTED,DISTANCE,DEP_AIRPORT_LAT,DEP_AIRPORT_LON,DEP_AIRPORT_TZOFFSET,ARR_AIRPORT_LAT,ARR_AIRPORT_LON,ARR_AIRPORT_TZOFFSET'.split(',')
 
@@ -27,18 +27,18 @@ def createJson(line):
    for name, value in zip(header, fields):
       featdict[name] = value
 
-   rowid = uuid.uuid4().int & (1<<64) - 1 # make up a 64-bit rowid since this data doesn't have it
    for name in ['FL_DATE', 'CARRIER', 'ORIGIN', 'DEST', 'DEP_DELAY', 
                 'TAXI_OUT', 'TAXI_IN', 'ARR_DELAY', 'CANCELLED']:
+     for sensorid in ['ORIGIN_AIRPORT_ID', 'DEST_AIRPORT_ID]
        value = featdict[name]
        record = {
           'dataName': name,
           'dataValue': value,
-          'groupId': str(rowid),  #int64 as a string
+          'groupId': featdict[sensorid],
           'startTime': featdict['DEP_TIME'] + 'Z',
           'endTime': featdict['ARR_TIME'] + 'Z'
        }
-       return json.dumps(record).replace(' ', '')
+       yield json.dumps(record).replace(' ', '')
    
 
 if __name__ == '__main__':
