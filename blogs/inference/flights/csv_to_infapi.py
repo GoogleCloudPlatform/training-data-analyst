@@ -29,7 +29,7 @@ def createJson(line):
 
    for name in ['FL_DATE', 'CARRIER', 'ORIGIN', 'DEST', 'DEP_DELAY', 
                 'TAXI_OUT', 'TAXI_IN', 'ARR_DELAY', 'CANCELLED']:
-     for sensorid in ['ORIGIN_AIRPORT_ID', 'DEST_AIRPORT_ID]
+     for sensorid in ['ORIGIN_AIRPORT_ID', 'DEST_AIRPORT_ID']:
        value = featdict[name]
        record = {
           'dataName': name,
