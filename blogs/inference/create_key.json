@@ -1,0 +1,10 @@
+#!/bin/bash
+ACCOUNT=infapi
+PROJECT=$(gcloud config get-value project)
+FILENAME=.access_key.json
+
+gcloud iam service-accounts create ${ACCOUNT} --display-name="Learn about Inference API"
+gcloud iam service-accounts add-iam-policy-binding ${ACCOUNT}@${PROJECT}.iam.gserviceaccount.com --member=allAuthenticatedUsers --role=roles/owner
+gcloud iam service-accounts keys create $FILENAME --iam-account=${ACCOUNT}@${PROJECT}.iam.gserviceaccount.com
+
+echo "Created $FILENAME  Please protect access to this key."

@@ -1,0 +1,7 @@
+#!/bin/bash
+ACCOUNT=infapi
+PROJECT=$(gcloud config get-value project)
+
+gcloud iam service-accounts delete ${ACCOUNT}@${PROJECT}.iam.gserviceaccount.com
+rm .access_key.json
+
