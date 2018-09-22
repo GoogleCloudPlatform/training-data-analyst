@@ -31,11 +31,6 @@ def createJson(line):
    for name in ['FL_DATE', 'CARRIER', 'ORIGIN', 'DEST', 'DEP_DELAY', 
                 'TAXI_OUT', 'TAXI_IN', 'ARR_DELAY', 'CANCELLED']:
        value = featdict[name]
-       if name in ['DEP_DELAY', 'TAXI_OUT', 'TAXI_IN', 'ARR_DELAY', 'CANCELLED']:
-         try:
-           value = float(value)
-         except:
-           value = 0
        record = {
           'dataName': name,
           'dataValue': value,
@@ -43,7 +38,7 @@ def createJson(line):
           'startTime': featdict['DEP_TIME'] + 'Z',
           'endTime': featdict['ARR_TIME'] + 'Z'
        }
-       yield json.dumps(record)
+       return json.dumps(record).replace(' ', '')
    
 
 if __name__ == '__main__':
