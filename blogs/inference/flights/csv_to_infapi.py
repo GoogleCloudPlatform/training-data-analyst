@@ -16,6 +16,14 @@ limitations under the License.
 import apache_beam as beam
 import argparse
 
+def get_group_id(lats, lons):
+   lat = float(lats)
+   lon = float(lons)
+   # snap to grid: 1 deg is approx 10 km
+   slat = int(round(lat/10))
+   slon = int(round(lon/10))
+   return slat*1000 + slon
+
 def createJson(line):
    import json
    import hashlib
@@ -29,12 +37,16 @@ def createJson(line):
 
    for name in ['FL_DATE', 'CARRIER', 'ORIGIN', 'DEST', 'DEP_DELAY', 
                 'TAXI_OUT', 'TAXI_IN', 'ARR_DELAY', 'CANCELLED']:
-     for sensorid in ['ORIGIN_AIRPORT_ID', 'DEST_AIRPORT_ID']:
+     dep_group_id = get_group_id(featdict['DEP_AIRPORT_LAT'],
+                                 featdict['DEP_AIRPORT_LON'])
+     arr_group_id = get_group_id(featdict['ARR_AIRPORT_LAT'],
+                                 featdict['ARR_AIRPORT_LON'])
+     for groupid in [dep_group_id, arr_group_id]:
        value = featdict[name]
        record = {
           'dataName': name,
           'dataValue': value,
-          'groupId': featdict[sensorid],
+          'groupId': str(groupid),
           'startTime': featdict['DEP_TIME'] + 'Z',
           'endTime': featdict['ARR_TIME'] + 'Z'
        }
