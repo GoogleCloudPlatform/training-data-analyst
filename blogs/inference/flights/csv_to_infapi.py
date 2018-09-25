@@ -16,13 +16,17 @@ limitations under the License.
 import apache_beam as beam
 import argparse
 
-def get_group_id(lats, lons):
-   lat = float(lats)
-   lon = float(lons)
-   # snap to grid: 1 deg is approx 10 km
-   slat = int(round(lat/10))
-   slon = int(round(lon/10))
-   return slat*1000 + slon
+def thresh_delay(delaystr):
+   delay = float(delaystr)
+   if delay < -10:
+        return 'Early'
+   elif delay < 10:
+        return 'Ontime'
+   elif delay < 20:
+        return 'Delayed'
+   else:
+        return 'Late'
+
 
 def createJson(line):
    import json
@@ -35,22 +39,22 @@ def createJson(line):
    for name, value in zip(header, fields):
       featdict[name] = value
 
-   for name in ['FL_DATE', 'CARRIER', 'ORIGIN', 'DEST', 'DEP_DELAY', 
-                'TAXI_OUT', 'TAXI_IN', 'ARR_DELAY', 'CANCELLED']:
-     dep_group_id = get_group_id(featdict['DEP_AIRPORT_LAT'],
-                                 featdict['DEP_AIRPORT_LON'])
-     arr_group_id = get_group_id(featdict['ARR_AIRPORT_LAT'],
-                                 featdict['ARR_AIRPORT_LON'])
-     for groupid in [dep_group_id, arr_group_id]:
-       value = featdict[name]
-       record = {
-          'dataName': name,
-          'dataValue': value,
-          'groupId': str(groupid),
-          'startTime': featdict['DEP_TIME'] + 'Z',
-          'endTime': featdict['ARR_TIME'] + 'Z'
-       }
-       yield json.dumps(record).replace(' ', '')
+   for name in ['CARRIER', 'ORIGIN', 'DEST', 'DEP_DELAY', 
+                'ARR_DELAY', 'CANCELLED']:
+     for timestamp, airport in zip(['DEP_TIME', 'ARR_TIME'], ['ORIGIN_AIRPORT_ID', 'DEST_AIRPORT_ID']):
+       try:
+         value = featdict[name]
+         if name == 'DEP_DELAY' or name == 'ARR_DELAY':
+           value = thresh_delay(value)
+         record = {
+           'dataName': name,
+           'dataValue': value,
+           'groupId': featdict[airport],
+           'startTime': featdict[timestamp] + 'Z'
+         }
+         yield json.dumps(record).replace(' ', '')
+       except:
+         pass
    
 
 if __name__ == '__main__':

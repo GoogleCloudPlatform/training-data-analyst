@@ -9,7 +9,7 @@
       }
     },
     "distribution_configs": {
-      "bgprob_exp": 0,
+      "bgprob_exp": 1,
       "data_name": "ORIGIN",
       "max_result_entries": 5,
     }
