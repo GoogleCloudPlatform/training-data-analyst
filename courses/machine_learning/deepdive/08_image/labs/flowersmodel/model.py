@@ -107,7 +107,7 @@ def read_and_preprocess(image_bytes, label=None, augment=False):
     if augment:
        #TODO: add image augmentation functions
     else:
-       image = tf.image.resize_bilinear(image, [HEIGHT, WIDTH, NUM_CHANNELS], align_corners=False)
+       image = tf.image.resize_bilinear(image, [HEIGHT, WIDTH], align_corners=False)
        image = tf.squeeze(image) #remove batch dimension
         
     #pixel values are in range [0,1], convert to [-1,1]
