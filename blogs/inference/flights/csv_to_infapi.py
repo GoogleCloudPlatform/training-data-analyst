@@ -42,7 +42,6 @@ def createJson(line):
    rowid = uuid.uuid4().int & (1<<63) - 1 # make up a 64-bit rowid since this data doesn't have it
    for name in ['CARRIER', 'ORIGIN', 'DEST', 'DEP_DELAY', 
                 'ARR_DELAY', 'CANCELLED']:
-     for timestamp, airport in zip(['DEP_TIME', 'ARR_TIME'], ['ORIGIN_AIRPORT_ID', 'DEST_AIRPORT_ID']):
        try:
          value = featdict[name]
          if name == 'DEP_DELAY' or name == 'ARR_DELAY':
@@ -51,7 +50,8 @@ def createJson(line):
            'dataName': name,
            'dataValue': value,
            'groupId': str(rowid),  # int64 as a string
-           'startTime': featdict[timestamp] + 'Z'
+           'startTime': featdict['DEP_TIME'] + 'Z',
+           'endTime': featdict['ARR_TIME'] + 'Z'
          }
          yield json.dumps(record).replace(' ', '')
        except:
