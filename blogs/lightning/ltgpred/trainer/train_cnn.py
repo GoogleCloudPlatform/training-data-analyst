@@ -101,7 +101,7 @@ def _convnet(img, mode, params):
   ksize = params.get('ksize', 5)
   nfil = params.get('nfil', 10)
   nlayers = params.get('nlayers', 3)
-  dprob = params.get('dprob', 0.25)
+  dprob = params.get('dprob', 0.05 if params['batch_norm'] else 0.25)
 
   # conv net with batchnorm
   convout = img
@@ -115,15 +115,9 @@ def _convnet(img, mode, params):
         kernel_initializer=xavier,
         strides=1,
         padding='same',
-        activation=None)
+        activation=tf.nn.relu)
     # maxpool
-    p1 = tf.layers.max_pooling2d(c1, pool_size=2, strides=2, padding='same')
-    # batchnorm
-    if params['batch_norm']:
-      p1 = tf.layers.batch_normalization(
-          p1, training=(mode == tf.estimator.ModeKeys.TRAIN
-                       ))  # only batchnorm when training
-    convout = tf.nn.relu(p1)
+    convout = tf.layers.max_pooling2d(c1, pool_size=2, strides=2, padding='same')
     print('Shape of output of {}th layer = {} {}'.format(
         layer + 1, convout.shape, convout))
 

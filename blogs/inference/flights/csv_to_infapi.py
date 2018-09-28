@@ -51,7 +51,7 @@ def createJson(line):
            'dataValue': value,
            'groupId': str(rowid),  # int64 as a string
            'startTime': featdict['DEP_TIME'] + 'Z',
-           'endTime': featdict['ARR_TIME'] + 'Z'
+           # 'endTime': featdict['ARR_TIME'] + 'Z'  # do this for realtime analysis only
          }
          yield json.dumps(record).replace(' ', '')
        except:
