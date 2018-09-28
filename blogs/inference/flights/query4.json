@@ -1,5 +1,5 @@
 {
-  "name": "gdelt_2018_04_data",
+  "name": "flights_data",
   "queries": [{
     "query": {
       "type": "TYPE_AND",
