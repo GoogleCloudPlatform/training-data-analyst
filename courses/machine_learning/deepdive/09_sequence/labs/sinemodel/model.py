@@ -39,8 +39,7 @@ def init(hparams):
 def linear_model(features, mode, params):
     X = features[TIMESERIES_COL]
     #TODO: finish linear model
-    return predictions
-
+    pass
 
 def dnn_model(features, mode, params):
   X = features[TIMESERIES_COL]
