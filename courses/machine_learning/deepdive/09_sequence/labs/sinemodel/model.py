@@ -38,7 +38,7 @@ def init(hparams):
 
 def linear_model(features, mode, params):
     X = features[TIMESERIES_COL]
-    predictions = tf.layers.dense(X, 1, activation=None)
+    #TODO: finish linear model
     return predictions
 
 
