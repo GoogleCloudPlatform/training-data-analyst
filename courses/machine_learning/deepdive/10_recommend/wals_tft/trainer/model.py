@@ -42,18 +42,6 @@ def read_dataset(mode, args):
     key = parsed_features['key']
     decoded_sparse_tensor = tf.SparseTensor(indices=tf.concat([values.indices, [key]], axis = 0), values = tf.concat([values.values, [0.0]], axis = 0), dense_shape = values.dense_shape)
     return decoded_sparse_tensor
-
-def read_dataset(mode, args):
-  def decode_example(protos, vocab_size):
-    features = {'key': tf.FixedLenFeature([1], tf.int64),
-                'indices': tf.VarLenFeature(dtype=tf.int64),
-                'values': tf.VarLenFeature(dtype=tf.float32)}
-    parsed_features = tf.parse_single_example(protos, features)
-    values = tf.sparse_merge(parsed_features['indices'], parsed_features['values'], vocab_size=vocab_size)
-    # Save key to remap after batching
-    key = parsed_features['key']
-    decoded_sparse_tensor = tf.SparseTensor(indices=tf.concat([values.indices, [key]], axis = 0), values = tf.concat([values.values, [0.0]], axis = 0), dense_shape = values.dense_shape)
-    return decoded_sparse_tensor
     
   def remap_keys(sparse_tensor):
     # Current indices of our SparseTensor that we need to fix
@@ -112,7 +100,6 @@ def read_dataset(mode, args):
     remapped_sparse_tensor = tf.SparseTensor(indices = selected_indices_fixed, values = selected_values, dense_shape = sparse_tensor.dense_shape)
     return remapped_sparse_tensor
 
-    
   def parse_tfrecords(filename, vocab_size):
     if mode == tf.estimator.ModeKeys.TRAIN:
         num_epochs = None # indefinitely
@@ -131,14 +118,11 @@ def read_dataset(mode, args):
   
   def _input_fn():
     features = {
-      WALSMatrixFactorization.INPUT_ROWS: parse_tfrecords('items_for_user', args['nitems']),
-      WALSMatrixFactorization.INPUT_COLS: parse_tfrecords('users_for_item', args['nusers']),
+      WALSMatrixFactorization.INPUT_ROWS: parse_tfrecords('items_for_user-*-of-*', args['nitems']),
+      WALSMatrixFactorization.INPUT_COLS: parse_tfrecords('users_for_item-*-of-*', args['nusers']),
       WALSMatrixFactorization.PROJECT_ROW: tf.constant(True)
     }
     return features, None
-  
-  def input_cols():
-    return parse_tfrecords('users_for_item', args['nusers'])
   
   return _input_fn
 
@@ -168,45 +152,6 @@ def batch_predict(args):
     with file_io.FileIO(os.path.join(args['output_dir'], 'batch_pred.txt'), mode='w') as f:
       for best_items_for_user in topk.eval():
         f.write(','.join(str(x) for x in best_items_for_user) + '\n')
-
-# online prediction returns row and column factors as needed
-def create_serving_input_fn(args):
-  def for_user_embeddings(userId):
-      # all items for this user (for user_embeddings)
-      items = tf.range(args['nitems'], dtype=tf.int64)
-      users = userId * tf.ones([args['nitems']], dtype=tf.int64)
-      ratings = 0.1 * tf.ones_like(users, dtype=tf.float32)
-      return items, users, ratings, tf.constant(True)
-    
-  def for_item_embeddings(itemId):
-      # all users for this item (for item_embeddings)
-      users = tf.range(args['nusers'], dtype=tf.int64)
-      items = itemId * tf.ones([args['nusers']], dtype=tf.int64)
-      ratings = 0.1 * tf.ones_like(users, dtype=tf.float32)
-      return items, users, ratings, tf.constant(False)
-    
-  def serving_input_fn():
-    feature_ph = {
-        'userId': tf.placeholder(tf.int64, 1),
-        'itemId': tf.placeholder(tf.int64, 1)
-    }
-
-    (items, users, ratings, project_row) = \
-                  tf.cond(feature_ph['userId'][0] < tf.constant(0, dtype=tf.int64),
-                          lambda: for_item_embeddings(feature_ph['itemId']),
-                          lambda: for_user_embeddings(feature_ph['userId']))
-    rows = tf.stack( [users, items], axis=1 )
-    cols = tf.stack( [items, users], axis=1 )
-    input_rows = tf.SparseTensor(rows, ratings, (args['nusers'], args['nitems']))
-    input_cols = tf.SparseTensor(cols, ratings, (args['nusers'], args['nitems']))
-    
-    features = {
-      WALSMatrixFactorization.INPUT_ROWS: input_rows,
-      WALSMatrixFactorization.INPUT_COLS: input_cols,
-      WALSMatrixFactorization.PROJECT_ROW: project_row
-    }
-    return tf.contrib.learn.InputFnOps(features, None, feature_ph)
-  return serving_input_fn
         
 def train_and_evaluate(args):
     train_steps = int(0.5 + (1.0 * args['num_epochs'] * args['nusers']) / args['batch_size'])
@@ -222,8 +167,7 @@ def train_and_evaluate(args):
             eval_input_fn=read_dataset(tf.estimator.ModeKeys.EVAL, args),
             train_steps=train_steps,
             eval_steps=1,
-            min_eval_frequency=steps_in_epoch,
-            export_strategies=tf.contrib.learn.utils.saved_model_export_utils.make_export_strategy(serving_input_fn=create_serving_input_fn(args))
+            min_eval_frequency=steps_in_epoch
         )
 
     from tensorflow.contrib.learn.python.learn import learn_runner
