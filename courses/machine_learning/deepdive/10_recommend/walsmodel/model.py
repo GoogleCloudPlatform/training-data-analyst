@@ -42,18 +42,6 @@ def read_dataset(mode, args):
     key = parsed_features['key']
     decoded_sparse_tensor = tf.SparseTensor(indices=tf.concat([values.indices, [key]], axis = 0), values = tf.concat([values.values, [0.0]], axis = 0), dense_shape = values.dense_shape)
     return decoded_sparse_tensor
-
-def read_dataset(mode, args):
-  def decode_example(protos, vocab_size):
-    features = {'key': tf.FixedLenFeature([1], tf.int64),
-                'indices': tf.VarLenFeature(dtype=tf.int64),
-                'values': tf.VarLenFeature(dtype=tf.float32)}
-    parsed_features = tf.parse_single_example(protos, features)
-    values = tf.sparse_merge(parsed_features['indices'], parsed_features['values'], vocab_size=vocab_size)
-    # Save key to remap after batching
-    key = parsed_features['key']
-    decoded_sparse_tensor = tf.SparseTensor(indices=tf.concat([values.indices, [key]], axis = 0), values = tf.concat([values.values, [0.0]], axis = 0), dense_shape = values.dense_shape)
-    return decoded_sparse_tensor
     
   def remap_keys(sparse_tensor):
     # Current indices of our SparseTensor that we need to fix
