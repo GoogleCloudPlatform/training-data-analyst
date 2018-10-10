@@ -79,10 +79,8 @@ def serving_input_fn():
     feature_placeholders = {
         column.name: tf.placeholder(tf.float32, [None]) for column in INPUT_COLUMNS
     }
-    features = {
-        key: tf.expand_dims(tensor, -1)
-        for key, tensor in feature_placeholders.items()
-    }
+
+    features = feature_placeholders
     return tf.estimator.export.ServingInputReceiver(features, feature_placeholders)
 
 # Create an estimator that we are going to train and evaluate

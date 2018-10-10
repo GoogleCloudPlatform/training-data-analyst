@@ -1,5 +1,4 @@
 *.pyc
-courses/machine_learning/cloudmle/.ipynb_checkpoints/*
 .DS_Store
 
 courses/machine_learning/deepdive/03_tensorflow/.ipynb_checkpoints/c_dataset-checkpoint.ipynb
@@ -38,6 +37,17 @@ courses/machine_learning/deepdive/03_tensorflow/taxi_trained/model.ckpt-1989.ind
 courses/machine_learning/deepdive/03_tensorflow/taxi_trained/export/exporter/1521147735/variables/variables.index
 courses/machine_learning/deepdive/03_tensorflow/taxi_trained/export/exporter/1521147711/variables/variables.data-00000-of-00001
 courses/machine_learning/deepdive/03_tensorflow/taxi_trained/model.ckpt-2000.meta
-courses/machine_learning/deepdive/03_tensorflow/diagrams/.ipynb_checkpoints/constant_input-checkpoint.ipynb
-courses/machine_learning/deepdive/03_tensorflow/diagrams/.ipynb_checkpoints/dataset_train_eval-checkpoint.ipynb
-courses/machine_learning/deepdive/03_tensorflow/diagrams/.ipynb_checkpoints/numpy_input-checkpoint.ipynb
+
+# generated files
+test.json
+courses/machine_learning/feateng/sample/train.csv
+courses/machine_learning/feateng/sample/valid.csv
+
+# this file is created by the debug_demo notebook
+courses/machine_learning/deepdive/03_tensorflow/debugger.py
+
+# training output dirs
+courses/machine_learning/deepdive/03_tensorflow/taxi_trained/
+
+# Rather than specifying checkpoint explictly, use an implicit specification.
+.ipynb_checkpoints

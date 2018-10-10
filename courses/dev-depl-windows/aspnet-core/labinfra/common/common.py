@@ -52,7 +52,7 @@ def AutoRef(base, resource, *args):
 
 def OrderedItems(dict_obj):
   """Convenient method to yield sorted iteritems of a dictionary."""
-  keys = dict_obj.keys()
+  keys = list(dict_obj.keys())
   keys.sort()
   for k in keys:
     yield (k, dict_obj[k])
@@ -80,7 +80,7 @@ def FormatException(message):
   """Adds more information to the exception."""
   message = ('Exception Type: %s\n'
              'Details: %s\n'
-             'Message: %s\n') % (sys.exc_type, traceback.format_exc(), message)
+             'Message: %s\n') % (sys.exc_info()[0], traceback.format_exc(), message)
   return message
 
 

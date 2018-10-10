@@ -1,25 +1,27 @@
 #!/usr/bin/env bash
 
-REGION="europe-west1"
-BUCKET="ksalama-gcs-cloudml" # change to your bucket name
+#[START deploy_cmle]
 
+PROJECT="[PROJECT_ID]" # change to your project name
+REGION="[REGION]"
+BUCKET="[BUCKET]" # change to your bucket name
 MODEL_NAME="babyweight_estimator" # change to your estimator name
-MODEL_VERSION="v3" # change to your model version
+MODEL_VERSION="v1" # change to your model version
+MODEL_BINARIES=gs://${BUCKET}/models/${MODEL_NAME}
 
-gsutil -m cp -r model/trained/* gs://${BUCKET}/models/${MODEL_NAME}
+# upload the local SavedModel to GCS
+gsutil -m cp -r model/trained/v1/* gs://${BUCKET}/models/${MODEL_NAME}
 
-MODEL_BINARIES=gs://${BUCKET}/models/${MODEL_NAME}/v1
+# set the current project
+gcloud config set project ${PROJECT}
 
+# list model files on GCS
 gsutil ls ${MODEL_BINARIES}
-
-# delete model version
-gcloud ml-engine versions delete ${MODEL_VERSION} --model=${MODEL_NAME}
-
-# delete model
-gcloud ml-engine models delete ${MODEL_NAME}
 
 # deploy model to GCP
 gcloud ml-engine models create ${MODEL_NAME} --regions=${REGION}
 
 # deploy model version
 gcloud ml-engine versions create ${MODEL_VERSION} --model=${MODEL_NAME} --origin=${MODEL_BINARIES} --runtime-version=1.4
+
+#[END deploy_cmle]

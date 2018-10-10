@@ -49,6 +49,7 @@ import org.apache.hadoop.hbase.util.Bytes;
  * This just makes sure you can compile and run a trivial program that reads and writes to bigtable
  */
 public class Ex0 {
+
   public static void main(String[] args) {
     String projectId = System.getProperty("bigtable.project");
     String instanceId = System.getProperty("bigtable.instance");
@@ -65,38 +66,10 @@ public class Ex0 {
       try {
         admin.createTable(descriptor);
       } catch (TableExistsException e) {
-         // No problem!
+        // No problem!
       }
 
       Table table = connection.getTable(TableName.valueOf(tableName));
-
-      ////
-      ThreadPoolWriter writer = new ThreadPoolWriter(36);
-      DataGenerator.consumeRandomData(Duration.ofHours(8), point -> {
-        // TODO 1b: For each data point, write a row into Bigtable.
-        // row key: formulate a row key as follows: <timestamp>#<service>#<metric>
-        // cell "data:value": <value> as a string
-        // tags: put each tag in the "tags" column family with a column named after the key in the map
-        // and the corresponding map value as the cell value.
-        // Write something
-        String r = point.get(DataGenerator.TIMESTAMP_FIELD).toString() + "#" + point.get(DataGenerator.SERVICE_ID_FIELD).toString() +
-            point.get(DataGenerator.TIMESTAMP_FIELD).toString();
-        Put put = new Put(Bytes.toBytes(r));
-        put.addColumn(Bytes.toBytes("cf"), Bytes.toBytes("col"),
-            Bytes.toBytes("It worked!"));
-
-        writer.execute(() -> {
-          table.put(put);
-        }, point);
-
-      });
-
-      System.out.println("submitted stuff,m wait");
-      try {
-        writer.shutdownAndWait();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
 
       // Write something
       Put put = new Put(Bytes.toBytes("row"));
