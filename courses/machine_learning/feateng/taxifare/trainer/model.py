@@ -95,11 +95,15 @@ def build_estimator(model_dir, nbuckets, hidden_units):
         latdiff, londiff, euclidean
     ]
     
+    ## setting the checkpoint interval to be much lower for this task
+    run_config = tf.estimator.RunConfig(save_checkpoints_secs = 30, 
+                                        keep_checkpoint_max = 3)
     estimator = tf.estimator.DNNLinearCombinedRegressor(
         model_dir = model_dir,
         linear_feature_columns = wide_columns,
         dnn_feature_columns = deep_columns,
-        dnn_hidden_units = hidden_units)
+        dnn_hidden_units = hidden_units,
+        config = run_config)
 
     # add extra evaluation metric for hyperparameter tuning
     estimator = tf.contrib.estimator.add_metrics(estimator, add_eval_metrics)
@@ -126,16 +130,13 @@ def add_engineered(features):
 def serving_input_fn():
     feature_placeholders = {
         # All the real-valued columns
-        column.name: tf.placeholder(tf.float32, [None]) for column in INPUT_COLUMNS[2:]
+        column.name: tf.placeholder(tf.float32, [None]) for column in INPUT_COLUMNS[2:7]
     }
     feature_placeholders['dayofweek'] = tf.placeholder(tf.string, [None])
     feature_placeholders['hourofday'] = tf.placeholder(tf.int32, [None])
 
-    features = {
-        key: tf.expand_dims(tensor, -1)
-        for key, tensor in feature_placeholders.items()
-    }
-    return tf.estimator.export.ServingInputReceiver(add_engineered(features), feature_placeholders)
+    features = add_engineered(feature_placeholders.copy())
+    return tf.estimator.export.ServingInputReceiver(features, feature_placeholders)
 
 # Create input function to load data into datasets
 def read_dataset(filename, mode, batch_size = 512):

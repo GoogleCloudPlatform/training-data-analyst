@@ -1,0 +1,18 @@
+{
+  "name": "flights_data",
+  "queries": [{
+    "query": {
+      "type": "TYPE_AND",
+      "children": [
+        {"type": "TYPE_TERM", "term": {"name": "ARR_DELAY", "value":"Late"}},
+        {"type": "TYPE_TERM", "term": {"name": "DEP_DELAY", "value":"Ontime"}}
+      ],
+      andNodeOptions: {"maxTimespan": "604800s"}
+    },
+    "distribution_configs": {
+      "bgprob_exp": 0.7,
+      "data_name": "ORIGIN",
+      "max_result_entries": 5,
+    }
+  }]
+}

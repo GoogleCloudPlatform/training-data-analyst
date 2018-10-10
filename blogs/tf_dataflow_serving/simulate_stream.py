@@ -45,6 +45,7 @@ def simulate_stream_data():
     print("Simulation started at {}".format(time_start.strftime('%Y-%m-%d %H:%M:%S')))
     print(".......................................")
 
+    #[START simulate_stream]
     client = pubsub.Client(project=PARAMS.project_id)
     topic = client.topic(PARAMS.pubsub_topic)
     if not topic.exists():
@@ -57,11 +58,13 @@ def simulate_stream_data():
 
         message = send_message(topic, index)
 
+        # for debugging
         if PARAMS.show_message:
             print "Message {} was sent: {}".format(index+1, message)
             print ""
 
         time.sleep(sleep_time_per_msg)
+    #[END simulate_stream]
 
     time_end = datetime.utcnow()
 

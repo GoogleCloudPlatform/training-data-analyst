@@ -1,0 +1,23 @@
+{
+  "name":"gdelt_2018_04_data",
+  "data_names": [
+    "PageURL",
+    "PageDomain",
+    "PageCountry",
+    "PageLanguage",
+    "PageTextTheme",
+    "PageTextGeo",
+    "ImageURL",
+    "ImagePopularityRawScore",
+    "ImagePopularity",
+    "ImageSafeSearch",
+    "ImageLabel",
+    "ImageWebEntity",
+    "ImageWebEntityBestGuessLabel",
+    "ImageGeoLandmark",
+    "ImageFaceToneHas"
+  ],
+  "data_sources": [
+    { "uri":"gs://inference-gdelt-demo/inference-gdelt-demo.201804.json" },
+  ]
+}

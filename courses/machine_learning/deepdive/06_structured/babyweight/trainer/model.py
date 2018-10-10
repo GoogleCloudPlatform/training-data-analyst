@@ -1,23 +1,3 @@
-#!/usr/bin/env python
-
-# Copyright 2017 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import shutil
 import numpy as np
 import tensorflow as tf
@@ -128,32 +108,16 @@ def my_rmse(labels, predictions):
     pred_values = predictions['predictions']
     return {'rmse': tf.metrics.root_mean_squared_error(labels, pred_values)}
 
-# forward to key-column to export
-def forward_key_to_export(estimator):
-    estimator = tf.contrib.estimator.forward_features(estimator, KEY_COLUMN)
-    # return estimator
-
-    ## This shouldn't be necessary (I've filed CL/187793590 to update extenders.py with this code)
-    config = estimator.config
-    def model_fn2(features, labels, mode):
-      estimatorSpec = estimator._call_model_fn(features, labels, mode, config=config)
-      if estimatorSpec.export_outputs:
-        for ekey in ['predict', 'serving_default']:
-          if (ekey in estimatorSpec.export_outputs and
-              isinstance(estimatorSpec.export_outputs[ekey],
-                         tf.estimator.export.PredictOutput)):
-               estimatorSpec.export_outputs[ekey] = \
-                 tf.estimator.export.PredictOutput(estimatorSpec.predictions)
-      return estimatorSpec
-    return tf.estimator.Estimator(model_fn=model_fn2, config=config)
-    ##
-
 # Create estimator to train and evaluate
 def train_and_evaluate(output_dir):
     wide, deep = get_wide_deep()
     EVAL_INTERVAL = 300 # seconds
+
+    ## TODO 2a: set the save_checkpoints_secs to the EVAL_INTERVAL
     run_config = tf.estimator.RunConfig(save_checkpoints_secs = EVAL_INTERVAL,
                                         keep_checkpoint_max = 3)
+    
+    ## TODO 2b: change the dnn_hidden_units to NNSIZE
     estimator = tf.estimator.DNNLinearCombinedRegressor(
         model_dir = output_dir,
         linear_feature_columns = wide,
@@ -161,13 +125,20 @@ def train_and_evaluate(output_dir):
         dnn_hidden_units = NNSIZE,
         config = run_config)
     
+    # illustrates how to add an extra metric
     estimator = tf.contrib.estimator.add_metrics(estimator, my_rmse)
-    estimator = forward_key_to_export(estimator)
-
+    # for batch prediction, you need a key associated with each instance
+    estimator = tf.contrib.estimator.forward_features(estimator, KEY_COLUMN)
+    
+    ## TODO 2c: Set the third argument of read_dataset to BATCH_SIZE 
+    ## TODO 2d: and set max_steps to TRAIN_STEPS
     train_spec = tf.estimator.TrainSpec(
         input_fn = read_dataset('train', tf.estimator.ModeKeys.TRAIN, BATCH_SIZE),
         max_steps = TRAIN_STEPS)
+    
     exporter = tf.estimator.LatestExporter('exporter', serving_input_fn, exports_to_keep=None)
+
+    ## TODO 2e: Lastly, set steps equal to EVAL_STEPS
     eval_spec = tf.estimator.EvalSpec(
         input_fn = read_dataset('eval', tf.estimator.ModeKeys.EVAL, 2**15),  # no need to batch in eval
         steps = EVAL_STEPS,

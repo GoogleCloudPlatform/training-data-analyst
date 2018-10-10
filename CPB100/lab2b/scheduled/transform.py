@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2016 Google Inc.
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -8,8 +8,8 @@
 # See https://github.com/GoogleCloudPlatform/datalab-samples/blob/master/basemap/earthquakes.ipynb for a notebook that illustrates this code
 
 import csv
-import urllib2
-import cStringIO
+import requests
+import io
 import numpy as np
 import matplotlib as mpl
 mpl.use('Agg')
@@ -30,8 +30,8 @@ class EarthQuake:
     
 def get_earthquake_data(url):
   # Read CSV earthquake data from USGS
-  response = urllib2.urlopen(url)
-  csvio = cStringIO.StringIO(response.read())
+  response = requests.get(url)
+  csvio = io.StringIO(response.text)
   reader = csv.reader(csvio)
   header = next(reader)
   quakes = [EarthQuake(row) for row in reader]
@@ -54,7 +54,7 @@ def get_marker(magnitude):
 
 def create_png(url, outfile): 
   quakes = get_earthquake_data('http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.csv')
-  print quakes[0].__dict__
+  print(quakes[0].__dict__)
 
   # Set up Basemap
   mpl.rcParams['figure.figsize'] = '16, 12'

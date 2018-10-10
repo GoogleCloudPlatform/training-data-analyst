@@ -139,19 +139,18 @@ def run_pipeline(inference_type, project, pubsub_topic, pubsub_subscription, bq_
     pipeline.run()
 
 
-def run_pipeline_with_micro_batches(inference_type, project, pubsub_topic, pubsub_subscription, bq_dataset, bq_table,
+#[START micro-batching]
+def run_pipeline_with_micro_batches(inference_type, project,
+                                    pubsub_topic, pubsub_subscription,
+                                    bq_dataset, bq_table,
                                     window_size, runner, args=None):
 
     prepare_steaming_source(project, pubsub_topic, pubsub_subscription)
-
     prepare_steaming_sink(project, bq_dataset, bq_table)
-
     pubsub_subscription_url = "projects/{}/subscriptions/{}".format(project, pubsub_subscription)
-
     options = beam.pipeline.PipelineOptions(flags=[], **args)
 
     pipeline = beam.Pipeline(runner, options=options)
-
     (
             pipeline
             | 'Read from PubSub' >> beam.io.ReadStringsFromPubSub(subscription=pubsub_subscription_url, id_label="source_id")
@@ -164,4 +163,5 @@ def run_pipeline_with_micro_batches(inference_type, project, pubsub_topic, pubsu
     )
 
     pipeline.run()
+#[END micro-batching]
 

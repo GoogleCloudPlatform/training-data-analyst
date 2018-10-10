@@ -33,9 +33,9 @@ sc = SparkContext("local", "Simple App")
 You must set these values for the job to run.
 '''
 APIKEY="your-api-key"   # CHANGE
-print APIKEY
+print(APIKEY)
 PROJECT_ID="your-project-id"  # CHANGE
-print PROJECT_ID 
+print(PROJECT_ID) 
 BUCKET="your-bucket"   # CHANGE
 
 
@@ -57,7 +57,7 @@ def SentimentAnalysis(text):
 
 ## main
 
-sampleline = u'There are places I remember, all my life though some have changed.'
+sampleline = 'There are places I remember, all my life though some have changed.'
 #
 
 # Calling the Natural Language Processing REST interface
@@ -67,7 +67,7 @@ results = SentimentAnalysis(sampleline)
 # 
 #  What is the service returning?
 #
-print "Function returns: ", type(results)
+print("Function returns: ", type(results))
 
-print json.dumps(results, sort_keys=True, indent=4)
+print(json.dumps(results, sort_keys=True, indent=4))
 
