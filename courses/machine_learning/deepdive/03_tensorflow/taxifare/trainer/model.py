@@ -101,6 +101,6 @@ def train_and_evaluate(args):
                                 mode = tf.estimator.ModeKeys.EVAL),
         steps = None,
         start_delay_secs = args['eval_delay_secs'],
-        throttle_secs = args['min_eval_frequency'],
+        throttle_secs = args['throttle_secs'],
         exporters = exporter)
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
