@@ -19,10 +19,10 @@ import argparse
 import json
 import os
 
-# for python 2
-import model
-# for python 3
-#from . import model
+# for python2
+# import model
+# for python3
+from . import model
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -81,7 +81,7 @@ if __name__ == '__main__':
         type = int
     )
     parser.add_argument(
-        '--min_eval_frequency',
+        '--throttle_secs',
         help = 'Seconds between evaluations',
         default = 300,
         type = int

@@ -15,20 +15,28 @@
 ////////////////////////////////////////////////////////////////////////////////
 package com.google.cloud.sme.pubsub;
 
-import com.google.api.core.ApiFuture;
+import com.google.cloud.pubsub.v1.AckReplyConsumer;
+import com.google.cloud.pubsub.v1.MessageReceiver;
+import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.Entities;
 import com.google.pubsub.v1.PubsubMessage;
-import com.google.pubsub.v1.ProjectTopicName;
+import com.google.pubsub.v1.ProjectSubscriptionName;
 
-/** A basic Pub/Sub publisher for purposes of demonstrating use of the API. */
-public class Publisher {
+/** A basic Pub/Sub subscriber for purposes of demonstrating use of the API. */
+public class ActionSubscriber {
 
-  /** Creates a new publisher associated with the given project and topic. */
-  public Publisher(String project, String topic) {
+  /** Creates a new subscriber associated with the given project and subscription. */
+  public ActionSubscriber(String project, String subscription) {
   }
 
-  /** Publishes the action on the topic associated with this publisher. */
-  public void publish(Entities.Action action) {
+  /** Returns the number of VIEW action seen */
+  public long getViewCount() {
+    return -1;
+  }
+
+  /** Returns true if action is a VIEW action. */
+  private boolean isViewAction(Entities.Action action) {
+    return action.getAction() == Entities.Action.ActionType.VIEW;
   }
 }
