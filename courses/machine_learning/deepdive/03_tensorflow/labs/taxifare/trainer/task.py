@@ -81,7 +81,7 @@ if __name__ == '__main__':
         type = int
     )
     parser.add_argument(
-        '--min_eval_frequency',
+        '--throttle_secs',
         help = 'Seconds between evaluations',
         default = 300,
         type = int
