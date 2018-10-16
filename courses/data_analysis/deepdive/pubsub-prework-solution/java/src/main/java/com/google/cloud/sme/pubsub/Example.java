@@ -56,14 +56,14 @@ public class Example {
     Args parsedArgs = new Args();
     JCommander.newBuilder().addObject(parsedArgs).build().parse(args);
 
-    Subscriber subscriber = null;
+    ActionSubscriber subscriber = null;
     if (parsedArgs.subscription != null) {
-      subscriber = new Subscriber(parsedArgs.project, parsedArgs.subscription);
+      subscriber = new ActionSubscriber(parsedArgs.project, parsedArgs.subscription);
     }
 
     if (parsedArgs.topic != null && parsedArgs.inputFile != null) {
       ActionReader actionReader = new FileActionReader(parsedArgs.inputFile);
-      Publisher publisher = new Publisher(parsedArgs.project, parsedArgs.topic);
+      ActionPublisher publisher = new ActionPublisher(parsedArgs.project, parsedArgs.topic);
       Entities.Action nextAction = actionReader.next();
       while (nextAction != null) {
         publisher.publish(nextAction);

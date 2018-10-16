@@ -19,19 +19,19 @@ import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiFutureCallback;
 import com.google.api.core.ApiFutures;
 import com.google.api.gax.rpc.ApiException;
+import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.Entities;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.ProjectTopicName;
 
 /** A basic Pub/Sub publisher for purposes of demonstrating use of the API. */
-public class Publisher {
-  private com.google.cloud.pubsub.v1.Publisher publisher = null;
+public class ActionPublisher {
+  private Publisher publisher = null;
 
-  public Publisher(String project, String topic) {
+  public ActionPublisher(String project, String topic) {
     ProjectTopicName fullTopic = ProjectTopicName.of(project, topic);
-    com.google.cloud.pubsub.v1.Publisher.Builder builder =
-        com.google.cloud.pubsub.v1.Publisher.newBuilder(fullTopic);
+    Publisher.Builder builder = Publisher.newBuilder(fullTopic);
     try {
       this.publisher = builder.build();
     } catch (Exception e) {
