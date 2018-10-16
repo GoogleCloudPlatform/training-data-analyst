@@ -16,6 +16,9 @@
 package com.google.cloud.sme.pubsub;
 
 import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutureCallback;
+import com.google.api.core.ApiFutures;
+import com.google.api.gax.rpc.ApiException;
 import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.Entities;
 import com.google.pubsub.v1.PubsubMessage;
