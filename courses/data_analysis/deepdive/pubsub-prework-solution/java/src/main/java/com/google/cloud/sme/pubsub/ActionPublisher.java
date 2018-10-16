@@ -16,22 +16,22 @@
 package com.google.cloud.sme.pubsub;
 
 import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutureCallback;
+import com.google.api.core.ApiFutures;
+import com.google.api.gax.rpc.ApiException;
+import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.Entities;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.ProjectTopicName;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
 
 /** A basic Pub/Sub publisher for purposes of demonstrating use of the API. */
-public class Publisher {
-  private com.google.cloud.pubsub.v1.Publisher publisher = null;
-  private ExecutorService executor = Executors.newCachedThreadPool();
+public class ActionPublisher {
+  private Publisher publisher = null;
 
-  public Publisher(String project, String topic) {
+  public ActionPublisher(String project, String topic) {
     ProjectTopicName fullTopic = ProjectTopicName.of(project, topic);
-    com.google.cloud.pubsub.v1.Publisher.Builder builder =
-        com.google.cloud.pubsub.v1.Publisher.newBuilder(fullTopic);
+    Publisher.Builder builder = Publisher.newBuilder(fullTopic);
     try {
       this.publisher = builder.build();
     } catch (Exception e) {
@@ -45,14 +45,22 @@ public class Publisher {
             .setData(ActionUtils.encodeActionAsJson(action))
             .build();
     ApiFuture<String> response = publisher.publish(message);
-    response.addListener(
-        () -> {
-          try {
-            response.get();
-          } catch (Exception e) {
-            System.out.println("Could not publish " + action + ": " + e);
-          }
-        },
-        executor);
+    ApiFutures.addCallback(response, new ApiFutureCallback<String>() {
+
+      @Override
+      public void onFailure(Throwable throwable) {
+        if (throwable instanceof ApiException) {
+          ApiException apiException = ((ApiException) throwable);
+          // details on the API exception
+          System.out.println(apiException.getStatusCode().getCode());
+          System.out.println(apiException.isRetryable());
+        }
+        System.out.println("Error publishing message : " + message);
+      }
+
+      @Override
+      public void onSuccess(String messageId) {
+      }
+    });
   }
 }
