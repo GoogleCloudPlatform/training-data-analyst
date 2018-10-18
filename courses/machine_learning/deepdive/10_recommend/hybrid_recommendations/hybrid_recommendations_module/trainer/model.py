@@ -295,11 +295,14 @@ def train_and_evaluate(args):
     train_spec = tf.estimator.TrainSpec(
         input_fn = read_dataset(filename = args['train_data_paths'], mode = tf.estimator.ModeKeys.TRAIN, batch_size = args['batch_size']),
         max_steps = args['train_steps'])
+    
+    exporter = tf.estimator.LatestExporter('exporter', serving_input_fn)
 
     eval_spec = tf.estimator.EvalSpec(
         input_fn = read_dataset(filename = args['eval_data_paths'], mode = tf.estimator.ModeKeys.EVAL, batch_size = args['batch_size']),
         steps = None,
         start_delay_secs = args['start_delay_secs'],
-        throttle_secs = args['throttle_secs'])
+        throttle_secs = args['throttle_secs'],
+        exporters = exporter)
 
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
