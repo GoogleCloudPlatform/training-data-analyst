@@ -116,7 +116,7 @@ def create_feature_columns(args):
     # Create title feature column using TF Hub
     embedded_title_column = hub.text_embedding_column(
         key = "title", 
-        module_spec = "https://tfhub.dev/google/nnlm-de-dim128-with-normalization/1",
+        module_spec = "https://tfhub.dev/google/nnlm-de-dim50-with-normalization/1",
         trainable = False)
 
     # Create author feature column
