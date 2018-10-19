@@ -128,4 +128,4 @@ if __name__ == '__main__':
 
     # Run the training job
     shutil.rmtree(arguments['output_dir'], ignore_errors = True) # start fresh each time
-    model.train_and_evaluate(arguments)
+    model.build_model(arguments)
