@@ -89,7 +89,6 @@ public class PubSubBigQuery extends InputOutput {
     }
     types[INPUTCOLS.weight_pounds.ordinal()] = "FLOAT";
     types[INPUTCOLS.mother_age.ordinal()] = "FLOAT";
-    types[INPUTCOLS.plurality.ordinal()] = "FLOAT";
     types[INPUTCOLS.gestation_weeks.ordinal()] = "FLOAT";
   }
 
