@@ -20,7 +20,6 @@ import apache_beam as beam
 import numpy as np
 import tensorflow as tf
 
-
 def generate_hours(starthour, endhour, startday, endday, startyear, endyear,
                    is_train):
   """generates hours within the specified ranges for training or eval.
@@ -49,60 +48,6 @@ def generate_hours(starthour, endhour, startday, endday, startyear, endyear,
             yield data
 
 
-class BoxDef(object):
-
-  def __init__(self, predsize, stride):
-    self.N = predsize  # pylint: disable=invalid-name
-    self.stride = stride
-    self.half_size = predsize // 2
-    self.N15 = predsize + self.half_size  # pylint: disable=invalid-name
-
-
-def get_prediction_grid_centers(ref, boxdef):
-  cy, cx = np.meshgrid(
-      np.arange(boxdef.N15, ref.shape[0] - boxdef.N15, boxdef.stride),
-      np.arange(boxdef.N15, ref.shape[1] - boxdef.N15, boxdef.stride))
-  cy = cy.ravel()
-  cx = cx.ravel()
-  return zip(cy, cx)
-
-
-def rawdata_input_fn(ref, ltg, ltgfcst, griddef, boxdef):
-  """Input function that yields example dicts for each box in grid."""
-  for cy, cx in get_prediction_grid_centers(ref, boxdef):
-    # restrict to grids where there is currently lightning in the area
-    interesting = np.sum(ltg[cy - boxdef.N15:cy + boxdef.N15, cx -
-                             boxdef.N15:cx + boxdef.N15]) > 0.5
-    if interesting:
-      label = np.sum(ltgfcst[cy - boxdef.half_size:cy + boxdef.half_size, cx -
-                             boxdef.half_size:cx + boxdef.half_size]) > 0.5
-      example = {
-          'cy':
-              cy,
-          'cx':
-              cx,
-          'lon':
-              griddef.lons[cy][cx],
-          'lat':
-              griddef.lats[cy][cx],
-          'ref_smallbox':
-              ref[cy - boxdef.half_size:cy + boxdef.half_size,
-                  cx - boxdef.half_size:cx + boxdef.half_size],
-          'ref_bigbox':
-              ref[cy - boxdef.N:cy + boxdef.N,
-                  cx - boxdef.N:cx + boxdef.N],
-          'ltg_smallbox':
-              ltg[cy - boxdef.half_size:cy + boxdef.half_size,
-                  cx - boxdef.half_size:cx + boxdef.half_size],
-          'ltg_bigbox':
-              ltg[cy - boxdef.N:cy + boxdef.N,
-                  cx - boxdef.N:cx + boxdef.N],
-          'has_ltg':
-              label
-      }
-      yield example
-
-
 def _int64_feature(value):
   """Wrapper for inserting int64 features into Example proto."""
   if not isinstance(value, list):
@@ -123,7 +68,7 @@ def _bytes_feature(value):
 
 def create_training_examples(ref, ltg, ltgfcst, griddef, boxdef):
   """Input function that yields dicts of CSV, tfrecord for each box in grid."""
-  for example in rawdata_input_fn(ref, ltg, ltgfcst, griddef, boxdef):
+  for example in boxdef.rawdata_input_fn(ref, ltg, griddef, ltgfcst):
     # create a CSV line consisting of extracted features
     csv_data = [
         example['cy'],
@@ -205,9 +150,10 @@ def create_record(ir_blob_path, griddef, boxdef, forecast_minutes,
 def run_job(options, on_cloud):  # pylint: disable=redefined-outer-name
   """Run the job."""
   from ltgpred.goesutil import goesio  # pylint: disable=g-import-not-at-top
+  from ltgpred.trainer import boxdef # pylint: disable=g-import-not-at-top
 
   # prediction box
-  boxdef = BoxDef(options['predsize'], options['stride'])
+  boxdef = boxdef.BoxDef(options['predsize'], options['stride'])
   griddef = goesio.create_conus_griddef(options['latlonres'])
   # start the pipeline
   opts = beam.pipeline.PipelineOptions(flags=[], **options)

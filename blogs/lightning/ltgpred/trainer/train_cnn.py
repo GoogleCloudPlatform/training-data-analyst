@@ -90,7 +90,7 @@ def _convnet(img, mode, params):
   """Neural network layers for simple convnet model.
 
   Args:
-    img (tensor): image tensor
+    img (tensor): image tensor (?, 64, 64, 2)
     mode (int): TRAIN, EVAL or PREDICT
     params (dict): command-line parameters
 
@@ -104,48 +104,65 @@ def _convnet(img, mode, params):
   dprob = params.get('dprob', 0.05 if params['batch_norm'] else 0.25)
 
   # conv net with batchnorm
-  convout = img
   xavier = tf.contrib.layers.xavier_initializer(seed=13)
-  for layer in range(nlayers):
-    # convolution
-    c1 = tf.layers.conv2d(
-        convout,
-        filters=nfil,
-        kernel_size=ksize,
-        kernel_initializer=xavier,
-        strides=1,
-        padding='same',
-        activation=tf.nn.relu)
-    # maxpool
-    convout = tf.layers.max_pooling2d(c1, pool_size=2, strides=2, padding='same')
-    print('Shape of output of {}th layer = {} {}'.format(
-        layer + 1, convout.shape, convout))
+  # convout = img
+  # for layer in range(nlayers):
+  #   nfilters = (nfil // (layer+1))  # (nfil // (nlayers - layer))
+  #   nfilters = 1 if nfilters < 1 else nfilters
+  #   # convolution
+  #   c1 = tf.layers.conv2d(
+  #       convout,
+  #       filters=nfilters,
+  #       kernel_size=ksize,
+  #       kernel_initializer=xavier,
+  #       strides=1,
+  #       padding='same',
+  #       activation=tf.nn.relu)
+  #   # maxpool
+  #   convout = tf.layers.max_pooling2d(c1, pool_size=2, strides=2, padding='same')
+  #   print('Shape of output of {}th layer = {} {}'.format(
+  #       layer + 1, convout.shape, convout))
+  #
+  # outlen = convout.shape[1] * convout.shape[2] * convout.shape[3]
+  # p2flat = tf.reshape(convout, [-1, outlen])  # flattened
+  # print('Shape of flattened conv layers output = {}'.format(p2flat.shape))
 
-  print('Shape of conv layers output = {}'.format(convout.shape))
-  outlen = convout.shape[1] * convout.shape[2] * convout.shape[3]
-  p2flat = tf.reshape(convout, [-1, outlen])  # flattened
+  # add some engineered features
+  halfsize = params['predsize']
+  qtrsize = halfsize // 2
+  ref_smbox = tf.slice(img, [0, qtrsize, qtrsize, 0], [-1, halfsize, halfsize, 1])
+  ltg_smbox = tf.slice(img, [0, qtrsize, qtrsize, 1], [-1, halfsize, halfsize, 1])
+  ref_bigbox = tf.slice(img, [0, 0, 0, 0], [-1, -1, -1, 1])
+  ltg_bigbox = tf.slice(img, [0, 0, 0, 1], [-1, -1, -1, 1])
+  engfeat = tf.concat([
+    tf.reduce_max(ref_bigbox, [1, 2]), # [?, 64, 64, 1] -> [?, 1]
+    tf.reduce_max(ref_smbox, [1, 2]),
+    tf.reduce_mean(ref_bigbox, [1, 2]),
+    tf.reduce_mean(ref_smbox, [1, 2]),
+    tf.reduce_mean(ltg_bigbox, [1, 2]),
+    tf.reduce_mean(ltg_smbox, [1, 2])
+  ], axis=1)
+  #engfeat = tf.Print(engfeat, [engfeat], "engfeat values= ")
+  #engfeat = tf.concat([engfeat, p2flat], axis=1)
+  print('Shape of eng+conv layers output = {}'.format(engfeat.shape))
+
+  # apply dropout
+  #p2flat = tf.layers.dropout(
+  #    p2flat, rate=dprob, training=(mode == tf.estimator.ModeKeys.TRAIN))
+
+  ylogits = tf.layers.dense(
+    engfeat, 1, activation=None, kernel_initializer=xavier)
 
   # apply batch normalization
   if params['batch_norm']:
-    h3 = tf.layers.dense(
-        p2flat, 100, activation=None, kernel_initializer=xavier)
-    h3 = tf.layers.batch_normalization(
-        h3, training=(mode == tf.estimator.ModeKeys.TRAIN
+    ylogits = tf.layers.batch_normalization(
+        ylogits, training=(mode == tf.estimator.ModeKeys.TRAIN
                      ))  # only batchnorm when training
-    h3 = tf.nn.relu(h3)
-  else:
-    h3 = tf.layers.dense(
-        p2flat, 100, activation=tf.nn.relu, kernel_initializer=xavier)
 
-  # apply dropout
-  h3d = tf.layers.dropout(
-      h3, rate=dprob, training=(mode == tf.estimator.ModeKeys.TRAIN))
-
-  ylogits = tf.layers.dense(h3d, 1, activation=None)
   return ylogits
 
 
-def convnet_ltg(features, labels, mode, params):
+def convnet_ltg(features, labels, mode, params, tpu_estimator_spec):
   """Model function for a simple convnet.
 
   Args:
@@ -153,6 +170,7 @@ def convnet_ltg(features, labels, mode, params):
     labels (tensor): labels
     mode (int): TRAIN, EVAL or PREDICT
     params (dict): command-line parameters
+    tpu_estimator_spec (bool): return TPUEstimatorSpec or EstimatorSpec
 
   Returns:
     tpuestimatorspec
@@ -162,17 +180,28 @@ def convnet_ltg(features, labels, mode, params):
 
   # do convolutional layers
   ylogits = _convnet(image, mode, params)
+  #ylogits = tf.Print(ylogits, [ylogits], "ylogits= ")
 
   # output layer from logits
   ltgprob = tf.nn.sigmoid(ylogits)
   class_int = tf.round(ltgprob)
 
+  # set up loss, train op and eval metrics
+  loss = None
+  train_op = None
+  evalmetrics = None
+  eval_metric_ops = None
   if mode == tf.estimator.ModeKeys.TRAIN or mode == tf.estimator.ModeKeys.EVAL:
-    print('shape of ylogits={}'.format(ylogits))
-    loss = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(
-            logits=tf.reshape(ylogits, [-1]),
-            labels=tf.cast(labels, dtype=tf.float32)))
+
+    with tf.control_dependencies([
+      tf.Assert(tf.is_numeric_tensor(ylogits),[ylogits]),
+      tf.assert_non_negative(labels, [labels]),
+      tf.assert_less_equal(labels, 1, [labels])
+    ]):
+      loss = tf.losses.sigmoid_cross_entropy(labels,
+        tf.reshape(ylogits, [-1]))
+      l2loss = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables()])
+      loss = loss + 0.001 * l2loss
 
     def metric_fn(labels, class_int, ltgprob):
       return {
@@ -184,39 +213,44 @@ def convnet_ltg(features, labels, mode, params):
       }
 
     evalmetrics = (metric_fn, [labels, class_int, ltgprob])
+    eval_metric_ops = metric_fn(labels, class_int, ltgprob)
 
     if mode == tf.estimator.ModeKeys.TRAIN:
       # this is needed for batch normalization, but has no effect otherwise
       update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-      optimizer = tf.train.GradientDescentOptimizer(
-          learning_rate=params['learning_rate'])
+      optimizer = tf.train.AdamOptimizer(
+          learning_rate=params['learning_rate'], epsilon=1)
+      optimizer = tf.contrib.estimator.clip_gradients_by_norm(
+        optimizer, 5)
       if params['use_tpu']:
         optimizer = tf.contrib.tpu.CrossShardOptimizer(optimizer)  # for TPU
       with tf.control_dependencies(update_ops):
         train_op = optimizer.minimize(loss, tf.train.get_global_step())
-    else:
-      train_op = None
-  else:
-    loss = None
-    train_op = None
-    evalmetrics = None
 
-  return tf.contrib.tpu.TPUEstimatorSpec(  # works on TPU, GPU, CPU
+  predictions_dict = {
+    'ltg_probability': ltgprob,
+    'has_ltg': class_int
+  }
+  export_outputs =  {
+    'ltgpred': tf.estimator.export.PredictOutput(predictions_dict)
+  }
+  if tpu_estimator_spec:
+    return tf.contrib.tpu.TPUEstimatorSpec(  # works on TPU, GPU, CPU
       mode=mode,
-      predictions={
-          'ltg_probability': ltgprob,
-          'has_ltg': class_int
-      },
+      predictions=predictions_dict,
       loss=loss,
       train_op=train_op,
       eval_metrics=evalmetrics,
-      export_outputs={
-          'ltgpred':
-              tf.estimator.export.PredictOutput({
-                  'ltg_probability': ltgprob,
-                  'has_ltg': class_int
-              })
-      })
+      export_outputs=export_outputs)
+  else:
+    return tf.estimator.EstimatorSpec(
+      mode=mode,
+      predictions=predictions_dict,
+      loss=loss,
+      train_op=train_op,
+      eval_metric_ops=eval_metric_ops,
+      export_outputs=export_outputs
+    )
 
 
 def load_global_step_from_checkpoint_dir(checkpoint_dir):
@@ -263,7 +297,7 @@ def make_serving_input_fn(params):
   return serving_input_fn
 
 
-def make_input_fn(pattern, mode, num_cores, transpose_input):
+def make_input_fn(pattern, mode, num_cores, transpose_input, hparams=None):
   """Make training/evaluation input function.
 
   Args:
@@ -271,6 +305,7 @@ def make_input_fn(pattern, mode, num_cores, transpose_input):
     mode (int): TRAIN/EVAL/PREDICT
     num_cores (int): If training on TPU, the number of cores to use
     transpose_input (bool): more efficient training on TPU
+    default_batch_size (int): batch_size if not sent in via params
 
   Returns:
     input function suitable for sending to estimator
@@ -290,7 +325,10 @@ def make_input_fn(pattern, mode, num_cores, transpose_input):
     return images, labels
 
   def _input_fn(params):  # pylint: disable=missing-docstring
+    if 'batch_size' not in params:
+      params = hparams
     batch_size = params['batch_size']  # provided by TPU
+
     is_training = (mode == tf.estimator.ModeKeys.TRAIN)
 
     # read the dataset
@@ -306,7 +344,7 @@ def make_input_fn(pattern, mode, num_cores, transpose_input):
     dataset = dataset.apply(
         tf.contrib.data.parallel_interleave(
             fetch_dataset, cycle_length=64, sloppy=True))
-    dataset = dataset.shuffle(1024)
+    dataset = dataset.shuffle(batch_size * 50)
 
     # convert features into images
     preprocess_fn = make_preprocess_fn(params)
@@ -362,8 +400,11 @@ def train_and_evaluate(hparams):
   else:
     config = tf.contrib.tpu.RunConfig()
 
+
+  def my_model_fn(features, labels, mode, params):
+    return convnet_ltg(features, labels, mode, params, True)
   estimator = tf.contrib.tpu.TPUEstimator(  # TPU change 4
-      model_fn=convnet_ltg,
+      model_fn=my_model_fn,
       config=config,
       params=hparams,
       model_dir=output_dir,
@@ -417,6 +458,52 @@ def train_and_evaluate(hparams):
       serving_input_receiver_fn=make_serving_input_fn(hparams))
 
 
+def estimator_train_and_evaluate(hparams):
+  """Estimator train and evaluate loop.
+
+  Args:
+    hparams (dict): Command-line parameters passed in
+  """
+  output_dir = hparams['job_dir']
+  def my_model_fn(features, labels, mode):
+    return convnet_ltg(features, labels, mode, hparams, False)
+  estimator = tf.estimator.Estimator(model_fn=my_model_fn,
+                                     model_dir=output_dir)
+
+  # set up training and evaluation input functions
+  hparams['batch_size'] = hparams['train_batch_size']
+  train_input_fn = make_input_fn(hparams['train_data_path'],
+                                 tf.estimator.ModeKeys.TRAIN,
+                                 hparams['num_cores'],
+                                 False,
+                                 hparams)
+  max_steps = hparams['train_steps']
+  train_spec = tf.estimator.TrainSpec(
+    train_input_fn, max_steps=max_steps)
+
+  # eval batch size has to be divisible by num_cores
+  eval_batch_size = min(hparams['num_eval_records'],
+                        hparams['train_batch_size'])
+  eval_batch_size = eval_batch_size - eval_batch_size % hparams['num_cores']
+  eval_steps = hparams['num_eval_records'] // eval_batch_size
+  tf.logging.info('train_batch_size=%d  eval_batch_size=%d  max_steps=%d',
+                  hparams['train_batch_size'], eval_batch_size, max_steps)
+  hparams['batch_size'] = eval_batch_size
+  eval_input_fn = make_input_fn(hparams['eval_data_path'],
+                                tf.estimator.ModeKeys.EVAL,
+                                hparams['num_cores'],
+                                False,
+                                hparams)
+  exporter = tf.estimator.LatestExporter(
+    'exporter', make_serving_input_fn(hparams))
+  eval_spec = tf.estimator.EvalSpec(
+    eval_input_fn, steps=eval_steps, exporters=exporter)
+
+  # launch
+  tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+
+
+
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(
       description='Train cnn model for lightning prediction')
@@ -446,7 +533,7 @@ if __name__ == '__main__':
       '--learning_rate',
       help='Initial learning rate for training',
       type=float,
-      default=1e-6)
+      default=0.001)
   parser.add_argument(
       '--train_steps',
       help="""\
@@ -523,3 +610,4 @@ if __name__ == '__main__':
 
   # run the training job
   train_and_evaluate(options)
+  #estimator_train_and_evaluate(options)
