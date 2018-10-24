@@ -14,11 +14,16 @@ import argparse
 import datetime
 import logging
 import os
+import random
 import shutil
 import subprocess
 import apache_beam as beam
 import numpy as np
 import tensorflow as tf
+
+from ltgpred.goesutil import goesio
+from ltgpred.trainer import boxdef as bd
+
 
 def generate_hours(starthour, endhour, startday, endday, startyear, endyear,
                    is_train):
@@ -55,9 +60,10 @@ def _int64_feature(value):
   return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
 
 
-def _array_feature(value):
+def _array_feature(value, min_value, max_value):
   """Wrapper for inserting ndarray float features into Example proto."""
-  value = np.nan_to_num(value.flatten())
+  value = np.nan_to_num(value.flatten()) # nan, -inf, +inf to numbers
+  value = np.clip(value, min_value, max_value) # clip to valid
   return tf.train.Feature(float_list=tf.train.FloatList(value=value))
 
 
@@ -91,19 +97,23 @@ def create_training_examples(ref, ltg, ltgfcst, griddef, boxdef):
             feature={
                 'cy': _int64_feature(example['cy']),
                 'cx': _int64_feature(example['cx']),
-                'lon': _array_feature(example['lon']),
-                'lat': _array_feature(example['lat']),
-                'ref': _array_feature(example['ref_bigbox']),
-                'ltg': _array_feature(example['ltg_bigbox']),
+                'lon': _array_feature(example['lon'], -180, 180),
+                'lat': _array_feature(example['lat'], -90, 90),
+                'ref': _array_feature(example['ref_bigbox'], 0, 1),
+                'ltg': _array_feature(example['ltg_bigbox'], 0, 1),
                 'has_ltg': _int64_feature(1 if example['has_ltg'] else 0)
             }))
 
-    yield {'csvline': csv_line, 'tfrecord': tfexample.SerializeToString()}
+    yield {
+      'csvline': csv_line,
+      'tfrecord': tfexample.SerializeToString(),
+      'ref': example['ref_center'],
+      'ltg' : example['ltg_center']
+    }
 
 
 def get_ir_blob_paths(hours_dict, max_per_hour=None):
   """Get IR records in this hour."""
-  import goesutil.goesio as goesio  # pylint: disable=g-import-not-at-top
   blob_paths = goesio.get_ir_blob_paths(hours_dict['year'], hours_dict['day'],
                                         hours_dict['hour'])
   if max_per_hour and len(blob_paths) > max_per_hour:
@@ -113,7 +123,6 @@ def get_ir_blob_paths(hours_dict, max_per_hour=None):
 
 
 def add_time_stamp(ir_blob_path):
-  import goesutil.goesio as goesio  # pylint: disable=g-import-not-at-top
   epoch = datetime.utcfromtimestamp(0)
   timestamp = goesio.get_timestamp_from_filename(ir_blob_path)
   yield beam.window.TimestampedValue(ir_blob_path,
@@ -122,12 +131,10 @@ def add_time_stamp(ir_blob_path):
 
 def create_record(ir_blob_path, griddef, boxdef, forecast_minutes,
                   ltg_validity_minutes):
-  """Create record from IR And lightning files."""
-  import goesutil.goesio as goesio  # pylint: disable=g-import-not-at-top
-
   # read IR image
   logging.info('Retrieving lightning for IR blob %s', ir_blob_path)
   ref = goesio.read_ir_data(ir_blob_path, griddef)
+  ref = np.ma.filled(ref, 0) # mask -> 0
 
   # create "current" lightning image
   influence_km = 5
@@ -146,54 +153,100 @@ def create_record(ir_blob_path, griddef, boxdef, forecast_minutes,
   for example in create_training_examples(ref, ltg, ltgfcst, griddef, boxdef):
     yield example
 
+class MeanStddev(beam.CombineFn):
+  def create_accumulator(self):
+    return (0.0, 0.0, 0) # x, x^2, count
 
-def run_job(options, on_cloud):  # pylint: disable=redefined-outer-name
+  def add_input(self, sum_count, input):
+    (sum, sumsq, count) = sum_count
+    return sum + input, sumsq + input*input, count + 1
+
+  def merge_accumulators(self, accumulators):
+    sums, sumsqs, counts = zip(*accumulators)
+    return sum(sums), sum(sumsqs), sum(counts)
+
+  def extract_output(self, sum_count):
+    (sum, sumsq, count) = sum_count
+    if count:
+      mean = sum / count
+      variance = (sumsq / count) - mean*mean
+      # -ve value could happen due to rounding
+      stddev = np.sqrt(variance) if variance > 0 else 0
+      return {
+        'mean': mean,
+        'variance': variance,
+        'stddev': stddev,
+        'count': count
+      }
+    else:
+      return {
+        'mean': float('NaN'),
+        'variance': float('NaN'),
+        'stddev': float('NaN'),
+        'count': 0
+      }
+
+
+def run_job(options):  # pylint: disable=redefined-outer-name
   """Run the job."""
-  from ltgpred.goesutil import goesio  # pylint: disable=g-import-not-at-top
-  from ltgpred.trainer import boxdef # pylint: disable=g-import-not-at-top
-
   # prediction box
-  boxdef = boxdef.BoxDef(options['predsize'], options['stride'])
+  boxdef = bd.BoxDef(options['predsize'], options['stride'])
   griddef = goesio.create_conus_griddef(options['latlonres'])
   # start the pipeline
   opts = beam.pipeline.PipelineOptions(flags=[], **options)
-  p = beam.Pipeline(options['runner'], options=opts)
-  for step in ['train', 'eval']:
-    # create examples
-    examples = (
-        p
-        | '{}_hours'.format(step) >> beam.Create(
-            generate_hours(options['starthour'], options['endhour'],
-                           options['startday'], options['endday'],
-                           options['startyear'], options['endyear'],
-                           step == 'train'))
-        | '{}_irblobs'.format(step) >>
-        beam.FlatMap(lambda x: get_ir_blob_paths(x, options['max_per_hour']))
-        | '{}_examples'.format(step) >>
-        beam.FlatMap(
-            lambda ir_blob_path:  # pylint: disable=g-long-lambda
-            create_record(ir_blob_path, griddef, boxdef,
-                          options['forecast_interval'],
-                          options['lightning_validity'])
-        ))
+  with beam.Pipeline(options['runner'], options=opts) as p:
+    for step in ['train', 'eval']:
+      # create examples
+      examples = (
+          p
+          | '{}_hours'.format(step) >> beam.Create(
+              generate_hours(options['starthour'], options['endhour'],
+                             options['startday'], options['endday'],
+                             options['startyear'], options['endyear'],
+                             step == 'train'))
+          | '{}_irblobs'.format(step) >>
+          beam.FlatMap(lambda x: get_ir_blob_paths(x, options['max_per_hour']))
+          | '{}_examples'.format(step) >>
+          beam.FlatMap(
+              lambda ir_blob_path:  # pylint: disable=g-long-lambda
+              create_record(ir_blob_path, griddef, boxdef,
+                            options['forecast_interval'],
+                            options['lightning_validity'])
+          ))
 
-    # write out csv files
-    _ = (
-        examples
-        | '{}_csvlines'.format(step) >> beam.Map(lambda x: x['csvline'])
-        | '{}_writecsv'.format(step) >> beam.io.Write(
-            beam.io.WriteToText(os.path.join(options['outdir'], 'csv', step))))
+      # shuffle the examples so that each small batch doesn't contain
+      # highly correlated records
+      examples = (examples
+          | '{}_reshuffleA'.format(step) >> beam.Map(
+              lambda t: (random.randint(1, 1000), t))
+          | '{}_reshuffleB'.format(step) >> beam.GroupByKey()
+          | '{}_reshuffleC'.format(step) >> beam.FlatMap(lambda t: t[1]))
 
-    # write out tfrecords
-    _ = (
-        examples
-        | '{}_tfrecords'.format(step) >> beam.Map(lambda x: x['tfrecord'])
-        | '{}_writetfr'.format(step) >> beam.io.tfrecordio.WriteToTFRecord(
-            os.path.join(options['outdir'], 'tfrecord', step)))
+      # write out center pixel statistics
+      if step == 'train':
+        _ = (examples
+          | 'get_values' >> beam.FlatMap(
+              lambda x : [(f, x[f]) for f in ['ref', 'ltg']])
+          | 'compute_stats' >> beam.CombinePerKey(MeanStddev())
+          | 'write_stats' >> beam.io.Write(beam.io.WriteToText(
+              os.path.join(options['outdir'], 'stats'), num_shards=1))
+        )
 
-  job = p.run()
-  if not on_cloud:
-    job.wait_until_finish()
+
+      # write out csv files
+      _ = (
+          examples
+          | '{}_csvlines'.format(step) >> beam.Map(lambda x: x['csvline'])
+          | '{}_writecsv'.format(step) >> beam.io.Write(
+              beam.io.WriteToText(os.path.join(options['outdir'], 'csv', step))))
+
+      # write out tfrecords
+      _ = (
+          examples
+          | '{}_tfrecords'.format(step) >> beam.Map(lambda x: x['tfrecord'])
+          | '{}_writetfr'.format(step) >> beam.io.tfrecordio.WriteToTFRecord(
+              os.path.join(options['outdir'], 'tfrecord', step)))
+
 
 
 if __name__ == '__main__':
@@ -267,7 +320,7 @@ if __name__ == '__main__':
       'machine_type':
           'n1-standard-8',
       'setup_file':
-          os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setup.py'),
+          os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../setup.py'),
       'save_main_session':
           True
   })
@@ -285,4 +338,4 @@ if __name__ == '__main__':
       pass
     options['runner'] = 'DataflowRunner'
 
-  run_job(options, options['project'])
+  run_job(options)

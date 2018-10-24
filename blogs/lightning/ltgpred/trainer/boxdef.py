@@ -10,16 +10,7 @@ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
 OF ANY KIND, either express or implied. See the License for the specific
 language governing permissions and limitations under the License.
 """
-import argparse
-import datetime
-import logging
-import os
-import shutil
-import subprocess
-import apache_beam as beam
 import numpy as np
-import tensorflow as tf
-
 
 class BoxDef(object):
 
@@ -58,6 +49,10 @@ class BoxDef(object):
                 griddef.lons[cy][cx],
             'lat':
                 griddef.lats[cy][cx],
+            'ref_center':
+                ref[cy][cx],
+            'ltg_center':
+                ltg[cy][cx],
             'ref_smallbox':
                 ref[cy - self.half_size:cy + self.half_size,
                     cx - self.half_size:cx + self.half_size],
@@ -74,4 +69,3 @@ class BoxDef(object):
                 label
         }
         yield example
-

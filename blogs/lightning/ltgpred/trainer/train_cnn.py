@@ -91,35 +91,27 @@ def make_preprocess_fn(params):
   return read_and_preprocess
 
 
-def engineered_layer(img, halfsize):
-  qtrsize = halfsize // 2
-  ref_smbox = img[:, qtrsize:(qtrsize+halfsize), qtrsize:(qtrsize+halfsize), 0:1]
-  ltg_smbox = img[:, qtrsize:(qtrsize+halfsize), qtrsize:(qtrsize+halfsize), 1:2]
-  ref_bigbox = img[:, :, :, 0:1]
-  ltg_bigbox = img[:, :, :, 1:2]
-  engfeat = tf.concat([
-    tf.reduce_max(ref_bigbox, [1, 2]), # [?, 64, 64, 1] -> [?, 1]
-    tf.reduce_max(ref_smbox, [1, 2]),
-    tf.reduce_mean(ref_bigbox, [1, 2]),
-    tf.reduce_mean(ref_smbox, [1, 2]),
-    tf.reduce_mean(ltg_bigbox, [1, 2]),
-    tf.reduce_mean(ltg_smbox, [1, 2])
-  ], axis=1)
-  return engfeat
+def engineered_features(img, halfsize):
+  with tf.control_dependencies([
+      tf.Assert(tf.is_numeric_tensor(img), [img])
+    ]):
+    qtrsize = halfsize // 2
+    ref_smbox = img[:, qtrsize:(qtrsize+halfsize), qtrsize:(qtrsize+halfsize), 0:1]
+    ltg_smbox = img[:, qtrsize:(qtrsize+halfsize), qtrsize:(qtrsize+halfsize), 1:2]
+    ref_bigbox = img[:, :, :, 0:1]
+    ltg_bigbox = img[:, :, :, 1:2]
+    engfeat = tf.concat([
+      tf.reduce_max(ref_bigbox, [1, 2]), # [?, 64, 64, 1] -> [?, 1]
+      tf.reduce_max(ref_smbox, [1, 2]),
+      tf.reduce_mean(ref_bigbox, [1, 2]),
+      tf.reduce_mean(ref_smbox, [1, 2]),
+      tf.reduce_mean(ltg_bigbox, [1, 2]),
+      tf.reduce_mean(ltg_smbox, [1, 2])
+    ], axis=1)
+    return engfeat
 
 
-def create_convnet_model(params):
-  """Neural network layers for simple convnet model.
-
-  Args:
-    img (tensor): image tensor (?, 64, 64, 2)
-    mode (int): TRAIN, EVAL or PREDICT
-    params (dict): command-line parameters
-
-  Returns:
-    logits
-  """
-  # hyperparams
+def create_combined_model(params):
   ksize = params.get('ksize', 5)
   nfil = params.get('nfil', 10)
   nlayers = params.get('nlayers', 3)
@@ -137,28 +129,61 @@ def create_convnet_model(params):
     cnn = keras.layers.Activation('elu')(cnn)
     cnn = keras.layers.BatchNormalization()(cnn)
     cnn = keras.layers.MaxPooling2D(pool_size=(2, 2))(cnn)
-    cnn = keras.layers.Dropout(dprob)(cnn)
   cnn = keras.layers.Flatten()(cnn)
-  cnn = keras.layers.Dense(10)(cnn)
-  cnn = keras.layers.Activation('relu')(cnn)
+  cnn = keras.layers.Dropout(dprob)(cnn)
+  cnn = keras.layers.Dense(10, activation='relu')(cnn)
 
   # feature engineering part of model
   engfeat = keras.layers.Lambda(
-    lambda x: engineered_layer(x, height//2))(img)
+    lambda x: engineered_features(x, height//2))(img)
 
   # concatenate the two parts
-  output = keras.layers.concatenate([cnn, engfeat])
-  output = keras.layers.Dense(1)(output)
-  ltgprob = keras.layers.Activation('softmax')(output)
+  both = keras.layers.concatenate([cnn, engfeat])
+  ltgprob = keras.layers.Dense(1, activation='sigmoid')(both)
 
   # create a model
   model = keras.Model(img, ltgprob)
   def rmse(y_true, y_pred):
     import tensorflow.keras.backend as K
     return K.sqrt(K.mean(K.square(y_pred - y_true), axis=-1))
-  optimizer = tf.train.RMSPropOptimizer(learning_rate=params['learning_rate'])
+  optimizer = tf.keras.optimizers.Adam(lr=params['learning_rate'],
+                                       clipnorm=1.)
   model.compile(optimizer=optimizer,
-                loss=tf.keras.losses.binary_crossentropy,
+                loss='binary_crossentropy',
+                metrics=['accuracy', 'mse', rmse])
+  return model
+
+
+def print_layer(layer, message, first_n=3, summarize=1024):
+  return keras.layers.Lambda((
+    lambda x: tf.Print(x, [x],
+                      message=message,
+                      first_n=first_n,
+                      summarize=summarize)))(layer)
+
+def create_feateng_model(params):
+  # input is a 2-channel image
+  height = width = 2 * params['predsize']
+  img = keras.Input(shape=[height, width, 2])
+
+  engfeat = keras.layers.Lambda(
+    lambda x: engineered_features(x, height//2))(img)
+  engfeat = print_layer(engfeat, "engfeat=")
+
+  ltgprob = keras.layers.Dense(1, activation='sigmoid')(engfeat)
+
+  # print
+  ltgprob = print_layer(ltgprob, "ltgprob=")
+
+  # create a model
+  model = keras.Model(img, ltgprob)
+  def rmse(y_true, y_pred):
+    import tensorflow.keras.backend as K
+    return K.sqrt(K.mean(K.square(y_pred - y_true), axis=-1))
+  optimizer = tf.keras.optimizers.Adam(lr=params['learning_rate'],
+                                       clipnorm=1.)
+  model.compile(optimizer=optimizer,
+                loss='binary_crossentropy',
                 metrics=['accuracy', 'mse', rmse])
   return model
 
@@ -206,7 +231,7 @@ def make_dataset(pattern, mode, batch_size, params):
   dataset = dataset.apply(
     tf.contrib.data.parallel_interleave(
       fetch_dataset, cycle_length=64, sloppy=True))
-  dataset = dataset.shuffle(batch_size * 50)
+  dataset = dataset.shuffle(batch_size * 50) # shuffle by a bit
 
   # convert features into images
   preprocess_fn = make_preprocess_fn(params)
@@ -249,12 +274,15 @@ def train_and_evaluate(hparams):
                         hparams['train_batch_size'])
   eval_batch_size = eval_batch_size - eval_batch_size % hparams['num_cores']
   eval_steps = hparams['num_eval_records'] // eval_batch_size
-  tf.logging.info('train_batch_size=%d  eval_batch_size=%d  max_steps=%d (%d x %d)',
+  tf.logging.info('train_batch_size=%d  eval_batch_size=%d'
+                  ' train_steps=%d (%d x %d) eval_steps=%d',
                   hparams['train_batch_size'], eval_batch_size,
-                  max_steps, steps_per_epoch, num_epochs)
+                  max_steps, steps_per_epoch, num_epochs,
+                  eval_steps)
 
-  # create convnet model
-  model = create_convnet_model(hparams)
+  # create model
+  model = create_combined_model(hparams)
+  #model = create_feateng_model(hparams)
 
   # resolve TPU and rewrite model for TPU if necessary
   if hparams['use_tpu']:
