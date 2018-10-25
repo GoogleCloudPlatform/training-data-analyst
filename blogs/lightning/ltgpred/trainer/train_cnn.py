@@ -20,6 +20,8 @@ import time
 import tensorflow as tf
 from tensorflow import keras
 
+def PATCH_SIZE(params):
+  return (2 * params['train_patch_radius']) + 1
 
 def reshape_into_image(features, params):
   """reshape features dict containing ref, ltg channels into image.
@@ -29,7 +31,7 @@ def reshape_into_image(features, params):
     params (dict): command-line parameters
 
   Returns:
-    reshaped tensor with shape [2*predsize, 2*predsize, 2]
+    reshaped tensor with shape [2*train_patch_radius, 2*train_patch_radius, 2]
   """
   # stack the inputs to form a 2-channel input
   # features['ref'] is [-1, height*width]
@@ -37,9 +39,7 @@ def reshape_into_image(features, params):
   n_channels = 2
   print('shape of ref feature {}'.format(features['ref'].shape))
   stacked = tf.concat([features['ref'], features['ltg']], axis=1)
-  # See create_dataset.py: cy - boxdef.N:cy + boxdef.N
-  height = 2 * params['predsize']
-  width = 2 * params['predsize']
+  height = width = PATCH_SIZE(params)
   print('shape of all features {}, will be reshaped to [{},{},{}]'.format(
       stacked.shape, height, width, n_channels))
   return tf.reshape(stacked, [height, width, n_channels])
@@ -67,9 +67,7 @@ def make_preprocess_fn(params):
     Returns:
       img, label
     """
-    # See create_dataset.py: cy - boxdef.N:cy + boxdef.N
-    height = 2 * params['predsize']
-    width = 2 * params['predsize']
+    height = width = PATCH_SIZE(params)
     parsed = tf.parse_single_example(
         example_data, {
             'ref': tf.VarLenFeature(tf.float32),
@@ -96,8 +94,8 @@ def engineered_features(img, halfsize):
       tf.Assert(tf.is_numeric_tensor(img), [img])
     ]):
     qtrsize = halfsize // 2
-    ref_smbox = img[:, qtrsize:(qtrsize+halfsize), qtrsize:(qtrsize+halfsize), 0:1]
-    ltg_smbox = img[:, qtrsize:(qtrsize+halfsize), qtrsize:(qtrsize+halfsize), 1:2]
+    ref_smbox = img[:, qtrsize:(qtrsize+halfsize+1), qtrsize:(qtrsize+halfsize+1), 0:1]
+    ltg_smbox = img[:, qtrsize:(qtrsize+halfsize+1), qtrsize:(qtrsize+halfsize+1), 1:2]
     ref_bigbox = img[:, :, :, 0:1]
     ltg_bigbox = img[:, :, :, 1:2]
     engfeat = tf.concat([
@@ -118,7 +116,7 @@ def create_combined_model(params):
   dprob = params.get('dprob', 0.05 if params['batch_norm'] else 0.25)
 
   # input is a 2-channel image
-  height = width = 2 * params['predsize']
+  height = width = PATCH_SIZE(params)
   img = keras.Input(shape=[height, width, 2])
 
   # convolutional part of model
@@ -163,7 +161,7 @@ def print_layer(layer, message, first_n=3, summarize=1024):
 
 def create_feateng_model(params):
   # input is a 2-channel image
-  height = width = 2 * params['predsize']
+  height = width = PATCH_SIZE(params)
   img = keras.Input(shape=[height, width, 2])
 
   engfeat = keras.layers.Lambda(
@@ -353,10 +351,10 @@ if __name__ == '__main__':
       'could be local or on GCS'
   )
   parser.add_argument(
-      '--predsize',
+      '--train_patch_radius',
       type=int,
       default=32,
-      help='predict lightning within a NxN grid; has to match preprocessing')
+      help='predict lightning based a 2Nx2N grid; has to match preprocessing')
   parser.add_argument(
       '--train_batch_size',
       help='Batch size for training steps',

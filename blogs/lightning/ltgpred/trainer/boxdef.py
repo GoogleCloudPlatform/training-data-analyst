@@ -14,17 +14,21 @@ import numpy as np
 
 class BoxDef(object):
 
-  def __init__(self, predsize, stride):
-    self.N = predsize  # pylint: disable=invalid-name
+  def __init__(self, train_patch_radius, label_patch_radius, stride):
+    self.train_patch_radius = train_patch_radius
     self.stride = stride
-    self.half_size = predsize // 2
-    self.N15 = predsize + self.half_size  # pylint: disable=invalid-name
+    self.label_patch_radius = label_patch_radius
 
 
   def get_prediction_grid_centers(self, ref):
+    neighborhood_size = self.train_patch_radius + self.label_patch_radius # slop
     cy, cx = np.meshgrid(
-        np.arange(self.N15, ref.shape[0] - self.N15, self.stride),
-        np.arange(self.N15, ref.shape[1] - self.N15, self.stride))
+        np.arange(neighborhood_size,
+                  ref.shape[0] - neighborhood_size,
+                  self.stride),
+        np.arange(neighborhood_size,
+                  ref.shape[1] - neighborhood_size,
+                  self.stride))
     cy = cy.ravel()
     cx = cx.ravel()
     return zip(cy, cx)
@@ -34,12 +38,14 @@ class BoxDef(object):
     """Input function that yields example dicts for each box in grid."""
     for cy, cx in self.get_prediction_grid_centers(ref):
       # restrict to grids where there is currently lightning in the area
-      interesting = np.sum(ltg[cy - self.N15:cy + self.N15, cx -
-                               self.N15:cx + self.N15]) > 0.5
+      interesting = np.sum(
+        ltg[cy - self.train_patch_radius:cy + self.train_patch_radius + 1,
+            cx - self.train_patch_radius:cx + self.train_patch_radius + 1]) > 0.5
       if interesting:
-        label = (np.sum(ltgfcst[cy - self.half_size:cy + self.half_size, cx -
-                                self.half_size:cx + self.half_size]) > 0.5
-                 if ltgfcst is not None else None)
+        label = (np.sum(
+                  ltgfcst[cy - self.label_patch_radius:cy + self.label_patch_radius + 1,
+                          cx - self.label_patch_radius:cx + self.label_patch_radius + 1])
+                 > 0.5 if ltgfcst is not None else None)
         example = {
             'cy':
                 cy,
@@ -54,17 +60,17 @@ class BoxDef(object):
             'ltg_center':
                 ltg[cy][cx],
             'ref_smallbox':
-                ref[cy - self.half_size:cy + self.half_size,
-                    cx - self.half_size:cx + self.half_size],
+                ref[cy - self.label_patch_radius:cy + self.label_patch_radius + 1,
+                    cx - self.label_patch_radius:cx + self.label_patch_radius + 1],
             'ref_bigbox':
-                ref[cy - self.N:cy + self.N,
-                    cx - self.N:cx + self.N],
+                ref[cy - self.train_patch_radius:cy + self.train_patch_radius + 1,
+                    cx - self.train_patch_radius:cx + self.train_patch_radius + 1],
             'ltg_smallbox':
-                ltg[cy - self.half_size:cy + self.half_size,
-                    cx - self.half_size:cx + self.half_size],
+                ltg[cy - self.label_patch_radius:cy + self.label_patch_radius + 1,
+                    cx - self.label_patch_radius:cx + self.label_patch_radius + 1],
             'ltg_bigbox':
-                ltg[cy - self.N:cy + self.N,
-                    cx - self.N:cx + self.N],
+                ltg[cy - self.train_patch_radius:cy + self.train_patch_radius + 1,
+                    cx - self.train_patch_radius:cx + self.train_patch_radius + 1],
             'has_ltg':
                 label
         }

@@ -72,44 +72,49 @@ def _bytes_feature(value):
   return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
-def create_training_examples(ref, ltg, ltgfcst, griddef, boxdef):
+def create_training_examples(ref, ltg, ltgfcst, griddef, boxdef, samplingfrac):
   """Input function that yields dicts of CSV, tfrecord for each box in grid."""
   for example in boxdef.rawdata_input_fn(ref, ltg, griddef, ltgfcst):
-    # create a CSV line consisting of extracted features
-    csv_data = [
-        example['cy'],
-        example['cx'],
-        example['lat'],
-        example['lon'],
-        np.mean(example['ref_smallbox']),  # mean within subgrid
-        np.max(example['ref_smallbox']),
-        np.mean(example['ref_bigbox']),
-        np.max(example['ref_bigbox']),
-        np.mean(example['ltg_smallbox']),
-        np.mean(example['ltg_bigbox']),
-        example['has_ltg']
-    ]
-    csv_line = ','.join([str(v) for v in csv_data])
+    # write out all lightning patches, but only some of the non-lightning ones
+    should_write = (example['has_ltg'] or
+                    random.random() < samplingfrac)
 
-    # create a TF Record with the raw data
-    tfexample = tf.train.Example(
-        features=tf.train.Features(
-            feature={
-                'cy': _int64_feature(example['cy']),
-                'cx': _int64_feature(example['cx']),
-                'lon': _array_feature(example['lon'], -180, 180),
-                'lat': _array_feature(example['lat'], -90, 90),
-                'ref': _array_feature(example['ref_bigbox'], 0, 1),
-                'ltg': _array_feature(example['ltg_bigbox'], 0, 1),
-                'has_ltg': _int64_feature(1 if example['has_ltg'] else 0)
-            }))
+    if should_write:
+      # create a CSV line consisting of extracted features
+      csv_data = [
+          example['cy'],
+          example['cx'],
+          example['lat'],
+          example['lon'],
+          np.mean(example['ref_smallbox']),  # mean within subgrid
+          np.max(example['ref_smallbox']),
+          np.mean(example['ref_bigbox']),
+          np.max(example['ref_bigbox']),
+          np.mean(example['ltg_smallbox']),
+          np.mean(example['ltg_bigbox']),
+          example['has_ltg']
+      ]
+      csv_line = ','.join([str(v) for v in csv_data])
 
-    yield {
-      'csvline': csv_line,
-      'tfrecord': tfexample.SerializeToString(),
-      'ref': example['ref_center'],
-      'ltg' : example['ltg_center']
-    }
+      # create a TF Record with the raw data
+      tfexample = tf.train.Example(
+          features=tf.train.Features(
+              feature={
+                  'cy': _int64_feature(example['cy']),
+                  'cx': _int64_feature(example['cx']),
+                  'lon': _array_feature(example['lon'], -180, 180),
+                  'lat': _array_feature(example['lat'], -90, 90),
+                  'ref': _array_feature(example['ref_bigbox'], 0, 1),
+                  'ltg': _array_feature(example['ltg_bigbox'], 0, 1),
+                  'has_ltg': _int64_feature(1 if example['has_ltg'] else 0)
+              }))
+
+      yield {
+        'csvline': csv_line,
+        'tfrecord': tfexample.SerializeToString(),
+        'ref': example['ref_center'],
+        'ltg' : example['ltg_center']
+      }
 
 
 def get_ir_blob_paths(hours_dict, max_per_hour=None):
@@ -130,7 +135,7 @@ def add_time_stamp(ir_blob_path):
 
 
 def create_record(ir_blob_path, griddef, boxdef, forecast_minutes,
-                  ltg_validity_minutes):
+                  ltg_validity_minutes, sampling_frac):
   # read IR image
   logging.info('Retrieving lightning for IR blob %s', ir_blob_path)
   ref = goesio.read_ir_data(ir_blob_path, griddef)
@@ -150,7 +155,9 @@ def create_record(ir_blob_path, griddef, boxdef, forecast_minutes,
   ltgfcst = goesio.create_ltg_grid(ltg_blob_paths, griddef, influence_km)
 
   # create examples
-  for example in create_training_examples(ref, ltg, ltgfcst, griddef, boxdef):
+  for example in create_training_examples(ref, ltg, ltgfcst,
+                                          griddef, boxdef,
+                                          sampling_frac):
     yield example
 
 class MeanStddev(beam.CombineFn):
@@ -189,8 +196,14 @@ class MeanStddev(beam.CombineFn):
 
 def run_job(options):  # pylint: disable=redefined-outer-name
   """Run the job."""
+
+  # for repeatability
+  random.seed(13)
+
   # prediction box
-  boxdef = bd.BoxDef(options['predsize'], options['stride'])
+  boxdef = bd.BoxDef(options['train_patch_radius'],
+                     options['label_patch_radius'],
+                     options['stride'])
   griddef = goesio.create_conus_griddef(options['latlonres'])
   # start the pipeline
   opts = beam.pipeline.PipelineOptions(flags=[], **options)
@@ -211,7 +224,8 @@ def run_job(options):  # pylint: disable=redefined-outer-name
               lambda ir_blob_path:  # pylint: disable=g-long-lambda
               create_record(ir_blob_path, griddef, boxdef,
                             options['forecast_interval'],
-                            options['lightning_validity'])
+                            options['lightning_validity'],
+                            options['sampling_frac'])
           ))
 
       # shuffle the examples so that each small batch doesn't contain
@@ -259,12 +273,17 @@ if __name__ == '__main__':
   parser.add_argument(
       '--outdir', required=True, help='output dir. could be local or on GCS')
   parser.add_argument(
-      '--predsize',
+      '--train_patch_radius',
       type=int,
       default=32,
-      help='predict lightning within a NxN grid')
+      help='learn from infrared, lightning within a 2Nx2N grid')
   parser.add_argument(
-      '--stride', type=int, default=16, help='predict lightning every N pixels')
+      '--label_patch_radius',
+      type=int,
+      default=2,
+      help='learn to predict lightning within a 2Nx2N grid')
+  parser.add_argument(
+      '--stride', type=int, default=4, help='patch translation')
   parser.add_argument(
       '--latlonres',
       type=float,
@@ -301,6 +320,11 @@ if __name__ == '__main__':
       type=int,
       default=15,
       help='how long to retain a ltg flash (minutes)')
+  parser.add_argument(
+      '--sampling_frac',
+      type=float,
+      default=0.1,
+      help='write out only this fraction of the no-lightning patches')
 
   # parse command-line args and add a few more
   logging.basicConfig(level=getattr(logging, 'INFO', None))
