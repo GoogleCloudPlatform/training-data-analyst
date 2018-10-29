@@ -1,0 +1,98 @@
+# Copyright 2018 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "2"
+  labels:
+    run: airflow-worker
+  name: airflow-worker
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: airflow-worker
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: airflow-worker
+    spec:
+      volumes:
+      - name: ssl-certs
+        hostPath:
+          path: /etc/ssl/certs
+      - name: airflow-config
+        configMap:
+          name: airflow-config
+      containers:
+      - image: gcr.io/cloud-airflow-public/airflow-worker-1.8.0
+        imagePullPolicy: Always
+        name: airflow-worker
+        env:
+        - name: GCS_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: gcs_bucket
+        - name: AIRFLOW_HOME
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: airflow_home
+        - name: DAGS_FOLDER
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: dags_folder
+        - name: C_FORCE_ROOT
+          value: "TRUE"
+        - name: SQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: sql_database
+        - name: SQL_USER
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: sql_user
+        - name: SQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: deployment-secrets
+              key: sql_password
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          value: mysql+mysqldb://$(SQL_USER):$(SQL_PASSWORD)@airflow-sqlproxy/$(SQL_DATABASE)
+        volumeMounts:
+        - name: airflow-config
+          mountPath: /etc/airflow
+        args: ["worker"]
+        ports:
+        - containerPort: 8793
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        securityContext:
+          privileged: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

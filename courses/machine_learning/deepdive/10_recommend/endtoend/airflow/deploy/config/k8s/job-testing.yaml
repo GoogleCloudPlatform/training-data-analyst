@@ -1,0 +1,87 @@
+# Copyright 2018 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: airflow-testing-1.8.0
+  namespace: default
+spec:
+  template:
+    metadata:
+      name: airflow-testing
+    spec:
+      volumes:
+      - name: ssl-certs
+        hostPath:
+          path: /etc/ssl/certs
+      - name: airflow-config
+        configMap:
+          name: airflow-config
+      containers:
+      - image: gcr.io/cloud-airflow-public/airflow-testing:1.8.0
+        imagePullPolicy: Always
+        args:
+          - "managed-airflow-test"
+          - "us-west1"
+        name: airflow-testing
+        env:
+        - name: GCS_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: gcs_bucket
+        - name: AIRFLOW_HOME
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: airflow_home
+        - name: DAGS_FOLDER
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: dags_folder
+        - name: DAGS_FOLDER
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: dags_folder
+        - name: SQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: sql_database
+        - name: SQL_USER
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: sql_user
+        - name: SQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: deployment-secrets
+              key: sql_password
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          value: mysql+mysqldb://$(SQL_USER):$(SQL_PASSWORD)@airflow-sqlproxy/$(SQL_DATABASE)
+        volumeMounts:
+        - name: airflow-config
+          mountPath: /etc/airflow
+        - name: ssl-certs
+          mountPath: /etc/ssl/certs
+        securityContext:
+          privileged: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Never
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
