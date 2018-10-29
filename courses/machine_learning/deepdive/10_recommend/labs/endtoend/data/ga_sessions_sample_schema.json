@@ -1,0 +1,645 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "visitorId",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "visitNumber",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "visitStartTime",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "date",
+    "type": "STRING"
+  },
+  {
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "visits",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "hits",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "pageviews",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "timeOnSite",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "bounces",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "transactions",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "transactionRevenue",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "newVisits",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "screenviews",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "uniqueScreenviews",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "timeOnScreen",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "totalTransactionRevenue",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "sessionQualityDim",
+        "type": "INTEGER"
+      }
+    ],
+    "mode": "NULLABLE",
+    "name": "totals",
+    "type": "RECORD"
+  },
+  {
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "browser",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "browserVersion",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "browserSize",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "operatingSystem",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "operatingSystemVersion",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "isMobile",
+        "type": "BOOLEAN"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "mobileDeviceBranding",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "mobileDeviceModel",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "mobileInputSelector",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "mobileDeviceInfo",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "mobileDeviceMarketingName",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "flashVersion",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "javaEnabled",
+        "type": "BOOLEAN"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "language",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "screenColors",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "screenResolution",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "deviceCategory",
+        "type": "STRING"
+      }
+    ],
+    "mode": "NULLABLE",
+    "name": "device",
+    "type": "RECORD"
+  },
+  {
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "index",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "value",
+        "type": "STRING"
+      }
+    ],
+    "mode": "REPEATED",
+    "name": "customDimensions",
+    "type": "RECORD"
+  },
+  {
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "hitNumber",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "time",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "hour",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "minute",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "isSecure",
+        "type": "BOOLEAN"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "isInteraction",
+        "type": "BOOLEAN"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "isEntrance",
+        "type": "BOOLEAN"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "isExit",
+        "type": "BOOLEAN"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "transactionId",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "transactionRevenue",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "transactionTax",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "transactionShipping",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "affiliation",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "currencyCode",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "localTransactionRevenue",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "localTransactionTax",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "localTransactionShipping",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "transactionCoupon",
+            "type": "STRING"
+          }
+        ],
+        "mode": "NULLABLE",
+        "name": "transaction",
+        "type": "RECORD"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "index",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "value",
+            "type": "STRING"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "customDimensions",
+        "type": "RECORD"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "eventCategory",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "eventAction",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "eventLabel",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "eventValue",
+            "type": "INTEGER"
+          }
+        ],
+        "mode": "NULLABLE",
+        "name": "eventInfo",
+        "type": "RECORD"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "productSKU",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "v2ProductName",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "v2ProductCategory",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "productVariant",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "productBrand",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "productRevenue",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "localProductRevenue",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "productPrice",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "localProductPrice",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "productQuantity",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "productRefundAmount",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "localProductRefundAmount",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "isImpression",
+            "type": "BOOLEAN"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "isClick",
+            "type": "BOOLEAN"
+          },
+          {
+            "fields": [
+              {
+                "mode": "NULLABLE",
+                "name": "index",
+                "type": "INTEGER"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "value",
+                "type": "STRING"
+              }
+            ],
+            "mode": "REPEATED",
+            "name": "customDimensions",
+            "type": "RECORD"
+          },
+          {
+            "fields": [
+              {
+                "mode": "NULLABLE",
+                "name": "index",
+                "type": "INTEGER"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "value",
+                "type": "INTEGER"
+              }
+            ],
+            "mode": "REPEATED",
+            "name": "customMetrics",
+            "type": "RECORD"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "productListName",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "productListPosition",
+            "type": "INTEGER"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "product",
+        "type": "RECORD"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "index",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "customVarName",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "customVarValue",
+            "type": "STRING"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "customVariables",
+        "type": "RECORD"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "index",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "value",
+            "type": "INTEGER"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "customMetrics",
+        "type": "RECORD"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "type",
+        "type": "STRING"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "pageLoadSample",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "pageLoadTime",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "pageDownloadTime",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "redirectionTime",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "speedMetricsSample",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "domainLookupTime",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "serverConnectionTime",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "serverResponseTime",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "domLatencyMetricsSample",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "domInteractiveTime",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "domContentLoadedTime",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "userTimingValue",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "userTimingSample",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "userTimingVariable",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "userTimingCategory",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "userTimingLabel",
+            "type": "STRING"
+          }
+        ],
+        "mode": "NULLABLE",
+        "name": "latencyTracking",
+        "type": "RECORD"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "sourcePropertyDisplayName",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "sourcePropertyTrackingId",
+            "type": "STRING"
+          }
+        ],
+        "mode": "NULLABLE",
+        "name": "sourcePropertyInfo",
+        "type": "RECORD"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "dataSource",
+        "type": "STRING"
+      }
+    ],
+    "mode": "REPEATED",
+    "name": "hits",
+    "type": "RECORD"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "fullVisitorId",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "userId",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "channelGrouping",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "socialEngagementType",
+    "type": "STRING"
+  }
+]

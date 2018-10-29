@@ -1,0 +1,5 @@
+python=2.7.13
+numpy==1.13.1
+pandas==0.20.3
+scipy==0.19.1
+

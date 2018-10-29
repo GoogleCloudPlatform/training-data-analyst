@@ -1,0 +1,75 @@
+# Copyright 2018 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    run: airflow-sqlproxy
+  name: airflow-sqlproxy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: airflow-sqlproxy
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        run: airflow-sqlproxy
+    spec:
+      volumes:
+      - name: ssl-certs
+        hostPath:
+          path: /etc/ssl/certs
+      containers:
+      - image: gcr.io/cloud-airflow-public/airflow-sqlproxy:1.8.0
+        volumeMounts:
+        - name: ssl-certs
+          mountPath: /etc/ssl/certs
+        command: ["/cloud_sql_proxy",
+          "-instances=$(SQL_PROJECT):$(SQL_REGION):$(SQL_INSTANCE)=tcp:0.0.0.0:3306"]
+        imagePullPolicy: Always
+        name: airflow-sqlproxy
+        ports:
+        - containerPort: 3306
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        env:
+        - name: SQL_PROJECT
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: sql_project
+        - name: SQL_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: sql_region
+        - name: SQL_INSTANCE
+          valueFrom:
+            configMapKeyRef:
+              name: deployment-settings
+              key: sql_instance
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

@@ -1,0 +1,41 @@
+{
+  "trainingInput": {
+    "scaleTier": "CUSTOM",
+    "masterType": "standard_gpu",
+    "hyperparameters": {
+        "goal": "MINIMIZE",
+        "params": [
+          {
+            "parameterName": "regularization",
+            "type": "DOUBLE",
+            "minValue": "0.001",
+            "maxValue": "10.0",
+            "scaleType": "UNIT_LINEAR_SCALE"
+          },
+          {
+            "parameterName": "latent_factors",
+            "type": "INTEGER",
+            "minValue": "5",
+            "maxValue": "50",
+            "scaleType": "UNIT_LINEAR_SCALE"
+          },
+          {
+            "parameterName": "unobs_weight",
+            "type": "DOUBLE",
+            "minValue": "0.001",
+            "maxValue": "5.0",
+            "scaleType": "UNIT_LOG_SCALE"
+          },
+          {
+            "parameterName": "feature_wt_exp",
+            "type": "DOUBLE",
+            "minValue": ".0001",
+            "maxValue": "10",
+            "scaleType": "UNIT_LINEAR_SCALE"
+          }
+        ],
+        "maxTrials": 500,
+        "maxParallelTrials": 1
+    }
+  }
+}

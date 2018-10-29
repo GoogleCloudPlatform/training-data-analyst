@@ -16,11 +16,17 @@
 
 import airflow
 from airflow import DAG
+
+# Reference for all available airflow operators: 
+# https://github.com/apache/incubator-airflow/tree/master/airflow/contrib/operators
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
 from airflow.hooks.base_hook import BaseHook
+from airflow.contrib.operators.mlengine_operator import MLEngineTrainingOperator
+
+# TODO: be sure gae_admin_plugin.py plugin file uploaded to Airflow/Plugins folder
 from airflow.operators.app_engine_admin_plugin import AppEngineVersionOperator
-from airflow.operators.ml_engine_plugin import MLEngineTrainingOperator
+
 
 import datetime
 
@@ -40,10 +46,13 @@ PROJECT_ID = _get_project_id()
 
 # Data set constants, used in BigQuery tasks.  You can change these
 # to conform to your data.
+
+# TODO: Specify your BigQuery dataset name and table name
 DATASET = 'GA360_test'
 TABLE_NAME = 'ga_sessions_sample'
 ARTICLE_CUSTOM_DIMENSION = '10'
 
+# TODO: Confirm bucket name and region
 # GCS bucket names and region, can also be changed.
 BUCKET = 'gs://recserve_' + PROJECT_ID
 REGION = 'us-east1'
@@ -66,9 +75,14 @@ default_args = {
 
 # Default schedule interval using cronjob syntax - can be customized here
 # or in the Airflow console.
+
+# TODO: Specify a schedule interval in CRON syntax to run once a day at 2100 hours (9pm)
+# Reference: https://airflow.apache.org/scheduler.html
 schedule_interval = '00 21 * * *'
 
-dag = DAG('recommendations_training_v1', default_args=default_args,
+# TODO: Title your DAG to be recommendations_training_v1
+dag = DAG('recommendations_training_v1', 
+          default_args=default_args,
           schedule_interval=schedule_interval)
 
 dag.doc_md = __doc__
@@ -103,15 +117,19 @@ FROM(
 
 bql = bql.format(ARTICLE_CUSTOM_DIMENSION, PROJECT_ID, DATASET, TABLE_NAME)
 
+# TODO: Complete the BigQueryOperator task to truncate the table if it already exists before writing
+# Reference: https://airflow.apache.org/integration.html#bigqueryoperator
 t1 = BigQueryOperator(
     task_id='bq_rec_training_data',
     bql=bql,
     destination_dataset_table='%s.recommendation_events' % DATASET,
-    write_disposition='WRITE_TRUNCATE',
+    write_disposition='WRITE_TRUNCATE', # specify to truncate on writes
     dag=dag)
 
 # BigQuery training data export to GCS
 
+# TODO: Fill in the missing operator name for task #2 which
+# takes a BigQuery dataset and table as input and exports it to GCS as a CSV
 training_file = BUCKET + '/data/recommendation_events.csv'
 t2 = BigQueryToCloudStorageOperator(
     task_id='bq_export_op',
@@ -133,6 +151,9 @@ training_args = ['--job-dir', job_dir,
                  '--data-type', 'web_views',
                  '--use-optimized']
 
+# TODO: Fill in the missing operator name for task #3 which will
+# start a new training job to Cloud ML Engine
+# Reference: https://airflow.apache.org/integration.html#cloud-ml-engine
 t3 = MLEngineTrainingOperator(
     task_id='ml_engine_training_op',
     project_id=PROJECT_ID,
@@ -157,7 +178,7 @@ t4 = AppEngineVersionOperator(
     dag=dag
 )
 
+# TODO: Be sure to set_upstream dependencies for all tasks
 t2.set_upstream(t1)
 t3.set_upstream(t2)
 t4.set_upstream(t3)
-
