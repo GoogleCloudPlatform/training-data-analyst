@@ -47,6 +47,9 @@ FAILURE_TAG = 'failure'
 # This variable will contain the name of the bucket to move the processed
 # file to.
 
+# '_names' must appear in CSV filename to be ingested (adjust as needed)
+INPUT_BUCKET_CSV = models.Variable.get('gcp_input_location')+'/*_names.csv' 
+
 # TODO: Populate the models.Variable.get() with the actual variable name for your output bucket
 COMPLETION_BUCKET = models.Variable.get('')
 DS_TAG = '{{ ds }}'
@@ -58,7 +61,7 @@ DATAFLOW_FILE = os.path.join(
 # gcp_temp_location:   Google Cloud Storage location to use for Dataflow temp location.
 DEFAULT_DAG_ARGS = {
     'start_date': YESTERDAY,
-    'retries': 0,
+    'retries': 2,
 
     # TODO: Populate the models.Variable.get() with the variable name for your GCP Project
     'project_id': models.Variable.get(''),
@@ -113,7 +116,7 @@ with models.DAG(dag_id='',
                 schedule_interval=None, default_args=DEFAULT_DAG_ARGS) as dag:
     # Args required for the Dataflow job.
     job_args = {
-        'input': 'gs://{{ dag_run.conf["bucket"] }}/{{ dag_run.conf["name"] }}',
+        'input': INPUT_BUCKET_CSV,
 
         # TODO: Populate the models.Variable.get() with the variable name for BQ table
         'output': models.Variable.get(''),
@@ -125,7 +128,7 @@ with models.DAG(dag_id='',
 
     # Main Dataflow task that will process and load the input delimited file.
     # TODO: Specify the type of operator we need to call to invoke DataFlow
-    dataflow_task = dataflow_operator.POPULATEOPERATORNAMEHHERE(
+    dataflow_task = dataflow_operator.POPULATEOPERATORNAMEHERE(
         task_id="process-delimited-and-push",
         py_file=DATAFLOW_FILE,
         options=job_args)
