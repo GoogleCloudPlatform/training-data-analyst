@@ -48,7 +48,7 @@ FAILURE_TAG = 'failure'
 # file to.
 
 # TODO: Populate the models.Variable.get() with the actual variable name for your output bucket
-COMPLETION_BUCKET = models.Variable.get('gcs_completion_bucket')
+COMPLETION_BUCKET = models.Variable.get('')
 DS_TAG = '{{ ds }}'
 DATAFLOW_FILE = os.path.join(
     configuration.get('core', 'dags_folder'), 'dataflow', 'process_delimited.py')
@@ -61,12 +61,12 @@ DEFAULT_DAG_ARGS = {
     'retries': 0,
 
     # TODO: Populate the models.Variable.get() with the variable name for your GCP Project
-    'project_id': models.Variable.get('gcp_project'),
+    'project_id': models.Variable.get(''),
     'dataflow_default_options': {
         'project': models.Variable.get('gcp_project'),
 
         # TODO: Populate the models.Variable.get() with the variable name for temp location
-        'temp_location': models.Variable.get('gcp_temp_location'),
+        'temp_location': models.Variable.get(''),
         'runner': 'DataflowRunner'
     }
 }
@@ -108,7 +108,7 @@ def move_to_completion_bucket(target_bucket, target_infix, **kwargs):
 #                  e.g. state,gender,year,name,number,created_date
 
 # TODO: Name the DAG id GcsToBigQueryTriggered
-with models.DAG(dag_id='GcsToBigQueryTriggered',
+with models.DAG(dag_id='',
                 description='A DAG triggered by an external Cloud Function',
                 schedule_interval=None, default_args=DEFAULT_DAG_ARGS) as dag:
     # Args required for the Dataflow job.
@@ -116,16 +116,16 @@ with models.DAG(dag_id='GcsToBigQueryTriggered',
         'input': 'gs://{{ dag_run.conf["bucket"] }}/{{ dag_run.conf["name"] }}',
 
         # TODO: Populate the models.Variable.get() with the variable name for BQ table
-        'output': models.Variable.get('bq_output_table'),
+        'output': models.Variable.get(''),
 
         # TODO: Populate the models.Variable.get() with the variable name for input field names
-        'fields': models.Variable.get('input_field_names'),
+        'fields': models.Variable.get(''),
         'load_dt': DS_TAG
     }
 
     # Main Dataflow task that will process and load the input delimited file.
     # TODO: Specify the type of operator we need to call to invoke DataFlow
-    dataflow_task = dataflow_operator.DataFlowPythonOperator(
+    dataflow_task = dataflow_operator.POPULATEOPERATORNAMEHHERE(
         task_id="process-delimited-and-push",
         py_file=DATAFLOW_FILE,
         options=job_args)
