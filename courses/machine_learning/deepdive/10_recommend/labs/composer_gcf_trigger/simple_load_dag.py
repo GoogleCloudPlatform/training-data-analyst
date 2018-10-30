@@ -48,7 +48,7 @@ FAILURE_TAG = 'failure'
 # file to.
 
 # '_names' must appear in CSV filename to be ingested (adjust as needed)
-INPUT_BUCKET_CSV = models.Variable.get('gcp_input_location')+'/*_names.csv' 
+INPUT_BUCKET_CSV = models.Variable.get('gcp_input_location')+'/usa_names.csv' 
 
 # TODO: Populate the models.Variable.get() with the actual variable name for your output bucket
 COMPLETION_BUCKET = models.Variable.get('')
