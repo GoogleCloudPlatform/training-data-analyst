@@ -22,10 +22,12 @@ from airflow import DAG
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
 from airflow.hooks.base_hook import BaseHook
-from airflow.contrib.operators.mlengine_operator import MLEngineTrainingOperator
+# from airflow.contrib.operators.mlengine_operator import MLEngineTrainingOperator
+# above mlengine_operator currently doesnt support custom MasterType so we import our own plugins:
 
-# TODO: be sure gae_admin_plugin.py plugin file uploaded to Airflow/Plugins folder
+# custom plugins
 from airflow.operators.app_engine_admin_plugin import AppEngineVersionOperator
+from airflow.operators.ml_engine_plugin import MLEngineTrainingOperator
 
 
 import datetime
@@ -78,7 +80,7 @@ default_args = {
 
 # TODO: Specify a schedule interval in CRON syntax to run once a day at 2100 hours (9pm)
 # Reference: https://airflow.apache.org/scheduler.html
-schedule_interval = '' 
+schedule_interval = '' # '00 XX * * *'
 
 # TODO: Title your DAG to be recommendations_training_v1
 dag = DAG('your_title', 
@@ -154,6 +156,7 @@ training_args = ['--job-dir', job_dir,
 # TODO: Fill in the missing operator name for task #3 which will
 # start a new training job to Cloud ML Engine
 # Reference: https://airflow.apache.org/integration.html#cloud-ml-engine
+# https://cloud.google.com/ml-engine/docs/tensorflow/machine-types
 t3 = MLEngineWHAT( # fix and complete operator name
     task_id='ml_engine_training_op',
     project_id=PROJECT_ID,
