@@ -80,10 +80,10 @@ default_args = {
 
 # TODO: Specify a schedule interval in CRON syntax to run once a day at 2100 hours (9pm)
 # Reference: https://airflow.apache.org/scheduler.html
-schedule_interval = '' # '00 XX * * *'
+schedule_interval = '' # example '00 XX 0 0 0'
 
 # TODO: Title your DAG to be recommendations_training_v1
-dag = DAG('your_title', 
+dag = DAG('', 
           default_args=default_args,
           schedule_interval=schedule_interval)
 
@@ -121,11 +121,11 @@ bql = bql.format(ARTICLE_CUSTOM_DIMENSION, PROJECT_ID, DATASET, TABLE_NAME)
 
 # TODO: Complete the BigQueryOperator task to truncate the table if it already exists before writing
 # Reference: https://airflow.apache.org/integration.html#bigqueryoperator
-t1 = BigQueryOperator(
+t1 = BigQuerySomething( # correct the operator name
     task_id='bq_rec_training_data',
     bql=bql,
     destination_dataset_table='%s.recommendation_events' % DATASET,
-    write_disposition='WRITE_', # specify to truncate on writes
+    write_disposition='WRITE_T_______', # specify to truncate on writes
     dag=dag)
 
 # BigQuery training data export to GCS
@@ -133,7 +133,7 @@ t1 = BigQueryOperator(
 # TODO: Fill in the missing operator name for task #2 which
 # takes a BigQuery dataset and table as input and exports it to GCS as a CSV
 training_file = BUCKET + '/data/recommendation_events.csv'
-t2 = BigQueryToWHAT( # fix and complete operator name
+t2 = BigQueryToCloudSomethingSomething( # correct the name
     task_id='bq_export_op',
     source_project_dataset_table='%s.recommendation_events' % DATASET,
     destination_cloud_storage_uris=[training_file],
@@ -157,7 +157,7 @@ training_args = ['--job-dir', job_dir,
 # start a new training job to Cloud ML Engine
 # Reference: https://airflow.apache.org/integration.html#cloud-ml-engine
 # https://cloud.google.com/ml-engine/docs/tensorflow/machine-types
-t3 = MLEngineWHAT( # fix and complete operator name
+t3 = MLEngineSomethingSomething( # complete the name
     task_id='ml_engine_training_op',
     project_id=PROJECT_ID,
     job_id=job_id,
@@ -184,4 +184,4 @@ t4 = AppEngineVersionOperator(
 # TODO: Be sure to set_upstream dependencies for all tasks
 t2.set_upstream(t1)
 t3.set_upstream(t2)
-t.set_upstream() # complete
+t4.set_upstream(t) # complete
