@@ -1,0 +1,7 @@
+google-api-python-client
+google-compute-engine
+google-cloud-storage
+sh
+retrying
+pyyaml
+oauth2client==3.0.0
