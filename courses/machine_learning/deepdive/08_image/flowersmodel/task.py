@@ -21,7 +21,7 @@ import argparse
 import json
 import os
 
-import model
+from . import model
 import tensorflow as tf
 
 if __name__ == '__main__':
