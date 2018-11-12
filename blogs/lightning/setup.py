@@ -28,6 +28,7 @@ from __future__ import print_function
 import subprocess
 from distutils.command.build import build as _build
 
+import os
 import setuptools
 
 
