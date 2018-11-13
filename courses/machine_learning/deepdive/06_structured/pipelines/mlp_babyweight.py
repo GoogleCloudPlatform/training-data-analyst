@@ -28,6 +28,7 @@ def kubeflow_tfjob_launcher_op(container_image, command, number_of_workers: int,
                 '--workers', number_of_workers,
                 '--pss', number_of_parameter_servers,
                 '--tfjob-timeout-minutes', tfjob_timeout_minutes,
+                '--tfjob-ns', 'mykfp',
                 '--container-image', container_image,
                 '--output-dir', output_dir,
                 '--ui-metadata-type', 'tensorboard',
@@ -55,7 +56,7 @@ def train_and_deploy(
     startYear=dsl.PipelineParam(name='startYear', value='2000')
 ):
   """Pipeline to train babyweight model"""
-  start_step = 4
+  start_step = 3
 
   # Step 1: create training dataset using Apache Beam on Cloud Dataflow
   if start_step <= 1:
