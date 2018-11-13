@@ -83,7 +83,7 @@ def preprocess(in_test_mode, PROJECT, BUCKET, start_year):
         ABS(FARM_FINGERPRINT(CONCAT(CAST(YEAR AS STRING), CAST(month AS STRING)))) AS hashmonth
       FROM
         publicdata.samples.natality
-      WHERE year > {}
+      WHERE year >= {}
       AND weight_pounds > 0
       AND mother_age > 0
       AND plurality > 0
