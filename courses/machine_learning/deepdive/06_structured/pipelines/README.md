@@ -11,7 +11,7 @@ To repeat the steps in the article, follow these steps.
 ## View the code
 * Examine the following code:
   * the pipeline code in `mlp_babyweight.py`
-  * the files in `containers/preprocess`
+  * the files in `containers/bqtocsv`
   
 ## Run the pipeline
 * Do the DSL compile: `dsl-compile --py mlp_babyweight.py --output mlp_babyweight.tar.gz`
