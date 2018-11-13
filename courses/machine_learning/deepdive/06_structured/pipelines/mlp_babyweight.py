@@ -55,7 +55,7 @@ def train_and_deploy(
     startYear=dsl.PipelineParam(name='startYear', value='2000')
 ):
   """Pipeline to train babyweight model"""
-  start_step = 1
+  start_step = 4
 
   # Step 1: create training dataset using Apache Beam on Cloud Dataflow
   if start_step <= 1:
@@ -138,6 +138,27 @@ def train_and_deploy(
       'outputs': {
         'model': 'babyweight',
         'version': 'mlp'
+      }
+    })
+
+  # Step 4: Deploy the trained model to Cloud ML Engine
+  if start_step <= 5:
+    deploy_cmle = dsl.ContainerOp(
+      name='deployapp',
+      # image needs to be a compile-time string
+      image='gcr.io/cloud-training-demos/babyweight-pipeline-deployapp:latest',
+      arguments=[
+        deploy_cmle.outputs['model'],
+        deploy_cmle.outputs['version']
+      ],
+      file_outputs={
+        'appurl': '/appurl.txt'
+      }
+    )
+  else:
+    deploy_cmle = ObjectDict({
+      'outputs': {
+        'appurl': 'https://cloud-training-demos.appspot.com/'
       }
     })
 
