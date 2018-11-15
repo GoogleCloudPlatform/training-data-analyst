@@ -286,12 +286,14 @@ def train_and_evaluate(hparams):
   if hparams['use_tpu']:
     tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
         hparams['tpu'], zone=hparams['tpu_zone'], project=hparams['project'])
-    model = tf.contrib.tpu.keras_to_tpu_model(
+    trained_model = tf.contrib.tpu.keras_to_tpu_model(
       model,
       strategy=tf.contrib.tpu.TPUDistributionStrategy(
         tpu_cluster_resolver
       )
     )
+  else:
+    trained_model = model
 
   # set up training and evaluation in a loop
   train_data = make_dataset(hparams['train_data_path'],
@@ -305,7 +307,7 @@ def train_and_evaluate(hparams):
 
   # train and evaluate
   start_timestamp = time.time()
-  model.fit(
+  history = trained_model.fit(
     train_data,
     steps_per_epoch=steps_per_epoch,
     epochs=num_epochs,
@@ -317,8 +319,46 @@ def train_and_evaluate(hparams):
   tf.logging.info('Finished training up to step %d. Elapsed seconds %d.',
                   max_steps, elapsed_time)
   tf.logging.info(model.summary())
+  print("if running interactively, graph: {}".format(history.history.keys()))
 
-  # export similar to Cloud ML Engine convention
+
+  # Serve the model via CMLE
+  #export_keras(model, trained_model, output_dir, hparams)
+  export_keras_old(trained_model, output_dir)
+
+
+def export_keras(model, trained_model, output_dir, hparams):
+  class ServingInput(tf.keras.layers.Layer):
+    def __init__(self):
+      super(ServingInput, self).__init__(trainable=False,
+                                         name='serving',
+                                         dtype=tf.float32,
+                                         batch_input_shape=(height, width, 2))
+
+    def get_config(self):
+      return {
+        'batch_input_shape': self._batch_input_shape,
+        'dtype': self.dtype,
+        'name': self.name
+      }
+
+    def call(self, parsed):
+      # go from JSON payload to the inputs desired by model
+      return reshape_into_image(parsed, hparams)
+
+  serving_model_core = model
+  serving_model_core.set_weights(trained_model.get_weights())
+  serving_model = keras.Sequential()
+  height = width = PATCH_SIZE(hparams)
+  serving_model.add(ServingInput())
+  serving_model.add(serving_model_core)
+  export_path = tf.contrib.saved_model.save_keras_model(serving_model,
+                                                        os.path.join(output_dir, 'export/exporter'))
+  export_path = export_path.decode('utf-8')
+  tf.logging.info('Model exported successfully to {}'.format(export_path))
+
+
+def export_keras_old(model, output_dir):
   tf.logging.info('Starting to export model.')
   signature = tf.saved_model.signature_def_utils.predict_signature_def(
     inputs={'image': model.input}, outputs={'scores': model.output})
