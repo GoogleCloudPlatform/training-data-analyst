@@ -11,4 +11,9 @@ gcloud container clusters create $CLUSTERNAME \
   --enable-cloud-monitoring \
   --machine-type n1-standard-2 \
   --num-nodes 4
+
 kubectl create clusterrolebinding ml-pipeline-admin-binding --clusterrole=cluster-admin --user=$(gcloud config get-value account)
+
+kubectl create clusterrolebinding pipelinerunnerbinding \
+  --clusterrole=cluster-admin \
+  --serviceaccount=kubeflow:pipeline-runner

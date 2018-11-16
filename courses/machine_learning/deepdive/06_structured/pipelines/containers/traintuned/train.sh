@@ -12,6 +12,8 @@ BUCKET=$2
 TFVERSION=1.8
 REGION=us-central1
 
+echo "Extracting information for job $HYPERJOB"
+
 # get information from the best hyperparameter job
 RMSE=$(gcloud ml-engine jobs describe $HYPERJOB --format 'value(trainingOutput.trials.finalMetric.objectiveValue.slice(0))')
 NNSIZE=$(gcloud ml-engine jobs describe $HYPERJOB --format 'value(trainingOutput.trials.hyperparameters.nnsize.slice(0))')

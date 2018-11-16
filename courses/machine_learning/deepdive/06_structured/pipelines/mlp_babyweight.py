@@ -28,7 +28,6 @@ def kubeflow_tfjob_launcher_op(container_image, command, number_of_workers: int,
                 '--workers', number_of_workers,
                 '--pss', number_of_parameter_servers,
                 '--tfjob-timeout-minutes', tfjob_timeout_minutes,
-                '--tfjob-ns', 'mykfp',
                 '--container-image', container_image,
                 '--output-dir', output_dir,
                 '--ui-metadata-type', 'tensorboard',
@@ -102,7 +101,9 @@ def train_and_deploy(
     # train: /output.txt is the model directory
     train_tuned = kubeflow_tfjob_launcher_op(
       container_image='gcr.io/cloud-training-demos/babyweight-pipeline-traintuned-trainer:latest',
-      command=[
+      command=[ # replaces the ENDPOINT of container
+        'bash',
+        '/babyweight/src/train.sh',
         hparam_train.outputs['jobname'],
         bucket
       ],
