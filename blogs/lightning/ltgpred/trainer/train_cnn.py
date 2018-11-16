@@ -23,6 +23,7 @@ from tensorflow import keras
 def PATCH_SIZE(params):
   return (2 * params['train_patch_radius']) + 1
 
+
 def reshape_into_image(features, params):
   """reshape features dict containing ref, ltg channels into image.
 
@@ -318,40 +319,39 @@ def train_and_evaluate(hparams):
   elapsed_time = int(time.time() - start_timestamp)
   tf.logging.info('Finished training up to step %d. Elapsed seconds %d.',
                   max_steps, elapsed_time)
-  tf.logging.info(model.summary())
+  #tf.logging.info(model.summary())
   print("if running interactively, graph: {}".format(history.history.keys()))
 
 
   # Serve the model via CMLE
-  #export_keras(model, trained_model, output_dir, hparams)
-  export_keras_old(trained_model, output_dir)
+  export_keras(model, trained_model, output_dir, hparams)
+  #export_keras_old(trained_model, output_dir)
 
 
 def export_keras(model, trained_model, output_dir, hparams):
-  class ServingInput(tf.keras.layers.Layer):
-    def __init__(self):
-      super(ServingInput, self).__init__(trainable=False,
-                                         name='serving',
-                                         dtype=tf.float32,
-                                         batch_input_shape=(height, width, 2))
-
-    def get_config(self):
-      return {
-        'batch_input_shape': self._batch_input_shape,
-        'dtype': self.dtype,
-        'name': self.name
-      }
-
-    def call(self, parsed):
-      # go from JSON payload to the inputs desired by model
-      return reshape_into_image(parsed, hparams)
-
-  serving_model_core = model
-  serving_model_core.set_weights(trained_model.get_weights())
-  serving_model = keras.Sequential()
+  # 1. multiple inputs from JSON
   height = width = PATCH_SIZE(hparams)
-  serving_model.add(ServingInput())
-  serving_model.add(serving_model_core)
+  json_input = [
+    keras.layers.Input(name='ref', dtype=tf.float32, shape=(height * width,)),
+    keras.layers.Input(name='ltg', dtype=tf.float32, shape=(height * width,)),
+  ]
+
+  # 2. reshape as image, which is what the model expects
+  reshape_layer = keras.layers.Reshape((height, width, 1))
+  img = keras.layers.concatenate([
+    reshape_layer(json_input[0]),
+    reshape_layer(json_input[1])
+  ])
+
+  # 3. now, use trained model to predict
+  model_core = model
+  model_core.set_weights(trained_model.get_weights())
+  model_output = model_core(img)
+
+  # 4. create serving model
+  serving_model = keras.Model(json_input, model_output)
+
+  # export
   export_path = tf.contrib.saved_model.save_keras_model(serving_model,
                                                         os.path.join(output_dir, 'export/exporter'))
   export_path = export_path.decode('utf-8')
