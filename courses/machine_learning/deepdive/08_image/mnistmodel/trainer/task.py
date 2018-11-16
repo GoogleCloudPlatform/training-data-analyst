@@ -20,7 +20,7 @@ that can be trained and deployed on Cloud ML Engine
 import argparse
 import json
 import os
-import model
+from . import model
 import tensorflow as tf
 
 
@@ -114,7 +114,7 @@ if __name__ == '__main__':
   if hparams['train_steps'] < 1:
      # 10,000 steps at batch_size of 512
      hparams['train_steps'] = (10000 * 512) // hparams['train_batch_size']
-     print "Training for {} steps".format(hparams['train_steps'])
+     print("Training for {} steps".format(hparams['train_steps']))
   
   
   # Run the training job
