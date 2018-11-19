@@ -19,9 +19,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
   def do_GET(self):
     self.send_response(200)
-    self.send_header('Content-type','text/plain')
+    self.send_header(b'Content-type','text/plain')
     self.end_headers()
-    self.wfile.write('Hello GCP dev!')
+    self.wfile.write(b'Hello GCP dev!')
     return
 
   
