@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 if [ "$#" -ne 2 ]; then
     echo "Usage: ./train.sh  hyperparam_jobname  bucket-name"
@@ -28,10 +28,10 @@ echo "Continuing to train model in $TRIALID with nnsize=$NNSIZE batch_size=$BATC
 CODEDIR=/babyweight/src/training-data-analyst/courses/machine_learning/deepdive/06_structured
 
 OUTDIR=gs://${BUCKET}/babyweight/hyperparam/$TRIALID
-PYTHONPATH=${PYTHONPATH}:${CODEDIR}/babyweight
-python3 -m trainer.task \
+export PYTHONPATH=${CODEDIR}/babyweight:${PYTHONPATH}
+
+python -m trainer.task \
   --job-dir=$OUTDIR \
-  --workers=5 \
   --bucket=${BUCKET} \
   --output_dir=${OUTDIR} \
   --eval_steps=10 \
@@ -44,3 +44,7 @@ python3 -m trainer.task \
 # note --stream-logs above so that we wait for job to finish
 # write output file for next step in pipeline
 echo $OUTDIR > /output.txt
+
+# for tensorboard
+echo {\"type\":\"tensorboard\"\,\"source\":\"$OUTDIR\"} > /mlpipeline-ui-metadata.json
+
