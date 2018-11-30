@@ -5,11 +5,13 @@ The given module provides examples for training, evaluating and Hyper-parameter 
 
 ## Learnt DQN agent
 ![Episode 500](img/breakout_4.0.gif?raw=true)  
-The agent couldnt play the game very well initially 
-![Episode 2000](img/breakout_18.0.gif?raw=true)  
-After being trained for 2000 episodes, the agent is able to start to breakdown the blocks
-![Episode 5000](img/breakout_36.0.gif?raw=true)  
-As training progresses, the agents begins obtaining good results in the game .
+The agent couldnt play the game very well initially  
+
+![Episode 2000](img/breakout_18.0.gif?raw=true)   
+After being trained for 2000 episodes, the agent is able to start to breakdown the blocks 
+
+![Episode 5000](img/breakout_36.0.gif?raw=true)   
+As training progresses, the agents begins obtaining good results in the game. 
 
 ## Installing Packages
 
@@ -140,3 +142,4 @@ gcloud ml-engine local train\
     --mode="eval"
     --load_model=$SAVED_MODEL\
 ```
+
