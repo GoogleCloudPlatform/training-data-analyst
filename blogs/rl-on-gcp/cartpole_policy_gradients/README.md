@@ -124,9 +124,3 @@ gcloud ml-engine local train\
     --n_hidden=16\
     --eval
 ```
-
-Using optimal hyperparameters. <br>
-![](img/solve.gif)
-
-Using suboptimal hyperparameters. <br>
-![](img/solve.gif)
