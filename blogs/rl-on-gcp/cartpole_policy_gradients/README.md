@@ -6,6 +6,8 @@ Solves Cartpole using OpenAI's gym using vanilla policy gradients (PG) with Tens
 2. Train on Google Cloud ML Engine
 3. Train on Google Cloud ML Engine, performing hyperparameter tuning (uses Bayesian Optimization)
 
+<img src="rl_model_code/cartpole.gif?raw=true" alt="drawing" width="400"/>
+
 ## Training
 
 ### Train model locally:
