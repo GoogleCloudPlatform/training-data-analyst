@@ -11,7 +11,7 @@ Solves Cartpole using OpenAI's gym using vanilla policy gradients (PG) with Tens
 ### Train model locally:
 
 ```
-OUTPUT_DIR=rl_agents
+OUTPUT_DIR=rl_model
 JOBNAME=rl_train_$(date -u +%y%m%d_%H%M%S)
 REGION=us-central1
 PACKAGE_PATH=$PWD/rl_model_code/trainer
@@ -25,13 +25,12 @@ gcloud ml-engine local train\
     --outdir=$OUTPUT_DIR
 ```
 
-Train model on cloud:
+### On cloud:
 
 ```
-### On cloud.
 JOBNAME=rl_job_$(date -u +%y%m%d_%H%M%S)
-BUCKET=gs://crawles-sandbox
-OUTPUT_DIR=gs://crawles-sandbox/rl/rl_agent_nov29
+BUCKET=gs://YOUR-BUCKET-HERE
+OUTPUT_DIR=gs://YOUR-BUCKET-HERE/rl/
 REGION='us-central1'
 PACKAGE_PATH=$PWD/rl_model_code/trainer
 gsutil rm -r $OUTPUT_DIR
@@ -48,7 +47,7 @@ gcloud ml-engine jobs submit training $JOBNAME \
   --n_games_per_update=5
 ```
 
-### Train using HP tuning.
+### Train using HP tuning:
 
 First create a hyperparam.yaml:
 
@@ -88,9 +87,10 @@ trainingInput:
 
 Then submit a ML Engine HP job (note the `--config` argument).
 
+```
 JOBNAME=hp_rl_job_$(date -u +%y%m%d_%H%M%S)
-BUCKET=gs://crawles-sandbox
-OUTPUT_DIR=gs://crawles-sandbox/rl-hp3
+BUCKET=gs://YOUR-BUCKET-HERE
+OUTPUT_DIR=gs://YOUR-BUCKET-HERE/hp_results
 REGION='us-central1'
 PACKAGE_PATH=$PWD/rl_model_code/trainer
 gsutil rm -r $OUTPUT_DIR
@@ -110,12 +110,12 @@ gcloud ml-engine jobs submit training $JOBNAME \
 
 Make sure to use same number of hidden nodes, as used during training. Note the `eval` flag.
 
-SAVED_MODEL=gs://crawles-sandbox/rl-hp/22
+```
+SAVED_MODEL=gs://YOUR-BUCKET-HERE/hp_results/BEST_TRIAL_ID
 JOBNAME=rl_train_$(date -u +%y%m%d_%H%M%S)
 REGION='us-central1'
 PACKAGE_PATH=$PWD/rl_model_code/trainer
 export PYTHONPATH=${PYTHONPATH}:${PWD}/rl_model_code
-
 gcloud ml-engine local train\
     --package-path=$PACKAGE_PATH\
     --module-name=trainer.task\
@@ -123,3 +123,10 @@ gcloud ml-engine local train\
     --outdir=$SAVED_MODEL\
     --n_hidden=16\
     --eval
+```
+
+Using optimal hyperparameters. <br>
+![](img/solve.gif)
+
+Using suboptimal hyperparameters. <br>
+![](img/solve.gif)
