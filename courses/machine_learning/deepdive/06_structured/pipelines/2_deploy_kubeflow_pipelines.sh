@@ -1,5 +1,5 @@
 #!/bin/bash
-PIPELINE_VERSION=0.1.2
+PIPELINE_VERSION=0.1.3
 kubectl create -f https://storage.googleapis.com/ml-pipeline/release/$PIPELINE_VERSION/bootstrapper.yaml
 
 kubectl get job

@@ -29,9 +29,9 @@ class ObjectDict(dict):
   description='Train Babyweight model'
 )
 def train_and_deploy(
-    project=dsl.PipelineParam(name='project', value='cloud-training-demos'),
-    bucket=dsl.PipelineParam(name='bucket', value='cloud-training-demos-ml'),
-    startYear=dsl.PipelineParam(name='startYear', value='2000')
+    project='cloud-training-demos',
+    bucket='cloud-training-demos-ml',
+    startYear='2000'
 ):
   """Pipeline to train babyweight model"""
   start_step = 1
@@ -146,5 +146,10 @@ def train_and_deploy(
 
 if __name__ == '__main__':
   import kfp.compiler as compiler
-
-  compiler._compile(train_and_deploy, __file__ + '.tgz')
+  import sys
+  if len(sys.argv) != 2:
+    print("Usage: mlp_babyweight  pipeline-output-name")
+    sys.exit(-1)
+  
+  filename = sys.argv[1]
+  compiler.Compiler().compile(train_and_deploy, filename)
