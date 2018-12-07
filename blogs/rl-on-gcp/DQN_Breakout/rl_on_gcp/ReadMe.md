@@ -51,7 +51,7 @@ gcloud ml-engine jobs submit training $JOBNAME \
         --module-name=trainer.trainer \
         --region=$REGION \
         --staging-bucket=gs://$BUCKET \
-        --scale-tier=BASIC\
+        --scale-tier=BASIC_GPU\
         --runtime-version=1.10 \
         --\
         --steps=5000000\
@@ -68,7 +68,7 @@ For Hyper-parameter(HP) tuning, it is required to define the list of parameters 
 ```
 # Creating a .yaml File
 trainingInput:
-  scaleTier: BASIC
+  scaleTier: BASIC_GPU
   hyperparameters:
     maxTrials: 40
     maxParallelTrials: 5
