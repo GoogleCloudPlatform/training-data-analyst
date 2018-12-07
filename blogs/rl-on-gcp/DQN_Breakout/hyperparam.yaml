@@ -1,5 +1,5 @@
 trainingInput:
-  scaleTier: BASIC
+  scaleTier: BASIC_GPU
   hyperparameters:
     maxTrials: 40
     maxParallelTrials: 5
