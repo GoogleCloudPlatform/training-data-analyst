@@ -79,10 +79,10 @@ def rnn_multistation_sampling_temperature_sequencer(filenames, resample_by=1, ba
                             temperatures = np.stack([temperatures[:]['f1'],  # min temperatures
                                                      temperatures[:]['f2'],  # max temperatures
                                                      temperatures[:]['f3']], # interpolated
-                                                    axis=1) # shape [18262, 2]
+                                                    axis=1) # shape [18262, 3]
                             # Resample temperatures by averaging them across RESAMPLE_BY days
                             temperatures = np.reshape(adjust(temperatures, resample_by), [-1, resample_by, 3]) # [n, RESAMPLE_BY, 3]
-                            temperatures = np.mean(temperatures, axis=1) # shape [n, 2]
+                            temperatures = np.mean(temperatures, axis=1) # shape [n, 3]
                             # Shift temperature sequence to generate training targets
                             temp_targets = temperatures[n_forward:]
                             temperatures = temperatures[:temperatures.shape[0]-n_forward] # to allow n_forward=0
