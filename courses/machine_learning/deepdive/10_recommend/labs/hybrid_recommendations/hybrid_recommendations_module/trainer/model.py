@@ -214,7 +214,7 @@ def build_model(args):
         # Put eval metrics into a dictionary
         eval_metrics = {
             'accuracy': accuracy,
-            'top_k_accuracy': top_k_accuracy
+            'top_k_accuracy': top_k_accuracy,
             'map_at_k': map_at_k}
 
         # Create scalar summaries to see in TensorBoard
