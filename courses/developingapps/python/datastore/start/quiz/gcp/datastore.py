@@ -20,7 +20,7 @@ import os
 
 # TODO: Get the GCLOUD_PROJECT environment variable
 
-project_id = os.getenv('GCLOUD_PROJECT')
+project_id = os.getenv('DEVSHELL_PROJECT_ID')  # why not use the pre-existing DEVSHELL_PROJECT_ID?
 
 # END TODO
 
