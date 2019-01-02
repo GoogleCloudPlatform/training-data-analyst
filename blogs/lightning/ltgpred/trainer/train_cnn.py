@@ -312,8 +312,7 @@ def train_and_evaluate(hparams):
 
   # Serve the model via CMLE
   export_keras(model, trained_model, output_dir, hparams)
-  #export_keras_old(trained_model, output_dir)
-
+  
 
 def export_keras(model, trained_model, output_dir, hparams):
   # 1. multiple inputs from JSON
@@ -346,22 +345,6 @@ def export_keras(model, trained_model, output_dir, hparams):
     tf.logging.info('Model exported successfully to {}'.format(export_path))
   else:
     print('Skipping export since --skipexport was specified')
-
-def export_keras_old(model, output_dir):
-  tf.logging.info('Starting to export model.')
-  signature = tf.saved_model.signature_def_utils.predict_signature_def(
-    inputs={'image': model.input}, outputs={'scores': model.output})
-  builder = tf.saved_model.builder.SavedModelBuilder(
-    os.path.join(output_dir, 'export/exporter'))
-  builder.add_meta_graph_and_variables(
-    sess=keras.backend.get_session(),
-    tags=[tf.saved_model.tag_constants.SERVING],
-    signature_def_map={
-      tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
-        signature
-    })
-  builder.save()
-  tf.logging.info('Model exported successfully')
 
 
 if __name__ == '__main__':
