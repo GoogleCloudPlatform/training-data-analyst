@@ -5,7 +5,7 @@ See slide deck at http://bit.ly/ams-cloud-deep-learning for details on what's ha
 To reproduce, follow these steps:
 
 1. Open CloudShell following the directions in https://cloud.google.com/shell/docs/quickstart -- this gives you a free 
-temporary VM. If you want something more permanent, start a Compute Engine instance.
+temporary VM. If you want something more permanent, start a Compute Engine instance or install the gcloud SDK to your laptop following the directions in https://cloud.google.com/sdk/install
 
 2. Install the necessary Python packages:
 ```
