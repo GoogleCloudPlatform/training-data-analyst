@@ -9,4 +9,4 @@ gcloud ml-engine jobs submit training $JOBNAME \
   --job-dir=gs://$BUCKET/hparam/ \
   --config=hyperparam.yaml \
   -- \
-  --F=5
+  --flow=5
