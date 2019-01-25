@@ -1,0 +1,31 @@
+trainingInput:
+  scaleTier: CUSTOM
+  masterType: complex_model_m_p100
+  hyperparameters:
+    goal: MAXIMIZE
+    maxTrials: 30
+    maxParallelTrials: 2
+    hyperparameterMetricTag: val_acc
+    params:
+    - parameterName: learning_rate
+      type: DOUBLE
+      minValue: 0.01
+      maxValue: 0.1
+      scaleType: UNIT_LOG_SCALE
+    - parameterName: nfil
+      type: INTEGER
+      minValue: 5
+      maxValue: 30
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: nlayers
+      type: INTEGER
+      minValue: 1
+      maxValue: 5
+      scaleType: UNIT_LINEAR_SCALE     
+    - parameterName: train_batch_size # has to be multiple of 128
+      type: DISCRETE
+      discreteValues: [128, 256, 512, 1024, 2048, 4096]       
+
+#    - parameterName: arch
+#      type: CATEGORICAL
+#      categoricalValues: ["convnet", "feateng", "resnet", "dnn"]       
