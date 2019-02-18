@@ -5,7 +5,7 @@ ZONE=us-central1-a
 
 gcloud config set compute/zone $ZONE
 gcloud beta container clusters create $CLUSTERNAME \
-  --cluster-version 1.11.2-gke.26 --enable-autoupgrade \
+  --cluster-version 1.11.6-gke.2 --enable-autoupgrade \
   --zone $ZONE \
   --scopes cloud-platform \
   --enable-cloud-logging \
