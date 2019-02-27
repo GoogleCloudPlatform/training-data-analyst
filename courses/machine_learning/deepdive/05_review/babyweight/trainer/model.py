@@ -113,11 +113,9 @@ def train_and_evaluate(output_dir):
     wide, deep = get_wide_deep()
     EVAL_INTERVAL = 300 # seconds
 
-    ## TODO 2a: set the save_checkpoints_secs to the EVAL_INTERVAL
     run_config = tf.estimator.RunConfig(save_checkpoints_secs = EVAL_INTERVAL,
                                         keep_checkpoint_max = 3)
     
-    ## TODO 2b: change the dnn_hidden_units to NNSIZE
     estimator = tf.estimator.DNNLinearCombinedRegressor(
         model_dir = output_dir,
         linear_feature_columns = wide,
@@ -130,15 +128,12 @@ def train_and_evaluate(output_dir):
     # for batch prediction, you need a key associated with each instance
     estimator = tf.contrib.estimator.forward_features(estimator, KEY_COLUMN)
     
-    ## TODO 2c: Set the third argument of read_dataset to BATCH_SIZE 
-    ## TODO 2d: and set max_steps to TRAIN_STEPS
     train_spec = tf.estimator.TrainSpec(
         input_fn = read_dataset('train', tf.estimator.ModeKeys.TRAIN, BATCH_SIZE),
         max_steps = TRAIN_STEPS)
     
     exporter = tf.estimator.LatestExporter('exporter', serving_input_fn, exports_to_keep=None)
 
-    ## TODO 2e: Lastly, set steps equal to EVAL_STEPS
     eval_spec = tf.estimator.EvalSpec(
         input_fn = read_dataset('eval', tf.estimator.ModeKeys.EVAL, 2**15),  # no need to batch in eval
         steps = EVAL_STEPS,

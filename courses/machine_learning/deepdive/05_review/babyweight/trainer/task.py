@@ -10,7 +10,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--bucket',
-        help = 'GCS path to data. We assume that data is in gs://BUCKET/babyweight/preproc/',
+        help = 'GCS path to data. We assume that data is in \
+        gs://BUCKET/babyweight/preproc/',
         required = True
     )
     parser.add_argument(
@@ -31,7 +32,8 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--nnsize',
-        help = 'Hidden layer sizes to use for DNN feature columns -- provide space-separated layers',
+        help = 'Hidden layer sizes to use for DNN feature columns -- provide \
+        space-separated layers',
         nargs = '+',
         type = int,
         default=[128, 32, 4]
@@ -43,21 +45,24 @@ if __name__ == '__main__':
         default = 3
     )
 
-    ## TODO 1: add the new arguments here 
     parser.add_argument(
         '--train_examples',
-        help = 'Number of examples (in thousands) to run the training job over. If this is more than actual # of examples available, it cycles through them. So specifying 1000 here when you have only 100k examples makes this 10 epochs.',
+        help = 'Number of examples (in thousands) to run the training job over. \
+        If this is more than actual # of examples available, it cycles through them. \
+        So specifying 1000 here when you have only 100k examples makes this 10 epochs.',
         type = int,
         default = 5000
     )    
     parser.add_argument(
         '--pattern',
-        help = 'Specify a pattern that has to be in input files. For example 00001-of will process only one shard',
+        help = 'Specify a pattern that has to be in input files. For example 00001-of \
+        will process only one shard',
         default = 'of'
     )
     parser.add_argument(
         '--eval_steps',
-        help = 'Positive number of steps for which to evaluate model. Default to None, which means to evaluate until input_fn raises an end-of-input exception',
+        help = 'Positive number of steps for which to evaluate model. Default to None, \
+        which means to evaluate until input_fn raises an end-of-input exception',
         type = int,       
         default = None
     )
