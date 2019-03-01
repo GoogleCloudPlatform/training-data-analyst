@@ -222,6 +222,7 @@ def load_global_step_from_checkpoint_dir(checkpoint_dir):
     return 0
 
 def train_and_evaluate(output_dir, hparams):
+  tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
   STEPS_PER_EVAL = 1000
   max_steps = hparams['train_steps']
   eval_batch_size = min(1024, hparams['num_eval_images'])
