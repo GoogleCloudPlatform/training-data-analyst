@@ -19,7 +19,7 @@ import argparse
 import json
 import os
 
-import model
+from . import model
 
 import tensorflow as tf
 from tensorflow.contrib.learn.python.learn import learn_runner
