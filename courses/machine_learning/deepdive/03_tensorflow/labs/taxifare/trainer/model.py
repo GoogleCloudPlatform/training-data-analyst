@@ -62,4 +62,8 @@ def serving_input_fn():
     return tf.estimator.export.ServingInputReceiver(features, feature_placeholders)
 
 # Create an estimator that we are going to train and evaluate
-# TODO: Create tf.estimator.DNNRegressor train and evaluate function passing args['parsed_argument'] from task.py
+def train_and_evaluate(args):
+    tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
+    
+    # TODO: Create tf.estimator.DNNRegressor train and evaluate function passing args['parsed_argument'] from task.py
+    
