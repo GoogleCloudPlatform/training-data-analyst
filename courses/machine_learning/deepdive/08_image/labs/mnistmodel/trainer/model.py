@@ -115,6 +115,7 @@ def image_classifier(features, labels, mode, params):
     )
 
 def train_and_evaluate(output_dir, hparams):
+  tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
   EVAL_INTERVAL = 60
 
   mnist = input_data.read_data_sets('mnist/data', one_hot=True, reshape=False)
