@@ -289,6 +289,8 @@ Main orchestrator. Responsible for calling all other functions in model.py
   # Returns: nothing, kicks off training and evaluation
 """
 def train_and_evaluate(output_dir, hparams):
+    tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
+  
     # Load Data
     ((train_texts, train_labels), (test_texts, test_labels)) = load_hacker_news_data(
         hparams['train_data_path'], hparams['eval_data_path'])
