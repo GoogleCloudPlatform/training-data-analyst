@@ -2,7 +2,11 @@
 
 INSTANCE_NAME=laktpu   # CHANGE THIS
 GCP_LOGIN_NAME=vlakshmanan@google.com  # CHANGE THIS
+ZONE=us-central1-b  # CHANGE THIS
+
 TPU_NAME=$INSTANCE_NAME
+
+gcloud config set-value compute/zone $ZONE
 
 gcloud compute instances create $INSTANCE_NAME \
 --machine-type n1-standard-2 \
