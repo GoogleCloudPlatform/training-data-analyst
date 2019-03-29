@@ -5,7 +5,7 @@ GCP_LOGIN_NAME=vlakshmanan@google.com  # CHANGE THIS
 ZONE="us-west1-b" # CHANGE THIS
 INSTANCE_TYPE="n1-standard-4" # CHANGE THIS
 
-IMAGE_FAMILY=tf-latest
+IMAGE_FAMILY=tf-latest-cpu
 
 gcloud compute instances create ${INSTANCE_NAME} \
       --machine-type=$INSTANCE_TYPE \
