@@ -1,7 +1,20 @@
 feature {
-  name: "relationship"
+  name: "race"
   type: BYTES
-  domain: "relationship"
+  domain: "race"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "education_num"
+  type: INT
   presence {
     min_fraction: 1.0
     min_count: 1
@@ -16,6 +29,128 @@ feature {
   name: "education"
   type: BYTES
   domain: "education"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "workclass"
+  type: BYTES
+  domain: "workclass"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "gender"
+  type: BYTES
+  domain: "gender"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "capital_loss"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "marital_status"
+  type: BYTES
+  domain: "marital_status"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "relationship"
+  type: BYTES
+  domain: "relationship"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "age"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "capital_gain"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "income_bracket"
+  type: BYTES
+  domain: "income_bracket"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "hours_per_week"
+  type: INT
   presence {
     min_fraction: 1.0
     min_count: 1
@@ -44,73 +179,6 @@ feature {
   }
 }
 feature {
-  name: "workclass"
-  type: BYTES
-  domain: "workclass"
-  presence {
-    min_fraction: 1.0
-    min_count: 1
-  }
-  shape {
-    dim {
-      size: 1
-    }
-  }
-}
-feature {
-  name: "capital_loss"
-  type: INT
-  presence {
-    min_fraction: 1.0
-    min_count: 1
-  }
-  shape {
-    dim {
-      size: 1
-    }
-  }
-}
-feature {
-  name: "age"
-  type: INT
-  presence {
-    min_fraction: 1.0
-    min_count: 1
-  }
-  shape {
-    dim {
-      size: 1
-    }
-  }
-}
-feature {
-  name: "hours_per_week"
-  type: INT
-  presence {
-    min_fraction: 1.0
-    min_count: 1
-  }
-  shape {
-    dim {
-      size: 1
-    }
-  }
-}
-feature {
-  name: "income_bracket"
-  type: BYTES
-  domain: "income_bracket"
-  presence {
-    min_fraction: 1.0
-    min_count: 1
-  }
-  shape {
-    dim {
-      size: 1
-    }
-  }
-}
-feature {
   name: "native_country"
   type: BYTES
   domain: "native_country"
@@ -124,82 +192,13 @@ feature {
     }
   }
 }
-feature {
-  name: "race"
-  type: BYTES
-  domain: "race"
-  presence {
-    min_fraction: 1.0
-    min_count: 1
-  }
-  shape {
-    dim {
-      size: 1
-    }
-  }
-}
-feature {
-  name: "education_num"
-  type: INT
-  presence {
-    min_fraction: 1.0
-    min_count: 1
-  }
-  shape {
-    dim {
-      size: 1
-    }
-  }
-}
-feature {
-  name: "capital_gain"
-  type: INT
-  presence {
-    min_fraction: 1.0
-    min_count: 1
-  }
-  shape {
-    dim {
-      size: 1
-    }
-  }
-}
-feature {
-  name: "marital_status"
-  type: BYTES
-  domain: "marital_status"
-  presence {
-    min_fraction: 1.0
-    min_count: 1
-  }
-  shape {
-    dim {
-      size: 1
-    }
-  }
-}
-feature {
-  name: "gender"
-  type: BYTES
-  domain: "gender"
-  presence {
-    min_fraction: 1.0
-    min_count: 1
-  }
-  shape {
-    dim {
-      size: 1
-    }
-  }
-}
 string_domain {
-  name: "relationship"
-  value: " Husband"
-  value: " Not-in-family"
-  value: " Other-relative"
-  value: " Own-child"
-  value: " Unmarried"
-  value: " Wife"
+  name: "race"
+  value: " Amer-Indian-Eskimo"
+  value: " Asian-Pac-Islander"
+  value: " Black"
+  value: " Other"
+  value: " White"
 }
 string_domain {
   name: "education"
@@ -221,6 +220,47 @@ string_domain {
   value: " Some-college"
 }
 string_domain {
+  name: "workclass"
+  value: " ?"
+  value: " Federal-gov"
+  value: " Local-gov"
+  value: " Never-worked"
+  value: " Private"
+  value: " Self-emp-inc"
+  value: " Self-emp-not-inc"
+  value: " State-gov"
+  value: " Without-pay"
+}
+string_domain {
+  name: "gender"
+  value: " Female"
+  value: " Male"
+}
+string_domain {
+  name: "marital_status"
+  value: " Divorced"
+  value: " Married-AF-spouse"
+  value: " Married-civ-spouse"
+  value: " Married-spouse-absent"
+  value: " Never-married"
+  value: " Separated"
+  value: " Widowed"
+}
+string_domain {
+  name: "relationship"
+  value: " Husband"
+  value: " Not-in-family"
+  value: " Other-relative"
+  value: " Own-child"
+  value: " Unmarried"
+  value: " Wife"
+}
+string_domain {
+  name: "income_bracket"
+  value: " <=50K"
+  value: " >50K"
+}
+string_domain {
   name: "occupation"
   value: " ?"
   value: " Adm-clerical"
@@ -237,23 +277,6 @@ string_domain {
   value: " Sales"
   value: " Tech-support"
   value: " Transport-moving"
-}
-string_domain {
-  name: "workclass"
-  value: " ?"
-  value: " Federal-gov"
-  value: " Local-gov"
-  value: " Never-worked"
-  value: " Private"
-  value: " Self-emp-inc"
-  value: " Self-emp-not-inc"
-  value: " State-gov"
-  value: " Without-pay"
-}
-string_domain {
-  name: "income_bracket"
-  value: " <=50K"
-  value: " >50K"
 }
 string_domain {
   name: "native_country"
@@ -300,29 +323,6 @@ string_domain {
   value: " Vietnam"
   value: " Yugoslavia"
   value: "Egypt"
-}
-string_domain {
-  name: "race"
-  value: " Amer-Indian-Eskimo"
-  value: " Asian-Pac-Islander"
-  value: " Black"
-  value: " Other"
-  value: " White"
-}
-string_domain {
-  name: "marital_status"
-  value: " Divorced"
-  value: " Married-AF-spouse"
-  value: " Married-civ-spouse"
-  value: " Married-spouse-absent"
-  value: " Never-married"
-  value: " Separated"
-  value: " Widowed"
-}
-string_domain {
-  name: "gender"
-  value: " Female"
-  value: " Male"
 }
 default_environment: "TRAINING"
 default_environment: "EVALUATION"
