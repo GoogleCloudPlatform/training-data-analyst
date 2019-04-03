@@ -1,0 +1,19 @@
+runtime: python
+env: flex
+entrypoint: gunicorn -b :$PORT main:app
+service: mlpoetry
+
+handlers:
+- url: /
+  script: main.app
+- url: /.*
+  script: main.app
+
+env_variables:
+  MODEL_NAME: poetry
+  PROJECT_ID: cloud-training-demos
+  VERSION_NAME: v1
+  PROBLEM_NAME: poetry_line_problem
+  T2T_USR_DIR: instance/poetry/trainer
+  HPARAMS: transformer_poetry
+  DATADIR: gs://cloud-training-demos-ml/poetry/data

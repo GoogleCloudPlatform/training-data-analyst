@@ -1,0 +1,344 @@
+feature {
+  name: "hours_per_week"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "capital_gain"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "workclass"
+  type: BYTES
+  domain: "workclass"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "native_country"
+  type: BYTES
+  domain: "native_country"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "race"
+  type: BYTES
+  domain: "race"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "capital_loss"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "marital_status"
+  type: BYTES
+  domain: "marital_status"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "gender"
+  type: BYTES
+  domain: "gender"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "education_num"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "relationship"
+  type: BYTES
+  domain: "relationship"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "education"
+  type: BYTES
+  domain: "education"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "income_bracket"
+  type: BYTES
+  domain: "income_bracket"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  not_in_environment: "SERVING"
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "age"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "occupation"
+  type: BYTES
+  domain: "occupation"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  distribution_constraints {
+    min_domain_mass: 0.9
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "fnlwgt"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  not_in_environment: "SERVING"
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+string_domain {
+  name: "workclass"
+  value: " ?"
+  value: " Federal-gov"
+  value: " Local-gov"
+  value: " Never-worked"
+  value: " Private"
+  value: " Self-emp-inc"
+  value: " Self-emp-not-inc"
+  value: " State-gov"
+  value: " Without-pay"
+}
+string_domain {
+  name: "native_country"
+  value: " ?"
+  value: " Cambodia"
+  value: " Canada"
+  value: " China"
+  value: " Columbia"
+  value: " Cuba"
+  value: " Dominican-Republic"
+  value: " Ecuador"
+  value: " El-Salvador"
+  value: " England"
+  value: " France"
+  value: " Germany"
+  value: " Greece"
+  value: " Guatemala"
+  value: " Haiti"
+  value: " Holand-Netherlands"
+  value: " Honduras"
+  value: " Hong"
+  value: " Hungary"
+  value: " India"
+  value: " Iran"
+  value: " Ireland"
+  value: " Italy"
+  value: " Jamaica"
+  value: " Japan"
+  value: " Laos"
+  value: " Mexico"
+  value: " Nicaragua"
+  value: " Outlying-US(Guam-USVI-etc)"
+  value: " Peru"
+  value: " Philippines"
+  value: " Poland"
+  value: " Portugal"
+  value: " Puerto-Rico"
+  value: " Scotland"
+  value: " South"
+  value: " Taiwan"
+  value: " Thailand"
+  value: " Trinadad&Tobago"
+  value: " United-States"
+  value: " Vietnam"
+  value: " Yugoslavia"
+  value: "Egypt"
+}
+string_domain {
+  name: "race"
+  value: " Amer-Indian-Eskimo"
+  value: " Asian-Pac-Islander"
+  value: " Black"
+  value: " Other"
+  value: " White"
+}
+string_domain {
+  name: "marital_status"
+  value: " Divorced"
+  value: " Married-AF-spouse"
+  value: " Married-civ-spouse"
+  value: " Married-spouse-absent"
+  value: " Never-married"
+  value: " Separated"
+  value: " Widowed"
+}
+string_domain {
+  name: "gender"
+  value: " Female"
+  value: " Male"
+}
+string_domain {
+  name: "relationship"
+  value: " Husband"
+  value: " Not-in-family"
+  value: " Other-relative"
+  value: " Own-child"
+  value: " Unmarried"
+  value: " Wife"
+}
+string_domain {
+  name: "education"
+  value: " 10th"
+  value: " 11th"
+  value: " 12th"
+  value: " 1st-4th"
+  value: " 5th-6th"
+  value: " 7th-8th"
+  value: " 9th"
+  value: " Assoc-acdm"
+  value: " Assoc-voc"
+  value: " Bachelors"
+  value: " Doctorate"
+  value: " HS-grad"
+  value: " Masters"
+  value: " Preschool"
+  value: " Prof-school"
+  value: " Some-college"
+}
+string_domain {
+  name: "income_bracket"
+  value: " <=50K"
+  value: " >50K"
+}
+string_domain {
+  name: "occupation"
+  value: " ?"
+  value: " Adm-clerical"
+  value: " Armed-Forces"
+  value: " Craft-repair"
+  value: " Exec-managerial"
+  value: " Farming-fishing"
+  value: " Handlers-cleaners"
+  value: " Machine-op-inspct"
+  value: " Other-service"
+  value: " Priv-house-serv"
+  value: " Prof-specialty"
+  value: " Protective-serv"
+  value: " Sales"
+  value: " Tech-support"
+  value: " Transport-moving"
+}
+default_environment: "TRAINING"
+default_environment: "EVALUATION"
+default_environment: "SERVING"
