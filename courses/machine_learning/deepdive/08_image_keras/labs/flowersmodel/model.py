@@ -22,7 +22,7 @@ import tensorflow as tf
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-LIST_OF_LABELS = 'daisy,dandelion,roses,sunflowers,tulips'.split(',')
+LIST_OF_LABELS = "daisy,dandelion,roses,sunflowers,tulips".split(',')
 HEIGHT = 299
 WIDTH = 299
 NUM_CHANNELS = 3
@@ -118,17 +118,16 @@ def read_and_preprocess(image_bytes, label = None, augment = False):
 
 def serving_input_fn():
     # Note: only handles one image at a time 
-    feature_placeholders = {'image_bytes': 
-                            tf.placeholder(dtype = tf.string, shape = [])}
+    feature_placeholders = {"image_bytes": tf.placeholder(dtype = tf.string, shape = [])}
     image, _ = read_and_preprocess(
-        tf.squeeze(input = feature_placeholders['image_bytes']))
-    image['image'] = tf.expand_dims(input = image['image'], axis = 0)
+        tf.squeeze(input = feature_placeholders["image_bytes"]))
+    image["image"] = tf.expand_dims(input = image["image"], axis = 0)
     return tf.estimator.export.ServingInputReceiver(features = image, receiver_tensors = feature_placeholders)
 
 def make_input_fn(csv_of_filenames, batch_size, mode, augment = False):
     def _input_fn(): 
         def decode_csv(csv_row):
-            filename, label = tf.decode_csv(records = csv_row, record_defaults = [[''],['']])
+            filename, label = tf.decode_csv(records = csv_row, record_defaults = [[""],[""]])
             image_bytes = tf.read_file(filename = filename)
             return image_bytes, label
         
@@ -153,13 +152,13 @@ def make_input_fn(csv_of_filenames, batch_size, mode, augment = False):
 # Wrapper function to build selected Keras model type
 def image_classifier(input_tensor, hparams):
     model_functions = {
-        'linear': linear_model,
-        'dnn': dnn_model,
-        'dnn_dropout': dnn_dropout_model,
-        'cnn': cnn_model}
+        "linear": linear_model,
+        "dnn": dnn_model,
+        "dnn_dropout": dnn_dropout_model,
+        "cnn": cnn_model}
     
     # Get function pointer for selected model type
-    model_function = model_functions[hparams['model']]
+    model_function = model_functions[hparams["model"]]
     
     # Build selected Keras model
     model = model_function(input_tensor, hparams)
@@ -189,7 +188,7 @@ def model_fn(features, labels, mode, params):
 
         loss = tf.reduce_mean(input_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(logits = logits, labels = tf.one_hot(indices = labels, depth = NCLASSES)))
         
-        eval_metric_ops =  {'accuracy': tf.metrics.accuracy(labels = labels, predictions = class_int)}
+        eval_metric_ops =  {"accuracy": tf.metrics.accuracy(labels = labels, predictions = class_int)}
         
         if mode == tf.estimator.ModeKeys.TRAIN:
             # This is needed for batch normalization, but has no effect otherwise
@@ -198,7 +197,7 @@ def model_fn(features, labels, mode, params):
                 train_op = tf.contrib.layers.optimize_loss(
                     loss = loss, 
                     global_step = tf.train.get_global_step(),
-                    learning_rate = params['learning_rate'],
+                    learning_rate = params["learning_rate"],
                     optimizer = "Adam")
         else:
             train_op = None
@@ -234,13 +233,13 @@ def train_and_evaluate(output_dir, hparams):
         config= tf.estimator.RunConfig(save_checkpoints_secs = EVAL_INTERVAL),
         model_dir = output_dir)
 
-    # Set estimator's train_spec to use train_input_fn and train for so many steps
+    # Set estimator"s train_spec to use train_input_fn and train for so many steps
     train_spec = tf.estimator.TrainSpec(
         input_fn = make_input_fn(
-            hparams['train_data_path'],
-            hparams['batch_size'],
+            hparams["train_data_path"],
+            hparams["batch_size"],
             mode = tf.estimator.ModeKeys.TRAIN,
-            augment = hparams['augment']),
+            augment = hparams["augment"]),
         max_steps = hparams["train_steps"])
 
     # Create exporter that uses serving_input_fn to create saved_model for serving
@@ -248,11 +247,11 @@ def train_and_evaluate(output_dir, hparams):
         name = "exporter", 
         serving_input_receiver_fn = serving_input_fn)
 
-    # Set estimator's eval_spec to use eval_input_fn and export saved_model
+    # Set estimator"s eval_spec to use eval_input_fn and export saved_model
     eval_spec = tf.estimator.EvalSpec(
         input_fn = make_input_fn(
-            hparams['eval_data_path'],
-            hparams['batch_size'],
+            hparams["eval_data_path"],
+            hparams["batch_size"],
             mode = tf.estimator.ModeKeys.EVAL),
         steps = None,
         exporters = exporter,

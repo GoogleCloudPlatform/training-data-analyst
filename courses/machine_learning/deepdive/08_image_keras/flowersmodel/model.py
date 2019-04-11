@@ -99,30 +99,29 @@ def read_and_preprocess_with_augment(image_bytes, label = None):
     
 def read_and_preprocess(image_bytes, label = None, augment = False):
     # Decode the image, end up with pixel values that are in the -1, 1 range
-    image = tf.image.decode_jpeg(contents = image_bytes, channels=NUM_CHANNELS)
+    image = tf.image.decode_jpeg(contents = image_bytes, channels = NUM_CHANNELS)
     image = tf.image.convert_image_dtype(image = image, dtype = tf.float32) # 0-1
     image = tf.expand_dims(input = image, axis = 0) # resize_bilinear needs batches
     
     if augment:
-        image = tf.image.resize_bilinear(images = image, size = [HEIGHT+10, WIDTH+10], align_corners = False)
+        image = tf.image.resize_bilinear(images = image, size = [HEIGHT + 10, WIDTH + 10], align_corners = False)
         image = tf.squeeze(input = image, axis = 0) # remove batch dimension
         image = tf.random_crop(value = image, size = [HEIGHT, WIDTH, NUM_CHANNELS])
         image = tf.image.random_flip_left_right(image = image)
-        image = tf.image.random_brightness(image = image, max_delta = 63.0/255.0)
+        image = tf.image.random_brightness(image = image, max_delta = 63.0 / 255.0)
         image = tf.image.random_contrast(image = image, lower = 0.2, upper = 1.8)
     else:
         image = tf.image.resize_bilinear(images = image, size = [HEIGHT, WIDTH], align_corners = False)
-        image = tf.squeeze(input = image, axis = 0) #remove batch dimension
+        image = tf.squeeze(input = image, axis = 0) # remove batch dimension
         
     # Pixel values are in range [0,1], convert to [-1,1]
     image = tf.subtract(x = image, y = 0.5)
     image = tf.multiply(x = image, y = 2.0)
-    return {'image':image}, label
+    return {'image': image}, label
 
 def serving_input_fn():
     # Note: only handles one image at a time 
-    feature_placeholders = {'image_bytes': 
-                            tf.placeholder(dtype = tf.string, shape = [])}
+    feature_placeholders = {'image_bytes': tf.placeholder(dtype = tf.string, shape = [])}
     image, _ = read_and_preprocess(
         tf.squeeze(input = feature_placeholders['image_bytes']))
     image['image'] = tf.expand_dims(input = image['image'], axis = 0)
@@ -133,7 +132,6 @@ def make_input_fn(csv_of_filenames, batch_size, mode, augment = False):
         def decode_csv(csv_row):
             filename, label = tf.decode_csv(records = csv_row, record_defaults = [[''],['']])
             image_bytes = tf.read_file(filename = filename)
-
             return image_bytes, label
         
         # Create tf.data.dataset from filename
@@ -193,8 +191,6 @@ def model_fn(features, labels, mode, params):
 
         loss = tf.reduce_mean(input_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(logits = logits, labels = tf.one_hot(indices = labels, depth = NCLASSES)))
         
-        eval_metric_ops =  {'accuracy': tf.metrics.accuracy(labels = labels, predictions = class_int)}
-        
         if mode == tf.estimator.ModeKeys.TRAIN:
             # This is needed for batch normalization, but has no effect otherwise
             update_ops = tf.get_collection(key = tf.GraphKeys.UPDATE_OPS)
@@ -204,8 +200,10 @@ def model_fn(features, labels, mode, params):
                     global_step = tf.train.get_global_step(),
                     learning_rate = params['learning_rate'],
                     optimizer = "Adam")
+            eval_metric_ops = None
         else:
             train_op = None
+            eval_metric_ops =  {'accuracy': tf.metrics.accuracy(labels = labels, predictions = class_int)}
     else:
         loss = None
         train_op = None
