@@ -28,7 +28,7 @@ NCLASSES = 10
 
 def linear_model(img, mode, hparams):
     X = tf.reshape(tensor = img, shape = [-1, HEIGHT * WIDTH]) #flatten
-    ylogits = tf.layers.dense(input = X, units = NCLASSES, activation = None)
+    ylogits = tf.layers.dense(inputs = X, units = NCLASSES, activation = None)
     return ylogits, NCLASSES
 
 def dnn_model(img, mode, hparams):
