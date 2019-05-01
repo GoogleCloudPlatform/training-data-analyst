@@ -2,7 +2,7 @@
 
 Demo: Creating an authorized View in BigQuery
 
-based off of: https://www.youtube.com/watch?v=0d5hGVQOrQ0&feature=youtu.be&t=2228
+based off of: https://cloud.google.com/bigquery/docs/share-access-views
 
 1. Open BigQuery: https://console.cloud.google.com/bigquery
 
