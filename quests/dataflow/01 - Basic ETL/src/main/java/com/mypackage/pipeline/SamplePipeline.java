@@ -103,7 +103,7 @@ public class SamplePipeline {
     int user_id;
     String ip;
     float lat;
-    float long;
+    float lng;
     String timestamp;
     String http_request;
     String uri;
@@ -134,7 +134,7 @@ public class SamplePipeline {
     fields.add(new TableFieldSchema().setName("timestamp").setType("TIMESTAMP"));
     fields.add(new TableFieldSchema().setName("ip").setType("STRING"));
     fields.add(new TableFieldSchema().setName("lat").setType("FLOAT"));
-    fields.add(new TableFieldSchema().setName("long").setType("FLOAT"));
+    fields.add(new TableFieldSchema().setName("lng").setType("FLOAT"));
     fields.add(new TableFieldSchema().setName("datetime").setType("TIMESTAMP"));
     fields.add(new TableFieldSchema().setName("http_request").setType("STRING"));
     fields.add(new TableFieldSchema().setName("uri").setType("STRING"));
@@ -164,7 +164,7 @@ public class SamplePipeline {
                 row.set("timestamp", Instant.now().toString());
                 row.set("ip", commonLog.ip);
                 row.set("lat", commonLog.lat);
-                row.set("long", commonLog.long);
+                row.set("long", commonLog.lng);
                 row.set("datetime", Instant.parse(commonLog.timestamp).toString());
                 row.set("http_request", commonLog.http_request);
                 row.set("uri", commonLog.uri);
