@@ -1,0 +1,35 @@
+trainingInput:
+  scaleTier: STANDARD_1
+  hyperparameters:
+    hyperparameterMetricTag: mae
+    goal: MINIMIZE
+    maxTrials: 30
+    maxParallelTrials: 1
+    params:
+    - parameterName: batch_size
+      type: INTEGER
+      minValue: 8
+      maxValue: 512
+      scaleType: UNIT_LOG_SCALE
+    - parameterName: input_sequence_length
+      type: INTEGER
+      minValue: 10
+      maxValue: 120
+      scaleType: UNIT_LOG_SCALE
+    - parameterName: model_fn_name
+      type: CATEGORICAL
+      categoricalValues: ["dnn_regression","stacked_lstm_regression","stacked_lstmN_regression","encoder_decoder_stacked_lstm_regression"]
+    - parameterName: lstm_hidden_units
+      type: CATEGORICAL
+      categoricalValues: ["64 32 16", "256 128 16", "64 64 64"]
+    - parameterName: lstm_dropout_output_keep_probs
+      type: CATEGORICAL
+      categoricalValues: ["0.9 1.0 1.0", "0.95 0.95 1.0", "0.95 0.95 0.95"]
+    - parameterName: dnn_hidden_units
+      type: CATEGORICAL
+      categoricalValues: ["256 128 64", "256 128 16", "64 64 64"]
+    - parameterName: learning_rate
+      type: DOUBLE
+      minValue: 0.001
+      maxValue: 0.1
+      scaleType: UNIT_LINEAR_SCALE
