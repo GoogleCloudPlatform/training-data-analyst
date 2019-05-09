@@ -164,7 +164,7 @@ public class SamplePipeline {
                 row.set("timestamp", Instant.now().toString());
                 row.set("ip", commonLog.ip);
                 row.set("lat", commonLog.lat);
-                row.set("long", commonLog.lng);
+                row.set("lng", commonLog.lng);
                 row.set("datetime", Instant.parse(commonLog.timestamp).toString());
                 row.set("http_request", commonLog.http_request);
                 row.set("uri", commonLog.uri);
