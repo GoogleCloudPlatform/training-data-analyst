@@ -1,7 +1,6 @@
-# Project Name
+# Advanced Dataflow Quest - Lab 1
 
-Project Description
-
+This is the first lab in the Advanced Dataflow Qwiklabs Quest. After completing this lab, you will understand how to write a basic ETL job using Apache Beam and the Cloud Dataflow runner. You will also understand how tools like Cloud Dataflow Templates can help you parameterize your pipelines, reduce friction for business users who want to do data processing, and call your pipelines from outside your development environment.
 
 ## Pipeline
 
