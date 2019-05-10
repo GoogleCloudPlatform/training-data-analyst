@@ -191,7 +191,7 @@ public class SamplePipeline {
     fields.add(new TableFieldSchema().setName("user_agent").setType("STRING"));
     TableSchema schema = new TableSchema().setFields(fields);
 
-     String input = "gs://your-project-id/testing/logs_head.txt";
+     String input = "gs://your-project-id/path/to/events.json";
      String output = "your-project-id:logs.logs";
 
     /*
