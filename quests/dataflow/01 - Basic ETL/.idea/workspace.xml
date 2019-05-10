@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="e2d35db7-cebb-42b4-b2be-dc6a754f4b19" name="Default Changelist" comment="" />
+    <ignored path="$PROJECT_DIR$/classes/" />
+    <ignored path="$PROJECT_DIR$/target/" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DefaultGradleProjectSettings">
+    <option name="testRunner" value="GRADLE" />
+    <option name="delegatedBuild" value="true" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/mypackage/pipeline/SamplePipeline.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="5">
+              <caret line="153" column="34" selection-start-line="153" selection-start-column="34" selection-end-line="153" selection-end-column="34" />
+              <folding>
+                <element signature="e#0#6620#0" expanded="true" />
+                <element signature="imports" expanded="true" />
+                <element signature="e#3987#3988#0" expanded="true" />
+                <element signature="e#4036#4037#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/test/java/com/mypackage/pipeline/SamplePipelineTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="496">
+              <caret line="46" column="5" lean-forward="true" selection-start-line="46" selection-start-column="5" selection-end-line="46" selection-end-column="5" />
+              <folding>
+                <element signature="e#0#1397#0" expanded="true" />
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/src/test/java/com/mypackage/pipeline/SamplePipelineTest.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/mypackage/pipeline/SamplePipeline.java" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="y" value="23" />
+    <option name="width" value="1280" />
+    <option name="height" value="1374" />
+  </component>
+  <component name="ProjectView">
+    <navigator currentView="Scope" currentSubView="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope" proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="PackagesPane" />
+      <pane id="Scope">
+        <subPane subId="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope">
+          <expand>
+            <path>
+              <item name="advanced-dataflow-lab" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="advanced-dataflow-lab" type="2674bda8:ScopeViewTreeModel$GroupNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Course" />
+      <pane id="ProjectPane" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+    <property name="settings.editor.splitter.proportion" value="0.2" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="Applet">
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SamplePipelineTest.testSamplePipeline" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="advanced-dataflow-lab" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.mypackage.pipeline.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.mypackage.pipeline" />
+      <option name="MAIN_CLASS_NAME" value="com.mypackage.pipeline.SamplePipelineTest" />
+      <option name="METHOD_NAME" value="testSamplePipeline" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <option name="TEST_OBJECT" value="class" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="TestNG">
+      <option name="TEST_OBJECT" value="CLASS" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType">
+      <module name="" />
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
+      <option name="PROGRAM_PARAMETERS" />
+      <predefined_log_file enabled="true" id="idea.log" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.SamplePipelineTest.testSamplePipeline" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e2d35db7-cebb-42b4-b2be-dc6a754f4b19" name="Default Changelist" comment="" />
+      <created>1557428486794</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1557428486794</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TestHistory">
+    <history-entry file="SamplePipelineTest_testSamplePipeline - 2019.05.09 at 13h 37m 29s.xml">
+      <configuration name="SamplePipelineTest.testSamplePipeline" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="SamplePipelineTest_testSamplePipeline - 2019.05.09 at 13h 37m 44s.xml">
+      <configuration name="SamplePipelineTest.testSamplePipeline" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="SamplePipelineTest_testSamplePipeline - 2019.05.09 at 13h 42m 39s.xml">
+      <configuration name="SamplePipelineTest.testSamplePipeline" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="SamplePipelineTest_testSamplePipeline - 2019.05.09 at 13h 42m 56s.xml">
+      <configuration name="SamplePipelineTest.testSamplePipeline" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="SamplePipelineTest_testSamplePipeline - 2019.05.09 at 13h 43m 10s.xml">
+      <configuration name="SamplePipelineTest.testSamplePipeline" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="SamplePipelineTest_testSamplePipeline - 2019.05.09 at 13h 43m 31s.xml">
+      <configuration name="SamplePipelineTest.testSamplePipeline" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="SamplePipelineTest_testSamplePipeline - 2019.05.09 at 13h 45m 16s.xml">
+      <configuration name="SamplePipelineTest.testSamplePipeline" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="SamplePipelineTest_testSamplePipeline - 2019.05.09 at 14h 19m 43s.xml">
+      <configuration name="SamplePipelineTest.testSamplePipeline" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="SamplePipelineTest_testSamplePipeline - 2019.05.09 at 14h 20m 21s.xml">
+      <configuration name="SamplePipelineTest.testSamplePipeline" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="SamplePipelineTest_testSamplePipeline - 2019.05.09 at 14h 22m 26s.xml">
+      <configuration name="SamplePipelineTest.testSamplePipeline" configurationId="JUnit" />
+    </history-entry>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="23" width="1280" height="1374" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Designer" />
+      <window_info id="Favorites" side_tool="true" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.10662359" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info anchor="bottom" id="Educational.CheckDetails" />
+      <window_info anchor="bottom" id="Version Control" />
+      <window_info anchor="bottom" id="Terminal" />
+      <window_info anchor="bottom" id="Event Log" sideWeight="0.50080776" side_tool="true" weight="0.39937598" />
+      <window_info anchor="bottom" id="Messages" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49919224" weight="0.3299532" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49919224" weight="0.39937598" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="right" id="Maven" />
+      <window_info anchor="right" id="Palette&#9;" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+    </layout>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/test/java/com/mypackage/pipeline/SamplePipelineTest.java</url>
+          <line>62</line>
+          <properties />
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="jar://$MAVEN_REPOSITORY$/org/apache/beam/beam-sdks-java-core/2.7.0/beam-sdks-java-core-2.7.0.jar!/org/apache/beam/sdk/Pipeline.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-253" />
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/org/apache/beam/beam-sdks-java-core/2.7.0/beam-sdks-java-core-2.7.0.jar!/org/apache/beam/sdk/testing/TestPipeline.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="273">
+          <caret line="109" selection-start-line="109" selection-end-line="109" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/mypackage/pipeline/SamplePipeline.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5">
+          <caret line="153" column="34" selection-start-line="153" selection-start-column="34" selection-end-line="153" selection-end-column="34" />
+          <folding>
+            <element signature="e#0#6620#0" expanded="true" />
+            <element signature="imports" expanded="true" />
+            <element signature="e#3987#3988#0" expanded="true" />
+            <element signature="e#4036#4037#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/com/mypackage/pipeline/SamplePipelineTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="496">
+          <caret line="46" column="5" lean-forward="true" selection-start-line="46" selection-start-column="5" selection-end-line="46" selection-end-column="5" />
+          <folding>
+            <element signature="e#0#1397#0" expanded="true" />
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ProjectJDKs.UI">
+        <settings>
+          <last-edited>1.8</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>

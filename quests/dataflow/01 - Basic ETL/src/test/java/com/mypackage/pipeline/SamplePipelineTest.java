@@ -16,13 +16,21 @@
 
 package com.mypackage.pipeline;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
+import com.google.api.services.bigquery.model.TableRow;
+import com.google.gson.Gson;
+import org.apache.beam.sdk.testing.NeedsRunner;
+import org.apache.beam.sdk.testing.PAssert;
+import org.apache.beam.sdk.testing.TestPipeline;
+import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.PCollection;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.time.Instant;
 
 /**
  * Test cases for the {@link SamplePipeline} class.
@@ -30,27 +38,51 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class SamplePipelineTest {
 
+  @Rule
+  public final transient TestPipeline pipeline = TestPipeline.create();
+
   /**
-   * Tests the pipeline.
+   * Tests whether {@link SamplePipeline.JsonToTableRowFn} correctly
+   * converts Json to a TableRow
    */
   @Test
+  @Category(NeedsRunner.class)
   public void testSamplePipeline() {
-    // Arrange
-    //
 
-    // Here perform the setup for the test.
-    String[] args = new String[]{};
+    Gson gson = new Gson();
+    SamplePipeline.CommonLog cl = new SamplePipeline.CommonLog(1,
+            "192.175.49.116", 37.751, -97.822, "2019-06-19T16:06:45.118306Z",
+            "\"GET eucharya.html HTTP/1.0\"",
+            "Mozilla/5.0 (compatible; MSIE 7.0; Windows NT 5.01; Trident/5.1)", 200, 500);
 
-    // Act
-    //
+    String testingTimeStamp =  Instant.now().toString();
+    cl.setTestingTimestamp(testingTimeStamp);
 
-    // Here perform the action which is being tested.
-    SamplePipeline.main(args);
+    String json = gson.toJson(cl);
 
-    // Assert
-    //
+    PCollection<TableRow> actual =
+            pipeline
+              .apply("Create", Create.of(json))
+              .apply("Apply JsonToTableRowFn",
+                      ParDo.of(new SamplePipeline.JsonToTableRowFn()));
 
-    // Here perform the assertions for the test.
-    assertThat(true, is(equalTo(true)));
+    TableRow expected = new TableRow();
+    expected.set("timestamp", testingTimeStamp);
+    expected.set("user_id", cl.user_id);
+    expected.set("ip", cl.ip);
+    expected.set("lat", cl.lat);
+    expected.set("lng", cl.lng);
+    expected.set("datetime", Instant.parse(cl.timestamp).toString());
+    expected.set("http_request", cl.http_request);
+    expected.set("http_response", cl.http_response);
+    expected.set("num_bytes", cl.num_bytes);
+    expected.set("user_agent", cl.user_agent);
+
+
+
+    PAssert.that(actual)
+            .containsInAnyOrder(expected);
+
+    pipeline.run();
   }
 }

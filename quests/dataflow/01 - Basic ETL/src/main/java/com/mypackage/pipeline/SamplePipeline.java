@@ -16,6 +16,8 @@
 
 package com.mypackage.pipeline;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.Gson;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -99,17 +101,63 @@ public class SamplePipeline {
     run(options);
   }
 
-  class CommonLog {
+  @VisibleForTesting
+  public static class CommonLog {
     int user_id;
     String ip;
-    float lat;
-    float lng;
+    double lat;
+    double lng;
     String timestamp;
     String http_request;
-    String uri;
-    String http_version;
+    String user_agent;
     int http_response;
     int num_bytes;
+    String testingTimestamp;
+
+    CommonLog(int user_id, String ip, double lat, double lng, String timestamp,
+              String http_request, String user_agent, int http_response, int num_bytes) {
+        this.user_id = user_id;
+        this.ip = ip;
+        this.lat = lat;
+        this.lng = lng;
+        this.timestamp = timestamp;
+        this.http_request = http_request;
+        this.user_agent = user_agent;
+        this.http_response = http_response;
+        this.num_bytes = num_bytes;
+    }
+
+    public void setTestingTimestamp(String timestamp) {
+        this.testingTimestamp = timestamp;
+    }
+  }
+
+  @VisibleForTesting
+  static class JsonToTableRowFn extends DoFn<String, TableRow> {
+
+      @ProcessElement
+      public void processElement(@Element String json, OutputReceiver<TableRow> r) throws Exception {
+          Gson gson = new Gson();
+          CommonLog commonLog = gson.fromJson(json, CommonLog.class);
+          TableRow row = new TableRow();
+
+          if (commonLog.testingTimestamp == null) {
+              row.set("processing_timestamp", Instant.now().toString());
+          } else {
+              row.set("processing_timestamp", commonLog.testingTimestamp);
+          }
+
+          row.set("user_id", commonLog.user_id);
+          row.set("ip", commonLog.ip);
+          row.set("lat", commonLog.lat);
+          row.set("lng", commonLog.lng);
+          row.set("event_timestamp", Instant.parse(commonLog.timestamp).toString());
+          row.set("http_request", commonLog.http_request);
+          row.set("http_response", commonLog.http_response);
+          row.set("num_bytes", commonLog.num_bytes);
+          row.set("user_agent", commonLog.user_agent);
+          r.output(row);
+      }
   }
 
   /**
@@ -131,16 +179,16 @@ public class SamplePipeline {
 
      // Build the table schema for the output table.
     List<TableFieldSchema> fields = new ArrayList<>();
-    fields.add(new TableFieldSchema().setName("timestamp").setType("TIMESTAMP"));
+    fields.add(new TableFieldSchema().setName("processing_timestamp").setType("TIMESTAMP"));
     fields.add(new TableFieldSchema().setName("ip").setType("STRING"));
+    fields.add(new TableFieldSchema().setName("user_id").setType("INTEGER"));
     fields.add(new TableFieldSchema().setName("lat").setType("FLOAT"));
     fields.add(new TableFieldSchema().setName("lng").setType("FLOAT"));
-    fields.add(new TableFieldSchema().setName("datetime").setType("TIMESTAMP"));
+    fields.add(new TableFieldSchema().setName("event_timestamp").setType("TIMESTAMP"));
     fields.add(new TableFieldSchema().setName("http_request").setType("STRING"));
-    fields.add(new TableFieldSchema().setName("uri").setType("STRING"));
-    fields.add(new TableFieldSchema().setName("http_version").setType("STRING"));
     fields.add(new TableFieldSchema().setName("http_response").setType("INTEGER"));
     fields.add(new TableFieldSchema().setName("num_bytes").setType("INTEGER"));
+    fields.add(new TableFieldSchema().setName("user_agent").setType("STRING"));
     TableSchema schema = new TableSchema().setFields(fields);
 
      String input = "gs://your-project-id/testing/logs_head.txt";
@@ -155,26 +203,8 @@ public class SamplePipeline {
 
     pipeline
         .apply("ReadFromGCS", TextIO.read().from(input))
-        .apply("ToBQRow", ParDo.of(new DoFn<String, TableRow>() {
-            @ProcessElement
-            public void processElement(@Element String json, OutputReceiver<TableRow> r) throws Exception {
-                Gson gson = new Gson();
-                CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-                TableRow row = new TableRow();
-                row.set("timestamp", Instant.now().toString());
-                row.set("ip", commonLog.ip);
-                row.set("lat", commonLog.lat);
-                row.set("lng", commonLog.lng);
-                row.set("datetime", Instant.parse(commonLog.timestamp).toString());
-                row.set("http_request", commonLog.http_request);
-                row.set("uri", commonLog.uri);
-                row.set("http_version", commonLog.http_version);
-                row.set("http_response", commonLog.http_response);
-                row.set("num_bytes", commonLog.num_bytes);
-                r.output(row);
-            }
-        }))
-        .apply(BigQueryIO.writeTableRows()
+        .apply("ToBQRow", ParDo.of(new JsonToTableRowFn()))
+        .apply("WriteToBQ", BigQueryIO.writeTableRows()
                 .to(output)
                 .withSchema(schema)
                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
