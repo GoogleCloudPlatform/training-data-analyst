@@ -23,13 +23,7 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-pubsub</artifactId>
-      <version>0.42.1-beta</version>
-    </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.cloud/google-cloud-storage -->
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-storage</artifactId>
-      <version>1.6.0</version>
+      <version>1.73.0</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/joda-time/joda-time -->
     <dependency>
@@ -78,6 +72,9 @@
             </goals>
             <configuration>
               <finalName>pubsub-prework</finalName>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
             </configuration>
           </execution>
         </executions>
