@@ -2,10 +2,10 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.cloud.sme</groupId>
-  <artifactId>publisher</artifactId>
+  <artifactId>example</artifactId>
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
-  <name>publisher</name>
+  <name>example</name>
   <url>http://maven.apache.org</url>
   <dependencies>
     <dependency>
@@ -23,19 +23,7 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-pubsub</artifactId>
-      <version>0.42.1-beta</version>
-    </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.cloud/google-cloud-storage -->
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-storage</artifactId>
-      <version>1.24.1</version>
-      <exclusions>
-        <exclusion>  <!-- declare the exclusion here -->
-          <groupId>com.google.guava</groupId>
-          <artifactId>guava</artifactId>
-        </exclusion>
-      </exclusions>
+      <version>1.73.0</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/joda-time/joda-time -->
     <dependency>
@@ -84,6 +72,9 @@
             </goals>
             <configuration>
               <finalName>pubsub</finalName>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
             </configuration>
           </execution>
         </executions>
