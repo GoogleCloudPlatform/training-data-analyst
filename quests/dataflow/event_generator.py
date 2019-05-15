@@ -12,6 +12,7 @@ from multiprocessing import Process, Value, Lock
 from copy import deepcopy
 import os
 from signal import SIGKILL
+import sys
 
 parser = argparse.ArgumentParser(__file__, description="event_generator")
 parser.add_argument("--taxonomy", "-x", dest="taxonomy_fp",
@@ -144,6 +145,7 @@ def create_user_process(user, root, num_events_counter, publish_to_pubsub):
     user['offline_events'] = []
 
     while True:
+        sys.stdout = open(str(os.getpid()) + ".out", "a")
         time_between_events = random.uniform(0, avg_time_between_events * 2)
         time.sleep(time_between_events)
         prob = random.random()
@@ -161,6 +163,7 @@ def create_user_process(user, root, num_events_counter, publish_to_pubsub):
                 sleep_then_publish_burst(user['offline_events'], num_events_counter,
                                          publisher, topic_path, publish_to_pubsub)
                 user['offline_events'] = []
+        sys.stdout.flush()
 
 def generate_event(user):
     """
@@ -175,7 +178,7 @@ def generate_event(user):
     file_size_bytes = random.choice(range(min_file_size_bytes, max_file_size_bytes))
     http_request = "\"{} {} HTTP/1.0\"".format(random.choice(verbs), uri)
     http_response = random.choice(responses)
-    event_values = [user['ip'], user['id'], user['lat'], user['lng'], current_time_str, http_request, http_response,
+    event_values = [user['ip'], user['id'], float(user['lat']), float(user['lng']), current_time_str, http_request, http_response,
                          file_size_bytes, user['user_agent']]
     return dict(zip(log_fields, event_values))
 
