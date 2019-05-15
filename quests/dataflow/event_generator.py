@@ -107,7 +107,7 @@ def sleep_then_publish_burst(burst, num_events_counter, publisher, topic_path, p
     """
     sleep_secs = random.uniform(0, max_lag_millis)
     time.sleep(sleep_secs)
-    publish_burst(burst, num_events_counter, publisher, topic_path)
+    publish_burst(burst, num_events_counter, publisher, topic_path, publish_to_pubsub)
 
 def publish_burst(burst, num_events_counter, publisher, topic_path, publish_to_pubsub):
     """
