@@ -125,7 +125,7 @@ def publish_burst(burst, num_events_counter, publisher, topic_path, publish_to_p
         if (publish_to_pubsub):
             publisher.publish(topic_path, data=data)
         num_events_counter.value += 1
-        print(event_dict)
+        print(json_str)
 
 def create_user_process(user, root, num_events_counter, publish_to_pubsub):
     """
