@@ -18,7 +18,8 @@ parser.add_argument("--taxonomy", "-x", dest="taxonomy_fp",
                     help="A .json file representing a taxonomy of web resources",
                     required=True)
 parser.add_argument("--users_fp", "-u", dest="users_fp",
-                    help="A .csv file of users")
+                    help="A .csv file of users",
+                    default="users.csv")
 parser.add_argument("--num_e", "-e", dest="max_num_events", type=int,
                     help="The maximum number of events to generate before " \
                     " stopping. Defaults to None, which means run" \
