@@ -102,6 +102,9 @@ public class SamplePipeline {
   }
 
   @VisibleForTesting
+  /**
+   * A class used for parsing JSON web server events
+   */
   public static class CommonLog {
     int user_id;
     String ip;
@@ -112,7 +115,6 @@ public class SamplePipeline {
     String user_agent;
     int http_response;
     int num_bytes;
-    String testingTimestamp;
 
     CommonLog(int user_id, String ip, double lat, double lng, String timestamp,
               String http_request, String user_agent, int http_response, int num_bytes) {
@@ -126,13 +128,12 @@ public class SamplePipeline {
         this.http_response = http_response;
         this.num_bytes = num_bytes;
     }
-
-    public void setTestingTimestamp(String timestamp) {
-        this.testingTimestamp = timestamp;
-    }
   }
 
   @VisibleForTesting
+  /**
+   * A DoFn which accepts a JSON string outputs a instance of TableRow
+   */
   static class JsonToTableRowFn extends DoFn<String, TableRow> {
 
       @ProcessElement
@@ -140,12 +141,6 @@ public class SamplePipeline {
           Gson gson = new Gson();
           CommonLog commonLog = gson.fromJson(json, CommonLog.class);
           TableRow row = new TableRow();
-
-          if (commonLog.testingTimestamp == null) {
-              row.set("processing_timestamp", Instant.now().toString());
-          } else {
-              row.set("processing_timestamp", commonLog.testingTimestamp);
-          }
 
           row.set("user_id", commonLog.user_id);
           row.set("ip", commonLog.ip);
@@ -179,7 +174,6 @@ public class SamplePipeline {
 
      // Build the table schema for the output table.
     List<TableFieldSchema> fields = new ArrayList<>();
-    fields.add(new TableFieldSchema().setName("processing_timestamp").setType("TIMESTAMP"));
     fields.add(new TableFieldSchema().setName("ip").setType("STRING"));
     fields.add(new TableFieldSchema().setName("user_id").setType("INTEGER"));
     fields.add(new TableFieldSchema().setName("lat").setType("FLOAT"));
