@@ -1,0 +1,10 @@
+.idea
+
+*.class
+
+practice/target
+practice/src/main/resources
+solution/target
+solution/src/main/resources
+
+*.iml
