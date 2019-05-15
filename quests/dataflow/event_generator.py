@@ -47,6 +47,10 @@ offline_to_online_probability = args.off_to_on_prob
 max_lag_millis = args.max_lag_millis
 project_id = args.project_id
 topic_name = args.topic_name
+if (project_id is None or topic_name is None):
+    publish_to_pubsub=False
+else:
+    publish_to_pubsub=True
 
 min_file_size_bytes = 100
 max_file_size_bytes = 500
@@ -91,7 +95,7 @@ def read_users(users_fp):
             users.append(user)
     return users
 
-def sleep_then_publish_burst(burst, num_events_counter, publisher, topic_path):
+def sleep_then_publish_burst(burst, num_events_counter, publisher, topic_path, publish_to_pubsub):
     """
 
     :param burst: a list of dictionaries, each representing an event
@@ -105,7 +109,7 @@ def sleep_then_publish_burst(burst, num_events_counter, publisher, topic_path):
     time.sleep(sleep_secs)
     publish_burst(burst, num_events_counter, publisher, topic_path)
 
-def publish_burst(burst, num_events_counter, publisher, topic_path):
+def publish_burst(burst, num_events_counter, publisher, topic_path, publish_to_pubsub):
     """
     Publishes and prints each event
     :param burst: a list of dictionaries, each representing an event
@@ -118,11 +122,12 @@ def publish_burst(burst, num_events_counter, publisher, topic_path):
     for event_dict in burst:
         json_str = json.dumps(event_dict)
         data = json_str.encode('utf-8')
-        publisher.publish(topic_path, data=data)
+        if (publish_to_pubsub):
+            publisher.publish(topic_path, data=data)
         num_events_counter.value += 1
         print(event_dict)
 
-def create_user_process(user, root, num_events_counter):
+def create_user_process(user, root, num_events_counter, publish_to_pubsub):
     """
     Code for continuously-running process representing a user publishing
     events to pubsub
@@ -148,12 +153,13 @@ def create_user_process(user, root, num_events_counter):
                 user['is_online'] = False
                 user['offline_events'] = [event]
             else:
-                sleep_then_publish_burst([event], num_events_counter, publisher, topic_path)
+                sleep_then_publish_burst([event], num_events_counter, publisher, topic_path, publish_to_pubsub)
         else:
             user['offline_events'].append(event)
             if prob < offline_to_online_probability:
                 user['is_online'] = True
-                sleep_then_publish_burst(user['offline_events'], num_events_counter, publisher, topic_path)
+                sleep_then_publish_burst(user['offline_events'], num_events_counter,
+                                         publisher, topic_path, publish_to_pubsub)
                 user['offline_events'] = []
 
 def generate_event(user):
@@ -192,7 +198,7 @@ if __name__ == '__main__':
     num_events_counter = Value('i', 0)
     users = read_users(users_fp)
     root = extract_resources(taxonomy_fp)
-    processes = [Process(target=create_user_process, args=(deepcopy(user), deepcopy(root), num_events_counter))
+    processes = [Process(target=create_user_process, args=(deepcopy(user), deepcopy(root), num_events_counter, publish_to_pubsub))
                  for user in users]
     [process.start() for process in processes]
     while num_events_counter.value <= max_num_events:
