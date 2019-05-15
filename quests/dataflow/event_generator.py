@@ -14,7 +14,7 @@ import os
 from signal import SIGKILL
 
 parser = argparse.ArgumentParser(__file__, description="event_generator")
-parser.add_argument("--taxonomy", "-t", dest="taxonomy_fp",
+parser.add_argument("--taxonomy", "-x", dest="taxonomy_fp",
                     help="A .json file representing a taxonomy of web resources",
                     required=True)
 parser.add_argument("--users_fp", "-u", dest="users_fp",
@@ -25,7 +25,7 @@ parser.add_argument("--num_e", "-e", dest="max_num_events", type=int,
                     " indefinitely", default=0)
 parser.add_argument("--off_to_on", "-off", dest="off_to_on_prob", type=float,
                     help="An integer representing the average amount of time in seconds a user spends offline " \
-                    "when they go offline", default=.2)
+                    "when they go offline", default=0.)
 parser.add_argument("--on_to_off", "-on", dest="on_to_off_prob", type=float,
                     help="An integer representing the average amount of time in seconds a user spends online "
                          "before going offline", default=.1)
@@ -41,9 +41,6 @@ args = parser.parse_args()
 taxonomy_fp = args.taxonomy_fp
 users_fp = args.users_fp
 max_num_events = args.max_num_events
-#offline_session_duration = args.offline_session_duration
-#online_session_duration = args.online_session_duration
-# The probability that a user will go offline when online is 1 - p()
 online_to_offline_probability = args.on_to_off_prob
 offline_to_online_probability = args.off_to_on_prob
 max_lag_millis = args.max_lag_millis
