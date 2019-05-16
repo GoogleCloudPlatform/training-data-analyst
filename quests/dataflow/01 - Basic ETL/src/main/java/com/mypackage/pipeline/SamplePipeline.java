@@ -18,9 +18,9 @@ package com.mypackage.pipeline;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
+import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.TextIO;
@@ -84,7 +84,7 @@ public class SamplePipeline {
    * The {@link Options} class provides the custom execution options passed by the executor at the
    * command-line.
    */
-  public interface Options extends PipelineOptions {
+  public interface Options extends DataflowPipelineOptions{
   }
 
   /**
@@ -168,9 +168,8 @@ public class SamplePipeline {
 
     // Create the pipeline
     Pipeline pipeline = Pipeline.create(options);
-    options.setJobName("My Job Name");
+    options.setJobName("sample-pipeline" + System.currentTimeMillis());
     options.setRunner(DataflowRunner.class);
-    options.setTempLocation("gs://path/to/tmp");
 
      // Build the table schema for the output table.
     List<TableFieldSchema> fields = new ArrayList<>();
