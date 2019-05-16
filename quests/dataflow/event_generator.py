@@ -60,7 +60,7 @@ responses = [200]
 
 
 log_fields = ["ip", "user_id, ", "lat", "lng", "timestamp", "http_request",
-    "uri", "http_version", "http_response", "num_bytes", "user_agent"]
+              "http_response", "num_bytes", "user_agent"]
 
 def extract_resources(taxonomy_filepath):
     """
@@ -178,8 +178,9 @@ def generate_event(user):
     file_size_bytes = random.choice(range(min_file_size_bytes, max_file_size_bytes))
     http_request = "\"{} {} HTTP/1.0\"".format(random.choice(verbs), uri)
     http_response = random.choice(responses)
-    event_values = [user['ip'], user['id'], float(user['lat']), float(user['lng']), current_time_str, http_request, http_response,
-                         file_size_bytes, user['user_agent']]
+    event_values = [user['ip'], user['id'], float(user['lat']), float(user['lng']), current_time_str, http_request,
+                    http_response, file_size_bytes, user['user_agent']]
+
     return dict(zip(log_fields, event_values))
 
 def get_next_page(user):
