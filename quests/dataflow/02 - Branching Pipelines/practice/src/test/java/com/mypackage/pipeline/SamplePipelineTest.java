@@ -50,13 +50,10 @@ public class SamplePipelineTest {
   public void testSamplePipeline() {
 
     Gson gson = new Gson();
-    SamplePipeline.CommonLog cl = new SamplePipeline.CommonLog(1,
+    SamplePipeline.CommonLog cl = new SamplePipeline.CommonLog("1",
             "192.175.49.116", 37.751, -97.822, "2019-06-19T16:06:45.118306Z",
             "\"GET eucharya.html HTTP/1.0\"",
             "Mozilla/5.0 (compatible; MSIE 7.0; Windows NT 5.01; Trident/5.1)", 200, 500);
-
-    String testingTimeStamp =  Instant.now().toString();
-    cl.setTestingTimestamp(testingTimeStamp);
 
     String json = gson.toJson(cl);
 
@@ -67,7 +64,6 @@ public class SamplePipelineTest {
                       ParDo.of(new SamplePipeline.JsonToTableRowFn()));
 
     TableRow expected = new TableRow();
-    expected.set("timestamp", testingTimeStamp);
     expected.set("user_id", cl.user_id);
     expected.set("ip", cl.ip);
     expected.set("lat", cl.lat);
