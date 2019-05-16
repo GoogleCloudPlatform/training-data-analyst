@@ -59,7 +59,7 @@ verbs = ["GET"]
 responses = [200]
 
 
-log_fields = ["ip", "user_id, ", "lat", "lng", "timestamp", "http_request",
+log_fields = ["ip", "user_id", "lat", "lng", "timestamp", "http_request",
               "http_response", "num_bytes", "user_agent"]
 
 def extract_resources(taxonomy_filepath):
