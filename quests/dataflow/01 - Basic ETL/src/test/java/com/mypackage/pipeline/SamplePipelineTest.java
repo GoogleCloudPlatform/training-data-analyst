@@ -55,8 +55,6 @@ public class SamplePipelineTest {
             "\"GET eucharya.html HTTP/1.0\"",
             "Mozilla/5.0 (compatible; MSIE 7.0; Windows NT 5.01; Trident/5.1)", 200, 500);
 
-    String testingTimeStamp =  Instant.now().toString();
-
     String json = gson.toJson(cl);
 
     PCollection<TableRow> actual =
