@@ -201,7 +201,7 @@ public class SamplePipelineDataflowTemplate {
         // Build the table schema for the output table.
         List<TableFieldSchema> fields = new ArrayList<>();
         fields.add(new TableFieldSchema().setName("ip").setType("STRING"));
-        fields.add(new TableFieldSchema().setName("user_id").setType("INTEGER"));
+        fields.add(new TableFieldSchema().setName("user_id").setType("STRING"));
         fields.add(new TableFieldSchema().setName("lat").setType("FLOAT"));
         fields.add(new TableFieldSchema().setName("lng").setType("FLOAT"));
         fields.add(new TableFieldSchema().setName("event_timestamp").setType("TIMESTAMP"));
