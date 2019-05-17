@@ -96,12 +96,12 @@ public class SamplePipelineDataflowTemplate {
         void setInputPath(ValueProvider<String> inputPath);
 
         @Description("GCS Coldline Bucket")
-        ValueProvider<String> getColdlineBucket();
-        void setColdlineBucket(ValueProvider<String> bucketName);
+        ValueProvider<String> getOutputPath();
+        void setOutputPath(ValueProvider<String> outputPath);
 
         @Description("BigQuery table path")
-        ValueProvider<String> getBQTablePath();
-        void setBQTablePath(ValueProvider<String> path);
+        ValueProvider<String> getTableName();
+        void setTableName(ValueProvider<String> tableName);
     }
 
     /**
@@ -216,12 +216,12 @@ public class SamplePipelineDataflowTemplate {
          */
 
         PCollection<String> lines = pipeline
-                .apply("ReadFromGCS", TextIO.read().from(options.getInputPath().get()));
+                .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()));
 
         // Write to Google Cloud Storage coldline bucket
         lines
                 .apply("WriteToColdlineStorage",
-                        TextIO.write().to(options.getColdlineBucket().get()));
+                        TextIO.write().to(options.getOutputPath()));
 
         lines
                 // Filter individual elements
@@ -229,7 +229,7 @@ public class SamplePipelineDataflowTemplate {
                 // Convert to TableRow, filtering fields to include only those for analysis
                 .apply("ToBQRow", ParDo.of(new JsonToTableRowFn()))
                 .apply("WriteToBQ", BigQueryIO.writeTableRows()
-                        .to(options.getBQTablePath().get())
+                        .to(options.getTableName())
                         .withSchema(schema)
                         .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
                         .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));

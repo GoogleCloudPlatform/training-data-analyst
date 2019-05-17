@@ -18,6 +18,7 @@ package com.mypackage.pipeline;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
+import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -93,13 +94,13 @@ public class SamplePipeline {
       String getInputPath();
       void setInputPath(String inputPath);
 
-      @Description("GCS Coldline Bucket")
-      String getColdlineBucket();
-      void setColdlineBucket(String bucketName);
+      @Description("Path to coldline storage bucket")
+      String getOutputPath();
+      void setOutputPath(String outputPath);
 
-      @Description("BigQuery table path")
-      String getBQTablePath();
-      void setBQTablePath(String path);
+      @Description("BigQuery table name")
+      String getTableName();
+      void setTableName(String tableName);
   }
 
   /**
@@ -199,6 +200,8 @@ public class SamplePipeline {
 
     // Create the pipeline
     Pipeline pipeline = Pipeline.create(options);
+    options.setJobName("sample-pipeline-" + System.currentTimeMillis());
+    options.setRunner(DataflowRunner.class);
 
      // Build the table schema for the output table.
     List<TableFieldSchema> fields = new ArrayList<>();
@@ -222,7 +225,7 @@ public class SamplePipeline {
 
     // Write to Google Cloud Storage coldline bucket
     lines
-            .apply("WriteToColdlineStorage", TextIO.write().to(options.getColdlineBucket()));
+            .apply("WriteToColdlineStorage", TextIO.write().to(options.getOutputPath()));
 
     lines
             // Filter individual elements
@@ -230,7 +233,7 @@ public class SamplePipeline {
             // Convert to TableRow, filtering fields to include only those for analysis
             .apply("ToBQRow", ParDo.of(new JsonToTableRowFn()))
             .apply("WriteToBQ", BigQueryIO.writeTableRows()
-                .to(options.getBQTablePath())
+                .to(options.getTableName())
                 .withSchema(schema)
                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));

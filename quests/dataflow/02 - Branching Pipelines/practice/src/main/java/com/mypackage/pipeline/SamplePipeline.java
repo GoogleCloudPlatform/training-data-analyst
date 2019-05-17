@@ -167,7 +167,7 @@ public class SamplePipeline {
 
     // Create the pipeline
     Pipeline pipeline = Pipeline.create(options);
-    options.setJobName("sample-pipeline" + System.currentTimeMillis());
+    options.setJobName("sample-pipeline-" + System.currentTimeMillis());
     options.setRunner(DataflowRunner.class);
     options.setTempLocation("gs://path/to/tmp");
 
