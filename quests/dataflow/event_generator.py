@@ -38,7 +38,7 @@ parser.add_argument("--topic_name", "-t", dest="topic_name", type=str,
                     help="The name of the topic where the messages to be published")
 
 
-avg_time_between_events = 1
+avg_time_between_events = .1
 args = parser.parse_args()
 taxonomy_fp = args.taxonomy_fp
 users_fp = args.users_fp
