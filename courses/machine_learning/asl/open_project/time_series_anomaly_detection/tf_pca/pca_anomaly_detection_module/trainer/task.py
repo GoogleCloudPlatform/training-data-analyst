@@ -29,7 +29,7 @@ if __name__ == "__main__":
     help = "this model ignores this field, but it is required by gcloud",
     default = "junk"
   )
-
+  
   # Sequence shape hyperparameters
   parser.add_argument(
     "--seq_len",
@@ -37,45 +37,7 @@ if __name__ == "__main__":
     type = int,
     default = 32
   )
-  parser.add_argument(
-    "--horizon",
-    help = "Number of timesteps to skip into the future",
-    type = int,
-    default = 0
-  )
-  parser.add_argument(
-    "--reverse_labels_sequence",
-    help = "Whether we should reverse the labels sequence dimension or not",
-    type = bool,
-    default = True
-  )
-
-  # Architecture hyperparameters
-
-  # LSTM hyperparameters
-  parser.add_argument(
-    "--encoder_lstm_hidden_units",
-    help = "Hidden layer sizes to use for LSTM encoder",
-    default = "64 32 16"
-  )
-  parser.add_argument(
-    "--decoder_lstm_hidden_units",
-    help = "Hidden layer sizes to use for LSTM decoder",
-    default = "16 32 64"
-  )
-  parser.add_argument(
-    "--lstm_dropout_output_keep_probs",
-    help = "Keep probabilties for LSTM outputs",
-    default = "1.0 1.0 1.0"
-  )
-
-  # DNN hyperparameters
-  parser.add_argument(
-    "--dnn_hidden_units",
-    help = "Hidden layer sizes to use for DNN",
-    default = "1024 256 64"
-  )
-
+  
   # Training parameters
   parser.add_argument(
     "--train_batch_size",
@@ -113,13 +75,19 @@ if __name__ == "__main__":
     type = int,
     default = 120
   )
-
+  
   # Anomaly detection
   parser.add_argument(
     "--evaluation_mode",
     help = "Which evaluation mode we are in (reconstruction, calculate_error_distribution_statistics, tune_anomaly_thresholds)",
     type = str,
     default = "reconstruction"
+  )
+  parser.add_argument(
+    "--k_principal_components",
+    help = "The top k principal components to keep after eigendecomposition",
+    type = int,
+    default = 3
   )
   parser.add_argument(
     "--num_time_anomaly_thresholds",
@@ -181,7 +149,7 @@ if __name__ == "__main__":
     type = float,
     default = 0.05
   )
-
+  
   # Parse all arguments
   args = parser.parse_args()
   arguments = args.__dict__
@@ -189,27 +157,17 @@ if __name__ == "__main__":
   # Unused args provided by service
   arguments.pop("job_dir", None)
   arguments.pop("job-dir", None)
-
-  # Fix list arguments
-  arguments["encoder_lstm_hidden_units"] = [int(x) 
-                                            for x in arguments["encoder_lstm_hidden_units"].split(' ')]
-  arguments["decoder_lstm_hidden_units"] = [int(x) 
-                                            for x in arguments["decoder_lstm_hidden_units"].split(' ')]
-  arguments["lstm_dropout_output_keep_probs"] = [float(x) 
-                                                 for x in arguments["lstm_dropout_output_keep_probs"].split(' ')]
-  arguments["dnn_hidden_units"] = [int(x) 
-                                   for x in arguments["dnn_hidden_units"].split(' ')]
-
+  
   # Fix eps argument
   arguments["eps"] = float(arguments["eps"])
 
   # Append trial_id to path if we are doing hptuning
   # This code can be removed if you are not using hyperparameter tuning
   arguments["output_dir"] = os.path.join(
-      arguments["output_dir"],
-      json.loads(
-          os.environ.get("TF_CONFIG", "{}")
-      ).get("task", {}).get("trial", "")
+    arguments["output_dir"],
+    json.loads(
+      os.environ.get("TF_CONFIG", "{}")
+    ).get("task", {}).get("trial", "")
   )
 
   # Run the training job

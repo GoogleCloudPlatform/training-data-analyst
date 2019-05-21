@@ -1,10 +1,8 @@
-# tf_lstm_encoder_decoder_autoencoder_anomaly_detection
+# tf_pca_anomaly_detection
 
-This project is an encoder-decoder autoencoder machine learning model to perform anomaly detection on time-series data such as IoT sensor data or cybersecurity data.
+This project is a PCA machine learning model to perform anomaly detection on time-series data such as IoT sensor data or cybersecurity data.
 
-This is mostly an implementation of this research paper: [LSTM-based Encoder-Decoder for Multi-sensor Anomaly Detection](https://arxiv.org/pdf/1607.00148.pdf).
-
-## lstm_encoder_decoder_autoencoder_anomaly_detection_local
+## pca_anomaly_detection_local
 This notebook is a local implementation of the model that contains a data generator for creating data as well as the TensorFlow model and Estimator. 
 
 ### Data generator
@@ -22,7 +20,7 @@ This model function has several subgraphs that are called based on a combination
 We first instantiate our custom estimator with the evaluation_mode hyperparameter set to "reconstruction". This is then sent to train_and_evaluate where two different subgraphs are run for training and evaluation.
 
 ##### mode == TRAIN
-During training we will train the encoder-decoder weight parameters. Our features will be the input time series data and since it is an autoencoder our labels will be our inputs. Our predictions will be the reconstructed inputs that we aim, through gradient descent, to be as close to the inputs as possible using a mean squared error loss. This trains on the normal sequence training dataset.
+During training we will train the PCA parameters over batches of data. Our features will be the input time series data and since it is an autoencoder our labels will be our inputs. Our predictions will be the reconstructed inputs that we aim, to be as close to the inputs as possible using a mean squared error loss. This trains on the normal sequence training dataset.
 
 ##### mode == EVAL
 During evaluation, we will calculate the RMSE and MAE of the reconstruction error. This evaluates on the normal sequence validation dataset and has an early stopping hook.
@@ -39,7 +37,7 @@ The anomaly thresholds for both timesteps and features can either be set manuall
 ##### mode == EVAL
 To tune the anomaly thresholds, we will try many different thresholds for each time based and feature based views of the error distribution. The thresholds will be chosen based on which ever produces the maximal F-beta score for each respectively.
 
-## lstm_encoder_decoder_autoencoder_anomaly_detection_gcp
+## pca_anomaly_detection_gcp
 This notebook is a Google Cloud Platform implementation of the model that uses data files created from above data generator stored in a GCS bucket.
 
 ### Create python module
