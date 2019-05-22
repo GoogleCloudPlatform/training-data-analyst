@@ -180,7 +180,6 @@ if __name__ == '__main__':
                 infile = readfile.read()
                 for line in infile:
                     outfile.write(line)
-                outfile.write("\n")
 
     # Iterate over the list of filepaths & remove each file.
     for filePath in filenames:
