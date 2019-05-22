@@ -5,14 +5,12 @@ sh ./install_packages.sh
 
 echo "Generating synthetic users"
 # Generate 2 fake web site users
-python3 user_generator.py --n=2
+python3 user_generator.py --n=10
 
 echo "Generating synthetic events"
 rm *.out
 # Generate 10 events
-python3 event_generator.py -x=taxonomy.json --num_e=10 --project_id=$(gcloud config get-value project)
-cat *.out >> events.json
-rm *.out
+python3 batch_event_generator.py --num_e=1000
 
 echo "Copying events to Cloud Storage"
 # Set BUCKET to the non-coldline Google Cloud Storage bucket
