@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;
 import org.apache.beam.sdk.coders.SerializableCoder;
 import org.apache.beam.sdk.io.TextIO;
@@ -35,6 +36,7 @@ import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.beam.sdk.coders.CoderRegistry;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -95,58 +97,6 @@ public class BatchUserTrafficPipeline {
     void setTableName(String tableName);
   }
 
-  @VisibleForTesting
-  /**
-   * A class used for parsing JSON web server events
-   */
-  @DefaultCoder(SerializableCoder.class)
-  public static class CommonLog implements Serializable {
-    String user_id;
-    String ip;
-    double lat;
-    double lng;
-    String timestamp;
-    String http_request;
-    String user_agent;
-    int http_response;
-    int num_bytes;
-
-    CommonLog(String user_id, String ip, double lat, double lng, String timestamp,
-              String http_request, String user_agent, int http_response, int num_bytes) {
-      this.user_id = user_id;
-      this.ip = ip;
-      this.lat = lat;
-      this.lng = lng;
-      this.timestamp = timestamp;
-      this.http_request = http_request;
-      this.user_agent = user_agent;
-      this.http_response = http_response;
-      this.num_bytes = num_bytes;
-    }
-  }
-
-  @VisibleForTesting
-  /**
-   * A DoFn which accepts a JSON string outputs a instance of TableRow
-   */
-  static class JsonToTableRowFn extends DoFn<String, TableRow> {
-
-    @ProcessElement
-    public void processElement(@Element String json, OutputReceiver<TableRow> r) throws Exception {
-      Gson gson = new Gson();
-      CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-      TableRow row = new TableRow();
-      row.set("user_id", commonLog.user_id);
-      row.set("ip", commonLog.ip);
-      row.set("lat", commonLog.lat);
-      row.set("lng", commonLog.lng);
-      row.set("event_timestamp", Instant.parse(commonLog.timestamp).toString());
-      row.set("http_request", commonLog.http_request);
-
-      r.output(row);
-    }
-  }
-
   /**
    * The main entry-point for pipeline execution. This method will start the pipeline but will not
    * wait for it's execution to finish. If blocking execution is required, use the {@link
@@ -177,7 +127,10 @@ public class BatchUserTrafficPipeline {
     // Create the pipeline
     Pipeline pipeline = Pipeline.create(options);
     options.setJobName("batch-user-traffic-pipeline-" + System.currentTimeMillis());
-    options.setRunner(DataflowRunner.class);
+
+    CoderRegistry cr = pipeline.getCoderRegistry();
+    cr.registerCoderForClass(CommonLog.class, AvroCoder.of(CommonLog.class));
+
 
     List<TableFieldSchema> fields = new ArrayList<>();
     fields.add(new TableFieldSchema().setName("user_id").setType("STRING"));

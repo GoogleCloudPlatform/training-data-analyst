@@ -82,7 +82,7 @@ public class BatchMinuteTrafficPipeline {
     /*
      * The logger to output status messages to.
      */
-    private static final Logger LOG = LoggerFactory.getLogger(BatchUserTrafficPipeline.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BatchMinuteTrafficPipeline.class);
 
     /**
      * The {@link Options} class provides the custom execution options passed by the executor at the
@@ -96,58 +96,6 @@ public class BatchMinuteTrafficPipeline {
         @Description("BigQuery table name")
         String getTableName();
         void setTableName(String tableName);
-    }
-
-    @VisibleForTesting
-    /**
-     * A class used for parsing JSON web server events
-     */
-    @DefaultCoder(SerializableCoder.class)
-    public static class CommonLog implements Serializable {
-        String user_id;
-        String ip;
-        double lat;
-        double lng;
-        String timestamp;
-        String http_request;
-        String user_agent;
-        int http_response;
-        int num_bytes;
-
-        CommonLog(String user_id, String ip, double lat, double lng, String timestamp,
-                  String http_request, String user_agent, int http_response, int num_bytes) {
-            this.user_id = user_id;
-            this.ip = ip;
-            this.lat = lat;
-            this.lng = lng;
-            this.timestamp = timestamp;
-            this.http_request = http_request;
-            this.user_agent = user_agent;
-            this.http_response = http_response;
-            this.num_bytes = num_bytes;
-        }
-    }
-
-    @VisibleForTesting
-    /**
-     * A DoFn which accepts a JSON string outputs a instance of TableRow
-     */
-    static class JsonToTableRowFn extends DoFn<String, TableRow> {
-
-        @ProcessElement
-        public void processElement(@Element String json, OutputReceiver<TableRow> r) throws Exception {
-            Gson gson = new Gson();
-            CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-            TableRow row = new TableRow();
-            row.set("user_id", commonLog.user_id);
-            row.set("ip", commonLog.ip);
-            row.set("lat", commonLog.lat);
-            row.set("lng", commonLog.lng);
-            row.set("event_timestamp", Instant.parse(commonLog.timestamp).toString());
-            row.set("http_request", commonLog.http_request);
-
-            r.output(row);
-        }
     }
 
     /**
@@ -180,7 +128,6 @@ public class BatchMinuteTrafficPipeline {
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
         options.setJobName("batch-minute-traffic-pipeline-" + System.currentTimeMillis());
-        options.setRunner(DataflowRunner.class);
 
         List<TableFieldSchema> fields = new ArrayList<>();
         fields.add(new TableFieldSchema().setName("second").setType("TIMESTAMP"));
