@@ -8,7 +8,7 @@ echo "Generating synthetic users"
 python3 user_generator.py --n=10
 
 echo "Generating synthetic events"
-rm *.out
+rm *.out 2> /dev/null
 # Generate 10 events
 python3 batch_event_generator.py --num_e=1000
 
