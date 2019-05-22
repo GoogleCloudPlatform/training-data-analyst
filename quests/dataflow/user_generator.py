@@ -7,7 +7,7 @@ from random import choice
 
 parser = argparse.ArgumentParser(__file__, description="Web Server Data Generator")
 parser.add_argument("--num_users", "-u", type=int, dest="num_users",
-                    help="The number of users to create", default=200)
+                    help="The number of users to create", default=100)
 
 args = parser.parse_args()
 num_users = int(args.num_users)

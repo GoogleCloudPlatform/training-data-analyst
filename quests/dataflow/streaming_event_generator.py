@@ -17,7 +17,7 @@ import sys
 parser = argparse.ArgumentParser(__file__, description="event_generator")
 parser.add_argument("--taxonomy", "-x", dest="taxonomy_fp",
                     help="A .json file representing a taxonomy of web resources",
-                    required=True)
+                    default="taxonomy.json")
 parser.add_argument("--users_fp", "-u", dest="users_fp",
                     help="A .csv file of users",
                     default="users.csv")
@@ -26,16 +26,16 @@ parser.add_argument("--num_e", "-e", dest="max_num_events", type=int,
                     " stopping. Defaults to None, which means run" \
                     " indefinitely", default=0)
 parser.add_argument("--off_to_on", "-off", dest="off_to_on_prob", type=float,
-                    help="An integer representing the average amount of time in seconds a user spends offline " \
-                    "when they go offline", default=0.)
+                    help="A float representing the probability that a user who is offline will come online",
+                    default=.25)
 parser.add_argument("--on_to_off", "-on", dest="on_to_off_prob", type=float,
-                    help="An integer representing the average amount of time in seconds a user spends online "
-                         "before going offline", default=.1)
+                    help="A float representing the probability that a user who is online will go offline",
+                    default=.1)
 parser.add_argument("--max_lag_millis", '-l', dest="max_lag_millis", type=int,
                     help="An integer representing the maximum amount of lag in millisecond", default=0)
-parser.add_argument("--project_id", "-p", type=str, dest="project_id", help="A GCP Project ID")
+parser.add_argument("--project_id", "-p", type=str, dest="project_id", help="A GCP Project ID", required=True)
 parser.add_argument("--topic_name", "-t", dest="topic_name", type=str,
-                    help="The name of the topic where the messages to be published")
+                    help="The name of the topic where the messages to be published", required=True)
 
 
 avg_time_between_events = .1
@@ -48,11 +48,6 @@ offline_to_online_probability = args.off_to_on_prob
 max_lag_millis = args.max_lag_millis
 project_id = args.project_id
 topic_name = args.topic_name
-if (project_id is None or topic_name is None):
-    publish_to_pubsub=False
-else:
-    publish_to_pubsub=True
-
 min_file_size_bytes = 100
 max_file_size_bytes = 500
 verbs = ["GET"]
@@ -96,7 +91,7 @@ def read_users(users_fp):
             users.append(user)
     return users
 
-def sleep_then_publish_burst(burst, num_events_counter, publisher, topic_path, publish_to_pubsub):
+def sleep_then_publish_burst(burst, num_events_counter, publisher, topic_path):
     """
 
     :param burst: a list of dictionaries, each representing an event
@@ -108,9 +103,9 @@ def sleep_then_publish_burst(burst, num_events_counter, publisher, topic_path, p
     """
     sleep_secs = random.uniform(0, max_lag_millis)
     time.sleep(sleep_secs)
-    publish_burst(burst, num_events_counter, publisher, topic_path, publish_to_pubsub)
+    publish_burst(burst, num_events_counter, publisher, topic_path)
 
-def publish_burst(burst, num_events_counter, publisher, topic_path, publish_to_pubsub):
+def publish_burst(burst, num_events_counter, publisher, topic_path):
     """
     Publishes and prints each event
     :param burst: a list of dictionaries, each representing an event
@@ -123,12 +118,10 @@ def publish_burst(burst, num_events_counter, publisher, topic_path, publish_to_p
     for event_dict in burst:
         json_str = json.dumps(event_dict)
         data = json_str.encode('utf-8')
-        if (publish_to_pubsub):
-            publisher.publish(topic_path, data=data)
+        publisher.publish(topic_path, data=data)
         num_events_counter.value += 1
-        print(json_str)
 
-def create_user_process(user, root, num_events_counter, publish_to_pubsub):
+def create_user_process(user, root, num_events_counter):
     """
     Code for continuously-running process representing a user publishing
     events to pubsub
@@ -145,7 +138,6 @@ def create_user_process(user, root, num_events_counter, publish_to_pubsub):
     user['offline_events'] = []
 
     while True:
-        sys.stdout = open(str(os.getpid()) + ".out", "a")
         time_between_events = random.uniform(0, avg_time_between_events * 2)
         time.sleep(time_between_events)
         prob = random.random()
@@ -155,15 +147,14 @@ def create_user_process(user, root, num_events_counter, publish_to_pubsub):
                 user['is_online'] = False
                 user['offline_events'] = [event]
             else:
-                sleep_then_publish_burst([event], num_events_counter, publisher, topic_path, publish_to_pubsub)
+                sleep_then_publish_burst([event], num_events_counter, publisher, topic_path)
         else:
             user['offline_events'].append(event)
             if prob < offline_to_online_probability:
                 user['is_online'] = True
                 sleep_then_publish_burst(user['offline_events'], num_events_counter,
-                                         publisher, topic_path, publish_to_pubsub)
+                                         publisher, topic_path)
                 user['offline_events'] = []
-        sys.stdout.flush()
 
 def generate_event(user):
     """
@@ -202,7 +193,7 @@ if __name__ == '__main__':
     num_events_counter = Value('i', 0)
     users = read_users(users_fp)
     root = extract_resources(taxonomy_fp)
-    processes = [Process(target=create_user_process, args=(deepcopy(user), deepcopy(root), num_events_counter, publish_to_pubsub))
+    processes = [Process(target=create_user_process, args=(deepcopy(user), deepcopy(root), num_events_counter))
                  for user in users]
     [process.start() for process in processes]
     while num_events_counter.value <= max_num_events:
