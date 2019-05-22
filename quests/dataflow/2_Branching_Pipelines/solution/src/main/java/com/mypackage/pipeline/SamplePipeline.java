@@ -160,8 +160,6 @@ public class SamplePipeline {
 
   };
 
-
-
   @VisibleForTesting
   /**
    * A DoFn which accepts a JSON string outputs a instance of TableRow
@@ -183,8 +181,6 @@ public class SamplePipeline {
           r.output(row);
       }
   }
-
-
 
   /**
    * Runs the pipeline to completion with the specified options. This method does not wait until the

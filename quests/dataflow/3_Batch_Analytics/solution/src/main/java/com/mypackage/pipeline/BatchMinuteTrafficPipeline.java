@@ -24,6 +24,8 @@ import com.google.gson.Gson;
 import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.DefaultCoder;
+import org.apache.beam.sdk.coders.SerializableCoder;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
@@ -37,6 +39,7 @@ import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,7 +102,8 @@ public class BatchMinuteTrafficPipeline {
     /**
      * A class used for parsing JSON web server events
      */
-    public static class CommonLog {
+    @DefaultCoder(SerializableCoder.class)
+    public static class CommonLog implements Serializable {
         String user_id;
         String ip;
         double lat;
@@ -149,7 +153,7 @@ public class BatchMinuteTrafficPipeline {
     /**
      * The main entry-point for pipeline execution. This method will start the pipeline but will not
      * wait for it's execution to finish. If blocking execution is required, use the {@link
-     * BatchUserTrafficPipeline#run(Options)} method to start the pipeline and invoke
+     * BatchMinuteTrafficPipeline#run(Options)} method to start the pipeline and invoke
      * {@code result.waitUntilFinish()} on the {@link PipelineResult}.
      *
      * @param args The command-line args passed by the executor.
@@ -175,14 +179,13 @@ public class BatchMinuteTrafficPipeline {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("sample-pipeline-" + System.currentTimeMillis());
+        options.setJobName("batch-minute-traffic-pipeline-" + System.currentTimeMillis());
         options.setRunner(DataflowRunner.class);
 
         List<TableFieldSchema> fields = new ArrayList<>();
-        fields.add(new TableFieldSchema().setName("minute").setType("TIMESTAMP"));
-        fields.add(new TableFieldSchema().setName("hits").setType("INTEGER"));
+        fields.add(new TableFieldSchema().setName("second").setType("TIMESTAMP"));
+        fields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
         TableSchema schema = new TableSchema().setFields(fields);
-
 
         /*
          * Steps:
@@ -201,22 +204,17 @@ public class BatchMinuteTrafficPipeline {
                         r.output(commonLog);
                     }
                 }))
-                .apply("AddTimestamp", ParDo.of(new DoFn<CommonLog, CommonLog>() {
-                    @ProcessElement
-                    public void processElement(@Element CommonLog commonLog, OutputReceiver<CommonLog> r) {
-                        org.joda.time.Instant jodaInstant = org.joda.time.Instant.parse(commonLog.timestamp);
-                        r.outputWithTimestamp(commonLog, jodaInstant);
-                    }
-                }))
+                .apply("AddEventTimestamps", WithTimestamps.of((CommonLog commonLog) ->
+                        org.joda.time.Instant.parse(commonLog.timestamp)))
                 .apply("WindowByMinute", Window.<CommonLog>into(FixedWindows.of(Duration.standardSeconds(60))))
-                .apply("CountTraffic", Count.globally())
+                .apply("CountTraffic", Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults())
                 .apply("ConvertToTableRow", ParDo.of(new DoFn<Long, TableRow>() {
                     @ProcessElement
                     public void processElement(@Element Long l, OutputReceiver<TableRow> r, IntervalWindow window) {
                         Instant i = Instant.ofEpochMilli(window.end().getMillis());
                         TableRow tableRow = new TableRow();
-                        tableRow.set("minute", i);
-                        tableRow.set("hits", l);
+                        tableRow.set("second", i.toString());
+                        tableRow.set("pageviews", l.intValue());
                         r.output(tableRow);
                     }
                 }))

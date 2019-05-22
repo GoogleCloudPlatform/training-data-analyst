@@ -24,6 +24,8 @@ import com.google.gson.Gson;
 import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.DefaultCoder;
+import org.apache.beam.sdk.coders.SerializableCoder;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
@@ -34,6 +36,7 @@ import org.apache.beam.sdk.values.KV;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +99,8 @@ public class BatchUserTrafficPipeline {
   /**
    * A class used for parsing JSON web server events
    */
-  public static class CommonLog {
+  @DefaultCoder(SerializableCoder.class)
+  public static class CommonLog implements Serializable {
     String user_id;
     String ip;
     double lat;
@@ -172,12 +176,12 @@ public class BatchUserTrafficPipeline {
 
     // Create the pipeline
     Pipeline pipeline = Pipeline.create(options);
-    options.setJobName("sample-pipeline-" + System.currentTimeMillis());
+    options.setJobName("batch-user-traffic-pipeline-" + System.currentTimeMillis());
     options.setRunner(DataflowRunner.class);
 
     List<TableFieldSchema> fields = new ArrayList<>();
     fields.add(new TableFieldSchema().setName("user_id").setType("STRING"));
-    fields.add(new TableFieldSchema().setName("hits").setType("INTEGER"));
+    fields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
     TableSchema schema = new TableSchema().setFields(fields);
 
 
@@ -212,7 +216,7 @@ public class BatchUserTrafficPipeline {
               public void processElement(@Element KV<String, Integer> kv, OutputReceiver<TableRow> receiver) {
                 TableRow tableRow = new TableRow();
                 tableRow.set("user_id", kv.getKey());
-                tableRow.set("hits", kv.getValue());
+                tableRow.set("pageviews", kv.getValue());
                 receiver.output(tableRow);
               }
             }))
