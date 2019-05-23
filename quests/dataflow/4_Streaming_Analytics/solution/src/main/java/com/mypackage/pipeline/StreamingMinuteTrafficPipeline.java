@@ -129,20 +129,11 @@ public class StreamingMinuteTrafficPipeline {
     }
 
     public static class PubsubMessageToCommonLog
-            extends PTransform<PCollection<PubsubMessage>, PCollectionTuple> {
+            extends PTransform<PCollection<String>, PCollectionTuple> {
 
         @Override
-        public PCollectionTuple expand(PCollection<PubsubMessage> input) {
+        public PCollectionTuple expand(PCollection<String> input) {
             return input
-                    .apply("PubsubMessageToString",
-                            ParDo.of(new DoFn<PubsubMessage, String>() {
-                                @ProcessElement
-                                public void processElement(@Element PubsubMessage message,
-                                                           OutputReceiver<String> r) {
-                                    LOG.info("Pubsub Message:" + message.toString());
-                                    r.output(message.toString());
-                                }
-                            }))
                     .apply(
                             "JsonToCommonLog",
                             ParDo.of(new DoFn<String, CommonLog>() {
@@ -236,7 +227,7 @@ public class StreamingMinuteTrafficPipeline {
         PCollectionTuple transformOut =
                 pipeline.apply(
                         "ReadPubSubMessages",
-                        PubsubIO.readMessagesWithAttributes().fromTopic(options.getInputTopic()))
+                        PubsubIO.readStrings().fromTopic(options.getInputTopic()))
                         .apply("ConvertMessageToCommonLog", new PubsubMessageToCommonLog());
 
         // Write parsed messages to BigQuery
@@ -266,7 +257,12 @@ public class StreamingMinuteTrafficPipeline {
                 .get(unparsedMessages)
                 .apply(
                         "StringToDeadletterStorage",
-                        TextIO.write().to(options.getDeadletterBucket())
+                        TextIO
+                                .write()
+                                .to(options.getDeadletterBucket())
+                                .withWindowedWrites()
+                        .withNumShards(10)
+
                 );
 
         return pipeline.run();
