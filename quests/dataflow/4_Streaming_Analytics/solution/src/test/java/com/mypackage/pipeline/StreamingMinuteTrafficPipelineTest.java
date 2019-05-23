@@ -25,10 +25,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Test cases for the {@link StreamingUserTrafficPipeline} class.
+ * Test cases for the {@link StreamingMinuteTrafficPipeline} class.
  */
 @RunWith(JUnit4.class)
-public class StreamingUserTrafficPipelineTest {
+public class StreamingMinuteTrafficPipelineTest {
 
   /**
    * Tests the pipeline.
@@ -45,7 +45,7 @@ public class StreamingUserTrafficPipelineTest {
     //
 
     // Here perform the action which is being tested.
-    StreamingUserTrafficPipeline.main(args);
+    StreamingMinuteTrafficPipeline.main(args);
 
     // Assert
     //
