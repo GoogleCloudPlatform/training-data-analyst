@@ -218,7 +218,7 @@ public class StreamingMinuteTrafficPipeline {
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
         options.setJobName("streaming-minute-traffic-pipeline-" + System.currentTimeMillis());
-        
+
         List<TableFieldSchema> fields = new ArrayList<>();
         fields.add(new TableFieldSchema().setName("second").setType("TIMESTAMP"));
         fields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
