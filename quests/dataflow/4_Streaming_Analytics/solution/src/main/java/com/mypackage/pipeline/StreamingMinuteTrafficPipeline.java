@@ -95,7 +95,7 @@ public class StreamingMinuteTrafficPipeline {
      */
     public interface Options extends PipelineOptions, StreamingOptions {
         @Description(
-                "The Cloud Pub/Sub topic to consume from. ")
+                "The Cloud Pub/Sub topic to consume from.")
         String getInputTopic();
 
         void setInputTopic(String inputTopic);
@@ -217,7 +217,7 @@ public class StreamingMinuteTrafficPipeline {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("streamining-minute-traffic-pipeline-" + System.currentTimeMillis());
+        options.setJobName("streaming-minute-traffic-pipeline-" + System.currentTimeMillis());
 
         List<TableFieldSchema> fields = new ArrayList<>();
         fields.add(new TableFieldSchema().setName("second").setType("TIMESTAMP"));
