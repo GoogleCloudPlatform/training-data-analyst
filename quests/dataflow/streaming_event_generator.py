@@ -8,11 +8,7 @@ from datetime import datetime, timezone
 import random
 from anytree.importer import DictImporter
 import json
-from multiprocessing import Process, Value, Lock
-from copy import deepcopy
-import os
-from signal import SIGKILL
-import sys
+from multiprocessing import Process
 
 parser = argparse.ArgumentParser(__file__, description="event_generator")
 parser.add_argument("--taxonomy", "-x", dest="taxonomy_fp",
@@ -38,7 +34,7 @@ parser.add_argument("--topic_name", "-t", dest="topic_name", type=str,
                     help="The name of the topic where the messages to be published", required=True)
 
 
-avg_time_between_events = .1
+avg_secs_between_events = 5
 args = parser.parse_args()
 taxonomy_fp = args.taxonomy_fp
 users_fp = args.users_fp
@@ -91,7 +87,7 @@ def read_users(users_fp):
             users.append(user)
     return users
 
-def sleep_then_publish_burst(burst, num_events_counter, publisher, topic_path):
+def sleep_then_publish_burst(burst, publisher, topic_path):
     """
 
     :param burst: a list of dictionaries, each representing an event
@@ -103,9 +99,9 @@ def sleep_then_publish_burst(burst, num_events_counter, publisher, topic_path):
     """
     sleep_secs = random.uniform(0, max_lag_millis)
     time.sleep(sleep_secs)
-    publish_burst(burst, num_events_counter, publisher, topic_path)
+    publish_burst(burst, publisher, topic_path)
 
-def publish_burst(burst, num_events_counter, publisher, topic_path):
+def publish_burst(burst, publisher, topic_path):
     """
     Publishes and prints each event
     :param burst: a list of dictionaries, each representing an event
@@ -119,9 +115,8 @@ def publish_burst(burst, num_events_counter, publisher, topic_path):
         json_str = json.dumps(event_dict)
         data = json_str.encode('utf-8')
         publisher.publish(topic_path, data=data)
-        num_events_counter.value += 1
 
-def create_user_process(user, root, num_events_counter):
+def create_user_process(user, root):
     """
     Code for continuously-running process representing a user publishing
     events to pubsub
@@ -138,7 +133,7 @@ def create_user_process(user, root, num_events_counter):
     user['offline_events'] = []
 
     while True:
-        time_between_events = random.uniform(0, avg_time_between_events * 2)
+        time_between_events = random.uniform(0, avg_secs_between_events * 2)
         time.sleep(time_between_events)
         prob = random.random()
         event = generate_event(user)
@@ -147,13 +142,12 @@ def create_user_process(user, root, num_events_counter):
                 user['is_online'] = False
                 user['offline_events'] = [event]
             else:
-                sleep_then_publish_burst([event], num_events_counter, publisher, topic_path)
+                sleep_then_publish_burst([event], publisher, topic_path)
         else:
             user['offline_events'].append(event)
             if prob < offline_to_online_probability:
                 user['is_online'] = True
-                sleep_then_publish_burst(user['offline_events'], num_events_counter,
-                                         publisher, topic_path)
+                sleep_then_publish_burst(user['offline_events'], publisher, topic_path)
                 user['offline_events'] = []
 
 def generate_event(user):
@@ -190,12 +184,10 @@ def get_next_page(user):
 
 
 if __name__ == '__main__':
-    num_events_counter = Value('i', 0)
     users = read_users(users_fp)
     root = extract_resources(taxonomy_fp)
-    processes = [Process(target=create_user_process, args=(deepcopy(user), deepcopy(root), num_events_counter))
+    processes = [Process(target=create_user_process, args=(deepcopy(user), deepcopy(root)))
                  for user in users]
     [process.start() for process in processes]
-    while num_events_counter.value <= max_num_events:
+    while True:
         time.sleep(1)
-    [os.kill(process.pid, SIGKILL) for process in processes]
