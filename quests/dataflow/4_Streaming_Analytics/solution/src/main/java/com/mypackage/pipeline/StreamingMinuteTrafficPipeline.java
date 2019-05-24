@@ -157,16 +157,17 @@ public class StreamingMinuteTrafficPipeline {
 
     public static class AggregatePageviews extends
             PTransform<PCollection<CommonLog>, PCollection<Long>> {
-        private final Options options;
-
-        AggregatePageviews(Options options) {
-            this.options = options;
-        }
-
 
         @Override
         public PCollection<Long> expand(PCollection<CommonLog> input) {
+            Options options = (Options) input.getPipeline().getOptions();
             return input
+                    .apply("AddEventTimestamp", WithTimestamps.of(
+                            new SerializableFunction<CommonLog, org.joda.time.Instant>() {
+                                @Override
+                                public org.joda.time.Instant apply(CommonLog input) {
+                                    return org.joda.time.Instant.parse(input.timestamp);
+                                }}))
                     .apply("WindowByMinute",
                             Window.<CommonLog>into(FixedWindows
                                     .of(Duration.standardMinutes(options.getWindowDuration())))
@@ -190,6 +191,7 @@ public class StreamingMinuteTrafficPipeline {
      * @param args The command-line args passed by the executor.
      */
     public static void main(String[] args) {
+        PipelineOptionsFactory.register(Options.class);
         Options options = PipelineOptionsFactory.fromArgs(args).as(Options.class);
         options.setStreaming(true);
         run(options);
@@ -233,7 +235,7 @@ public class StreamingMinuteTrafficPipeline {
         // Write parsed messages to BigQuery
         transformOut
                 .get(parsedMessages)
-                .apply("AggregatePageviews", new AggregatePageviews(options))
+                .apply("AggregatePageviews", new AggregatePageviews())
                 .apply("ConvertToTableRow", ParDo.of(new DoFn<Long, TableRow>() {
                     @ProcessElement
                     public void processElement(@Element Long l, OutputReceiver<TableRow> r, IntervalWindow window) {
@@ -255,15 +257,16 @@ public class StreamingMinuteTrafficPipeline {
         // Write unparsed messages to Cloud Storage
         transformOut
                 .get(unparsedMessages)
+                .apply("WindowByMinute",
+                        Window.<String>into(FixedWindows
+                                .of(Duration.standardMinutes(1))))
                 .apply(
                         "StringToDeadletterStorage",
                         TextIO
                                 .write()
                                 .to(options.getDeadletterBucket())
                                 .withWindowedWrites()
-                        .withNumShards(10)
-
-                );
+                        .withNumShards(10));
 
         return pipeline.run();
     }
