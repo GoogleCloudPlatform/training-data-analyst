@@ -1,4 +1,4 @@
-# Advanced Dataflow Quest Lab 4
+# Streaming Analytics
 
 ## Pipeline
 
