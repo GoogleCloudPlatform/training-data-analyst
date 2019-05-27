@@ -20,6 +20,7 @@ import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.TextIO;
@@ -144,14 +145,12 @@ public class StreamingMinuteTrafficPipeline {
                                              try {
                                                  CommonLog commonLog = gson.fromJson(json, CommonLog.class);
                                                  context.output(parsedMessages, commonLog);
-                                             } catch (Exception e) {
+                                             } catch (JsonSyntaxException e) {
                                                  context.output(unparsedMessages, json);
                                              }
                                          }
-                                     }
-                            )
-                                    .withOutputTags(parsedMessages, TupleTagList.of(unparsedMessages))
-                    );
+                                     })
+                            .withOutputTags(parsedMessages, TupleTagList.of(unparsedMessages)));
         }
     }
 
@@ -162,8 +161,6 @@ public class StreamingMinuteTrafficPipeline {
         public PCollection<Long> expand(PCollection<CommonLog> input) {
             Options options = (Options) input.getPipeline().getOptions();
             return input
-                    .apply("AddEventTimestamp", WithTimestamps.of((CommonLog commonLog) ->
-                            org.joda.time.Instant.parse(commonLog.timestamp)))
                     .apply("WindowByMinute",
                             Window.<CommonLog>into(FixedWindows
                                     .of(Duration.standardMinutes(options.getWindowDuration())))
@@ -182,10 +179,11 @@ public class StreamingMinuteTrafficPipeline {
     static class LongToTableRowFn extends DoFn<Long, TableRow> {
 
         @ProcessElement
-        public void processElement(@Element Long l, OutputReceiver<TableRow> r, IntervalWindow window)  throws Exception {
+        public void processElement(@Element Long l,
+                                   OutputReceiver<TableRow> r, IntervalWindow window)  throws Exception {
             Instant i = Instant.ofEpochMilli(window.end().getMillis());
             TableRow tableRow = new TableRow();
-            tableRow.set("second", i.toString());
+            tableRow.set("window-end", i.toString());
             tableRow.set("pageviews", l.intValue());
             r.output(tableRow);
         }
@@ -222,7 +220,7 @@ public class StreamingMinuteTrafficPipeline {
         options.setJobName("streaming-minute-traffic-pipeline-" + System.currentTimeMillis());
 
         List<TableFieldSchema> fields = new ArrayList<>();
-        fields.add(new TableFieldSchema().setName("second").setType("TIMESTAMP"));
+        fields.add(new TableFieldSchema().setName("window-end").setType("TIMESTAMP"));
         fields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
         TableSchema schema = new TableSchema().setFields(fields);
 
@@ -238,13 +236,19 @@ public class StreamingMinuteTrafficPipeline {
         PCollectionTuple transformOut =
                 pipeline.apply(
                         "ReadPubSubMessages",
-                        PubsubIO.readStrings().fromTopic(options.getInputTopic()))
+                        PubsubIO.readStrings()
+                                // Retrieve timestamp information from Pubsub Message attributes
+                                .withTimestampAttribute("timestamp")
+                                .fromTopic(options.getInputTopic()))
                         .apply("ConvertMessageToCommonLog", new PubsubMessageToCommonLog());
 
         // Write parsed messages to BigQuery
         transformOut
+                // Retrieve parsed messages
                 .get(parsedMessages)
+                // Aggregate into one count per window
                 .apply("AggregatePageviews", new AggregatePageviews())
+                // Convert this count into a TableRow
                 .apply("LongToTableRow", ParDo.of(new LongToTableRowFn()))
                 .apply(
                         "WriteSuccessfulRecords",
@@ -256,6 +260,7 @@ public class StreamingMinuteTrafficPipeline {
 
         // Write unparsed messages to Cloud Storage
         transformOut
+                // Retrieve unparsed messages
                 .get(unparsedMessages)
                 .apply("WindowByMinute",
                         Window.<String>into(FixedWindows
