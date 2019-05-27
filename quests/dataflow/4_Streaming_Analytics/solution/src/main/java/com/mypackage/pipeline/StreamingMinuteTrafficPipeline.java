@@ -162,22 +162,16 @@ public class StreamingMinuteTrafficPipeline {
         public PCollection<Long> expand(PCollection<CommonLog> input) {
             Options options = (Options) input.getPipeline().getOptions();
             return input
-                    .apply("AddEventTimestamp", WithTimestamps.of(
-                            new SerializableFunction<CommonLog, org.joda.time.Instant>() {
-                                @Override
-                                public org.joda.time.Instant apply(CommonLog input) {
-                                    return org.joda.time.Instant.parse(input.timestamp);
-                                }}))
+                    .apply("AddEventTimestamp", WithTimestamps.of((CommonLog commonLog) ->
+                            org.joda.time.Instant.parse(commonLog.timestamp)))
                     .apply("WindowByMinute",
                             Window.<CommonLog>into(FixedWindows
                                     .of(Duration.standardMinutes(options.getWindowDuration())))
                                     .withAllowedLateness(Duration.standardDays(options.getAllowedLateness()))
                                     .triggering(
                                             AfterWatermark.pastEndOfWindow()
-                                                    .withEarlyFirings(AfterProcessingTime.pastFirstElementInPane()
-                                                            .plusDelayOf(Duration.standardMinutes(1)))
-                                                    .withLateFirings(AfterPane.elementCountAtLeast(1))
-                                    ).accumulatingFiredPanes())
+                                                    .withLateFirings(AfterPane.elementCountAtLeast(1)))
+                                    .accumulatingFiredPanes())
                     .apply("CountTraffic", Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults());
         }
     }
@@ -261,12 +255,12 @@ public class StreamingMinuteTrafficPipeline {
                         Window.<String>into(FixedWindows
                                 .of(Duration.standardMinutes(1))))
                 .apply(
-                        "StringToDeadletterStorage",
+                        "WriteDeadletterStorage",
                         TextIO
                                 .write()
                                 .to(options.getDeadletterBucket())
                                 .withWindowedWrites()
-                        .withNumShards(10));
+                                .withNumShards(10));
 
         return pipeline.run();
     }
