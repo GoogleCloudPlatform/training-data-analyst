@@ -186,7 +186,7 @@ def get_next_page(user):
 if __name__ == '__main__':
     users = read_users(users_fp)
     root = extract_resources(taxonomy_fp)
-    processes = [Process(target=create_user_process, args=(deepcopy(user), deepcopy(root)))
+    processes = [Process(target=create_user_process, args=(user, root))
                  for user in users]
     [process.start() for process in processes]
     while True:
