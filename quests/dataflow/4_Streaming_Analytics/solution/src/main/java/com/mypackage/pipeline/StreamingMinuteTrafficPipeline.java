@@ -24,8 +24,8 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.io.gcp.bigquery.WriteResult;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
-import org.apache.beam.sdk.io.gcp.pubsub.PubsubMessage;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -177,6 +177,21 @@ public class StreamingMinuteTrafficPipeline {
     }
 
     /**
+     * A DoFn which accepts a JSON string outputs a instance of TableRow
+     */
+    static class LongToTableRowFn extends DoFn<Long, TableRow> {
+
+        @ProcessElement
+        public void processElement(@Element Long l, OutputReceiver<TableRow> r, IntervalWindow window)  throws Exception {
+            Instant i = Instant.ofEpochMilli(window.end().getMillis());
+            TableRow tableRow = new TableRow();
+            tableRow.set("second", i.toString());
+            tableRow.set("pageviews", l.intValue());
+            r.output(tableRow);
+        }
+    }
+
+    /**
      * The main entry-point for pipeline execution. This method will start the pipeline but will not
      * wait for it's execution to finish. If blocking execution is required, use the {@link
      * StreamingMinuteTrafficPipeline#run(Options)} method to start the pipeline and invoke
@@ -230,16 +245,7 @@ public class StreamingMinuteTrafficPipeline {
         transformOut
                 .get(parsedMessages)
                 .apply("AggregatePageviews", new AggregatePageviews())
-                .apply("ConvertToTableRow", ParDo.of(new DoFn<Long, TableRow>() {
-                    @ProcessElement
-                    public void processElement(@Element Long l, OutputReceiver<TableRow> r, IntervalWindow window) {
-                        Instant i = Instant.ofEpochMilli(window.end().getMillis());
-                        TableRow tableRow = new TableRow();
-                        tableRow.set("second", i.toString());
-                        tableRow.set("pageviews", l.intValue());
-                        r.output(tableRow);
-                    }
-                }))
+                .apply("LongToTableRow", ParDo.of(new LongToTableRowFn()))
                 .apply(
                         "WriteSuccessfulRecords",
                         BigQueryIO.writeTableRows()
