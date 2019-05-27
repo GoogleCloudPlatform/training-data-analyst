@@ -114,7 +114,7 @@ def publish_burst(burst, publisher, topic_path):
     for event_dict in burst:
         json_str = json.dumps(event_dict)
         data = json_str.encode('utf-8')
-        publisher.publish(topic_path, data=data)
+        publisher.publish(topic_path, data=data, timestamp=event_dict['timestamp'])
 
 def create_user_process(user, root):
     """
