@@ -262,9 +262,11 @@ public class StreamingMinuteTrafficPipeline {
         transformOut
                 // Retrieve unparsed messages
                 .get(unparsedMessages)
-                .apply("WindowByMinute",
-                        Window.<String>into(FixedWindows
-                                .of(Duration.standardMinutes(1))))
+                .apply("FireEvery10s",
+                        Window.<String>configure()
+                                .triggering(AfterProcessingTime.pastFirstElementInPane()
+                                        .plusDelayOf(Duration.standardSeconds(10)))
+                                .discardingFiredPanes())
                 .apply(
                         "WriteDeadletterStorage",
                         TextIO
