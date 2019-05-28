@@ -20,13 +20,11 @@ import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
-import org.apache.beam.sdk.io.gcp.bigquery.WriteResult;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
+import org.apache.beam.sdk.io.gcp.pubsub.PubsubMessage;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -34,12 +32,11 @@ import org.apache.beam.sdk.options.StreamingOptions;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.windowing.*;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionTuple;
-import org.apache.beam.sdk.values.TupleTagList;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.beam.sdk.values.TupleTag;
+
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -106,59 +103,40 @@ public class StreamingMinuteTrafficPipeline {
 
         void setWindowDuration(Integer windowDuration);
 
-        @Description("Window allowed lateness, in days")
-        Integer getAllowedLateness();
-
-        void setAllowedLateness(Integer allowedLateness);
-
         @Description(
-                "The Cloud BigQuery table name to write to. "
+                "The Cloud BigQuery table name to write raw data to. "
                         + "The name should be in the format of "
                         + "<project-id>:<dataset>.<table-name>."
         )
-        String getOutputTableName();
-
-        void setOutputTableName(String outputTableName);
+        String getRawOutputTableName();
+        void setRawOutputTableName(String rawOutputTableName);
 
         @Description(
-                "The Cloud Storage bucket used for writing "
-                        + "unparseable Pubsub Messages."
+                "The Cloud BigQuery table name to write aggregated data to. "
+                        + "The name should be in the format of "
+                        + "<project-id>:<dataset>.<table-name>."
         )
-        String getDeadletterBucket();
+        String getAggregateOutputTableName();
+        void setAggregateOutputTableName(String aggregateOutputTableName);
 
-        void setDeadletterBucket(String deadletterBucket);
-    }
-
-    // TODO: create a composite transform that reads strings and emits CommonLogs
-
-    public static class AggregatePageviews extends
-            PTransform<PCollection<CommonLog>, PCollection<Long>> {
-
-        @Override
-        public PCollection<Long> expand(PCollection<CommonLog> input) {
-            Options options = (Options) input.getPipeline().getOptions();
-            return input;
-                    // TODO: add windowing
-                    // TODO: uncomment the aggregation below
-                    //.apply("CountTraffic", Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults());
-        }
     }
 
     /**
-     * A DoFn which accepts a JSON string outputs a instance of TableRow
+     * A DoFn which accepts a JSON string and emits a CommonLog
      */
-    static class LongToTableRowFn extends DoFn<Long, TableRow> {
+    public static class JsonToCommonLog
+            extends DoFn<String, CommonLog> {
 
         @ProcessElement
-        public void processElement(@Element Long l,
-                                   OutputReceiver<TableRow> r, IntervalWindow window)  throws Exception {
-            Instant i = Instant.ofEpochMilli(window.end().getMillis());
-            TableRow tableRow = new TableRow();
-            tableRow.set("window-end", i.toString());
-            tableRow.set("pageviews", l.intValue());
-            r.output(tableRow);
+        public void processElement(@Element String json,
+                                   OutputReceiver<CommonLog> receiver) {
+            // Use Expose() annotation, so that Gson does not expect processing_timestamp field
+            Gson gson = new Gson();
+            CommonLog commonLog = gson.fromJson(json, CommonLog.class);
+            receiver.output(commonLog);
         }
     }
+
 
     /**
      * The main entry-point for pipeline execution. This method will start the pipeline but will not
@@ -190,20 +168,18 @@ public class StreamingMinuteTrafficPipeline {
         Pipeline pipeline = Pipeline.create(options);
         options.setJobName("streaming-minute-traffic-pipeline-" + System.currentTimeMillis());
 
-        List<TableFieldSchema> fields = new ArrayList<>();
-        fields.add(new TableFieldSchema().setName("window-end").setType("TIMESTAMP"));
-        fields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
-        TableSchema schema = new TableSchema().setFields(fields);
+        List<TableFieldSchema> rawFields = new ArrayList<>();
+        rawFields.add(new TableFieldSchema().setName("user_id").setType("STRING"));
+        rawFields.add(new TableFieldSchema().setName("event_timestamp").setType("TIMESTAMP"));
+        rawFields.add(new TableFieldSchema().setName("processing_timestamp").setType("TIMESTAMP"));
+        TableSchema rawSchema = new TableSchema().setFields(rawFields);
 
-        /*
-         * Steps:
-         *  1) Read something
-         *  2) Transform something
-         *  3) Write something
-         */
-        // Pipeline code goes here
+        List<TableFieldSchema> aggregateFields = new ArrayList<>();
+        aggregateFields.add(new TableFieldSchema().setName("window_end").setType("TIMESTAMP"));
+        aggregateFields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
+        TableSchema aggregateSchema = new TableSchema().setFields(aggregateFields);
+
         LOG.info("Building pipeline...");
-
 
         return pipeline.run();
     }

@@ -21,4 +21,6 @@ public class CommonLog implements Serializable {
     public String user_agent;
     public int http_response;
     public int num_bytes;
+
+
 }
