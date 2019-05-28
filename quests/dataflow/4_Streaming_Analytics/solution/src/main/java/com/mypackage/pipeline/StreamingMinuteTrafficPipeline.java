@@ -20,7 +20,6 @@ import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
@@ -125,15 +124,14 @@ public class StreamingMinuteTrafficPipeline {
     /**
      * A DoFn which accepts a JSON string and emits a CommonLog
      */
-    public static class PubsubMessageToCommonLog
-            extends DoFn<PubsubMessage, CommonLog> {
+    public static class JsonToCommonLog
+            extends DoFn<String, CommonLog> {
 
         @ProcessElement
-        public void processElement(@Element PubsubMessage message,
+        public void processElement(@Element String json,
                                    OutputReceiver<CommonLog> receiver) {
             // Use Expose() annotation, so that Gson does not expect processing_timestamp field
             Gson gson = new Gson();
-            String json = new String(message.getPayload());
             CommonLog commonLog = gson.fromJson(json, CommonLog.class);
             receiver.output(commonLog);
         }
@@ -204,11 +202,11 @@ public class StreamingMinuteTrafficPipeline {
         PCollection<CommonLog> commonLogs =
                 pipeline.apply(
                         "ReadPubSubMessages",
-                        PubsubIO.readMessagesWithAttributes()
+                        PubsubIO.readStrings()
                                 // Retrieve timestamp information from Pubsub Message attributes
                                 .withTimestampAttribute("timestamp")
                                 .fromTopic(options.getInputTopic()))
-                        .apply("ConvertPubsubMessageToCommonLog", ParDo.of(new PubsubMessageToCommonLog()));
+                        .apply("ConvertPubsubMessageToCommonLog", ParDo.of(new JsonToCommonLog()));
 
         // Convert CommonLogs to format for raw table, dropping everything except for timestamps
         // Then write to BigQuery
