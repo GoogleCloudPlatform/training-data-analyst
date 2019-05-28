@@ -123,7 +123,7 @@ public class StreamingMinuteTrafficPipeline {
     }
 
     /**
-     * A DoFn which accepts a JSON string
+     * A DoFn which accepts a JSON string and emits a CommonLog
      */
     public static class PubsubMessageToCommonLog
             extends DoFn<PubsubMessage, CommonLog> {
@@ -132,11 +132,9 @@ public class StreamingMinuteTrafficPipeline {
         public void processElement(@Element PubsubMessage message,
                                    OutputReceiver<CommonLog> receiver) {
             // Use Expose() annotation, so that Gson does not expect processing_timestamp field
-            Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+            Gson gson = new Gson();
             String json = new String(message.getPayload());
             CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-            // Set the processing_timestamp field
-            commonLog.setProcessing_timestamp(message.getAttribute("processing_timestamp"));
             receiver.output(commonLog);
         }
     }
@@ -152,7 +150,7 @@ public class StreamingMinuteTrafficPipeline {
                                    OutputReceiver<TableRow> r, IntervalWindow window)  throws Exception {
             Instant i = Instant.ofEpochMilli(window.end().getMillis());
             TableRow tableRow = new TableRow();
-            tableRow.set("window-end", i.toString());
+            tableRow.set("window_end", i.toString());
             tableRow.set("pageviews", l.intValue());
             r.output(tableRow);
         }
@@ -189,12 +187,13 @@ public class StreamingMinuteTrafficPipeline {
         options.setJobName("streaming-minute-traffic-pipeline-" + System.currentTimeMillis());
 
         List<TableFieldSchema> rawFields = new ArrayList<>();
+        rawFields.add(new TableFieldSchema().setName("user_id").setType("STRING"));
         rawFields.add(new TableFieldSchema().setName("event_timestamp").setType("TIMESTAMP"));
         rawFields.add(new TableFieldSchema().setName("processing_timestamp").setType("TIMESTAMP"));
         TableSchema rawSchema = new TableSchema().setFields(rawFields);
 
         List<TableFieldSchema> aggregateFields = new ArrayList<>();
-        aggregateFields.add(new TableFieldSchema().setName("window-end").setType("TIMESTAMP"));
+        aggregateFields.add(new TableFieldSchema().setName("window_end").setType("TIMESTAMP"));
         aggregateFields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
         TableSchema aggregateSchema = new TableSchema().setFields(aggregateFields);
 
@@ -220,8 +219,9 @@ public class StreamingMinuteTrafficPipeline {
                             public void processElement(@Element CommonLog commonLog,
                                                        OutputReceiver<TableRow> r) {
                                 TableRow tableRow = new TableRow();
-                                tableRow.set("event_timestamp", commonLog.event_timestamp);
-                                tableRow.set("processing_timestamp", commonLog.processing_timestamp);
+                                tableRow.set("user_id", commonLog.user_id);
+                                tableRow.set("event_timestamp", commonLog.timestamp);
+                                tableRow.set("processing_timestamp", Instant.now().toString());
                                 r.output(tableRow);
                             }
                         }))
@@ -242,18 +242,7 @@ public class StreamingMinuteTrafficPipeline {
                 .apply("CountEventsPerWindow",
                         Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults())
                 .apply("ConvertLongToTableRow",
-                        ParDo.of(new DoFn<Long, TableRow>() {
-                            @ProcessElement
-                            public void processElement(@Element Long l,
-                                                       OutputReceiver<TableRow> r,
-                                                       IntervalWindow window) {
-                                Instant i = Instant.ofEpochMilli(window.end().getMillis());
-                                TableRow tableRow = new TableRow();
-                                tableRow.set("window-end", i.toString());
-                                tableRow.set("pageviews", l.intValue());
-                                r.output(tableRow);
-                            }
-                        }))
+                        ParDo.of(new LongToTableRowFn()))
                 .apply("WriteAggregatedDataToBigQuery",
                         BigQueryIO
                                 .writeTableRows()
