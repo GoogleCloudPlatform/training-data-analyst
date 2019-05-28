@@ -20,13 +20,12 @@ import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.GsonBuilder;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
-import org.apache.beam.sdk.io.gcp.bigquery.WriteResult;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
+import org.apache.beam.sdk.io.gcp.pubsub.PubsubMessage;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -34,12 +33,11 @@ import org.apache.beam.sdk.options.StreamingOptions;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.windowing.*;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionTuple;
-import org.apache.beam.sdk.values.TupleTagList;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.beam.sdk.values.TupleTag;
+
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -106,72 +104,43 @@ public class StreamingMinuteTrafficPipeline {
 
         void setWindowDuration(Integer windowDuration);
 
-        @Description("Window allowed lateness, in days")
-        Integer getAllowedLateness();
-
-        void setAllowedLateness(Integer allowedLateness);
-
         @Description(
-                "The Cloud BigQuery table name to write to. "
+                "The Cloud BigQuery table name to write raw data to. "
                         + "The name should be in the format of "
                         + "<project-id>:<dataset>.<table-name>."
         )
-        String getOutputTableName();
-
-        void setOutputTableName(String outputTableName);
+        String getRawOutputTableName();
+        void setRawOutputTableName(String rawOutputTableName);
 
         @Description(
-                "The Cloud Storage bucket used for writing "
-                        + "unparseable Pubsub Messages."
+                "The Cloud BigQuery table name to write aggregated data to. "
+                        + "The name should be in the format of "
+                        + "<project-id>:<dataset>.<table-name>."
         )
-        String getDeadletterBucket();
+        String getAggregateOutputTableName();
+        void setAggregateOutputTableName(String aggregateOutputTableName);
 
-        void setDeadletterBucket(String deadletterBucket);
     }
 
+    /**
+     * A DoFn which accepts a JSON string
+     */
     public static class PubsubMessageToCommonLog
-            extends PTransform<PCollection<String>, PCollectionTuple> {
+            extends DoFn<PubsubMessage, CommonLog> {
 
-        @Override
-        public PCollectionTuple expand(PCollection<String> input) {
-            return input
-                    .apply(
-                            "JsonToCommonLog",
-                            ParDo.of(new DoFn<String, CommonLog>() {
-                                         @ProcessElement
-                                         public void processElement(ProcessContext context) {
-                                             String json = context.element();
-                                             Gson gson = new Gson();
-                                             try {
-                                                 CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-                                                 context.output(parsedMessages, commonLog);
-                                             } catch (JsonSyntaxException e) {
-                                                 context.output(unparsedMessages, json);
-                                             }
-                                         }
-                                     })
-                            .withOutputTags(parsedMessages, TupleTagList.of(unparsedMessages)));
+        @ProcessElement
+        public void processElement(@Element PubsubMessage message,
+                                   OutputReceiver<CommonLog> receiver) {
+            // Use Expose() annotation, so that Gson does not expect processing_timestamp field
+            Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+            String json = new String(message.getPayload());
+            CommonLog commonLog = gson.fromJson(json, CommonLog.class);
+            // Set the processing_timestamp field
+            commonLog.setProcessing_timestamp(message.getAttribute("processing_timestamp"));
+            receiver.output(commonLog);
         }
     }
 
-    public static class AggregatePageviews extends
-            PTransform<PCollection<CommonLog>, PCollection<Long>> {
-
-        @Override
-        public PCollection<Long> expand(PCollection<CommonLog> input) {
-            Options options = (Options) input.getPipeline().getOptions();
-            return input
-                    .apply("WindowByMinute",
-                            Window.<CommonLog>into(FixedWindows
-                                    .of(Duration.standardMinutes(options.getWindowDuration())))
-                                    .withAllowedLateness(Duration.standardDays(options.getAllowedLateness()))
-                                    .triggering(
-                                            AfterWatermark.pastEndOfWindow()
-                                                    .withLateFirings(AfterPane.elementCountAtLeast(1)))
-                                    .accumulatingFiredPanes())
-                    .apply("CountTraffic", Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults());
-        }
-    }
 
     /**
      * A DoFn which accepts a JSON string outputs a instance of TableRow
@@ -219,61 +188,79 @@ public class StreamingMinuteTrafficPipeline {
         Pipeline pipeline = Pipeline.create(options);
         options.setJobName("streaming-minute-traffic-pipeline-" + System.currentTimeMillis());
 
-        List<TableFieldSchema> fields = new ArrayList<>();
-        fields.add(new TableFieldSchema().setName("window-end").setType("TIMESTAMP"));
-        fields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
-        TableSchema schema = new TableSchema().setFields(fields);
+        List<TableFieldSchema> rawFields = new ArrayList<>();
+        rawFields.add(new TableFieldSchema().setName("event_timestamp").setType("TIMESTAMP"));
+        rawFields.add(new TableFieldSchema().setName("processing_timestamp").setType("TIMESTAMP"));
+        TableSchema rawSchema = new TableSchema().setFields(rawFields);
 
-        /*
-         * Steps:
-         *  1) Read something
-         *  2) Transform something
-         *  3) Write something
-         */
-        // Pipeline code goes here
+        List<TableFieldSchema> aggregateFields = new ArrayList<>();
+        aggregateFields.add(new TableFieldSchema().setName("window-end").setType("TIMESTAMP"));
+        aggregateFields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
+        TableSchema aggregateSchema = new TableSchema().setFields(aggregateFields);
+
         LOG.info("Building pipeline...");
 
-        PCollectionTuple transformOut =
+        // Read PubsubMessages, parse them into CommonLogs
+        // Add in a field representing processing time
+        PCollection<CommonLog> commonLogs =
                 pipeline.apply(
                         "ReadPubSubMessages",
-                        PubsubIO.readStrings()
+                        PubsubIO.readMessagesWithAttributes()
                                 // Retrieve timestamp information from Pubsub Message attributes
                                 .withTimestampAttribute("timestamp")
                                 .fromTopic(options.getInputTopic()))
-                        .apply("ConvertMessageToCommonLog", new PubsubMessageToCommonLog());
+                        .apply("ConvertPubsubMessageToCommonLog", ParDo.of(new PubsubMessageToCommonLog()));
 
-        // Write parsed messages to BigQuery
-        transformOut
-                // Retrieve parsed messages
-                .get(parsedMessages)
-                // Aggregate into one count per window
-                .apply("AggregatePageviews", new AggregatePageviews())
-                // Convert this count into a TableRow
-                .apply("LongToTableRow", ParDo.of(new LongToTableRowFn()))
-                .apply(
-                        "WriteSuccessfulRecords",
-                        BigQueryIO.writeTableRows()
-                                .to(options.getOutputTableName())
-                                .withSchema(schema)
+        // Convert CommonLogs to format for raw table, dropping everything except for timestamps
+        // Then write to BigQuery
+        commonLogs
+                .apply("CommonLogToRawTableRow",
+                        ParDo.of(new DoFn<CommonLog, TableRow>() {
+                            @ProcessElement
+                            public void processElement(@Element CommonLog commonLog,
+                                                       OutputReceiver<TableRow> r) {
+                                TableRow tableRow = new TableRow();
+                                tableRow.set("event_timestamp", commonLog.event_timestamp);
+                                tableRow.set("processing_timestamp", commonLog.processing_timestamp);
+                                r.output(tableRow);
+                            }
+                        }))
+                .apply("WriteRawDataToBigQuery",
+                        BigQueryIO
+                                .writeTableRows()
+                                .to(options.getRawOutputTableName())
+                                .withSchema(rawSchema)
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
-
-        // Write unparsed messages to Cloud Storage
-        transformOut
-                // Retrieve unparsed messages
-                .get(unparsedMessages)
-                .apply("FireEvery10s",
-                        Window.<String>configure()
-                                .triggering(AfterProcessingTime.pastFirstElementInPane()
-                                        .plusDelayOf(Duration.standardSeconds(10)))
-                                .discardingFiredPanes())
-                .apply(
-                        "WriteDeadletterStorage",
-                        TextIO
-                                .write()
-                                .to(options.getDeadletterBucket())
-                                .withWindowedWrites()
-                                .withNumShards(10));
+        // Window events, then count the number of events within each window
+        // Before finally converting to TableRow and writing to BigQuery
+        commonLogs
+                .apply("WindowCommonLogs",
+                        Window.into(
+                                FixedWindows.of(
+                                        Duration.standardMinutes(options.getWindowDuration()))))
+                .apply("CountEventsPerWindow",
+                        Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults())
+                .apply("ConvertLongToTableRow",
+                        ParDo.of(new DoFn<Long, TableRow>() {
+                            @ProcessElement
+                            public void processElement(@Element Long l,
+                                                       OutputReceiver<TableRow> r,
+                                                       IntervalWindow window) {
+                                Instant i = Instant.ofEpochMilli(window.end().getMillis());
+                                TableRow tableRow = new TableRow();
+                                tableRow.set("window-end", i.toString());
+                                tableRow.set("pageviews", l.intValue());
+                                r.output(tableRow);
+                            }
+                        }))
+                .apply("WriteAggregatedDataToBigQuery",
+                        BigQueryIO
+                                .writeTableRows()
+                                .to(options.getAggregateOutputTableName())
+                                .withSchema(aggregateSchema)
+                                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
+                                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
         return pipeline.run();
     }
