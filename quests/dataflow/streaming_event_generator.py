@@ -17,10 +17,6 @@ parser.add_argument("--taxonomy", "-x", dest="taxonomy_fp",
 parser.add_argument("--users_fp", "-u", dest="users_fp",
                     help="A .csv file of users",
                     default="users.csv")
-parser.add_argument("--num_e", "-e", dest="max_num_events", type=int,
-                    help="The maximum number of events to generate before " \
-                    " stopping. Defaults to None, which means run" \
-                    " indefinitely", default=0)
 parser.add_argument("--off_to_on", "-off", dest="off_to_on_prob", type=float,
                     help="A float representing the probability that a user who is offline will come online",
                     default=.25)
@@ -28,7 +24,7 @@ parser.add_argument("--on_to_off", "-on", dest="on_to_off_prob", type=float,
                     help="A float representing the probability that a user who is online will go offline",
                     default=.1)
 parser.add_argument("--max_lag_millis", '-l', dest="max_lag_millis", type=int,
-                    help="An integer representing the maximum amount of lag in millisecond", default=0)
+                    help="An integer representing the maximum amount of lag in millisecond", default=250)
 parser.add_argument("--project_id", "-p", type=str, dest="project_id", help="A GCP Project ID", required=True)
 parser.add_argument("--topic_name", "-t", dest="topic_name", type=str,
                     help="The name of the topic where the messages to be published", required=True)
@@ -38,7 +34,6 @@ avg_secs_between_events = 5
 args = parser.parse_args()
 taxonomy_fp = args.taxonomy_fp
 users_fp = args.users_fp
-max_num_events = args.max_num_events
 online_to_offline_probability = args.on_to_off_prob
 offline_to_online_probability = args.off_to_on_prob
 max_lag_millis = args.max_lag_millis
@@ -97,7 +92,7 @@ def sleep_then_publish_burst(burst, publisher, topic_path):
     :param topic_path: a topic path for PubSub
     :return:
     """
-    sleep_secs = random.uniform(0, max_lag_millis)
+    sleep_secs = random.uniform(0, max_lag_millis/1000)
     time.sleep(sleep_secs)
     publish_burst(burst, publisher, topic_path)
 
