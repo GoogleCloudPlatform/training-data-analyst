@@ -71,7 +71,7 @@ def input_fn(indf):
   # features, label
   label = df['has_ltg']
   del df['has_ltg']
-  features = pd.get_dummies(df)
+  features = df # pd.get_dummies(df)
   return features, label
 
 
