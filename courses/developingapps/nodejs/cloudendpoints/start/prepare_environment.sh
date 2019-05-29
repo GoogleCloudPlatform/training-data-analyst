@@ -40,10 +40,6 @@ gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CR
 echo "Enabling Cloud Functions API"
 gcloud beta services enable cloudfunctions.googleapis.com
 echo "Creating Cloud Function"
-<<<<<<< HEAD
-gcloud beta functions deploy process-feedback --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe --runtime nodejs6
-=======
 gcloud functions deploy process-feedback --runtime nodejs8 --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
->>>>>>> 9812985ebb17cf1db45d0d92a2bdfd22cab215d7
 
 echo "Project ID: $DEVSHELL_PROJECT_ID"
