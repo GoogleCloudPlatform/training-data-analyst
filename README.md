@@ -13,30 +13,32 @@ Labs and demos for Google Cloud Platform courses (http://cloud.google.com/traini
 [![Open in Cloud Shell](http://gstatic.com/cloudssh/images/open-btn.png)](https://console.cloud.google.com/cloudshell/open/?git_repo=https://github.com/GoogleCloudPlatform/training-data-analyst.git)
 
 ## Courses
-
 Code for the following courses is included in this repo:
 
 ### Google Cloud Platform Big Data and Machine Learning Fundamentals
-
+#### Course
 https://cloud.google.com/training/courses/data-ml-fundamentals
 
-[GCP Big Data & Machine Learning Fundamentals](CPB100)
-
+#### Code
+1. [GCP Big Data & Machine Learning Fundamentals](CPB100)
 
 ### Data Engineering on Google Cloud Platform
-  
+#### Course
 https://cloud.google.com/training/courses/data-engineering
 
-1. [Serverless Data Analysis](courses/data_analysis)
-2. [Leveraging unstructured data](courses/unstructured)
+#### Code
+1. [Leveraging unstructured data](courses/unstructured)
+2. [Serverless Data Analysis](courses/data_analysis)
 3. [Serverless Machine Learning](courses/machine_learning)
 4. [Resilient streaming systems](courses/streaming)
 
+
 ### Machine Learning on Google Cloud Platform (& Advanced ML on GCP)
+#### Courses
+1. https://www.coursera.org/learn/google-machine-learning
+2. https://www.coursera.org/specializations/advanced-machine-learning-tensorflow-gcp
 
-https://www.coursera.org/learn/google-machine-learning
-https://www.coursera.org/specializations/advanced-machine-learning-tensorflow-gcp
-
+#### Codes
 1. [How Google Does ML](courses/machine_learning/deepdive/01_googleml)
 2. [Launching into ML](courses/machine_learning/deepdive/02_generalization)
 3. [Introduction to TensorFlow](courses/machine_learning/deepdive/03_tensorflow)
