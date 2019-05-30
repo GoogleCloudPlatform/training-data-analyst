@@ -47,13 +47,12 @@ def write_csvs(users):
     :param users:
     :return:
     """
-    with open("users.csv", 'w') as event_out, open("users_bq.csv", 'w') as bq_out:
+    with open("users.csv", 'w') as event_out, open("users_bq.txt", 'w') as bq_out:
             cols = list(users[0].keys())
             cols.sort()
             bq_cols = cols.copy()
             [bq_cols.remove(s) for s in sensitive_fields]
             event_out.write(",".join(cols) + '\n')
-            bq_out.write(",".join(bq_cols) + '\n')
             for user in users:
                 event_vals = [str(user[key]) for key in cols]
                 event_out.write(",".join(event_vals) + '\n')
