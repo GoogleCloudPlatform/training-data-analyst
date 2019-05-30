@@ -1,0 +1,12 @@
+- column: age_bracket
+    description: A string representing an age range
+    mode: REQUIRED
+    type: STRING
+- column: id
+    description: A string representing a user's ID
+    mode: REQUIRED
+    type: STRING
+- column: opted_into_marketing
+    description: A boolean representing whether a user has opted into receiving marketing materials
+    mode: REQUIRED
+    type: BOOLEAN
