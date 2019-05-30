@@ -16,6 +16,8 @@ faker = Faker()
 # A list of functions for generating user agent strings for various browsers
 ualist = [faker.firefox, faker.chrome, faker.safari, faker.internet_explorer, faker.opera]
 
+sensitive_fields = ['lat', 'lng', 'ip', 'user_agent']
+
 def generate_user():
     """
     Returns a randomly generate dictionary representing a user, where each user is described by
@@ -39,15 +41,25 @@ def generate_user():
     user['id'] = hash(str(user['ip']) + str(user['lat'] + str(user['lng'])))
     return user
 
-def write_csv(users):
-    with open("users.csv", 'w') as out:
-        cols = list(users[0].keys())
-        cols.sort()
-        out.write(",".join(cols) + '\n')
-        for user in users:
-            vals = [str(user[key]) for key in cols]
-            out.write(",".join(vals) + '\n')
+def write_csvs(users):
+    """
+    Writes two .csv files, one for ingestiong by an event generator, the other formatted to be uploaded to BigQuery
+    :param users:
+    :return:
+    """
+    with open("users.csv", 'w') as event_out, open("users_bq.csv", 'w') as bq_out:
+            cols = list(users[0].keys())
+            cols.sort()
+            bq_cols = cols.copy()
+            [bq_cols.remove(s) for s in sensitive_fields]
+            event_out.write(",".join(cols) + '\n')
+            bq_out.write(",".join(bq_cols) + '\n')
+            for user in users:
+                event_vals = [str(user[key]) for key in cols]
+                event_out.write(",".join(event_vals) + '\n')
+                bq_vals = [str(user[key]) for key in bq_cols]
+                bq_out.write(",".join(bq_vals) + '\n')
 
 if __name__ == '__main__':
     users = [generate_user() for i in range(num_users)]
-    write_csv(users)
+    write_csvs(users)
