@@ -25,7 +25,7 @@
 - column: http_response
   description: An integer representing an HTTP response code
   mode: REQUIRED
-  type: INTEGER
+  type: INT32
 - column: user_agent
   description: A string representing a user agent string
   mode: REQUIRED
@@ -33,4 +33,4 @@
 - column: num_bytes
   description: An integer representing the number of bytes returned by the http_request
   mode: REQUIRED
-  type: INTEGER
+  type: INT32
