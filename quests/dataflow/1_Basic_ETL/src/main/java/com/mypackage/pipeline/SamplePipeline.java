@@ -108,15 +108,15 @@ public class SamplePipeline {
   public static class CommonLog {
     String user_id;
     String ip;
-    double lat;
-    double lng;
+    float lat;
+    float lng;
     String timestamp;
     String http_request;
     String user_agent;
     int http_response;
     int num_bytes;
 
-    CommonLog(String user_id, String ip, double lat, double lng, String timestamp,
+    CommonLog(String user_id, String ip, float lat, float lng, String timestamp,
               String http_request, String user_agent, int http_response, int num_bytes) {
         this.user_id = user_id;
         this.ip = ip;
@@ -145,8 +145,8 @@ public class SamplePipeline {
           row.set("user_id", commonLog.user_id);
           row.set("ip", commonLog.ip);
           row.set("lat", commonLog.lat);
-          row.set("lng", commonLog.lng);
-          row.set("event_timestamp", Instant.parse(commonLog.timestamp).toString());
+          row.set("long", commonLog.lng);
+          row.set("timestamp", Instant.parse(commonLog.timestamp).toString());
           row.set("http_request", commonLog.http_request);
           row.set("http_response", commonLog.http_response);
           row.set("num_bytes", commonLog.num_bytes);
@@ -175,8 +175,8 @@ public class SamplePipeline {
     fields.add(new TableFieldSchema().setName("ip").setType("STRING"));
     fields.add(new TableFieldSchema().setName("user_id").setType("STRING"));
     fields.add(new TableFieldSchema().setName("lat").setType("FLOAT"));
-    fields.add(new TableFieldSchema().setName("lng").setType("FLOAT"));
-    fields.add(new TableFieldSchema().setName("event_timestamp").setType("TIMESTAMP"));
+    fields.add(new TableFieldSchema().setName("long").setType("FLOAT"));
+    fields.add(new TableFieldSchema().setName("timestamp").setType("TIMESTAMP"));
     fields.add(new TableFieldSchema().setName("http_request").setType("STRING"));
     fields.add(new TableFieldSchema().setName("http_response").setType("INTEGER"));
     fields.add(new TableFieldSchema().setName("num_bytes").setType("INTEGER"));
@@ -184,7 +184,7 @@ public class SamplePipeline {
     TableSchema schema = new TableSchema().setFields(fields);
 
      String input = "gs://your-project-id/path/to/events.json";
-     String output = "your-project-id:logs.logs";
+     String output = "your-project-id:Logs.logs";
 
     /*
      * Steps:
