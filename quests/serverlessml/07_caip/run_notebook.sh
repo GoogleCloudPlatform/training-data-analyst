@@ -25,6 +25,7 @@ export GCS_INPUT_NOTEBOOK="$GCS_OUTPUT_DIR/inputs/$(basename $INPUT_NOTEBOOK)"
 export GCS_INPUT_PARAMS="$GCS_OUTPUT_DIR/inputs/$(basename $INPUT_PARAMS)"
 export GCS_OUTPUT_NOTEBOOK="$GCS_OUTPUT_DIR/$(basename $INPUT_NOTEBOOK)"
 export LAUNCHER_SCRIPT="https://raw.githubusercontent.com/GoogleCloudPlatform/ml-on-gcp/master/dlvm/tools/scripts/notebook_executor.sh"
+#export LAUNCHER_SCRIPT="https://raw.githubusercontent.com/GoogleCloudPlatform/ml-on-gcp/7311f1e270f5e896e01a522c46e17fc230cf8f84/dlvm/tools/scripts/notebook_executor.sh"
 
 echo "Please monitor the VM on the GCP console"
 echo "Once the VM is ready (while it is running), you can monitor the logs using:"
@@ -40,9 +41,22 @@ gcloud compute instances create $INSTANCE_NAME \
         --machine-type=$INSTANCE_TYPE \
         --boot-disk-size=200GB \
         --scopes=https://www.googleapis.com/auth/cloud-platform \
-        --metadata="input_notebook_path=${GCS_INPUT_NOTEBOOK},output_notebook_path=${GCS_OUTPUT_NOTEBOOK},parameters_file=${GCS_INPUT_PARAMS},install-nvidia-driver=True,startup-script-url=$LAUNCHER_SCRIPT" || exit 1
+        --metadata="input_notebook_path=${GCS_INPUT_NOTEBOOK},output_notebook_path=${GCS_OUTPUT_NOTEBOOK},parameters_file=${GCS_INPUT_PARAMS},startup-script-url=$LAUNCHER_SCRIPT" || exit 1
 
 # copy locally
-sleep 1
-echo "Copying ${GCS_OUTPUT_NOTEBOOK} to $OUTPUT_NOTEBOOK"
+echo "if you ctrl-C this, you will have to manually copy over the file"
+echo "gsutil cp ${GCS_OUTPUT_NOTEBOOK}  $OUTPUT_NOTEBOOK"
+
+while true; do
+   proxy=$(gcloud compute instances describe --zone $ZONE $INSTANCE_NAME --format="value(status)"  2> /dev/null | grep -v RUNNING)
+   if [ -z "$proxy" ]
+   then
+      echo -n "."
+      sleep 1
+   else
+      echo "done!"
+      break
+   fi
+done
+
 gsutil cp ${GCS_OUTPUT_NOTEBOOK} ${OUTPUT_NOTEBOOK} || exit 1
