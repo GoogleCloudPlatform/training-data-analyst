@@ -1,17 +1,18 @@
 #!/bin/bash
 
-if [ "$#" -ne 3 ]; then
-    echo "Usage: ./run_notebook.sh  input_notebook output_gcs_dir  paramsfile"
-    echo "   eg: ./run_notebook.sh  ../06_feateng_keras/taxifare_fc.ipynb  gs://cloud-training-demos-ml/quests/serverlessml/notebook notebook_params.yaml"
+if [ "$#" -ne 4 ]; then
+    echo "Usage: ./run_notebook.sh  input_notebook output_notebook output_gcs_dir paramsfile"
+    echo "   eg: ./run_notebook.sh  ../06_feateng_keras/taxifare_fc.ipynb ./feat_eng_full.ipynb gs://cloud-training-demos-ml/quests/serverlessml/notebook notebook_params.yaml"
     exit
 fi
 
-set -x
+#set -x
 
 INSTANCE_NAME=notebook$(date +%Y%m%d%H%M%S)
 INPUT_NOTEBOOK=$1
-GCS_OUTPUT_DIR=$2/${INSTANCE_NAME}
-INPUT_PARAMS=$3
+OUTPUT_NOTEBOOK=$2
+GCS_OUTPUT_DIR=$3/${INSTANCE_NAME}
+INPUT_PARAMS=$4
 
 # gcloud compute images list --project deeplearning-platform-release --no-standard-images
 export IMAGE_FAMILY="tf-2-0-cu100-experimental"
@@ -23,7 +24,12 @@ gsutil cp $INPUT_NOTEBOOK $INPUT_PARAMS $GCS_OUTPUT_DIR/inputs || exit 1
 export GCS_INPUT_NOTEBOOK="$GCS_OUTPUT_DIR/inputs/$(basename $INPUT_NOTEBOOK)"
 export GCS_INPUT_PARAMS="$GCS_OUTPUT_DIR/inputs/$(basename $INPUT_PARAMS)"
 export GCS_OUTPUT_NOTEBOOK="$GCS_OUTPUT_DIR/$(basename $INPUT_NOTEBOOK)"
-export LAUNCHER_SCRIPT="papermill ${GCS_INPUT_NOTEBOOK} ${GCS_OUTPUT_NOTEBOOK} -y ${GCS_INPUT_PARAMS}"
+export LAUNCHER_SCRIPT="https://raw.githubusercontent.com/GoogleCloudPlatform/ml-on-gcp/master/dlvm/tools/scripts/notebook_executor.sh"
+
+echo "Please monitor the VM on the GCP console"
+echo "Once the VM is ready (while it is running), you can monitor the logs using:"
+echo "     gcloud compute instances get-serial-port-output --zone $ZONE $INSTANCE_NAME"
+echo "Once the VM exits, the output notebook will be in $GCS_OUTPUT_NOTEBOOK"
 
 gcloud compute instances create $INSTANCE_NAME \
         --zone=$ZONE \
@@ -34,6 +40,9 @@ gcloud compute instances create $INSTANCE_NAME \
         --machine-type=$INSTANCE_TYPE \
         --boot-disk-size=200GB \
         --scopes=https://www.googleapis.com/auth/cloud-platform \
-        --metadata="install-nvidia-driver=True,startup-script=$LAUNCHER_SCRIPT" || exit 1
+        --metadata="input_notebook_path=${GCS_INPUT_NOTEBOOK},output_notebook_path=${GCS_OUTPUT_NOTEBOOK},parameters_file=${GCS_INPUT_PARAMS},install-nvidia-driver=True,startup-script-url=$LAUNCHER_SCRIPT" || exit 1
 
-echo "Please monitor the VM on the GCP console; once the VM exits, the output notebook should be available in $GCS_OUTPUT_NOTEBOOK"
+# copy locally
+sleep 1
+echo "Copying ${GCS_OUTPUT_NOTEBOOK} to $OUTPUT_NOTEBOOK"
+gsutil cp ${GCS_OUTPUT_NOTEBOOK} ${OUTPUT_NOTEBOOK} || exit 1
