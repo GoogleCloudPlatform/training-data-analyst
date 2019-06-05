@@ -125,17 +125,17 @@ public class SamplePipelineDataflowTemplate {
      * A class used for parsing JSON web server events
      */
     public static class CommonLog {
-        int user_id;
+        String user_id;
         String ip;
-        double lat;
-        double lng;
+        float lat;
+        float lng;
         String timestamp;
         String http_request;
         String user_agent;
         int http_response;
         int num_bytes;
 
-        CommonLog(int user_id, String ip, double lat, double lng, String timestamp,
+        CommonLog(String user_id, String ip, float lat, float lng, String timestamp,
                   String http_request, String user_agent, int http_response, int num_bytes) {
             this.user_id = user_id;
             this.ip = ip;
@@ -175,8 +175,8 @@ public class SamplePipelineDataflowTemplate {
             row.set("user_id", commonLog.user_id);
             row.set("ip", commonLog.ip);
             row.set("lat", commonLog.lat);
-            row.set("lng", commonLog.lng);
-            row.set("event_timestamp", Instant.parse(commonLog.timestamp).toString());
+            row.set("long", commonLog.lng);
+            row.set("timestamp", Instant.parse(commonLog.timestamp).toString());
             row.set("http_request", commonLog.http_request);
 
             r.output(row);
@@ -203,8 +203,8 @@ public class SamplePipelineDataflowTemplate {
         fields.add(new TableFieldSchema().setName("ip").setType("STRING"));
         fields.add(new TableFieldSchema().setName("user_id").setType("STRING"));
         fields.add(new TableFieldSchema().setName("lat").setType("FLOAT"));
-        fields.add(new TableFieldSchema().setName("lng").setType("FLOAT"));
-        fields.add(new TableFieldSchema().setName("event_timestamp").setType("TIMESTAMP"));
+        fields.add(new TableFieldSchema().setName("long").setType("FLOAT"));
+        fields.add(new TableFieldSchema().setName("timestamp").setType("TIMESTAMP"));
         fields.add(new TableFieldSchema().setName("http_request").setType("STRING"));
         TableSchema schema = new TableSchema().setFields(fields);
 
