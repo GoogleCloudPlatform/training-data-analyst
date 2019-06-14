@@ -2,7 +2,7 @@
 
 # loads TPCDS data files into BQ tables using command-line bq
 
-BQ_DIR=/Users/scohen/google-cloud-sdk/bin
+BQ_DIR=/Users/ldap/google-cloud-sdk/bin
 data_files_listing=2t_data_files.txt   # file listing name 
 bq_dataset=tpcds_2t_baseline           # BQ dataset name 
 

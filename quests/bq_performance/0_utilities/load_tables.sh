@@ -8,7 +8,7 @@ SECONDS=0
 for stmt in $(<$FILENAME)　
 do 
   echo "$stmt"
-  `/Users/scohen/google-cloud-sdk/bin/bq query --nouse_legacy_sql $stmt` 
+  `/Users/ldap/google-cloud-sdk/bin/bq query --nouse_legacy_sql $stmt` 
 done
 duration=$SECONDS
 echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."

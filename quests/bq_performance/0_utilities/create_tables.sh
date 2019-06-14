@@ -9,11 +9,11 @@ DATASET="tpcds_2t_flat_part_clust" # name of the BQ dataset where to store the n
 IFS=";"
 
 echo "creating tables in dataset $DATASET."
-`/Users/scohen/google-cloud-sdk/bin/bq rm -r -f $DATASET`
-`/Users/scohen/google-cloud-sdk/bin/bq mk $DATASET`
+`/Users/ldap/google-cloud-sdk/bin/bq rm -r -f $DATASET`
+`/Users/ldap/google-cloud-sdk/bin/bq mk $DATASET`
 
 for stmt in $(<$FILENAME)　
 do 
   echo "$stmt"
-  `/Users/scohen/google-cloud-sdk/bin/bq query --nouse_legacy_sql $stmt` 
+  `/Users/ldap/google-cloud-sdk/bin/bq query --nouse_legacy_sql $stmt` 
 done

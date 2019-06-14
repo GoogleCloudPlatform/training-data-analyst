@@ -13,7 +13,7 @@ do
   echo $stmt >> $LOGFILE
   
   SECONDS=0
-  `/Users/scohen/google-cloud-sdk/bin/bq query --nouse_legacy_sql $stmt` 
+  `/Users/ldap/google-cloud-sdk/bin/bq query --nouse_legacy_sql $stmt` 
   duration=$SECONDS
   
   index=$((index+1))
