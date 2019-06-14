@@ -1,0 +1,8 @@
+# These values will replace the cell tagged "parameters" in the Jupyter notebook
+DATADIR: gs://cloud-training-demos-ml/quests/serverlessml/data
+EXPORT_DIR: gs://cloud-training-demos-ml/quests/serverlessml/export
+NBUCKETS: 10  # for feature crossing
+TRAIN_BATCH_SIZE: 32
+NUM_TRAIN_EXAMPLES: 5000000 # remember the training dataset repeats, so this will wrap around
+NUM_EVALS: 5  # evaluate this many times
+NUM_EVAL_EXAMPLES: 100000 # enough to get a reasonable sample, but no so much that it slows down
