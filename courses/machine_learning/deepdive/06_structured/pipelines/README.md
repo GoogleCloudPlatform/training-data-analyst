@@ -3,7 +3,7 @@
 To repeat the steps in the article, follow these steps.
 
 ## Setup
-* Run `./create_cluster.sh`
+* Run `./1_create_cluster.sh`
 * Watch [GKE section of the GCP console](https://console.cloud.google.com/kubernetes) and make sure cluster is created.
 * Run `./2_deploy_kubeflow_pipelines.sh`
 * Install the local interpreter: `./3_install_sdk.sh`
