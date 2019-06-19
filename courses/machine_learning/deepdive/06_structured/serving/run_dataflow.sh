@@ -4,7 +4,7 @@ PROJECT_ID=$(gcloud config get-value project)
 
 cd pipeline
 bq mk babyweight
-bq rm -rf babyweight.predictions
+bq rm -f babyweight.predictions
 
 mvn compile exec:java \
  -Dexec.mainClass=com.google.cloud.training.mlongcp.AddPrediction \
