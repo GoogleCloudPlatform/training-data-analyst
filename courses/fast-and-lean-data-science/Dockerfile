@@ -1,7 +1,4 @@
-# The base image for AI Platform Notebook instances
-FROM gcr.io/deeplearning-platform-release/tf-gpu.1-13
-# Stuff that should have been configured in the base image (bug)
-ENV LC_ALL C.UTF-8
-ENV LANG C.UTF-8
-# Upgrading to Tensorflow 2.0
-RUN pip install tensorflow-gpu==2.0.0-beta1
+# The base image for AI Platform Notebook instances, with Tensorflow 2.0
+FROM gcr.io/deeplearning-platform-release/tf2-gpu
+# if you need additional libraries, install them like this
+# RUN pip install my-library

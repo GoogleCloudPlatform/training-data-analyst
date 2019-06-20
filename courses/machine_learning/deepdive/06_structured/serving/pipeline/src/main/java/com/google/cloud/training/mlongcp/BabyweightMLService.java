@@ -25,9 +25,9 @@ import com.google.gson.GsonBuilder;
 
 public class BabyweightMLService {
   private static final Logger LOG = LoggerFactory.getLogger(BabyweightMLService.class);
-  private static final String PROJECT = "cloud-training-demos";
   private static String       MODEL   = "babyweight";
   private static String       VERSION = "ml_on_gcp";
+  private static String       PROJECT = "";
 
   static class Instance {
     String key, is_male, plurality;
@@ -145,6 +145,9 @@ public class BabyweightMLService {
     // create request
     Request request = new Request();
 
+    // set project from args
+    PROJECT = args[0];
+
     Instance instance = new Instance();
     instance.key = "notused";
     instance.is_male = "True";
@@ -154,7 +157,7 @@ public class BabyweightMLService {
 
     request.instances.add(instance);
 
-    // send request to service
+    // send request to service with project ID
     Response resp = sendRequest(request);
     System.out.println(resp.getPredictedBabyWeights()[0]);
 
