@@ -158,6 +158,12 @@ if __name__ == "__main__":
       default="reconstruction"
   )
   parser.add_argument(
+      "--labeled_tune_thresh",
+      help="If we have a labeled dataset for supervised anomaly tuning.",
+      type=bool,
+      default=True
+  )
+  parser.add_argument(
       "--num_time_anom_thresh",
       help="Number of anomaly thresholds to evaluate in time dimension.",
       type=int,
@@ -192,6 +198,18 @@ if __name__ == "__main__":
       help="Maximum anomaly threshold to evaluate in features dimension.",
       type=float,
       default=2000.0
+  )
+  parser.add_argument(
+      "--time_thresh_scl",
+      help="Max num of std devs for time mahalanobis distance to be normal.",
+      type=float,
+      default=2.0
+  )
+  parser.add_argument(
+      "--feat_thresh_scl",
+      help="Max num of std devs for feature mahalanobis distance to be normal.",
+      type=float,
+      default=2.0
   )
   parser.add_argument(
       "--time_anom_thresh",

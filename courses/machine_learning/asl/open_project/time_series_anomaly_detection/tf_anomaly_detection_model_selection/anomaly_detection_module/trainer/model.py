@@ -77,7 +77,7 @@ def convert_sequences_from_strings_to_floats(features, column_list, seq_len):
   return features
 
 
-def decode_csv(value_column, mode, seq_len, training_mode):
+def decode_csv(value_column, mode, seq_len, training_mode, labeled_tune_thresh):
   """Decodes CSV file into tensors.
 
   Given single string tensor and sequence length, returns features dictionary
@@ -90,13 +90,16 @@ def decode_csv(value_column, mode, seq_len, training_mode):
     seq_len: Number of timesteps in sequence.
     training_mode: Which training mode we're in. Values are "reconstruction",
       "calculate_error_distribution_statistics", and "tune_anomaly_thresholds".
+    labeled_tune_thresh: If tune anomaly thresholds dataset is labeled or not.
 
   Returns:
     Features dictionary of tensors and labels tensor.
   """
   if (mode == tf.estimator.ModeKeys.TRAIN or
       (mode == tf.estimator.ModeKeys.EVAL and
-       training_mode != "tune_anomaly_thresholds")):
+       (training_mode != "tune_anomaly_thresholds" or
+        (training_mode == "tune_anomaly_thresholds" and
+         not labeled_tune_thresh)))):
     # For subset of CSV files that do NOT have labels
     columns = tf.decode_csv(
         records=value_column,
@@ -120,7 +123,7 @@ def decode_csv(value_column, mode, seq_len, training_mode):
 
     features = convert_sequences_from_strings_to_floats(
         features=features,
-        column_list=LABELED_CSV_COLUMNS[0:-1],
+        column_list=UNLABELED_CSV_COLUMNS,
         seq_len=seq_len)
 
     return features, labels
@@ -981,7 +984,6 @@ def create_mahalanobis_dist_vars(var_name, size):
   """
   with tf.variable_scope(
       name_or_scope="mahalanobis_dist_vars", reuse=tf.AUTO_REUSE):
-    # Time based
     count_var = tf.get_variable(
         name="abs_err_count_{0}_var".format(var_name),
         dtype=tf.int64,
@@ -1067,7 +1069,6 @@ def create_confusion_matrix_thresh_vars(scope, var_name, size):
   """
   with tf.variable_scope(
       name_or_scope=scope, reuse=tf.AUTO_REUSE):
-    # Time based
     tp_thresh_var = tf.get_variable(
         name="tp_thresh_{0}_var".format(var_name),
         dtype=tf.int64,
@@ -1144,6 +1145,82 @@ def create_both_confusion_matrix_thresh_vars(
           fp_thresh_feat_var,
           tn_thresh_feat_var)
 
+def create_mahalanobis_unsupervised_thresh_vars(scope, var_name):
+  """Creates mahalanobis unsupervised threshold variables.
+
+  Given variable scope and name, create and return mahalanobis unsupervised
+  threshold variables of mean and standard deviation.
+
+  Args:
+    scope: String of variable scope name.
+    var_name: String denoting which set of variables to create. Values are
+      "time" and "feat".
+
+  Returns:
+    Mahalanobis unsupervised threshold variables of count, mean, and standard
+    deviation.
+  """
+  with tf.variable_scope(
+      name_or_scope=scope, reuse=tf.AUTO_REUSE):
+    count_thresh_var = tf.get_variable(
+        name="count_thresh_{0}_var".format(var_name),
+        dtype=tf.int64,
+        initializer=tf.zeros(
+            shape=[], dtype=tf.int64),
+        trainable=False)
+
+    mean_thresh_var = tf.get_variable(
+        name="mean_thresh_{0}_var".format(var_name),
+        dtype=tf.float64,
+        initializer=tf.zeros(
+            shape=[], dtype=tf.float64),
+        trainable=False)
+
+    var_thresh_var = tf.get_variable(
+        name="var_thresh_{0}_var".format(var_name),
+        dtype=tf.float64,
+        initializer=tf.zeros(
+            shape=[], dtype=tf.float64),
+        trainable=False)
+
+    return (count_thresh_var,
+            mean_thresh_var,
+            var_thresh_var)
+
+
+def create_both_mahalanobis_unsupervised_thresh_vars(scope):
+  """Creates time & feature mahalanobis unsupervised threshold variables.
+
+  Given variable scope, create and return mahalanobis unsupervised
+  threshold variables of mean and standard deviation for both time and
+  feature major representations.
+
+  Args:
+    scope: String of variable scope name.
+
+  Returns:
+    Mahalanobis unsupervised threshold variables of mean and standard
+    deviation for both time and feature major representations.
+  """
+  # Time based
+  (count_thresh_time_var,
+   mean_thresh_time_var,
+   var_thresh_time_var) = create_mahalanobis_unsupervised_thresh_vars(
+       scope=scope, var_name="time")
+
+  # Features based
+  (count_thresh_feat_var,
+   mean_thresh_feat_var,
+   var_thresh_feat_var) = create_mahalanobis_unsupervised_thresh_vars(
+       scope=scope, var_name="feat")
+
+  return (count_thresh_time_var,
+          mean_thresh_time_var,
+          var_thresh_time_var,
+          count_thresh_feat_var,
+          mean_thresh_feat_var,
+          var_thresh_feat_var)
+
 
 # Running covariance updating functions for mahalanobis distance variables
 def update_record_count(count_a, count_b):
@@ -1205,6 +1282,9 @@ def update_cov_incremental(
   Returns:
     A tf.float64 matrix tensor of new covariance matrix.
   """
+  print("value_b = \n{}".format(value_b))
+  print("mean_a = \n{}".format(mean_a))
+  print("mean_ab = \n{}".format(mean_ab))
   mean_diff = tf.matmul(
       a=value_b - mean_a, b=value_b - mean_ab, transpose_a=True)
   if sample_cov:
@@ -1265,7 +1345,7 @@ def singleton_batch_cov_variable_updating(
 
   # Assign values to variables, use control dependencies around return to
   # enforce the mahalanobis variables to be assigned, the control order matters,
-  # hence the separate contexts
+  # hence the separate contexts.
   with tf.control_dependencies(
       control_inputs=[tf.assign(ref=cov_variable, value=cov_tensor)]):
     with tf.control_dependencies(
@@ -1274,6 +1354,67 @@ def singleton_batch_cov_variable_updating(
           control_inputs=[tf.assign(ref=count_variable, value=count_tensor)]):
 
         return (tf.identity(input=cov_variable),
+                tf.identity(input=mean_variable),
+                tf.identity(input=count_variable))
+
+
+def singleton_batch_var_variable_updating(
+    inner_size, x, count_variable, mean_variable, var_variable):
+  """Updates mahalanobis thresh vars incrementally when number_of_rows equals 1.
+
+  Given the inner size of the matrix, the data scalar x, the variable tracking
+  running record counts, the variable tracking the running mean, and the
+  variable tracking the running variance, returns updated running variance,
+  running mean, and running record count variables.
+
+  Args:
+    inner_size: Inner size of matrix X.
+    x: tf.float64 scalar tensor of input data.
+    count_variable: tf.int64 scalar variable tracking running record counts.
+    mean_variable: tf.float64 scalar variable tracking running mean.
+    var_variable: tf.float64 scalar variable tracking running variance.
+
+  Returns:
+    Updated running variance, running mean, and running record count variables.
+  """
+  # Calculate new combined mean for incremental covariance matrix calculation
+  # time_shape = (), features_shape = ()
+  mean_ab = update_mean_incremental(
+      count_a=count_variable, mean_a=mean_variable, value_b=x)
+
+  # Update running variables from single example
+  # time_shape = (), features_shape = ()
+  count_tensor = update_record_count(count_a=count_variable, count_b=1)
+
+  # time_shape = (), features_shape = ()
+  mean_tensor = mean_ab
+
+  # Check if inner dimension is greater than 1 to calculate covariance matrix
+  if inner_size == 1:
+    var_tensor = tf.zeros_like(tensor=var_variable, dtype=tf.float64)
+  else:
+    # time_shape = (), features_shape = ()
+    var_tensor = update_cov_incremental(
+        count_a=count_variable,
+        mean_a=tf.reshape(tensor=mean_variable, shape=[1]),
+        cov_a=tf.reshape(tensor=var_variable, shape=[1, 1]),
+        value_b=tf.reshape(tensor=x, shape=[1,1]),
+        mean_ab=tf.reshape(tensor=mean_ab, shape=[1]),
+        sample_cov=True)
+
+    var_tensor = tf.squeeze(input=var_tensor)
+
+  # Assign values to variables, use control dependencies around return to
+  # enforce the mahalanobis variables to be assigned, the control order matters,
+  # hence the separate contexts.
+  with tf.control_dependencies(
+      control_inputs=[tf.assign(ref=var_variable, value=var_tensor)]):
+    with tf.control_dependencies(
+        control_inputs=[tf.assign(ref=mean_variable, value=mean_tensor)]):
+      with tf.control_dependencies(
+          control_inputs=[tf.assign(ref=count_variable, value=count_tensor)]):
+
+        return (tf.identity(input=var_variable),
                 tf.identity(input=mean_variable),
                 tf.identity(input=count_variable))
 
@@ -1348,7 +1489,7 @@ def non_singleton_batch_cov_variable_updating(
   """Updates mahalanobis variables when number_of_rows does NOT equal 1.
 
   Given the current batch size, inner size of the matrix, the data matrix X,
-  the variable tracking, running record counts, the variable tracking running
+  the variable tracking running record counts, the variable tracking running
   column means, and the variable tracking running covariance matrix, returns
   updated running covariance matrix, running column means, and running record
   count variables.
@@ -1412,7 +1553,7 @@ def non_singleton_batch_cov_variable_updating(
 
   # Assign values to variables, use control dependencies around return to
   # enforce the mahalanobis variables to be assigned, the control order matters,
-  # hence the separate contexts
+  # hence the separate contexts.
   with tf.control_dependencies(
       control_inputs=[tf.assign(ref=cov_variable, value=cov_tensor)]):
     with tf.control_dependencies(
@@ -1421,6 +1562,85 @@ def non_singleton_batch_cov_variable_updating(
           control_inputs=[tf.assign(ref=count_variable, value=count_tensor)]):
 
         return (tf.identity(input=cov_variable),
+                tf.identity(input=mean_variable),
+                tf.identity(input=count_variable))
+
+
+def non_singleton_batch_var_variable_updating(
+    cur_batch_size, inner_size, x, count_variable, mean_variable, var_variable):
+  """Updates mahalanobis thresh variables when number_of_rows does NOT equal 1.
+
+  Given the current batch size, inner size of the matrix, the data vector x,
+  the variable tracking the running record count, the variable tracking the
+  running mean, and the variable tracking the running variance, returns
+  updated running variance, running mean, and running record count variables.
+
+  Args:
+    cur_batch_size: Number of examples in current batch (could be partial).
+    inner_size: Inner size of matrix X.
+    x: tf.float64 vector tensor of mahalanobis distance.
+    count_variable: tf.int64 scalar variable tracking running record count.
+    mean_variable: tf.float64 scalar variable tracking running mean.
+    var_variable: tf.float64 scalar variable tracking running variance.
+
+  Returns:
+    Updated running variance, running mean, and running record count variables.
+  """
+  # Find statistics of batch
+  number_of_rows = cur_batch_size * inner_size
+  
+  # time_shape = (), features_shape = ()
+  x_mean = tf.reduce_mean(input_tensor=x)
+
+  # time_shape = (cur_batch_size * seq_len,)
+  # features_shape = (cur_batch_size * num_feat,)
+  x_centered = x - x_mean
+
+  if inner_size > 1:
+    # time_shape = (), features_shape = ()
+    x_var = tf.reduce_sum(input_tensor=tf.square(x=x_centered))
+    x_var /= tf.cast(x=number_of_rows - 1, dtype=tf.float64)
+
+  # Update running variables from batch statistics
+  # time_shape = (), features_shape = ()
+  count_tensor = update_record_count(
+      count_a=count_variable, count_b=number_of_rows)
+
+  # time_shape = (), features_shape = ()
+  mean_tensor = update_mean_batch(
+      count_a=count_variable,
+      mean_a=mean_variable,
+      count_b=number_of_rows,
+      mean_b=x_mean)
+
+  # Check if inner dimension is greater than 1 to calculate covariance matrix
+  if inner_size == 1:
+    var_tensor = tf.zeros_like(tensor=var_variable, dtype=tf.float64)
+  else:
+    # time_shape = (num_feat, num_feat)
+    # features_shape = (seq_len, seq_len)
+    var_tensor = update_cov_batch(
+        count_a=count_variable,
+        mean_a=mean_variable,
+        cov_a=var_variable,
+        count_b=number_of_rows,
+        mean_b=tf.expand_dims(input=x_mean, axis=0),
+        cov_b=tf.reshape(tensor=x_var, shape=[1, 1]),
+        sample_cov=True)
+
+    var_tensor = tf.squeeze(input=var_tensor)
+
+  # Assign values to variables, use control dependencies around return to
+  # enforce the mahalanobis thresh variables to be assigned, the control order
+  # matters, hence the separate contexts.
+  with tf.control_dependencies(
+      control_inputs=[tf.assign(ref=var_variable, value=var_tensor)]):
+    with tf.control_dependencies(
+        control_inputs=[tf.assign(ref=mean_variable, value=mean_tensor)]):
+      with tf.control_dependencies(
+          control_inputs=[tf.assign(ref=count_variable, value=count_tensor)]):
+
+        return (tf.identity(input=var_variable),
                 tf.identity(input=mean_variable),
                 tf.identity(input=count_variable))
 
@@ -1441,7 +1661,7 @@ def mahalanobis_dist(err_vec, mean_vec, inv_cov, final_shape):
     final_shape: Final shape of mahalanobis distance tensor.
 
   Returns:
-    tf.float64 matrix tensor of mahalanobis distance magnitudes.
+    tf.float64 matrix tensor of mahalanobis distance.
   """
   # time_shape = (cur_batch_size * seq_len, num_feat)
   # features_shape = (cur_batch_size * num_feat, seq_len)
@@ -1468,9 +1688,9 @@ def mahalanobis_dist(err_vec, mean_vec, inv_cov, final_shape):
 
   # time_shape = (cur_batch_size, seq_len)
   # features_shape = (cur_batch_size, num_feat)
-  mahalanobis_dist_final_shaped_abs = tf.abs(x=mahalanobis_dist_final_shaped)
+  mahalanobis_dist_final_shaped_sqrt = tf.sqrt(x=mahalanobis_dist_final_shaped)
 
-  return mahalanobis_dist_final_shaped_abs
+  return mahalanobis_dist_final_shaped_sqrt
 
 
 def calculate_error_distribution_statistics_training(
@@ -1840,7 +2060,7 @@ def find_best_anom_thresh(
     return tf.identity(input=anom_thresh_var)
 
 
-def tune_anomaly_thresholds_training(
+def tune_anomaly_thresholds_supervised_training(
     labels_norm_mask,
     labels_anom_mask,
     mahalanobis_dist_time,
@@ -1858,7 +2078,7 @@ def tune_anomaly_thresholds_training(
     params,
     mode,
     dummy_var):
-  """Tunes anomaly thresholds during training mode.
+  """Tunes anomaly thresholds during supervised training mode.
 
   Given label masks, mahalanobis distances, confusion matrices, and anomaly
   thresholds, returns loss and train_op.
@@ -2220,6 +2440,127 @@ def tune_anomaly_thresholds_evaluation(
   return loss, eval_metric_ops
 
 
+def tune_anomaly_thresholds_unsupervised_training(
+    cur_batch_size,
+    num_feat,
+    time_anom_thresh_var,
+    mahalanobis_dist_time,
+    count_thresh_time_var,
+    mean_thresh_time_var,
+    var_thresh_time_var,
+    feat_anom_thresh_var,
+    mahalanobis_dist_feat,
+    count_thresh_feat_var,
+    mean_thresh_feat_var,
+    var_thresh_feat_var,
+    params,
+    dummy_var):
+  """Calculates error distribution statistics during training mode.
+
+  Given dimensions of inputs, mahalanobis distances, and variables tracking
+  counts, means, and variances of mahalanobis distance, returns loss and
+  train_op.
+
+  Args:
+    cur_batch_size: Current batch size, could be partially filled.
+    num_feat: Number of features.
+    time_anom_thresh_var: Time anomaly threshold variable.
+    mahalanobis_dist_time: Time major mahalanobis distance.
+    count_thresh_time_var: Time major running count of number of records.
+    mean_thresh_time_var: Time major running mean of mahalanobis distance.
+    var_thresh_time_var: Time major running variance of mahalanobis distance.
+    feat_anom_thresh_var: Feature anomaly threshold variable.
+    mahalanobis_dist_feat: Feature major mahalanobis distance.
+    count_thresh_feat_var: Feature major running count of number of records.
+    mean_thresh_feat_var: Feature major running mean of mahalanobis distance.
+    var_thresh_feat_var: Feature major running variance of mahalanobis distance.
+    params: Dictionary of parameters.
+    dummy_var: Dummy variable used to allow training mode to happen since it
+      requires a gradient to tie back to the graph dependency.
+
+  Returns:
+    loss: The scalar loss to tie our updates back to Estimator graph.
+    train_op: The train operation to tie our updates back to Estimator graph.
+  """
+  with tf.variable_scope(
+      name_or_scope="mahalanobis_dist_thresh_vars", reuse=tf.AUTO_REUSE):
+    # Time based
+    mahalanobis_dist_time_flat = tf.reshape(
+        tensor=mahalanobis_dist_time,
+        shape=[cur_batch_size * params["seq_len"]])
+
+    singleton_time_condition = tf.equal(
+        x=cur_batch_size * params["seq_len"], y=1)
+
+    var_time_var, mean_time_var, count_time_var = tf.cond(
+        pred=singleton_time_condition,
+        true_fn=lambda: singleton_batch_var_variable_updating(
+            params["seq_len"],
+            mahalanobis_dist_time_flat,
+            count_thresh_time_var,
+            mean_thresh_time_var,
+            var_thresh_time_var),
+        false_fn=lambda: non_singleton_batch_var_variable_updating(
+            cur_batch_size,
+            params["seq_len"],
+            mahalanobis_dist_time_flat,
+            count_thresh_time_var,
+            mean_thresh_time_var,
+            var_thresh_time_var))
+
+    # Features based
+    mahalanobis_dist_feat_flat = tf.reshape(
+        tensor=mahalanobis_dist_feat,
+        shape=[cur_batch_size * num_feat])
+
+    singleton_feat_condition = tf.equal(
+        x=cur_batch_size * num_feat, y=1)
+
+    var_feat_var, mean_feat_var, count_feat_var = tf.cond(
+        pred=singleton_feat_condition,
+        true_fn=lambda: singleton_batch_var_variable_updating(
+            num_feat,
+            mahalanobis_dist_feat_flat,
+            count_thresh_feat_var,
+            mean_thresh_feat_var,
+            var_thresh_feat_var),
+        false_fn=lambda: non_singleton_batch_var_variable_updating(
+            cur_batch_size,
+            num_feat,
+            mahalanobis_dist_feat_flat,
+            count_thresh_feat_var,
+            mean_thresh_feat_var,
+            var_thresh_feat_var))
+
+  # Lastly use control dependencies around loss to enforce the mahalanobis
+  # variables to be assigned, the control order matters, hence the separate
+  # contexts.
+  with tf.control_dependencies(
+      control_inputs=[var_time_var, var_feat_var]):
+    with tf.control_dependencies(
+        control_inputs=[mean_time_var, mean_feat_var]):
+      with tf.control_dependencies(
+          control_inputs=[count_time_var, count_feat_var]):
+        time_out = mean_time_var + params["time_thresh_scl"] * var_time_var
+        feat_out = mean_feat_var + params["feat_thresh_scl"] * var_feat_var
+        with tf.control_dependencies(
+            control_inputs=[tf.assign(ref=time_anom_thresh_var,
+                                      value=time_out),
+                            tf.assign(ref=feat_anom_thresh_var,
+                                      value=feat_out)]):
+
+          loss = tf.reduce_sum(
+              input_tensor=tf.zeros(shape=(), dtype=tf.float64) * dummy_var)
+
+          train_op = tf.contrib.layers.optimize_loss(
+              loss=loss,
+              global_step=tf.train.get_global_step(),
+              learning_rate=params["learning_rate"],
+              optimizer="SGD")
+
+  return loss, train_op
+
+
 def anomaly_detection_predictions(
     cur_batch_size,
     seq_len,
@@ -2319,7 +2660,7 @@ def anomaly_detection(features, labels, mode, params):
   print("anomaly_detection: mode = \n{}".format(mode))
   print("anomaly_detection: params = \n{}".format(params))
 
-  # 0. Get input sequence tensor into correct shape
+  # Get input sequence tensor into correct shape
   # Get dynamic batch size in case there was a partially filled batch
   cur_batch_size = tf.shape(
       input=features[UNLABELED_CSV_COLUMNS[0]], out_type=tf.int64)[0]
@@ -2346,18 +2687,26 @@ def anomaly_detection(features, labels, mode, params):
        seq_len=params["seq_len"], num_feat=num_feat)
 
   # Variables for automatically tuning anomaly thresh
-  # Time based
-  (tp_thresh_time_var,
-   fn_thresh_time_var,
-   fp_thresh_time_var,
-   tn_thresh_time_var,
-   tp_thresh_feat_var,
-   fn_thresh_feat_var,
-   fp_thresh_feat_var,
-   tn_thresh_feat_var) = create_both_confusion_matrix_thresh_vars(
-       scope="mahalanobis_dist_thresh_vars",
-       time_thresh_size=[params["num_time_anom_thresh"]],
-       feat_thresh_size=[params["num_feat_anom_thresh"]])
+  if params["labeled_tune_thresh"]:
+    (tp_thresh_time_var,
+     fn_thresh_time_var,
+     fp_thresh_time_var,
+     tn_thresh_time_var,
+     tp_thresh_feat_var,
+     fn_thresh_feat_var,
+     fp_thresh_feat_var,
+     tn_thresh_feat_var) = create_both_confusion_matrix_thresh_vars(
+         scope="mahalanobis_dist_thresh_vars",
+         time_thresh_size=[params["num_time_anom_thresh"]],
+         feat_thresh_size=[params["num_feat_anom_thresh"]])
+  else:
+    (count_thresh_time_var,
+     mean_thresh_time_var,
+     var_thresh_time_var,
+     count_thresh_feat_var,
+     mean_thresh_feat_var,
+     var_thresh_feat_var) = create_both_mahalanobis_unsupervised_thresh_vars(
+         scope="mahalanobis_dist_thresh_vars")
 
   with tf.variable_scope(
       name_or_scope="mahalanobis_dist_thresh_vars", reuse=tf.AUTO_REUSE):
@@ -2374,15 +2723,16 @@ def anomaly_detection(features, labels, mode, params):
         trainable=False)
 
   # Variables for tuning anomaly thresh evaluation
-  (tp_thresh_eval_time_var,
-   fn_thresh_eval_time_var,
-   fp_thresh_eval_time_var,
-   tn_thresh_eval_time_var,
-   tp_thresh_eval_feat_var,
-   fn_thresh_eval_feat_var,
-   fp_thresh_eval_feat_var,
-   tn_thresh_eval_feat_var) = create_both_confusion_matrix_thresh_vars(
-       scope="anom_thresh_eval_vars", time_thresh_size=[], feat_thresh_size=[])
+  if params["labeled_tune_thresh"]:
+    (tp_thresh_eval_time_var,
+     fn_thresh_eval_time_var,
+     fp_thresh_eval_time_var,
+     tn_thresh_eval_time_var,
+     tp_thresh_eval_feat_var,
+     fn_thresh_eval_feat_var,
+     fp_thresh_eval_feat_var,
+     tn_thresh_eval_feat_var) = create_both_confusion_matrix_thresh_vars(
+         scope="anom_thresh_eval_vars", time_thresh_size=[], feat_thresh_size=[])
 
   # Create dummy variable for graph dependency requiring a gradient for TRAIN
   dummy_var = tf.get_variable(
@@ -2469,46 +2819,64 @@ def anomaly_detection(features, labels, mode, params):
             final_shape=num_feat)
 
       if mode != tf.estimator.ModeKeys.PREDICT:
-        labels_norm_mask = tf.equal(x=labels, y=0)
-        labels_anom_mask = tf.equal(x=labels, y=1)
+        if params["labeled_tune_thresh"]:
+          labels_norm_mask = tf.equal(x=labels, y=0)
+          labels_anom_mask = tf.equal(x=labels, y=1)
 
-        if mode == tf.estimator.ModeKeys.TRAIN:
-          loss, train_op = tune_anomaly_thresholds_training(
-              labels_norm_mask,
-              labels_anom_mask,
-              mahalanobis_dist_time,
-              tp_thresh_time_var,
-              fn_thresh_time_var,
-              fp_thresh_time_var,
-              tn_thresh_time_var,
-              time_anom_thresh_var,
-              mahalanobis_dist_feat,
-              tp_thresh_feat_var,
-              fn_thresh_feat_var,
-              fp_thresh_feat_var,
-              tn_thresh_feat_var,
-              feat_anom_thresh_var,
-              params,
-              mode,
-              dummy_var)
-        elif mode == tf.estimator.ModeKeys.EVAL:
-          loss, eval_metric_ops = tune_anomaly_thresholds_evaluation(
-              labels_norm_mask,
-              labels_anom_mask,
-              time_anom_thresh_var,
-              mahalanobis_dist_time,
-              tp_thresh_eval_time_var,
-              fn_thresh_eval_time_var,
-              fp_thresh_eval_time_var,
-              tn_thresh_eval_time_var,
-              feat_anom_thresh_var,
-              mahalanobis_dist_feat,
-              tp_thresh_eval_feat_var,
-              fn_thresh_eval_feat_var,
-              fp_thresh_eval_feat_var,
-              tn_thresh_eval_feat_var,
-              params,
-              mode)
+          if mode == tf.estimator.ModeKeys.TRAIN:
+            loss, train_op = tune_anomaly_thresholds_supervised_training(
+                labels_norm_mask,
+                labels_anom_mask,
+                mahalanobis_dist_time,
+                tp_thresh_time_var,
+                fn_thresh_time_var,
+                fp_thresh_time_var,
+                tn_thresh_time_var,
+                time_anom_thresh_var,
+                mahalanobis_dist_feat,
+                tp_thresh_feat_var,
+                fn_thresh_feat_var,
+                fp_thresh_feat_var,
+                tn_thresh_feat_var,
+                feat_anom_thresh_var,
+                params,
+                mode,
+                dummy_var)
+          elif mode == tf.estimator.ModeKeys.EVAL:
+            loss, eval_metric_ops = tune_anomaly_thresholds_evaluation(
+                labels_norm_mask,
+                labels_anom_mask,
+                time_anom_thresh_var,
+                mahalanobis_dist_time,
+                tp_thresh_eval_time_var,
+                fn_thresh_eval_time_var,
+                fp_thresh_eval_time_var,
+                tn_thresh_eval_time_var,
+                feat_anom_thresh_var,
+                mahalanobis_dist_feat,
+                tp_thresh_eval_feat_var,
+                fn_thresh_eval_feat_var,
+                fp_thresh_eval_feat_var,
+                tn_thresh_eval_feat_var,
+                params,
+                mode)
+        else:  # not params["labeled_tune_thresh"]
+          if mode == tf.estimator.ModeKeys.TRAIN:
+            loss, train_op = tune_anomaly_thresholds_unsupervised_training(
+                cur_batch_size,
+                num_feat,
+                time_anom_thresh_var,
+                mahalanobis_dist_time,
+                count_thresh_time_var,
+                mean_thresh_time_var,
+                var_thresh_time_var,
+                feat_anom_thresh_var,
+                mahalanobis_dist_feat,
+                count_thresh_feat_var,
+                mean_thresh_feat_var,
+                var_thresh_feat_var,
+                params,
+                dummy_var)
       else:  # mode == tf.estimator.ModeKeys.PREDICT
         predictions_dict, export_outputs = anomaly_detection_predictions(
             cur_batch_size,
@@ -2687,34 +3055,41 @@ def train_and_evaluate(args):
       tf.estimator.train_and_evaluate(
           estimator=estimator, train_spec=train_spec, eval_spec=eval_spec)
   else:
-    if args["training_mode"] == "calculate_error_distribution_statistics":
-      # Get final mahalanobis statistics over the entire val_1 dataset
-      train_spec = tf.estimator.TrainSpec(
-          input_fn=read_dataset(
-              filename=args["train_file_pattern"],
-              mode=tf.estimator.ModeKeys.EVAL,  # read through val data once
-              batch_size=args["train_batch_size"],
-              params=args),
-          max_steps=args["train_steps"])
+    # if args["training_mode"] == "calculate_error_distribution_statistics"
+    # Get final mahalanobis statistics over the entire val_1 dataset
 
+    # if args["training_mode"] == "tune_anomaly_thresholds"
+    # Tune anomaly thresholds using val_2 and val_anom datasets
+    train_spec = tf.estimator.TrainSpec(
+        input_fn=read_dataset(
+            filename=args["train_file_pattern"],
+            mode=tf.estimator.ModeKeys.EVAL,  # read through val data once
+            batch_size=args["train_batch_size"],
+            params=args),
+        max_steps=args["train_steps"])
+
+    if args["training_mode"] == "calculate_error_distribution_statistics":
+      # Evaluate until the end of eval files
+      eval_steps = None
+        
       # Don't create exporter for serving yet since anomaly thresholds
       # aren't trained yet
       exporter = None
     elif args["training_mode"] == "tune_anomaly_thresholds":
-      # Tune anomaly thresholds using val_2 and val_anom datasets
-      train_spec = tf.estimator.TrainSpec(
-          input_fn=read_dataset(
-              filename=args["train_file_pattern"],
-              mode=tf.estimator.ModeKeys.EVAL,  # read through val data once
-              batch_size=args["train_batch_size"],
-              params=args),
-          max_steps=args["train_steps"])
-
+      if args["labeled_tune_thresh"]:
+        # Evaluate until the end of eval files
+        eval_steps = None
+      else:
+        # Don't evaluate
+        eval_steps = 0
+        
       # Create exporter that uses serving_input_fn to create saved_model
       # for serving
       exporter = tf.estimator.LatestExporter(
           name="exporter",
           serving_input_receiver_fn=lambda: serving_input_fn(args["seq_len"]))
+    else:
+      print("{0} isn't a valid training mode!".format(args["training_mode"]))
 
     # Create eval spec to read in our validation data and export our model
     eval_spec = tf.estimator.EvalSpec(
@@ -2723,11 +3098,13 @@ def train_and_evaluate(args):
             mode=tf.estimator.ModeKeys.EVAL,
             batch_size=args["eval_batch_size"],
             params=args),
-        steps=None,
+        steps=eval_steps,
         exporters=exporter,
         start_delay_secs=args["start_delay_secs"],  # start eval after N secs
         throttle_secs=args["throttle_secs"])  # evaluate every N secs
 
+  if (args["training_mode"] == "calculate_error_distribution_statistics" or 
+      args["training_mode"] == "tune_anomaly_thresholds"):
     # Create train and evaluate loop to train and evaluate our estimator
     tf.estimator.train_and_evaluate(
         estimator=estimator, train_spec=train_spec, eval_spec=eval_spec)
