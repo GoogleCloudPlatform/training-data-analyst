@@ -2541,8 +2541,10 @@ def tune_anomaly_thresholds_unsupervised_training(
         control_inputs=[mean_time_var, mean_feat_var]):
       with tf.control_dependencies(
           control_inputs=[count_time_var, count_feat_var]):
-        time_out = mean_time_var + params["time_thresh_scl"] * var_time_var
-        feat_out = mean_feat_var + params["feat_thresh_scl"] * var_feat_var
+        time_out = mean_time_var
+        time_out += params["time_thresh_scl"] * tf.sqrt(x=var_time_var)
+        feat_out = mean_feat_var
+        feat_out += params["feat_thresh_scl"] * tf.sqrt(x=var_feat_var)
         with tf.control_dependencies(
             control_inputs=[tf.assign(ref=time_anom_thresh_var,
                                       value=time_out),
