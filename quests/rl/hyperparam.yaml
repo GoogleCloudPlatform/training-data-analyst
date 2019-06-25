@@ -4,8 +4,8 @@ trainingInput:
   hyperparameters:
     maxTrials: 50
     maxParallelTrials: 30
-    enableTrialEarlyStopping: True
-    goal: MAXIMIZE    
+    enableTrialEarlyStopping: False
+    goal: MAXIMIZE
     hyperparameterMetricTag: DQNetwork/episode_reward_1
     params:
     - parameterName: learning_rate

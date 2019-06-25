@@ -91,8 +91,9 @@ def _parse_arguments(argv):
         default=0)
     parser.add_argument(
         '--record_rate',
-        help="""How often to record metrics to tensorboard, 0 if never, higher
-        to avoid hyperparameter tuning "too many metrics" error""",
+        help="""Record metrics to tensorboard every <record_rate> steps, 0 if
+        never. Use higher values to avoid hyperparameter tuning
+        "too many metrics" error""",
         type=int,
         default=100)
     return parser.parse_known_args(argv)
@@ -176,6 +177,7 @@ def _play(agent, env, episode, render_rate, score_print_rate, record_rate):
             state = state_prime  # st+1 is now our current state.
 
     if agent.train:
+        # TODO: Eval every x steps instead of recording training rewards.
         tensorboard_write = episode % record_rate == 0
         agent.learn(episode_reward, tensorboard_write)
 

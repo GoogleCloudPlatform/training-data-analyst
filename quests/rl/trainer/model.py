@@ -24,9 +24,6 @@ from collections import deque
 from enum import Enum
 
 
-RANDOM_START_CHANCE = 1
-
-
 # Create agent components
 class DQNetwork():
     def __init__(
@@ -172,10 +169,10 @@ class Agent():
         self.train = train
         self.memory_batch_size = memory_batch_size
         self.gamma = gamma
-        self.epsilon = RANDOM_START_CHANCE
+        self.epsilon = 1  # The chance to take a random action.
         self.epsilon_decay = epsilon_decay
 
-        # Setup TensorBoard Writer
+        # Setup TensorBoard Writer.
         trial_id = json.loads(
             os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
         summary_path = os.path.join(output_path, trial_id)
@@ -213,7 +210,7 @@ class Agent():
             return np.inf
         brain = self.brain
 
-        # Obtain random mini-batch from memory
+        # Obtain random mini-batch from memory.
         states_mb, actions_mb, rewards_mb, states_prime_mb, dones_mb = (
             self.memory.sample(self.memory_batch_size))
 
