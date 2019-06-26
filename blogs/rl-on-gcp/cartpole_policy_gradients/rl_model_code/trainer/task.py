@@ -34,6 +34,7 @@ from docopt import docopt
 from . import model
 
 arguments = docopt(__doc__)
+
 # Update hyperparameters in model.py.
 model.DISCOUNT_RATE = float(arguments['--discount_rate'])
 model.LEARNING_RATE = float(arguments['--learning_rate'])

@@ -14,11 +14,14 @@ from __future__ import division
 from __future__ import print_function
 import argparse
 import functools
+import hypertune
 import logging
 import os
 import time
 import tensorflow as tf
 from tensorflow import keras
+
+from . import convnet, resnet, dnn
 
 def PATCH_SIZE(params):
   return (2 * params['train_patch_radius']) + 1
@@ -109,38 +112,33 @@ def engineered_features(img, halfsize):
     ], axis=1)
     return engfeat
 
+def bias_value(img, halfsize):
+    center_ref = img[:, halfsize, halfsize, 0:1] # [?]
+    return tf.ones_like(center_ref)
 
 def create_combined_model(params):
-  ksize = params.get('ksize', 5)
-  nfil = params.get('nfil', 10)
-  nlayers = params.get('nlayers', 3)
-  dprob = params.get('dprob', 0.05 if params['batch_norm'] else 0.25)
-
   # input is a 2-channel image
   height = width = PATCH_SIZE(params)
   img = keras.Input(shape=[height, width, 2])
-
-  # convolutional part of model
-  cnn = keras.layers.BatchNormalization()(img)
-  for layer in range(nlayers):
-    nfilters = nfil * (layer + 1)
-    cnn = keras.layers.Conv2D(nfilters, (ksize, ksize), padding='same')(cnn)
-    cnn = keras.layers.Activation('elu')(cnn)
-    cnn = keras.layers.BatchNormalization()(cnn)
-    cnn = keras.layers.MaxPooling2D(pool_size=(2, 2))(cnn)
-  cnn = keras.layers.Flatten()(cnn)
-  cnn = keras.layers.Dropout(dprob)(cnn)
-  cnn = keras.layers.Dense(10, activation='relu')(cnn)
 
   # feature engineering part of model
   engfeat = keras.layers.Lambda(
     lambda x: engineered_features(x, height//2))(img)
 
+  # deep learning part of model
+  deep = {
+    'feateng': keras.layers.Lambda(lambda x: bias_value(x, height//2))(img),
+    'convnet': convnet.create_cnn_model(img, params),
+    'resnet': resnet.create_resnet_model(img, params),
+    'dnn': dnn.create_dnn_model(img, params)
+  }.get(params['arch'], None)
+
   # concatenate the two parts
-  both = keras.layers.concatenate([cnn, engfeat])
+  both = keras.layers.concatenate([deep, engfeat])
+
   ltgprob = keras.layers.Dense(1, activation='sigmoid')(both)
 
-  # create a model
+  # compile model
   model = keras.Model(img, ltgprob)
   def rmse(y_true, y_pred):
     import tensorflow.keras.backend as K
@@ -159,33 +157,6 @@ def print_layer(layer, message, first_n=3, summarize=1024):
                       message=message,
                       first_n=first_n,
                       summarize=summarize)))(layer)
-
-def create_feateng_model(params):
-  # input is a 2-channel image
-  height = width = PATCH_SIZE(params)
-  img = keras.Input(shape=[height, width, 2])
-
-  engfeat = keras.layers.Lambda(
-    lambda x: engineered_features(x, height//2))(img)
-  engfeat = print_layer(engfeat, "engfeat=")
-
-  ltgprob = keras.layers.Dense(1, activation='sigmoid')(engfeat)
-
-  # print
-  ltgprob = print_layer(ltgprob, "ltgprob=")
-
-  # create a model
-  model = keras.Model(img, ltgprob)
-  def rmse(y_true, y_pred):
-    import tensorflow.keras.backend as K
-    return K.sqrt(K.mean(K.square(y_pred - y_true), axis=-1))
-  optimizer = tf.keras.optimizers.Adam(lr=params['learning_rate'],
-                                       clipnorm=1.)
-  model.compile(optimizer=optimizer,
-                loss='binary_crossentropy',
-                metrics=['accuracy', 'mse', rmse])
-  return model
-
 
 def make_dataset(pattern, mode, batch_size, params):
   """Make training/evaluation dataset.
@@ -281,30 +252,39 @@ def train_and_evaluate(hparams):
 
   # create model
   model = create_combined_model(hparams)
-  #model = create_feateng_model(hparams)
+
+
 
   # resolve TPU and rewrite model for TPU if necessary
-  if hparams['use_tpu']:
+  if hparams['use_tpu'] and hparams['master']:
     tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
-        hparams['tpu'], zone=hparams['tpu_zone'], project=hparams['project'])
+        hparams['master'])
     trained_model = tf.contrib.tpu.keras_to_tpu_model(
       model,
       strategy=tf.contrib.tpu.TPUDistributionStrategy(
         tpu_cluster_resolver
       )
     )
-  else:
-    trained_model = model
-
-  # set up training and evaluation in a loop
-  train_data = make_dataset(hparams['train_data_path'],
+    # on a TPU, we need to provide a function that returns a dataset
+    # this is so that the TPU can put the input pipeline on attached VM
+    train_data = lambda: make_dataset(hparams['train_data_path'],
                             tf.estimator.ModeKeys.TRAIN,
                             hparams['train_batch_size'],
                             hparams)
-  eval_data  = make_dataset(hparams['eval_data_path'],
+    eval_data  = lambda: make_dataset(hparams['eval_data_path'],
                             tf.estimator.ModeKeys.EVAL,
                             eval_batch_size,
                             hparams)
+  else:
+    trained_model = model
+    train_data = make_dataset(hparams['train_data_path'],
+                              tf.estimator.ModeKeys.TRAIN,
+                              hparams['train_batch_size'],
+                              hparams)
+    eval_data = make_dataset(hparams['eval_data_path'],
+                             tf.estimator.ModeKeys.EVAL,
+                             eval_batch_size,
+                             hparams)
 
   # train and evaluate
   start_timestamp = time.time()
@@ -322,11 +302,16 @@ def train_and_evaluate(hparams):
   #tf.logging.info(model.summary())
   print("if running interactively, graph: {}".format(history.history.keys()))
 
+  # write validation accuracy as hyperparameter tuning metric
+  hpt = hypertune.HyperTune()
+  hpt.report_hyperparameter_tuning_metric(
+    hyperparameter_metric_tag='val_acc',
+    metric_value=history.history['val_acc'][-1], # last one
+    global_step=0)
 
   # Serve the model via CMLE
   export_keras(model, trained_model, output_dir, hparams)
-  #export_keras_old(trained_model, output_dir)
-
+  
 
 def export_keras(model, trained_model, output_dir, hparams):
   # 1. multiple inputs from JSON
@@ -352,27 +337,13 @@ def export_keras(model, trained_model, output_dir, hparams):
   serving_model = keras.Model(json_input, model_output)
 
   # export
-  export_path = tf.contrib.saved_model.save_keras_model(serving_model,
-                                                        os.path.join(output_dir, 'export/exporter'))
-  export_path = export_path.decode('utf-8')
-  tf.logging.info('Model exported successfully to {}'.format(export_path))
-
-
-def export_keras_old(model, output_dir):
-  tf.logging.info('Starting to export model.')
-  signature = tf.saved_model.signature_def_utils.predict_signature_def(
-    inputs={'image': model.input}, outputs={'scores': model.output})
-  builder = tf.saved_model.builder.SavedModelBuilder(
-    os.path.join(output_dir, 'export/exporter'))
-  builder.add_meta_graph_and_variables(
-    sess=keras.backend.get_session(),
-    tags=[tf.saved_model.tag_constants.SERVING],
-    signature_def_map={
-      tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
-        signature
-    })
-  builder.save()
-  tf.logging.info('Model exported successfully')
+  if not hparams['skipexport']:
+    export_path = tf.contrib.saved_model.save_keras_model(serving_model,
+                                                          os.path.join(output_dir, 'export/exporter'))
+    export_path = export_path.decode('utf-8')
+    tf.logging.info('Model exported successfully to {}'.format(export_path))
+  else:
+    print('Skipping export since --skipexport was specified')
 
 
 if __name__ == '__main__':
@@ -399,7 +370,7 @@ if __name__ == '__main__':
       '--train_batch_size',
       help='Batch size for training steps',
       type=int,
-      default=256)
+      default="256")
   parser.add_argument(
       '--learning_rate',
       help='Initial learning rate for training',
@@ -429,7 +400,7 @@ if __name__ == '__main__':
       help=
       ('If specified, use TPU to execute the model for training and evaluation.'
        ' Else use whatever devices are available to'
-       ' TensorFlow by default (e.g. CPU and GPU)'),
+       ' TensorFlow by default (e.g. CPU and GPU); expects --master'),
       dest='use_tpu',
       action='store_true')
   parser.add_argument(
@@ -439,45 +410,49 @@ if __name__ == '__main__':
       dest='transpose',
       action='store_true')
   parser.add_argument(
-      '--tpu',
+      '--skipexport',
+      help=('If specified, does not export model for serving'),
+      dest='skipexport',
+      action='store_true')
+  parser.add_argument(
+      '--master',
       default=None,
-      help='The Cloud TPU to use for training. This should be either the name '
-      'used when creating the Cloud TPU, or grpc://ip.address.of.tpu:8470 url.'
+      help='The Cloud TPU to use for training. This will be provided by '
+      'ML Engine is of the form grpc://ip.address.of.tpu:8470 url.'
   )
-  parser.add_argument(
-      '--project',
-      default=None,
-      help='Project name for the Cloud TPU-enabled project. If not specified, '
-      'will attempt to automatically detect the GCE project from metadata.')
-  parser.add_argument(
-      '--tpu_zone',
-      default=None,
-      help='GCE zone where the Cloud TPU is located in. If not specified, we '
-      'will attempt to automatically detect the GCE project from metadata.')
   parser.add_argument(
       '--num_cores', default=8, type=int, help='Number of TPU cores to use')
 
-  # optional hyperparameters used by cnn
+  # optional hyperparameters used by deep networks
   parser.add_argument(
-      '--ksize', help='kernel size of each layer for CNN', type=int, default=5)
+      '--arch',
+      default='feateng',
+      help='This trainer supports several architectures: '
+      'feateng (no deep learning); dnn; convnet; resnet'
+  )
+  parser.add_argument(
+      '--ksize', help='kernel size of each layer in deep network', type=int, default=5)
   parser.add_argument(
       '--nfil',
-      help='number of filters in each layer for CNN',
+      help='number of filters in each layer in deep network',
       type=int,
       default=10)
   parser.add_argument(
-      '--nlayers', help='number of layers in CNN (<= 5)', type=int, default=3)
+      '--nlayers', help='number of layers in deep network (<= 5)', type=int, default=3)
   parser.add_argument(
-      '--dprob', help='dropout probability for CNN', type=float, default=0.25)
+      '--dprob', help='dropout probability in deep network', type=float, default=0.25)
   parser.add_argument(
       '--batch_norm',
-      help='if specified, do batch_norm for CNN',
+      help='if specified, do batch_norm for deep network',
       dest='batch_norm',
       action='store_true')
 
   logging.basicConfig(level=getattr(logging, 'INFO', None))
-  parser.set_defaults(use_tpu=False, batch_norm=False)
+  parser.set_defaults(use_tpu=False,
+                      batch_norm=False,
+                      skipexport=False)
   options = parser.parse_args().__dict__
+
 
   # run the training job
   train_and_evaluate(options)

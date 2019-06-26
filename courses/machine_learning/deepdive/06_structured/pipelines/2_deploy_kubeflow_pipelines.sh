@@ -1,5 +1,5 @@
 #!/bin/bash
-PIPELINE_VERSION=0.1.2
+PIPELINE_VERSION=0.1.3
 kubectl create -f https://storage.googleapis.com/ml-pipeline/release/$PIPELINE_VERSION/bootstrapper.yaml
 
 kubectl get job
@@ -12,3 +12,8 @@ sleep 1
 done
 
 kubectl get job
+
+
+# This is an alternate method
+# jobname=$(kubectl get job | tail -1 | awk '{print $1}')
+# kubectl wait --for=condition=complete --timeout=5m job/$jobname

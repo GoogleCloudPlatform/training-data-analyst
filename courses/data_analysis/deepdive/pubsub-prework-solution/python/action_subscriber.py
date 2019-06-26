@@ -34,8 +34,6 @@ class ActionSubscriber:
     return action.action == entities_pb2.Action.VIEW
 
   def callback(self, message):
-    self._view_lock.acquire()
-    self._view_lock.release()
     action = ActionUtils.decode_action_from_json(message.data)
     try:
       if self.is_view_action(action):

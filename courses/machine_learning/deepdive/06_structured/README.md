@@ -6,5 +6,5 @@ https://codelabs.developers.google.com/codelabs/end-to-end-ml/index.html
 
 and this slide deck:
 
-https://goo.gl/AHDwiV
+http://bit.ly/end-to-end-ml-gcp
 

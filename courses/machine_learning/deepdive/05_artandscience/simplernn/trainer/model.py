@@ -95,8 +95,10 @@ def simple_rnn(features, labels, mode):
     #print('last outputs={}'.format(outputs))
 
     # Output is result of linear activation of last layer of RNN
-    weight = tf.Variable(tf.random_normal([LSTM_SIZE, N_OUTPUTS]))
-    bias = tf.Variable(tf.random_normal([N_OUTPUTS]))
+    weight = tf.get_variable("weight", initializer=tf.initializers.random_normal, 
+			     shape=[LSTM_SIZE, N_OUTPUTS])
+    bias = tf.get_variable("bias", initializer=tf.initializers.random_normal, 
+			   shape=[N_OUTPUTS])
     predictions = tf.matmul(outputs, weight) + bias
     
     # 2. Loss function, training/eval ops

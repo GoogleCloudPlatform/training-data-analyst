@@ -1,0 +1,95 @@
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>ML Poetry</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic">
+  <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.4/angular-material.min.css">
+</head>
+
+<body ng-app="myApp" ng-cloak style="background-color: #efefef" ng-controller="myCtrl" layout="column">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <span>Machine Learning Poetry</span>
+    </div>
+  </md-toolbar>
+  <md-content flex style="width:800">
+    <md-card>
+      <md-card-content>
+        <p><em>Example application to complete poetry using ML</em></p>
+       </md-card-content>
+    </md-card>
+    <md-card>
+      <md-card-content>
+        <div layout="row" layout-align="left">
+          <md-input-container>
+            <label> First line: </label> 
+            <input type="text" md-maxlength="100"
+                       ng-model="data.first_line" id="first_line">
+          </md-input-container>
+        </div>
+      </md-card-content>
+      <md-card-actions layout="row" layout-align="end center">
+        <md-button ng-click="submit()" class="md-accent md-raised">Complete poem</md-button>
+      </md-card-actions>
+    </md-card>
+    <md-card>
+      <md-card-content>
+        <div layout="row" layout-align="space-between center">
+          <span>Next line of poem</span>
+          <span>{: result :}</span>
+        </div>
+      </md-card-content>
+    </md-card>
+    <md-card>
+      <md-card-content>
+	      <p>Read <a href="https://cloud.google.com/blog/big-data/2018/02/cloud-poetry-training-and-hyperparameter-tuning-custom-text-models-on-cloud-ml-engine">the blog post</a> and the <a href="https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/machine_learning/deepdive/09_sequence/poetry.ipynb">Jupyter notebook</a> for how to do this on Google Cloud Platform. Tweet interesting model-generated poetry with #mlpoetry to @lak_gcp and @googlecloud.  Here is an example: </p>
+	       <pre><em>
+	{: data.first_line :}
+        {: result :}
+
+        #mlpoetry on @googlecloud
+        Try it out: https://mlpoetry-dot-cloud-training-demos.appspot.com/
+	       </em></pre>
+	</p>
+      </md-card-content>
+    </md-card>
+  </md-content>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.4/angular-material.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.js"></script>
+
+  <script>
+    var app = angular.module('myApp', ['ngMaterial']);
+    app.config(['$interpolateProvider', function($interpolateProvider) {
+      $interpolateProvider.startSymbol('{:');
+      $interpolateProvider.endSymbol(':}');
+    }]);
+    app.config(function($mdThemingProvider) {
+      $mdThemingProvider.theme('default')
+        .primaryPalette('blue-grey')
+        .accentPalette('orange');
+    });
+    app.controller('myCtrl', ['$scope', '$http',
+      function($scope, $http) {
+        $scope.data = {};
+        $scope.submit = function() {
+          $scope.result = "Wait...";
+          $http({
+            method : 'POST',
+            url : '/api/predict',
+            data: $scope.data
+          }).success(function(data, status, headers, config) {
+            $scope.result = data.result;
+          }).error(function(data, status, headers, config) {
+            $scope.result = 'Error';
+          });
+        }
+      }
+    ]);
+  </script>
+</body>
+</html>

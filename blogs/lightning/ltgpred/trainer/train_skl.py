@@ -21,7 +21,7 @@ import subprocess
 import hypertune
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.externals import joblib
 import tensorflow as tf
 from tensorflow.python.lib.io import file_io
@@ -71,7 +71,7 @@ def input_fn(indf):
   # features, label
   label = df['has_ltg']
   del df['has_ltg']
-  features = pd.get_dummies(df)
+  features = df # pd.get_dummies(df)
   return features, label
 
 
@@ -88,7 +88,7 @@ def train_and_evaluate(params, max_depth=5, n_estimators=100):
   # train
   train_df = read_csv_files(params['train_data'])
   train_x, train_y = input_fn(train_df)
-  model = RandomForestRegressor(
+  model = RandomForestClassifier(
       max_depth=max_depth, n_estimators=n_estimators, random_state=0)
   model.fit(train_x, train_y)
 
