@@ -1893,6 +1893,34 @@ def reconstruction_evaluation(X_time_orig, X_time_recon, training_mode):
   return loss, eval_metric_ops
 
 
+def calculate_threshold_confusion_matrix(labels_mask, preds, num_thresh):
+  """Calculates confusion matrix based on thresholds.
+
+  Given labels mask, predictions, and number of thresholds, returns count
+  for cell in confusion matrix.
+
+  Args:
+    labels_norm_mask: tf.bool vector tensor when label was normal or 
+      anomalous.
+    num_thresh: Number of anomaly thresholds to try in parallel grid search.
+
+  Returns:
+    Count for cell in confusion matrix.
+  """
+  count = tf.reduce_sum(
+      input_tensor=tf.cast(
+          x=tf.map_fn(
+              fn=lambda threshold: tf.logical_and(
+                  x=labels_mask,
+                  y=preds[threshold, :]),
+              elems=tf.range(start=0, limit=num_thresh, dtype=tf.int64),
+              dtype=tf.bool),
+          dtype=tf.int64),
+      axis=1)
+
+  return count
+
+
 def update_anom_thresh_vars(
     labels_norm_mask,
     labels_anom_mask,
@@ -1968,49 +1996,17 @@ def update_anom_thresh_vars(
   # Calculate confusion matrix of current batch
   # time_shape = (num_time_anom_thresh,)
   # feat_shape = (num_feat_anom_thresh,)
-  tp = tf.reduce_sum(
-      input_tensor=tf.cast(
-          x=tf.map_fn(
-              fn=lambda threshold: tf.logical_and(
-                  x=labels_anom_mask,
-                  y=predicted_anomalies[threshold, :]),
-              elems=tf.range(start=0, limit=num_thresh, dtype=tf.int64),
-              dtype=tf.bool),
-          dtype=tf.int64),
-      axis=1)
+  tp = calculate_threshold_confusion_matrix(
+      labels_anom_mask, predicted_anomalies, num_thresh)
 
-  fn = tf.reduce_sum(
-      input_tensor=tf.cast(
-          x=tf.map_fn(
-              fn=lambda threshold: tf.logical_and(
-                  x=labels_anom_mask,
-                  y=predicted_normals[threshold, :]),
-              elems=tf.range(start=0, limit=num_thresh, dtype=tf.int64),
-              dtype=tf.bool),
-          dtype=tf.int64),
-      axis=1)
+  fn = calculate_threshold_confusion_matrix(
+      labels_anom_mask, predicted_normals, num_thresh)
 
-  fp = tf.reduce_sum(
-      input_tensor=tf.cast(
-          x=tf.map_fn(
-              fn=lambda threshold: tf.logical_and(
-                  x=labels_norm_mask,
-                  y=predicted_anomalies[threshold, :]),
-              elems=tf.range(start=0, limit=num_thresh, dtype=tf.int64),
-              dtype=tf.bool),
-          dtype=tf.int64),
-      axis=1)
+  fp = calculate_threshold_confusion_matrix(
+      labels_norm_mask, predicted_anomalies, num_thresh)
 
-  tn = tf.reduce_sum(
-      input_tensor=tf.cast(
-          x=tf.map_fn(
-              fn=lambda threshold: tf.logical_and(
-                  x=labels_norm_mask,
-                  y=predicted_normals[threshold, :]),
-              elems=tf.range(start=0, limit=num_thresh, dtype=tf.int64),
-              dtype=tf.bool),
-          dtype=tf.int64),
-      axis=1)
+  tn = calculate_threshold_confusion_matrix(
+      labels_norm_mask, predicted_normals, num_thresh)
 
   if mode == tf.estimator.ModeKeys.EVAL:
     # shape = ()
