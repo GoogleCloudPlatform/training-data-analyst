@@ -738,6 +738,99 @@ def lstm_enc_dec_autoencoder_model(
 
 
 # PCA model functions
+def create_pca_vars(var_name, size):
+  """Creates PCA variables.
+
+  Given variable name and size, create and return PCA variables for count,
+  mean, covariance, eigenvalues, and eignvectors.
+
+  Args:
+    var_name: String denoting which set of variables to create. Values are
+      "time" and "feat".
+    size: The size of the variable, either sequence length or number of
+      features.
+
+  Returns:
+    PCA variables for count, mean, covariance, eigenvalues, and
+    eigenvectors.
+  """
+  with tf.variable_scope(
+      name_or_scope="pca_vars", reuse=tf.AUTO_REUSE):
+    count_var = tf.get_variable(
+        name="pca_{}_count_var".format(var_name),
+        dtype=tf.int64,
+        initializer=tf.zeros(shape=[], dtype=tf.int64),
+        trainable=False)
+
+    mean_var = tf.get_variable(
+        name="pca_{}_mean_var".format(var_name),
+        dtype=tf.float64,
+        initializer=tf.zeros(shape=[size], dtype=tf.float64),
+        trainable=False)
+
+    cov_var = tf.get_variable(
+        name="pca_{}_cov_var".format(var_name),
+        dtype=tf.float64,
+        initializer=tf.zeros(shape=[size, size], dtype=tf.float64),
+        trainable=False)
+
+    eigval_var = tf.get_variable(
+        name="pca_{}_eigval_var".format(var_name),
+        dtype=tf.float64,
+        initializer=tf.zeros(shape=[size], dtype=tf.float64),
+        trainable=False)
+
+    eigvec_var = tf.get_variable(
+        name="pca_{}_eigvec_var".format(var_name),
+        dtype=tf.float64,
+        initializer=tf.zeros(shape=[size, size], dtype=tf.float64),
+        trainable=False)
+
+  return count_var, mean_var, cov_var, eigval_var, eigvec_var
+
+
+def create_both_pca_vars(seq_len, num_feat):
+  """Creates both time & feature major PCA variables.
+
+  Given dimensions of inputs, create and return PCA variables for count,
+  mean, covariance, eigenvalues, and eigenvectors for both time and
+  feature major representations.
+
+  Args:
+    seq_len: Number of timesteps in sequence.
+    num_feat: Number of features.
+
+  Returns:
+    PCA variables for count, mean, covariance, eigenvalues, and
+    eigenvectors for both time and feature major representations.
+  """
+  # Time based
+  (pca_time_count_var,
+   pca_time_mean_var,
+   pca_time_cov_var,
+   pca_time_eigval_var,
+   pca_time_eigvec_var) = create_pca_vars(
+       var_name="time", size=num_feat)
+
+  # Features based
+  (pca_feat_count_var,
+   pca_feat_mean_var,
+   pca_feat_cov_var,
+   pca_feat_eigval_var,
+   pca_feat_eigvec_var) = create_pca_vars(
+       var_name="feat", size=seq_len)
+
+  return (pca_time_count_var,
+          pca_time_mean_var,
+          pca_time_cov_var,
+          pca_time_eigval_var,
+          pca_time_eigvec_var,
+          pca_feat_count_var,
+          pca_feat_mean_var,
+          pca_feat_cov_var,
+          pca_feat_eigval_var,
+          pca_feat_eigvec_var)
+
 def pca_model(X, mode, params, cur_batch_size, num_feat, dummy_var):
   """PCA to reconstruct inputs and minimize reconstruction error.
 
@@ -782,70 +875,16 @@ def pca_model(X, mode, params, cur_batch_size, num_feat, dummy_var):
   ##############################################################################
 
   # Variables for calculating error distribution statistics
-  with tf.variable_scope(name_or_scope="pca_vars", reuse=tf.AUTO_REUSE):
-    # Time based
-    pca_time_count_var = tf.get_variable(
-        name="pca_time_count_var",
-        dtype=tf.int64,
-        initializer=tf.zeros(shape=[], dtype=tf.int64),
-        trainable=False)
-
-    pca_time_mean_var = tf.get_variable(
-        name="pca_time_mean_var",
-        dtype=tf.float64,
-        initializer=tf.zeros(shape=[num_feat], dtype=tf.float64),
-        trainable=False)
-
-    pca_time_cov_var = tf.get_variable(
-        name="pca_time_cov_var",
-        dtype=tf.float64,
-        initializer=tf.zeros(shape=[num_feat, num_feat], dtype=tf.float64),
-        trainable=False)
-
-    pca_time_eigval_var = tf.get_variable(
-        name="pca_time_eigval_var",
-        dtype=tf.float64,
-        initializer=tf.zeros(shape=[num_feat], dtype=tf.float64),
-        trainable=False)
-
-    pca_time_eigvec_var = tf.get_variable(
-        name="pca_time_eigvec_var",
-        dtype=tf.float64,
-        initializer=tf.zeros(shape=[num_feat, num_feat], dtype=tf.float64),
-        trainable=False)
-
-    # Features based
-    pca_feat_count_var = tf.get_variable(
-        name="pca_feat_count_var",
-        dtype=tf.int64,
-        initializer=tf.zeros(shape=[], dtype=tf.int64),
-        trainable=False)
-
-    pca_feat_mean_var = tf.get_variable(
-        name="pca_feat_mean_var",
-        dtype=tf.float64,
-        initializer=tf.zeros(shape=[params["seq_len"]], dtype=tf.float64),
-        trainable=False)
-
-    pca_feat_cov_var = tf.get_variable(
-        name="pca_feat_cov_var",
-        dtype=tf.float64,
-        initializer=tf.zeros(
-            shape=[params["seq_len"], params["seq_len"]], dtype=tf.float64),
-        trainable=False)
-
-    pca_feat_eigval_var = tf.get_variable(
-        name="pca_feat_eigval_var",
-        dtype=tf.float64,
-        initializer=tf.zeros(shape=[params["seq_len"]], dtype=tf.float64),
-        trainable=False)
-
-    pca_feat_eigvec_var = tf.get_variable(
-        name="pca_feat_eigvec_var",
-        dtype=tf.float64,
-        initializer=tf.zeros(
-            shape=[params["seq_len"], params["seq_len"]], dtype=tf.float64),
-        trainable=False)
+  (pca_time_count_var,
+   pca_time_mean_var,
+   pca_time_cov_var,
+   pca_time_eigval_var,
+   pca_time_eigvec_var,
+   pca_feat_count_var,
+   pca_feat_mean_var,
+   pca_feat_cov_var,
+   pca_feat_eigval_var,
+   pca_feat_eigvec_var) = create_both_pca_vars(params["seq_len"], num_feat)
 
   # 3. Loss function, training/eval ops
   if (mode == tf.estimator.ModeKeys.TRAIN and
