@@ -2,9 +2,8 @@ import argparse
 import json
 import os
 
-from . import model
+from model import train_and_evaluate
 
-import tensorflow as tf
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
@@ -274,4 +273,4 @@ if __name__ == "__main__":
       )
 
   # Run the training job
-  model.train_and_evaluate(arguments)
+  train_and_evaluate(arguments)
