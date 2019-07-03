@@ -17,7 +17,7 @@ def split_and_convert_string(string_tensor):
   """
   # Split string tensor into a sparse tensor based on delimiter
   split_string = tf.string_split(source=tf.expand_dims(
-      input=string_tensor, axis=0), delimiter=",")
+      input=string_tensor, axis=0), delimiter=";")
 
   # Converts the values of the sparse tensor to floats
   converted_tensor = tf.string_to_number(
@@ -89,7 +89,7 @@ def decode_csv(value_column, mode, seq_len, training_mode, labeled_tune_thresh):
     columns = tf.decode_csv(
         records=value_column,
         record_defaults=UNLABELED_DEFAULTS,
-        field_delim=";")
+        field_delim=",")
 
     features = dict(zip(UNLABELED_CSV_COLUMNS, columns))
     features = convert_sequences_from_strings_to_floats(
@@ -100,7 +100,7 @@ def decode_csv(value_column, mode, seq_len, training_mode, labeled_tune_thresh):
     columns = tf.decode_csv(
         records=value_column,
         record_defaults=LABELED_DEFAULTS,
-        field_delim=";")
+        field_delim=",")
 
     features = dict(zip(LABELED_CSV_COLUMNS, columns))
 
