@@ -16,8 +16,8 @@
   * Change the Dataproc Image to 1.4 or higher.
   * Turn on the optional opensource components ```Anaconda``` and ```Jupyter``` .
 * When cluster is started, click on the JupyterLab Link (in web interfaces menu of new cluster)
-  * In a Terminal, ```git clone https://github.com/GoogleCloudPlatform/bigquery-oreilly-book```
-  * Type: ```cd bigquery-oreilly-book/05_devel/sparktobq```
+  * In a Terminal, ```git clone https://github.com/GoogleCloudPlatform/training-data-analyst```
+  * Type: ```cd training-data-analyst/quests/sparktobq```
   * In an editor, modify ```copy_to_gcs.sh``` to refer to your bucket
   * Type: ```./copy_to_gcs.sh```
   * The notebooks should show up in the menu of JupyterLab
@@ -35,7 +35,6 @@
 * Test running it standalone
 * You may have to replace uses of ```gsutil``` within Spark code by Python API
 * From CloudShell:
-  * 
   * Use the script [submit_onejob.sh](submit_onejob.sh) to submit the created file ```spark_analysis.py``` to the cluster you have created above.
   * Wait for job to finish.
   * Delete the ```sparktobq``` cluster -- you don't need it any more.
@@ -48,4 +47,6 @@
 * Run ```04_bigquery.ipynb```
 
 ### Part 5
-* 
+* On the same AI Platform Notebooks instance as Part 4, open and run ```05_functions.ipynb```
+* Delete the Notebooks instance
+
