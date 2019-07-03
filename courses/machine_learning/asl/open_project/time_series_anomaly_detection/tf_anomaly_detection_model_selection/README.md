@@ -9,7 +9,7 @@ This notebook is a local implementation of the model that contains a data genera
 The current data generator creates different sinusoids for both normal and anomalous sequences. This can be replaced with any other time series data that you want to perform anomaly detection on as long as it matches the correct input format. The format is a delimited string that separates features and internal to each feature the timesteps are delimited by a different separator.
 
 For example for data that contains three features and five timesteps where the first subscript is feature index and the second subscript is timestep index, a row of input data would look like the following:
-x00,x01,x02,x03,x04;x10,x11,x12,x13,x14;x20,x21,x22,x23,x24
+x00;x01;x02;x03;x04,x10;x11;x12;x13;x14,x20;x21;x22;x23;x24
 
 This data is then read into the input function, batched, and sent to the custom model function.
 
