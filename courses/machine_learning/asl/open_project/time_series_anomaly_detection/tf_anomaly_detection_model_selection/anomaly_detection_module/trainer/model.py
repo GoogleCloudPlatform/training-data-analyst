@@ -1,8 +1,8 @@
 import tensorflow as tf
 
-from anomaly_detection import anomaly_detection
-from input import read_dataset
-from serving import serving_input_fn
+from .anomaly_detection import anomaly_detection
+from .input import read_dataset
+from .serving import serving_input_fn
 
 # Set logging to be level of INFO
 tf.logging.set_verbosity(tf.logging.INFO)

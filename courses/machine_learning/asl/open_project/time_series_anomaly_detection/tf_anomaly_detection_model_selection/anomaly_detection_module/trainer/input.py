@@ -1,5 +1,5 @@
 import tensorflow as tf
-from globals import *
+from .globals import *
 
 
 # Input function functions

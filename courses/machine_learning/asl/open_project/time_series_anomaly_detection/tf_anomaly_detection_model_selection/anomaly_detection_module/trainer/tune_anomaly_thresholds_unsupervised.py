@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from calculate_error_distribution_statistics import non_singleton_batch_var_variable_updating
-from calculate_error_distribution_statistics import singleton_batch_var_variable_updating
+from .calculate_error_distribution_statistics import non_singleton_batch_var_variable_updating
+from .calculate_error_distribution_statistics import singleton_batch_var_variable_updating
 
 
 def tune_anomaly_thresholds_unsupervised_training(

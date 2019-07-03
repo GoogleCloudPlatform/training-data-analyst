@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 
-from model import train_and_evaluate
+from .model import train_and_evaluate
 
 
 if __name__ == "__main__":

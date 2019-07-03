@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from globals import *
+from .globals import *
 
 # Serving input functions
 def fix_shape_and_type_for_serving(placeholder):
