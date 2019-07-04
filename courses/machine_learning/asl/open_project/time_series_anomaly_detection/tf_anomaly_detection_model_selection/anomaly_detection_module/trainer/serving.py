@@ -22,7 +22,7 @@ def fix_shape_and_type_for_serving(placeholder):
   # shape = (batch_size, seq_len)
   split_string = tf.stack(values=tf.map_fn(
       fn=lambda x: tf.string_split(
-          source=[placeholder[x]], delimiter=",").values,
+          source=[placeholder[x]], delimiter=";").values,
       elems=tf.range(
           start=0, limit=cur_batch_size, dtype=tf.int64),
       dtype=tf.string), axis=0)

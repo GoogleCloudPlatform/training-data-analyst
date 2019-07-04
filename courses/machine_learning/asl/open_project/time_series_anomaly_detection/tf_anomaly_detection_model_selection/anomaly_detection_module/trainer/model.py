@@ -28,13 +28,14 @@ def train_and_evaluate(args):
 
   if args["training_mode"] == "reconstruction":
     if args["model_type"] == "pca":
-      estimator.train(
+      # Create train spec to read in our training data
+      train_spec = tf.estimator.TrainSpec(
           input_fn=read_dataset(
               filename=args["train_file_pattern"],
-              mode=tf.estimator.ModeKeys.EVAL,
+              mode=tf.estimator.ModeKeys.TRAIN,
               batch_size=args["train_batch_size"],
               params=args),
-          steps=None)
+          max_steps=args["train_steps"])
     else:  # dense_autoencoder or lstm_enc_dec_autoencoder
       # Create early stopping hook to help reduce overfitting
       early_stopping_hook = tf.contrib.estimator.stop_if_no_decrease_hook(
@@ -55,20 +56,20 @@ def train_and_evaluate(args):
           max_steps=args["train_steps"],
           hooks=[early_stopping_hook])
 
-      # Create eval spec to read in our validation data and export our model
-      eval_spec = tf.estimator.EvalSpec(
-          input_fn=read_dataset(
-              filename=args["eval_file_pattern"],
-              mode=tf.estimator.ModeKeys.EVAL,
-              batch_size=args["eval_batch_size"],
-              params=args),
-          steps=None,
-          start_delay_secs=args["start_delay_secs"],  # start eval after N secs
-          throttle_secs=args["throttle_secs"])  # evaluate every N secs
+    # Create eval spec to read in our validation data and export our model
+    eval_spec = tf.estimator.EvalSpec(
+        input_fn=read_dataset(
+            filename=args["eval_file_pattern"],
+            mode=tf.estimator.ModeKeys.EVAL,
+            batch_size=args["eval_batch_size"],
+            params=args),
+        steps=None,
+        start_delay_secs=args["start_delay_secs"],  # start eval after N secs
+        throttle_secs=args["throttle_secs"])  # evaluate every N secs
 
-      # Create train and evaluate loop to train and evaluate our estimator
-      tf.estimator.train_and_evaluate(
-          estimator=estimator, train_spec=train_spec, eval_spec=eval_spec)
+    # Create train and evaluate loop to train and evaluate our estimator
+    tf.estimator.train_and_evaluate(
+        estimator=estimator, train_spec=train_spec, eval_spec=eval_spec)
   else:
     # if args["training_mode"] == "calculate_error_distribution_statistics"
     # Get final mahalanobis statistics over the entire val_1 dataset

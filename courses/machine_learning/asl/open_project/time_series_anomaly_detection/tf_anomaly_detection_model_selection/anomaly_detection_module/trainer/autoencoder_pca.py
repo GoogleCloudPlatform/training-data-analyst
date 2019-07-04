@@ -1,5 +1,8 @@
 import tensorflow as tf
 
+from .calculate_error_distribution_statistics import non_singleton_batch_cov_variable_updating
+from .calculate_error_distribution_statistics import singleton_batch_cov_variable_updating
+
 
 # PCA model functions
 def create_pca_vars(var_name, size):
