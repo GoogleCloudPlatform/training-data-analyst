@@ -93,7 +93,10 @@ def decode_csv(value_column, mode, seq_len, training_mode, labeled_tune_thresh):
 
     features = dict(zip(UNLABELED_CSV_COLUMNS, columns))
     features = convert_sequences_from_strings_to_floats(
-        features=features, column_list=UNLABELED_CSV_COLUMNS, seq_len=seq_len)
+        features=features,
+        column_list=UNLABELED_CSV_COLUMNS,
+        seq_len=seq_len)
+
     return features
   else:
     # For subset of CSV files that DO have labels
@@ -150,7 +153,7 @@ def read_dataset(filename, mode, batch_size, params):
             mode=mode,
             seq_len=params["seq_len"],
             training_mode=params["training_mode"],
-			labeled_tune_thresh=params["labeled_tune_thresh"]))
+            labeled_tune_thresh=params["labeled_tune_thresh"]))
 
     # Determine amount of times to repeat file if we are training or evaluating
     if mode == tf.estimator.ModeKeys.TRAIN:
