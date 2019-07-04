@@ -32,7 +32,7 @@ def train_and_evaluate(args):
       train_spec = tf.estimator.TrainSpec(
           input_fn=read_dataset(
               filename=args["train_file_pattern"],
-              mode=tf.estimator.ModeKeys.TRAIN,
+              mode=tf.estimator.ModeKeys.EVAL,  # read through train data once
               batch_size=args["train_batch_size"],
               params=args),
           max_steps=args["train_steps"])
