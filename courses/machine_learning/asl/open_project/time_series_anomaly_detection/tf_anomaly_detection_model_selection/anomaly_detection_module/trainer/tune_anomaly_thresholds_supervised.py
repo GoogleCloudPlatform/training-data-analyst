@@ -170,35 +170,144 @@ def calculate_composite_classification_metrics(tp, fn, fp, tn, f_score_beta):
 
 
 def find_best_anom_thresh(
-    anom_threshs, f_beta_score, user_passed_anom_thresh, anom_thresh_var):
+    anom_threshs, f_beta_score, anom_thresh_var):
   """Find best anomaly threshold to use for anomaly classification.
 
-  Given grid of anomaly thresholds, variables for the confusion matrix, and the
-  value of beta for f-beta score, returns accuracy, precision, recall, and
-  f-beta score composite metrics.
+  Given vector of anomaly thresholds and the value of beta for f-beta score,
+  returns updated variable that stores the best anomaly threshold value.
 
   Args:
     anom_threshs: tf.float64 vector tensor of grid of anomaly thresholds to try.
     f_beta_score: tf.float64 vector tensor of f-beta scores for each anomaly
       threshold.
-    user_passed_anom_thresh: User passed anomaly threshold that overrides
-      the threshold optimization.
+    anom_thresh_var: tf.float64 variable that stores anomaly threshold value.
+
+  Returns:
+    Updated variable that stores the anomaly threshold value.
+  """
+  # shape = ()
+  best_anom_thresh = tf.gather(
+      params=anom_threshs, indices=tf.argmax(input=f_beta_score, axis=0))
+
+  with tf.control_dependencies(
+      control_inputs=[tf.assign(
+          ref=anom_thresh_var, value=best_anom_thresh)]):
+
+    return tf.identity(input=anom_thresh_var)
+
+
+def optimize_anomaly_theshold(
+    var_name,
+    labels_norm_mask,
+    labels_anom_mask,
+    mahalanobis_dist,
+    tp_thresh_var,
+    fn_thresh_var,
+    fp_thresh_var,
+    tn_thresh_var,
+    params,
+    mode,
+    anom_thresh_var):
+  """Optimizes anomaly threshold for anomaly classification.
+
+  Given variable name, label masks, mahalanobis distance, variables for
+  confusion matrix, and dictionary of parameters, returns accuracy, precision, recall, and
+  f-beta score composite metrics.
+
+  Args:
+    var_name: String denoting which set of variables to use. Values are
+      "time" and "feat".
+    labels_norm_mask: tf.bool vector mask of labels for normals.
+    labels_anom_mask: tf.bool vector mask of labels for anomalies.
+    mahalanobis_dist_time: Mahalanobis distance of reconstruction error.
+    tp_thresh_var: tf.int64 variable to track number of true positives wrt
+      thresholds.
+    fn_thresh_var: tf.int64 variable to track number of false negatives wrt
+      thresholds.
+    fp_thresh_var: tf.int64 variable to track number of false positives wrt
+      thresholds.
+    tn_thresh_var: tf.int64 variable to track number of true negatives wrt
+      thresholds.
+    params: Dictionary of parameters.
+    mode: Estimator ModeKeys, can take values of TRAIN and EVAL.
     anom_thresh_var: tf.float64 variable that stores anomaly threshold value.
 
   Returns:
     Updated variable that stores the anomaly threshold value
   """
-  if user_passed_anom_thresh is None:
-    # shape = ()
-    best_anom_thresh = tf.gather(
-        params=anom_threshs, indices=tf.argmax(input=f_beta_score, axis=0))
-  else:
-    # shape = ()
-    best_anom_thresh = user_passed_anom_thresh
+  # shape = (num_anom_thresh,)
+  anom_threshs = tf.linspace(
+      start=tf.constant(
+          value=params["min_{}_anom_thresh".format(var_name)],
+          dtype=tf.float64),
+      stop=tf.constant(
+          value=params["max_{}_anom_thresh".format(var_name)],
+          dtype=tf.float64),
+      num=params["num_{}_anom_thresh".format(var_name)])
+
+  with tf.variable_scope(
+      name_or_scope="mahalanobis_dist_thresh_vars",
+      reuse=tf.AUTO_REUSE):
+    (tp_update_op,
+     fn_update_op,
+     fp_update_op,
+     tn_update_op) = \
+      update_anom_thresh_vars(
+          labels_norm_mask,
+          labels_anom_mask,
+          params["num_{}_anom_thresh".format(var_name)],
+          anom_threshs,
+          mahalanobis_dist,
+          tp_thresh_var,
+          fn_thresh_var,
+          fp_thresh_var,
+          tn_thresh_var,
+          mode)
 
   with tf.control_dependencies(
+      control_inputs=[
+          tp_update_op,
+          fn_update_op,
+          fp_update_op,
+          tn_update_op]):
+    _, pre, rec, f_beta = \
+      calculate_composite_classification_metrics(
+          tp_thresh_var,
+          fn_thresh_var,
+          fp_thresh_var,
+          tn_thresh_var,
+          params["f_score_beta"])
+
+    with tf.control_dependencies(
+        control_inputs=[pre, rec]):
+      with tf.control_dependencies(
+          control_inputs=[f_beta]):
+        best_anom_thresh_time = find_best_anom_thresh(
+            anom_threshs,
+            f_beta,
+            anom_thresh_var)
+
+        return tf.identity(input=anom_thresh_var)
+
+
+def set_anom_thresh(user_passed_anom_thresh, anom_thresh_var):
+  """Set anomaly threshold to use for anomaly classification from user input.
+
+  Given user passed anomaly threshold returns updated variable that stores 
+  the anomaly threshold value.
+
+  Args:
+    anom_threshs: tf.float64 vector tensor of grid of anomaly thresholds to try.
+    user_passed_anom_thresh: User passed anomaly threshold that overrides
+      the threshold optimization.
+    anom_thresh_var: tf.float64 variable that stores anomaly threshold value.
+
+  Returns:
+    Updated variable that stores the anomaly threshold value.
+  """
+  with tf.control_dependencies(
       control_inputs=[tf.assign(
-          ref=anom_thresh_var, value=best_anom_thresh)]):
+          ref=anom_thresh_var, value=user_passed_anom_thresh)]):
 
     return tf.identity(input=anom_thresh_var)
 
@@ -261,122 +370,55 @@ def tune_anomaly_thresholds_supervised_training(
     train_op: The train operation to tie our updates back to Estimator graph.
   """
   # Time based
-  # shape = (num_time_anom_thresh,)
-  time_anom_threshs = tf.linspace(
-      start=tf.constant(
-          value=params["min_time_anom_thresh"], dtype=tf.float64),
-      stop=tf.constant(
-          value=params["max_time_anom_thresh"], dtype=tf.float64),
-      num=params["num_time_anom_thresh"])
-
-  with tf.variable_scope(
-      name_or_scope="mahalanobis_dist_thresh_vars",
-      reuse=tf.AUTO_REUSE):
-    (tp_time_update_op,
-     fn_time_update_op,
-     fp_time_update_op,
-     tn_time_update_op) = \
-      update_anom_thresh_vars(
-          labels_norm_mask,
-          labels_anom_mask,
-          params["num_time_anom_thresh"],
-          time_anom_threshs,
-          mahalanobis_dist_time,
-          tp_thresh_time_var,
-          fn_thresh_time_var,
-          fp_thresh_time_var,
-          tn_thresh_time_var,
-          mode)
+  if params["time_anom_thresh"] is None:
+    best_anom_thresh_time = optimize_anomaly_theshold(
+        "time",
+        labels_norm_mask,
+        labels_anom_mask,
+        mahalanobis_dist_time,
+        tp_thresh_time_var,
+        fn_thresh_time_var,
+        fp_thresh_time_var,
+        tn_thresh_time_var,
+        params,
+        mode,
+        time_anom_thresh_var)
+  else:
+    best_anom_thresh_time = set_anom_thresh(
+        params["time_anom_thresh"], time_anom_thresh_var)
 
   # Features based
-  # shape = (num_feat_anom_thresh,)
-  feat_anom_threshs = tf.linspace(
-      start=tf.constant(value=params["min_feat_anom_thresh"],
-                        dtype=tf.float64),
-      stop=tf.constant(value=params["max_feat_anom_thresh"],
-                       dtype=tf.float64),
-      num=params["num_feat_anom_thresh"])
+  if params["feat_anom_thresh"] is None:
+    best_anom_thresh_feat = optimize_anomaly_theshold(
+        "feat",
+        labels_norm_mask,
+        labels_anom_mask,
+        mahalanobis_dist_feat,
+        tp_thresh_feat_var,
+        fn_thresh_feat_var,
+        fp_thresh_feat_var,
+        tn_thresh_feat_var,
+        params,
+        mode,
+        feat_anom_thresh_var)
+  else:
+    best_anom_thresh_feat = set_anom_thresh(
+        params["feat_anom_thresh"], feat_anom_thresh_var)
 
-  with tf.variable_scope(
-      name_or_scope="mahalanobis_dist_thresh_vars",
-      reuse=tf.AUTO_REUSE):
-    (tp_feat_update_op,
-     fn_feat_update_op,
-     fp_feat_update_op,
-     tn_feat_update_op) = \
-      update_anom_thresh_vars(
-          labels_norm_mask,
-          labels_anom_mask,
-          params["num_feat_anom_thresh"],
-          feat_anom_threshs,
-          mahalanobis_dist_feat,
-          tp_thresh_feat_var,
-          fn_thresh_feat_var,
-          fp_thresh_feat_var,
-          tn_thresh_feat_var,
-          mode)
-
-  # Reconstruction loss on evaluation set
   with tf.control_dependencies(
-      control_inputs=[
-          tp_time_update_op,
-          fn_time_update_op,
-          fp_time_update_op,
-          tn_time_update_op,
-          tp_feat_update_op,
-          fn_feat_update_op,
-          fp_feat_update_op,
-          tn_feat_update_op]):
-    # Time based
-    _, pre_time, rec_time, f_beta_time = \
-      calculate_composite_classification_metrics(
-          tp_thresh_time_var,
-          fn_thresh_time_var,
-          fp_thresh_time_var,
-          tn_thresh_time_var,
-          params["f_score_beta"])
+      control_inputs=[best_anom_thresh_time,
+                      best_anom_thresh_feat]):
+    loss = tf.reduce_sum(
+        input_tensor=tf.zeros(
+            shape=(), dtype=tf.float64) * dummy_var)
 
-    # Features based
-    _, pre_feat, rec_feat, f_beta_feat = \
-      calculate_composite_classification_metrics(
-          tp_thresh_feat_var,
-          fn_thresh_feat_var,
-          fp_thresh_feat_var,
-          tn_thresh_feat_var,
-          params["f_score_beta"])
+    train_op = tf.contrib.layers.optimize_loss(
+        loss=loss,
+        global_step=tf.train.get_global_step(),
+        learning_rate=params["learning_rate"],
+        optimizer="SGD")
 
-    with tf.control_dependencies(
-        control_inputs=[pre_time, pre_feat, rec_time, rec_feat]):
-      with tf.control_dependencies(
-          control_inputs=[f_beta_time, f_beta_feat]):
-        # Time based
-        best_anom_thresh_time = find_best_anom_thresh(
-            time_anom_threshs,
-            f_beta_time,
-            params["time_anom_thresh"],
-            time_anom_thresh_var)
-
-        # Features based
-        best_anom_thresh_feat = find_best_anom_thresh(
-            feat_anom_threshs,
-            f_beta_feat,
-            params["feat_anom_thresh"],
-            feat_anom_thresh_var)
-
-        with tf.control_dependencies(
-            control_inputs=[best_anom_thresh_time,
-                            best_anom_thresh_feat]):
-          loss = tf.reduce_sum(
-              input_tensor=tf.zeros(
-                  shape=(), dtype=tf.float64) * dummy_var)
-
-          train_op = tf.contrib.layers.optimize_loss(
-              loss=loss,
-              global_step=tf.train.get_global_step(),
-              learning_rate=params["learning_rate"],
-              optimizer="SGD")
-
-  return loss, train_op
+    return loss, train_op
 
 
 def tune_anomaly_thresholds_evaluation(
