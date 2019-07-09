@@ -2,11 +2,11 @@ import tensorflow as tf
 
 from .calculate_error_distribution_statistics import non_singleton_batch_var_variable_updating
 from .calculate_error_distribution_statistics import singleton_batch_var_variable_updating
+from .predict import flag_anomalies_by_thresholding
 
 
 def tune_anomaly_thresholds_unsupervised_training(
     cur_batch_size,
-    num_feat,
     time_anom_thresh_var,
     mahalanobis_dist_time,
     count_thresh_time_var,
@@ -19,7 +19,7 @@ def tune_anomaly_thresholds_unsupervised_training(
     var_thresh_feat_var,
     params,
     dummy_var):
-  """Calculates error distribution statistics during training mode.
+  """Tunes anomaly thresholds during unsupervised training mode.
 
   Given dimensions of inputs, mahalanobis distances, and variables tracking
   counts, means, and variances of mahalanobis distance, returns loss and
@@ -27,7 +27,6 @@ def tune_anomaly_thresholds_unsupervised_training(
 
   Args:
     cur_batch_size: Current batch size, could be partially filled.
-    num_feat: Number of features.
     time_anom_thresh_var: Time anomaly threshold variable.
     mahalanobis_dist_time: Time major mahalanobis distance.
     count_thresh_time_var: Time major running count of number of records.
@@ -75,22 +74,22 @@ def tune_anomaly_thresholds_unsupervised_training(
     # Features based
     mahalanobis_dist_feat_flat = tf.reshape(
         tensor=mahalanobis_dist_feat,
-        shape=[cur_batch_size * num_feat])
+        shape=[cur_batch_size * params["num_feat"]])
 
     singleton_feat_condition = tf.equal(
-        x=cur_batch_size * num_feat, y=1)
+        x=cur_batch_size * params["num_feat"], y=1)
 
     var_feat_var, mean_feat_var, count_feat_var = tf.cond(
         pred=singleton_feat_condition,
         true_fn=lambda: singleton_batch_var_variable_updating(
-            num_feat,
+            params["num_feat"],
             mahalanobis_dist_feat_flat,
             count_thresh_feat_var,
             mean_thresh_feat_var,
             var_thresh_feat_var),
         false_fn=lambda: non_singleton_batch_var_variable_updating(
             cur_batch_size,
-            num_feat,
+            params["num_feat"],
             mahalanobis_dist_feat_flat,
             count_thresh_feat_var,
             mean_thresh_feat_var,
@@ -125,3 +124,49 @@ def tune_anomaly_thresholds_unsupervised_training(
               optimizer="SGD")
 
   return loss, train_op
+
+
+def tune_anomaly_thresholds_unsupervised_eval(
+    cur_batch_size,
+    time_anom_thresh_var,
+    mahalanobis_dist_time,
+    feat_anom_thresh_var,
+    mahalanobis_dist_feat):
+  """Checks tuned anomaly thresholds during supervised evaluation mode.
+
+  Given dimensions of inputs, mahalanobis distances, and variables tracking
+  counts, means, and variances of mahalanobis distance, returns loss and
+  train_op.
+
+  Args:
+    cur_batch_size: Current batch size, could be partially filled.
+    time_anom_thresh_var: Time anomaly threshold variable.
+    mahalanobis_dist_time: Time major mahalanobis distance.
+    feat_anom_thresh_var: Feature anomaly threshold variable.
+    mahalanobis_dist_feat: Feature major mahalanobis distance.
+
+  Returns:
+    loss: The scalar loss to tie our updates back to Estimator graph.
+    eval_metric_ops: Evaluation metrics of threshold tuning.
+  """
+  loss = tf.zeros(shape=[], dtype=tf.float64)
+
+  # Flag predictions as either normal or anomalous
+  # shape = (cur_batch_size,)
+  time_anom_flags = flag_anomalies_by_thresholding(
+      cur_batch_size, mahalanobis_dist_time, time_anom_thresh_var)
+
+  # shape = (cur_batch_size,)
+  feat_anom_flags = flag_anomalies_by_thresholding(
+      cur_batch_size, mahalanobis_dist_feat, feat_anom_thresh_var)
+
+  # Anomaly detection eval metrics
+  eval_metric_ops = {
+      # Time based
+      "time_anom_tp": tf.metrics.mean(values=time_anom_flags),
+
+      # Features based
+      "feat_anom_tp": tf.metrics.mean(values=feat_anom_flags)
+  }
+
+  return loss, eval_metric_ops

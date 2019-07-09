@@ -96,7 +96,6 @@ def decode_csv(value_column, mode, seq_len, training_mode, labeled_tune_thresh):
         features=features,
         column_list=UNLABELED_CSV_COLUMNS,
         seq_len=seq_len)
-
     return features
   else:
     # For subset of CSV files that DO have labels

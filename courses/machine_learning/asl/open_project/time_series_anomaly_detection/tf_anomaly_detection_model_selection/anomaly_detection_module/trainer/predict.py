@@ -1,6 +1,34 @@
 import tensorflow as tf
 
 
+def flag_anomalies_by_thresholding(
+    cur_batch_size, mahalanobis_dist, anom_thresh_var):
+  """Flags anomalies by thresholding.
+
+  Given current batch size, mahalanobis distance, and anomaly threshold
+  variable, return predicted anomaly flags.
+
+  Args:
+    cur_batch_size: Current batch size, could be partially filled.
+    mahalanobis_dist: Mahalanobis distance.
+    anom_thresh_var: Anomaly threshold variable.
+
+  Returns:
+    anomaly_flags: tf.int64 vector of current batch size elements of
+    0's and 1's indicating if each sequence is anomalous or not.
+  """
+  anom_flags = tf.where(
+      condition=tf.reduce_any(
+          input_tensor=tf.greater(
+              x=tf.abs(x=mahalanobis_dist),
+              y=anom_thresh_var),
+          axis=1),
+      x=tf.ones(shape=[cur_batch_size], dtype=tf.int64),
+      y=tf.zeros(shape=[cur_batch_size], dtype=tf.int64))
+
+  return anom_flags
+
+
 def anomaly_detection_predictions(
     cur_batch_size,
     seq_len,
@@ -36,24 +64,12 @@ def anomaly_detection_predictions(
   """
   # Flag predictions as either normal or anomalous
   # shape = (cur_batch_size,)
-  time_anom_flags = tf.where(
-      condition=tf.reduce_any(
-          input_tensor=tf.greater(
-              x=tf.abs(x=mahalanobis_dist_time),
-              y=time_anom_thresh_var),
-          axis=1),
-      x=tf.ones(shape=[cur_batch_size], dtype=tf.int64),
-      y=tf.zeros(shape=[cur_batch_size], dtype=tf.int64))
+  time_anom_flags = flag_anomalies_by_thresholding(
+      cur_batch_size, mahalanobis_dist_time, time_anom_thresh_var)
 
   # shape = (cur_batch_size,)
-  feat_anom_flags = tf.where(
-      condition=tf.reduce_any(
-          input_tensor=tf.greater(
-              x=tf.abs(x=mahalanobis_dist_feat),
-              y=feat_anom_thresh_var),
-          axis=1),
-      x=tf.ones(shape=[cur_batch_size], dtype=tf.int64),
-      y=tf.zeros(shape=[cur_batch_size], dtype=tf.int64))
+  feat_anom_flags = flag_anomalies_by_thresholding(
+      cur_batch_size, mahalanobis_dist_feat, feat_anom_thresh_var)
 
   # Create predictions dictionary
   predictions_dict = {

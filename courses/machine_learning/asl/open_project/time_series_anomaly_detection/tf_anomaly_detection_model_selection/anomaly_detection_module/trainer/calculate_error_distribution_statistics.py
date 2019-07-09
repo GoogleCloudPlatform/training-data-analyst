@@ -61,11 +61,9 @@ def update_cov_incremental(
   Returns:
     A tf.float64 matrix tensor of new covariance matrix.
   """
-  print("value_b = \n{}".format(value_b))
-  print("mean_a = \n{}".format(mean_a))
-  print("mean_ab = \n{}".format(mean_ab))
   mean_diff = tf.matmul(
       a=value_b - mean_a, b=value_b - mean_ab, transpose_a=True)
+
   if sample_cov:
     ucov_a = cov_a * tf.cast(x=count_a - 1, dtype=tf.float64)
     cov_ab = (ucov_a + mean_diff) / tf.cast(x=count_a, dtype=tf.float64)
@@ -177,7 +175,7 @@ def singleton_batch_var_variable_updating(
         count_a=count_variable,
         mean_a=tf.reshape(tensor=mean_variable, shape=[1]),
         cov_a=tf.reshape(tensor=var_variable, shape=[1, 1]),
-        value_b=tf.reshape(tensor=x, shape=[1,1]),
+        value_b=tf.reshape(tensor=x, shape=[1, 1]),
         mean_ab=tf.reshape(tensor=mean_ab, shape=[1]),
         sample_cov=True)
 
@@ -367,7 +365,7 @@ def non_singleton_batch_var_variable_updating(
   """
   # Find statistics of batch
   number_of_rows = cur_batch_size * inner_size
-  
+
   # time_shape = (), features_shape = ()
   x_mean = tf.reduce_mean(input_tensor=x)
 
@@ -474,7 +472,6 @@ def mahalanobis_dist(err_vec, mean_vec, inv_cov, final_shape):
 
 def calculate_error_distribution_statistics_training(
     cur_batch_size,
-    num_feat,
     X_time_abs_recon_err,
     abs_err_count_time_var,
     abs_err_mean_time_var,
@@ -495,7 +492,6 @@ def calculate_error_distribution_statistics_training(
 
   Args:
     cur_batch_size: Current batch size, could be partially filled.
-    num_feat: Number of features.
     X_time_abs_recon_err: Time major reconstructed input data's absolute
       reconstruction error.
     abs_err_count_time_var: Time major running count of number of records.
@@ -544,19 +540,19 @@ def calculate_error_distribution_statistics_training(
 
     # Features based
     singleton_feat_condition = tf.equal(
-        x=cur_batch_size * num_feat, y=1)
+        x=cur_batch_size * params["num_feat"], y=1)
 
     cov_feat_var, mean_feat_var, count_feat_var = tf.cond(
         pred=singleton_feat_condition,
         true_fn=lambda: singleton_batch_cov_variable_updating(
-            num_feat,
+            params["num_feat"],
             X_feat_abs_recon_err,
             abs_err_count_feat_var,
             abs_err_mean_feat_var,
             abs_err_cov_feat_var),
         false_fn=lambda: non_singleton_batch_cov_variable_updating(
             cur_batch_size,
-            num_feat,
+            params["num_feat"],
             X_feat_abs_recon_err,
             abs_err_count_feat_var,
             abs_err_mean_feat_var,

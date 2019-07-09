@@ -8,8 +8,9 @@ def calculate_threshold_confusion_matrix(labels_mask, preds, num_thresh):
   for cell in confusion matrix.
 
   Args:
-    labels_norm_mask: tf.bool vector tensor when label was normal or 
+    labels_mask: tf.bool vector tensor when label was normal or
       anomalous.
+    preds: Predicted anomaly labels.
     num_thresh: Number of anomaly thresholds to try in parallel grid search.
 
   Returns:
@@ -211,15 +212,15 @@ def optimize_anomaly_theshold(
   """Optimizes anomaly threshold for anomaly classification.
 
   Given variable name, label masks, mahalanobis distance, variables for
-  confusion matrix, and dictionary of parameters, returns accuracy, precision, recall, and
-  f-beta score composite metrics.
+  confusion matrix, and dictionary of parameters, returns accuracy, precision,
+  recall, and f-beta score composite metrics.
 
   Args:
     var_name: String denoting which set of variables to use. Values are
       "time" and "feat".
     labels_norm_mask: tf.bool vector mask of labels for normals.
     labels_anom_mask: tf.bool vector mask of labels for anomalies.
-    mahalanobis_dist_time: Mahalanobis distance of reconstruction error.
+    mahalanobis_dist: Mahalanobis distance of reconstruction error.
     tp_thresh_var: tf.int64 variable to track number of true positives wrt
       thresholds.
     fn_thresh_var: tf.int64 variable to track number of false negatives wrt
@@ -278,26 +279,23 @@ def optimize_anomaly_theshold(
           tn_thresh_var,
           params["f_score_beta"])
 
-    with tf.control_dependencies(
-        control_inputs=[pre, rec]):
-      with tf.control_dependencies(
-          control_inputs=[f_beta]):
-        best_anom_thresh_time = find_best_anom_thresh(
+    with tf.control_dependencies(control_inputs=[pre, rec]):
+      with tf.control_dependencies(control_inputs=[f_beta]):
+        best_anom_thresh = find_best_anom_thresh(
             anom_threshs,
             f_beta,
             anom_thresh_var)
-
-        return tf.identity(input=anom_thresh_var)
+        with tf.control_dependencies(control_inputs=[best_anom_thresh]):
+          return tf.identity(input=anom_thresh_var)
 
 
 def set_anom_thresh(user_passed_anom_thresh, anom_thresh_var):
   """Set anomaly threshold to use for anomaly classification from user input.
 
-  Given user passed anomaly threshold returns updated variable that stores 
+  Given user passed anomaly threshold returns updated variable that stores
   the anomaly threshold value.
 
   Args:
-    anom_threshs: tf.float64 vector tensor of grid of anomaly thresholds to try.
     user_passed_anom_thresh: User passed anomaly threshold that overrides
       the threshold optimization.
     anom_thresh_var: tf.float64 variable that stores anomaly threshold value.
@@ -421,7 +419,7 @@ def tune_anomaly_thresholds_supervised_training(
     return loss, train_op
 
 
-def tune_anomaly_thresholds_evaluation(
+def tune_anomaly_thresholds_supervised_eval(
     labels_norm_mask,
     labels_anom_mask,
     time_anom_thresh_var,
@@ -438,7 +436,7 @@ def tune_anomaly_thresholds_evaluation(
     tn_thresh_eval_feat_var,
     params,
     mode):
-  """Checks tuned anomaly thresholds during evaluation mode.
+  """Checks tuned anomaly thresholds during supervised evaluation mode.
 
   Given label masks, mahalanobis distances, confusion matrices, and anomaly
   thresholds, returns loss and eval_metric_ops.
@@ -471,7 +469,7 @@ def tune_anomaly_thresholds_evaluation(
 
   Returns:
     loss: Scalar reconstruction loss.
-    eval_metric_ops: Evaluation metrics of reconstruction.
+    eval_metric_ops: Evaluation metrics of threshold tuning.
   """
   with tf.variable_scope(
       name_or_scope="anom_thresh_eval_vars", reuse=tf.AUTO_REUSE):

@@ -57,10 +57,10 @@ def rnn_decoder(dec_input, init_state, cell, infer, dnn_hidden_units, num_feat):
       matrix tensors input to the decoder.
     init_state: Initial state of the decoder cell. Final state from the
       encoder cell.
-    cell:
-    infer:
-    dnn_hidden_units:
-    num_feat:
+    cell: RNN Cell object.
+    infer: Boolean whether in inference mode or not.
+    dnn_hidden_units: Python list of integers of number of units per DNN layer.
+    num_feat: Python integer of the number of features.
 
   Returns:
     outputs: List of decoder outputs of length number of timesteps of tf.float64
@@ -136,7 +136,7 @@ def rnn_decoder(dec_input, init_state, cell, infer, dnn_hidden_units, num_feat):
 
 
 def lstm_enc_dec_autoencoder_model(
-    X, mode, params, cur_batch_size, num_feat, dummy_var):
+    X, mode, params, cur_batch_size, dummy_var):
   """LSTM autoencoder to reconstruct inputs and minimize reconstruction error.
 
   Given data matrix tensor X, the current Estimator mode, the dictionary of
@@ -149,7 +149,6 @@ def lstm_enc_dec_autoencoder_model(
     mode: Estimator ModeKeys. Can take values of TRAIN, EVAL, and PREDICT.
     params: Dictionary of parameters.
     cur_batch_size: Current batch size, could be partially filled.
-    num_feat: Number of features.
     dummy_var: Dummy variable used to allow training mode to happen since it
       requires a gradient to tie back to the graph dependency.
 
@@ -158,9 +157,9 @@ def lstm_enc_dec_autoencoder_model(
     train_op: Train operation so that Estimator can correctly add to dependency
       graph.
     X_time: 2D tensor representation of time major input data.
-    X_time_recon: 3D tensor representation of time major input data.
+    X_time_recon: 2D tensor representation of time major input data.
     X_feat: 2D tensor representation of feature major input data.
-    X_feat_recon: 3D tensor representation of feature major input data.
+    X_feat_recon: 2D tensor representation of feature major input data.
   """
   # Unstack 3-D features tensor into a sequence(list) of 2-D tensors
   # shape = (cur_batch_size, num_feat)
@@ -264,12 +263,13 @@ def lstm_enc_dec_autoencoder_model(
         cell=dec_stacked_lstm_cells,
         infer=False,
         dnn_hidden_units=params["dnn_hidden_units"],
-        num_feat=num_feat)
+        num_feat=params["num_feat"])
   else:
     # Since this is inference create fake labels. The list length needs to be
     # the output sequence length even though only the first element is the only
     # one actually used (as our go signal)
-    fake_labels = [tf.zeros(shape=[cur_batch_size, num_feat], dtype=tf.float64)
+    fake_labels = [tf.zeros(shape=[cur_batch_size, params["num_feat"]],
+                            dtype=tf.float64)
                    for _ in range(params["seq_len"])]
 
     # Call our decoder using fake labels as our inputs, the encoder final state
@@ -283,7 +283,7 @@ def lstm_enc_dec_autoencoder_model(
         cell=dec_stacked_lstm_cells,
         infer=True,
         dnn_hidden_units=params["dnn_hidden_units"],
-        num_feat=num_feat)
+        num_feat=params["num_feat"])
 
   # Stack together list of rank 2 decoder output tensors into one rank 3 tensor
   # shape = (cur_batch_size, seq_len, lstm_hidden_units[-1])
@@ -319,7 +319,7 @@ def lstm_enc_dec_autoencoder_model(
     # shape = (cur_batch_size * seq_len, num_feat)
     logits = tf.layers.dense(
         inputs=network,
-        units=num_feat,
+        units=params["num_feat"],
         activation=None)
 
   # Now that we are through the final DNN for each sequence element for
@@ -327,7 +327,7 @@ def lstm_enc_dec_autoencoder_model(
   # shape = (cur_batch_size, seq_len, num_feat)
   predictions = tf.reshape(
       tensor=logits,
-      shape=[cur_batch_size, params["seq_len"], num_feat])
+      shape=[cur_batch_size, params["seq_len"], params["num_feat"]])
 
   if (mode == tf.estimator.ModeKeys.TRAIN and
       params["training_mode"] == "reconstruction"):
@@ -356,11 +356,11 @@ def lstm_enc_dec_autoencoder_model(
     # shape = (cur_batch_size * seq_len, num_feat)
     X_time = tf.reshape(
         tensor=X,
-        shape=[cur_batch_size * params["seq_len"], num_feat])
+        shape=[cur_batch_size * params["seq_len"], params["num_feat"]])
 
     X_time_recon = tf.reshape(
         tensor=predictions,
-        shape=[cur_batch_size * params["seq_len"], num_feat])
+        shape=[cur_batch_size * params["seq_len"], params["num_feat"]])
 
     # Features based
     # shape = (cur_batch_size, num_feat, seq_len)
@@ -369,7 +369,7 @@ def lstm_enc_dec_autoencoder_model(
     # shape = (cur_batch_size * num_feat, seq_len)
     X_feat = tf.reshape(
         tensor=X_transposed,
-        shape=[cur_batch_size * num_feat, params["seq_len"]])
+        shape=[cur_batch_size * params["num_feat"], params["seq_len"]])
 
     # shape = (cur_batch_size, num_feat, seq_len)
     predictions_transposed = tf.transpose(a=predictions, perm=[0, 2, 1])
@@ -377,6 +377,6 @@ def lstm_enc_dec_autoencoder_model(
     # shape = (cur_batch_size * num_feat, seq_len)
     X_feat_recon = tf.reshape(
         tensor=predictions_transposed,
-        shape=[cur_batch_size * num_feat, params["seq_len"]])
+        shape=[cur_batch_size * params["num_feat"], params["seq_len"]])
 
     return None, None, X_time, X_time_recon, X_feat, X_feat_recon
