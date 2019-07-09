@@ -93,7 +93,6 @@ def train_and_evaluate(args):
         
         # Calculate max_steps
         max_steps += args["eval_examples"] // args["train_batch_size"]
-        max_steps += args["previous_train_steps"]
 
         # Create train spec to read in our training data
         train_spec = tf.estimator.TrainSpec(
