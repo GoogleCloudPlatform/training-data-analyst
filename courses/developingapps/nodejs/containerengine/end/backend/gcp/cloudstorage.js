@@ -13,14 +13,13 @@
 
 'use strict';
 
-const Storage = require('@google-cloud/storage');
 const config = require('../config');
+const {Storage} = require('@google-cloud/storage');
 
+const GCLOUD_PROJECT = config.get('GCLOUD_PROJECT');
 const GCLOUD_BUCKET = config.get('GCLOUD_BUCKET');
 
-const storage = Storage({
-  projectId: config.get('GCLOUD_PROJECT')
-});
+const storage = new Storage({GCLOUD_PROJECT});
 const bucket = storage.bucket(GCLOUD_BUCKET);
 
 
@@ -38,8 +37,8 @@ function sendUploadToGCS (req, res, next) {
 
   const stream = file.createWriteStream({
     metadata: {
-      contentType: req.file.mimetype
-    }
+      contentType: req.file.mimetype,
+    },
   });
 
   stream.on('error', (err) => {
@@ -67,11 +66,11 @@ const multer = Multer({
   storage: Multer.MemoryStorage,
   limits: {
     fileSize: 40 * 1024 * 1024 // no larger than 40mb
-  }
+  },
 });
 // [END multer]
 
 module.exports = {
   sendUploadToGCS,
-  multer
+  multer,
 };
