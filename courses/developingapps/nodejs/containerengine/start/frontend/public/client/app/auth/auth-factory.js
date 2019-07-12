@@ -10,9 +10,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-(function () {
+((() => {
 
-    var module = angular.module('qiqAuth');
+    const module = angular.module('qiqAuth');
 
     module.factory('authFactory', authFactory);
 
@@ -21,19 +21,19 @@
 
     function authFactory($q) {
 
-        var user = {
+        const user = {
             isLoggedIn: true,
             email: 'app.dev.student@example.org',
-            uid: -1
+            uid: -1,
         };
 
 
         return {
             register: register,
-            login: login, 
+            login: login,
             logout: logout,
             user: user,
-            authorize: authorize
+            authorize: authorize,
         };
 
         function register(email, password) {
@@ -51,4 +51,4 @@
     }
 
 
-})();
+}))();

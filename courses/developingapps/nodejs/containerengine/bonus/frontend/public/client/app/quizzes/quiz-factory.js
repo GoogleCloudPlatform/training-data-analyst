@@ -10,9 +10,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-(function () {
+((() => {
 
-    var module = angular.module('qiqQuiz');
+    const module = angular.module('qiqQuiz');
 
     module.factory('quizFactory', quizFactory);
 
@@ -20,49 +20,43 @@
     quizFactory.$inject = ['$http']
 
     function quizFactory($http) {
-        var answers = [];
+        const answers = [];
 
         return {
             getQuestions: getQuestions,
-            sendAnswers: sendAnswers, 
-            sendFeedback: sendFeedback, 
-            addAnswer: addAnswer
+            sendAnswers: sendAnswers,
+            sendFeedback: sendFeedback,
+            addAnswer: addAnswer,
         };
 
         function getQuestions(quizName) {
-            return $http.get('/api/quizzes/' + quizName).then(function (response) {
-                return response.data.questions;
-            });
+            return $http.get(`/api/quizzes/${quizName}`).then((response) => response.data.questions);
         }
 
         function addAnswer(email, questionId, selectedAnswer) {
-            var answer = {
+            const answer = {
                 email: email,
                 id: questionId,
                 answer: selectedAnswer,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             };
             answers.push(answer);
         }
 
         function sendAnswers(quizName) {
-            return $http.post('/api/quizzes/' + quizName, answers).then(function (response) {
-                return response.data;
-            });
+            return $http.post(`/api/quizzes/${quizName}`, answers).then((response) => response.data);
         }
 
         function sendFeedback(email, quiz, rating, feedback) {
-            return $http.post('/api/quizzes/feedback/' + quiz, {
+            return $http.post(`/api/quizzes/feedback/${quiz}`, {
                 email: email,
                 quiz: quiz,
                 timestamp: Date.now(),
                 rating: rating,
-                feedback: feedback
-            }).then(function (response) {
-                return response.data; 
-            });
+                feedback: feedback,
+            }).then((response) => response.data);
         }
     }
 
 
-})();
+}))();

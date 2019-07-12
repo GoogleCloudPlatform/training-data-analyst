@@ -13,13 +13,12 @@
 
 'use strict';
 
-const Datastore = require('@google-cloud/datastore');
 const config = require('../config');
+const {Datastore} = require('@google-cloud/datastore');
 
 // [START config]
-const ds = Datastore({
-  projectId: config.get('GCLOUD_PROJECT')
-});
+const GCLOUD_PROJECT = config.get('GCLOUD_PROJECT');
+const ds = new Datastore({GCLOUD_PROJECT});
 const kind = 'Question';
 // [END config]
 
@@ -43,7 +42,7 @@ function list(quiz = 'gcp', redact = true) {
     });
     return {
       questions,
-      nextPageToken: moreResults != 'NO_MORE_RESULTS' ? endCursor : false
+      nextPageToken: moreResults != 'NO_MORE_RESULTS' ? endCursor : false,
     };
   });
 }
@@ -66,7 +65,7 @@ function create({ quiz, author, title, answer1, answer2, answer3, answer4, corre
       { name: 'answer4', value: answer4 },
       { name: 'correctAnswer', value: correctAnswer },
       { name: 'imageUrl', value: imageUrl },
-    ]
+    ],
   };
   return ds.save(entity);
 }
@@ -75,6 +74,6 @@ function create({ quiz, author, title, answer1, answer2, answer3, answer4, corre
 // [START exports]
 module.exports = {
   create,
-  list
+  list,
 };
 // [END exports]

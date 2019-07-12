@@ -10,17 +10,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-(function () {
+((() => {
 
-    var module = angular.module('qiqQuiz');
+    const module = angular.module('qiqQuiz');
 
     module.controller('QuizController', QuizController);
 
     QuizController.$inject = ['$routeParams', 'quizFactory', 'authFactory'];
 
     function QuizController($routeParams, quizFactory, authFactory) {
-        var qc = this;
-        var currentQuestionIndex = 0;
+        const qc = this;
+        let currentQuestionIndex = 0;
 
         qc.quizName = $routeParams.name || 'gcp';
         qc.user = authFactory.user;
@@ -34,7 +34,7 @@
         init();
 
         function init() {
-            quizFactory.getQuestions(qc.quizName).then(function (data) {
+            quizFactory.getQuestions(qc.quizName).then((data) => {
                 qc.questions = data;
                 qc.question = qc.questions[currentQuestionIndex];
             });
@@ -45,7 +45,7 @@
             qc.selectedAnswer = -1;
             currentQuestionIndex++;
             if (currentQuestionIndex == qc.questions.length) {
-                quizFactory.sendAnswers(qc.quizName).then(function (data) {
+                quizFactory.sendAnswers(qc.quizName).then((data) => {
                     qc.correct = data.correct;
                     qc.total = data.total;
                     qc.gameOver = true;
@@ -57,9 +57,9 @@
 
         function sendFeedback() {
             console.log({email:qc.user.email, quizName:qc.quizName, rating:qc.rating, feedback:qc.feedback});
-            quizFactory.sendFeedback(qc.user.email, qc.quizName, qc.rating, qc.feedback).then(function (data) {
+            quizFactory.sendFeedback(qc.user.email, qc.quizName, qc.rating, qc.feedback).then((data) => {
                 qc.feedbackSent = true;
             });
         }
     }
-})();
+}))();
