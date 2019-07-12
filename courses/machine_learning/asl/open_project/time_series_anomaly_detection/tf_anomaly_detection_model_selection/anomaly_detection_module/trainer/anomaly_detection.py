@@ -1,7 +1,5 @@
 import tensorflow as tf
 
-from .globals import *
-
 from .autoencoder_dense import dense_autoencoder_model
 from .autoencoder_lstm import lstm_enc_dec_autoencoder_model
 from .autoencoder_pca import pca_model
@@ -42,12 +40,12 @@ def anomaly_detection(features, labels, mode, params):
   # Get input sequence tensor into correct shape
   # Get dynamic batch size in case there was a partially filled batch
   cur_batch_size = tf.shape(
-      input=features[UNLABELED_CSV_COLUMNS[0]], out_type=tf.int64)[0]
+      input=features[params["feat_names"][0]], out_type=tf.int64)[0]
 
   # Stack all of the features into a 3-D tensor
   # shape = (cur_batch_size, seq_len, num_feat)
   X = tf.stack(
-      values=[features[key] for key in UNLABELED_CSV_COLUMNS], axis=2)
+      values=[features[key] for key in params["feat_names"]], axis=2)
 
   ##############################################################################
   

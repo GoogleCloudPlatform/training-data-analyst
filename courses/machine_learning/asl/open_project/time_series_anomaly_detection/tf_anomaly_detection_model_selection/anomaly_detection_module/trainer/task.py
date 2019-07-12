@@ -42,6 +42,20 @@ if __name__ == "__main__":
       type=int,
       default=5
   )
+  
+  # Feature hyperparameters
+  parser.add_argument(
+      "--feat_names",
+      help="Names of features.",
+      type=str,
+      required=True
+  )
+  parser.add_argument(
+      "--feat_defaults",
+      help="Default values of features.",
+      type=str,
+      required=True
+  )
 
   # Training parameters
   parser.add_argument(
@@ -171,6 +185,12 @@ if __name__ == "__main__":
   )
   ## PCA
   parser.add_argument(
+      "--autotune_principal_components",
+      help="Whether we should autotune the number of principal components.",
+      type=str,
+      default="False"
+  )
+  parser.add_argument(
       "--k_principal_components_time",
       help="Top time k principal components to keep after eigendecomposition.",
       type=int,
@@ -285,12 +305,20 @@ if __name__ == "__main__":
   else:
     arguments["reverse_labels_sequence"] = False
     
+  if arguments["autotune_principal_components"].lower() in ("yes", "true", "t", "y", "1"):
+    arguments["autotune_principal_components"] = True
+  else:
+    arguments["autotune_principal_components"] = False
+    
   if arguments["labeled_tune_thresh"].lower() in ("yes", "true", "t", "y", "1"):
     arguments["labeled_tune_thresh"] = True
   else:
     arguments["labeled_tune_thresh"] = False
 
   # Fix list arguments
+  arguments["feat_names"] = arguments["feat_names"].split(",")
+  arguments["feat_defaults"] = [[item] for item in arguments["feat_defaults"].split(",")]
+
   ## Dense Autoencoder
   arguments["enc_dnn_hidden_units"] = [
       int(x) for x in arguments["enc_dnn_hidden_units"].split(",")]
