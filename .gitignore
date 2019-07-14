@@ -1,6 +1,9 @@
 *.pyc
 .DS_Store
 
+# IntelliJ IDEA
+.idea/
+
 courses/machine_learning/deepdive/03_tensorflow/.ipynb_checkpoints/c_dataset-checkpoint.ipynb
 courses/machine_learning/deepdive/03_tensorflow/.ipynb_checkpoints/d_traineval-checkpoint.ipynb
 courses/machine_learning/deepdive/03_tensorflow/taxi_trained/checkpoint
