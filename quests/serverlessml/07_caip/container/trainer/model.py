@@ -4,6 +4,7 @@ import logging
 
 ### BEGIN Cell #1 ###
 import os, json, math, shutil
+import datetime
 import numpy as np
 import tensorflow as tf
 logging.info(tf.__version__)
@@ -23,14 +24,14 @@ NUM_EVAL_EXAMPLES = 10000 # enough to get a reasonable sample, but no so much th
 ### END PARAMS from notebook ###
 
 ### BEGIN PARAMS from YAML ###
+NBUCKETS = 10
+NUM_TRAIN_EXAMPLES = 5000000
+OUTDIR = "gs://cloud-training-demos-ml/quests/serverlessml/"
+NUM_EVALS = 5
+EXPORT_DIR = "gs://cloud-training-demos-ml/quests/serverlessml/export/savedmodel"
 TRAIN_BATCH_SIZE = 32
 NUM_EVAL_EXAMPLES = 100000
-NUM_TRAIN_EXAMPLES = 5000000
-NBUCKETS = 10
-NUM_EVALS = 5
-DATADIR = gs://cloud-training-demos-ml/quests/serverlessml/data
-OUTDIR = gs://cloud-training-demos-ml/quests/serverlessml/
-EXPORT_DIR = gs://cloud-training-demos-ml/quests/serverlessml/export/savedmodel
+DATADIR = "gs://cloud-training-demos-ml/quests/serverlessml/data"
 ### END PARAMS from YAML ###
 
 ### BEGIN Cell #4 ###
@@ -62,6 +63,17 @@ def load_dataset(pattern, batch_size=1, mode=tf.estimator.ModeKeys.EVAL):
     return dataset
 ### END Cell #5 ###
 
+### BEGIN Cell #21 ###
+def parse_datetime(s):
+    if type(s) is not str:
+        s = s.numpy().decode('utf-8') # if it is a Tensor
+    try:
+        # Python 3.5 doesn't handle timezones of the form 00:00, only 0000
+        return datetime.datetime.strptime(s.replace(':',''), "%Y-%m-%d %H%M%S%z")
+    except:
+        return datetime.datetime.strptime(s, "%Y-%m-%d %H:%M:%S %Z")
+### END Cell #21 ###
+
 ### BEGIN Cell #8 ###
 ## Add transformations
 def euclidean(params):
@@ -72,9 +84,7 @@ def euclidean(params):
 
 DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 def get_dayofweek(s):
-    # Python 3.5 doesn't handle timezones of the form 00:00, only 0000
-    s1 = s.numpy().decode('utf-8') # get Python string
-    ts = datetime.datetime.strptime(s1.replace(':',''), "%Y-%m-%d %H%M%S%z")
+    ts = parse_datetime(s)
     return DAYS[ts.weekday()]
 
 def dayofweek(ts_in):
