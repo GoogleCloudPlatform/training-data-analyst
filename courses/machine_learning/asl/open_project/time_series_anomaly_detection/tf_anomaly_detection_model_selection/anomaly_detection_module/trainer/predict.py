@@ -83,6 +83,10 @@ def anomaly_detection_predictions(
           perm=[0, 2, 1]),
       "mahalanobis_dist_time": mahalanobis_dist_time,
       "mahalanobis_dist_feat": mahalanobis_dist_feat,
+      "time_anom_thresh_var": tf.fill(
+          dims=[cur_batch_size], value=time_anom_thresh_var),
+      "feat_anom_thresh_var": tf.fill(
+          dims=[cur_batch_size], value=feat_anom_thresh_var),
       "time_anom_flags": time_anom_flags,
       "feat_anom_flags": feat_anom_flags}
 
