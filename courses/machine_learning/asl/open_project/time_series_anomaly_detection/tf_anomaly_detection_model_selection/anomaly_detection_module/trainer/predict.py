@@ -64,24 +64,24 @@ def anomaly_detection_predictions(cur_batch_size, seq_len, num_feat,
                                                      mahalanobis_dist_feat,
                                                      feat_anom_thresh_var)
 
-    # Create predictions dictionary
-    predictions_dict = {
-        "X_time_abs_recon_err":
-        tf.reshape(tensor=X_time_abs_recon_err,
-                   shape=[cur_batch_size, seq_len, num_feat]),
-        "X_feat_abs_recon_err":
-        tf.transpose(a=tf.reshape(tensor=X_feat_abs_recon_err,
-                                  shape=[cur_batch_size, num_feat, seq_len]),
-                     perm=[0, 2, 1]),
-        "mahalanobis_dist_time":
-        mahalanobis_dist_time,
-        "mahalanobis_dist_feat":
-        mahalanobis_dist_feat,
-        "time_anom_flags":
-        time_anom_flags,
-        "feat_anom_flags":
-        feat_anom_flags
-    }
+  # Create predictions dictionary
+  predictions_dict = {
+      "X_time_abs_recon_err": tf.reshape(
+          tensor=X_time_abs_recon_err,
+          shape=[cur_batch_size, seq_len, num_feat]),
+      "X_feat_abs_recon_err": tf.transpose(
+          a=tf.reshape(
+              tensor=X_feat_abs_recon_err,
+              shape=[cur_batch_size, num_feat, seq_len]),
+          perm=[0, 2, 1]),
+      "mahalanobis_dist_time": mahalanobis_dist_time,
+      "mahalanobis_dist_feat": mahalanobis_dist_feat,
+      "time_anom_thresh_var": tf.fill(
+          dims=[cur_batch_size], value=time_anom_thresh_var),
+      "feat_anom_thresh_var": tf.fill(
+          dims=[cur_batch_size], value=feat_anom_thresh_var),
+      "time_anom_flags": time_anom_flags,
+      "feat_anom_flags": feat_anom_flags}
 
     # Create export outputs
     export_outputs = {
