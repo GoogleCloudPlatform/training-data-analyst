@@ -16,12 +16,13 @@ import os
 from google.cloud import datastore
 
 project_id = os.getenv('GCLOUD_PROJECT')
+
+
 """
 Persists initial questions into datastore
 """
-
-
 def main():
+
     """
     Create an array of dicts defining questions
     """
@@ -73,6 +74,7 @@ def main():
     ]
 
     client = datastore.Client(project_id)
+
     """
     Create and persist and entity for each question
     """
@@ -82,7 +84,6 @@ def main():
         for q_prop, q_val in q_info.iteritems():
             q_entity[q_prop] = q_val
         client.put(q_entity)
-
 
 if __name__ == '__main__':
     main()

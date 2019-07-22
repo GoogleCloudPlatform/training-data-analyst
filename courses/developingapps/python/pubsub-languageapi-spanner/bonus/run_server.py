@@ -16,20 +16,20 @@ from quiz import app
 
 # TODO: Add the following statement to import and start
 # Stackdriver debug-agent
-# The start(...) method takes an 'options' object that you
+# The start(...) method takes an 'options' object that you 
 # can use to configure the Stackdriver Debugger agent.
-# You will need to pass through an object with an
+# You will need to pass through an object with an 
 # allowExpressions Boolean property set to true.
 
 try:
-    import googleclouddebugger
-    googleclouddebugger.enable(
-        enable_service_account_auth=True,
-        project_id='my-gcp-project-id',
-        project_number='123456789',
-        service_account_json_file='/opt/cdbg/gcp-svc.json')
+  import googleclouddebugger
+  googleclouddebugger.enable(
+      enable_service_account_auth=True,
+      project_id='my-gcp-project-id',
+      project_number='123456789',
+      service_account_json_file='/opt/cdbg/gcp-svc.json')
 except ImportError:
-    pass
+  pass
 
 # END TODO
 

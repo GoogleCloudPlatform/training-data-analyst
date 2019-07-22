@@ -19,21 +19,21 @@ from google.cloud import pubsub_v1
 
 # A basic Pub/Sub publisher for purposes of demonstrating use of the API.
 class ActionPublisher:
-    # Creates a new publisher associated with the given project and topic.
-    def __init__(self, project, topic):
-        self._publisher = pubsub_v1.PublisherClient()
-        self._topic_path = self._publisher.topic_path(project, topic)
+  # Creates a new publisher associated with the given project and topic.
+  def __init__(self, project, topic):
+    self._publisher = pubsub_v1.PublisherClient()
+    self._topic_path = self._publisher.topic_path(project, topic)
 
-    def callback(self, message_future):
-        # When timeout is unspecified, the exception method waits indefinitely.
-        if message_future.exception(timeout=30):
-            print('Publishing message on {} threw an Exception {}.'.format(
-                topic_name, message_future.exception()))
+  def callback(self, message_future):
+    # When timeout is unspecified, the exception method waits indefinitely.
+    if message_future.exception(timeout=30):
+      print('Publishing message on {} threw an Exception {}.'.format(
+          topic_name, message_future.exception()))
 
-    # Publishes the action on the topic associated with this publisher.
-    def publish(self, action):
-        data = ActionUtils.encode_action_as_json(action)
-        data = data.encode('utf-8')
+  # Publishes the action on the topic associated with this publisher.
+  def publish(self, action):
+    data = ActionUtils.encode_action_as_json(action)
+    data = data.encode('utf-8')
 
-        message_future = self._publisher.publish(self._topic_path, data=data)
-        message_future.add_done_callback(self.callback)
+    message_future = self._publisher.publish(self._topic_path, data=data)
+    message_future.add_done_callback(self.callback)

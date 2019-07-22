@@ -2,10 +2,10 @@ import apache_beam as beam
 from model import inference
 import json
 
-HEADER = [
-    'weight_pounds', 'is_male', 'mother_age', 'mother_race', 'plurality',
-    'gestation_weeks', 'mother_married', 'cigarette_use', 'alcohol_use'
-]
+
+HEADER = ['weight_pounds', 'is_male', 'mother_age', 'mother_race', 'plurality',
+          'gestation_weeks', 'mother_married',
+          'cigarette_use', 'alcohol_use']
 
 SOURCE_QUERY = """
             SELECT
@@ -34,16 +34,16 @@ def get_source_query(sample_size):
         SELECT *
         FROM {}
         LIMIT {}
-    """.format(SOURCE_QUERY, sample_size)
+    """.format(SOURCE_QUERY,sample_size)
     return query
 
 
 def get_sample_size_desc(sample_size):
     desc = '({}{} Rows)'
     if sample_size >= 1000000:
-        desc = desc.format(sample_size / 1000000.0, 'M')
+        desc = desc.format(sample_size/1000000.0,'M')
     elif sample_size >= 1000:
-        desc = desc.format(sample_size / 1000.0, 'K')
+        desc = desc.format(sample_size /1000.0, 'K')
     else:
         desc = desc.format(sample_size, '')
     return desc
@@ -62,12 +62,10 @@ def process_row(bq_row):
     """
 
     # modify opaque numeric race code into human-readable data
-    races = dict(
-        zip([1, 2, 3, 4, 5, 6, 7, 18, 28, 39, 48], [
-            'White', 'Black', 'American Indian', 'Chinese', 'Japanese',
-            'Hawaiian', 'Filipino', 'Asian bq_row', 'Korean', 'Samaon',
-            'Vietnamese'
-        ]))
+    races = dict(zip([1, 2, 3, 4, 5, 6, 7, 18, 28, 39, 48],
+                     ['White', 'Black', 'American Indian', 'Chinese',
+                      'Japanese', 'Hawaiian', 'Filipino',
+                      'Asian bq_row', 'Korean', 'Samaon', 'Vietnamese']))
     instance = dict()
 
     instance['is_male'] = str(bq_row['is_male'])
@@ -101,12 +99,10 @@ def to_json_line(bq_row):
     """
 
     # modify opaque numeric race code into human-readable data
-    races = dict(
-        zip([1, 2, 3, 4, 5, 6, 7, 18, 28, 39, 48], [
-            'White', 'Black', 'American Indian', 'Chinese', 'Japanese',
-            'Hawaiian', 'Filipino', 'Asian bq_row', 'Korean', 'Samaon',
-            'Vietnamese'
-        ]))
+    races = dict(zip([1, 2, 3, 4, 5, 6, 7, 18, 28, 39, 48],
+                     ['White', 'Black', 'American Indian', 'Chinese',
+                      'Japanese', 'Hawaiian', 'Filipino',
+                      'Asian bq_row', 'Korean', 'Samaon', 'Vietnamese']))
     instance = dict()
 
     instance['is_male'] = str(bq_row['is_male'])
@@ -170,8 +166,7 @@ def to_csv(instance):
     return csv_row
 
 
-def run_pipeline(inference_type, sample_size, sink_location, runner,
-                 args=None):
+def run_pipeline(inference_type, sample_size, sink_location, runner, args=None):
 
     source_query = get_source_query(sample_size)
 
@@ -183,25 +178,21 @@ def run_pipeline(inference_type, sample_size, sink_location, runner,
 
     pipeline = beam.Pipeline(runner, options=options)
 
-    (pipeline
-     | 'Read from BigQuery {}'.format(sample_size_desc) >> beam.io.Read(
-         beam.io.BigQuerySource(query=source_query, use_standard_sql=True))
-     | 'Process BQ Row' >> beam.Map(process_row)
-     | 'Estimate Targets - {}'.format(inference_type) >>
-     beam.Map(lambda instance: estimate(instance, inference_type))
-     | 'Convert to CSV' >> beam.Map(to_csv)
-     | 'Write to Sink ' >> beam.io.Write(
-         beam.io.WriteToText(sink_location, file_name_suffix='.csv')))
+    (
+            pipeline
+            | 'Read from BigQuery {}'.format(sample_size_desc) >> beam.io.Read(beam.io.BigQuerySource(query=source_query, use_standard_sql=True))
+            | 'Process BQ Row' >> beam.Map(process_row)
+            | 'Estimate Targets - {}'.format(inference_type) >> beam.Map(lambda instance: estimate(instance, inference_type))
+            | 'Convert to CSV' >> beam.Map(to_csv)
+            | 'Write to Sink ' >> beam.io.Write(beam.io.WriteToText(sink_location, file_name_suffix='.csv'))
+    )
 
     job = pipeline.run()
     if runner == 'DirectRunner':
         job.wait_until_finish()
 
 
-def run_pipeline_with_batch_predict(sample_size,
-                                    sink_location,
-                                    runner,
-                                    args=None):
+def run_pipeline_with_batch_predict(sample_size, sink_location, runner, args=None):
 
     source_query = get_source_query(sample_size)
 
@@ -213,12 +204,12 @@ def run_pipeline_with_batch_predict(sample_size,
 
     pipeline = beam.Pipeline(runner, options=options)
 
-    (pipeline
-     | 'Read from BigQuery {}'.format(sample_size_desc) >> beam.io.Read(
-         beam.io.BigQuerySource(query=source_query, use_standard_sql=True))
-     | 'Convert to Json line' >> beam.Map(to_json_line)
-     | 'Write to Sink ' >> beam.io.Write(
-         beam.io.WriteToText(sink_location, file_name_suffix='.dat')))
+    (
+            pipeline
+            | 'Read from BigQuery {}'.format(sample_size_desc) >> beam.io.Read(beam.io.BigQuerySource(query=source_query, use_standard_sql=True))
+            | 'Convert to Json line' >> beam.Map(to_json_line)
+            | 'Write to Sink ' >> beam.io.Write(beam.io.WriteToText(sink_location, file_name_suffix='.dat'))
+    )
 
     job = pipeline.run()
     if runner == 'DirectRunner':

@@ -18,24 +18,40 @@ from google.cloud import spanner
 spanner_client = spanner.Client()
 instance = spanner_client.instance('quiz-instance')
 database = instance.database('quiz-database')
+
 """
 Takes an email address and reverses it (to be used as primary key)
 """
-
-
 def reverse_email(email):
-    return '_'.join(
-        list(reversed(email.replace('@', '_').replace('.', '_').split('_'))))
-
+    return '_'.join(list(reversed(email.replace('@','_').
+                        replace('.','_').
+                        split('_'))))
 
 def save_answer(data):
     with database.batch() as batch:
         answer_id = '{}_{}_{}'.format(reverse_email(data['email']),
-                                      data['quiz'], data['timestamp'])
-        batch.insert(table='answers',
-                     columns=('answerId', 'id', 'email', 'quiz', 'answer',
-                              'correct', 'timestamp'),
-                     values=[
-                         (answer_id, data['id'], data['email'], data['quiz'],
-                          data['answer'], data['correct'], data['timestamp'])
-                     ])
+                                        data['quiz'],
+                                        data['timestamp'])
+        batch.insert(
+            table='answers',
+            columns=(
+                'answerId',
+                'id',
+                'email',
+                'quiz',
+                'answer',
+                'correct',
+                'timestamp'
+            ),
+            values=[
+                (
+                    answer_id,
+                    data['id'],
+                    data['email'],
+                    data['quiz'],
+                    data['answer'],
+                    data['correct'],
+                    data['timestamp']
+                )
+            ]
+        )

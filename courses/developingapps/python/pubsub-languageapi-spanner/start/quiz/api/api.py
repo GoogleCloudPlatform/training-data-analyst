@@ -15,6 +15,7 @@
 import json
 
 from flask import Response
+
 """
 Import shared GCP helper modules
 """
@@ -23,6 +24,7 @@ Import shared GCP helper modules
 from quiz.gcp import datastore
 
 # END TODO
+
 """
 Gets list of questions from datastore
 - Create query
@@ -31,8 +33,6 @@ Gets list of questions from datastore
 - Pretty print JSON
 - Set header and return the response
 """
-
-
 def get_questions(quiz_name):
     questions = datastore.list_entities(quiz_name)
     payload = {'questions': list(questions)}
@@ -40,7 +40,6 @@ def get_questions(quiz_name):
     response = Response(payload)
     response.headers['Content-Type'] = 'application/json'
     return response
-
 
 """
 Grades submitted answers
@@ -50,39 +49,31 @@ Grades submitted answers
 - Compose and pretty print payload
 - Compose and return response
 """
-
-
 def get_grade(quiz_name, answers):
     questions = datastore.list_entities(quiz_name, False)
-    score = len(
-        list(
-            filter(
-                lambda x: x > 0,
-                list(
-                    map(
-                        lambda q: len(
-                            list(
-                                filter(
-                                    lambda answer: answer['id'] == q['id'] and
-                                    int(answer['answer']) == q['correctAnswer'
-                                                               ], answers))),
-                        questions)))))
+    score = len(list(filter(lambda x: x > 0,
+                    list(map(lambda q:
+                         len(list(filter(lambda answer:
+                            answer['id'] == q['id'] and
+                            int(answer['answer']) == q['correctAnswer'],
+                            answers)))
+                         , questions))
+                )))
     payload = {'correct': score, 'total': len(questions)}
     payload = json.dumps(payload, indent=2, sort_keys=True)
     response = Response(payload)
     response.headers['Content-Type'] = 'application/json'
     return response
 
-
 """
 Publish feedback
 - Call pubsub helper
 - Compose and return response
 """
-
-
 def publish_feedback(feedback):
     # TODO: Publish the feedback using your pubsub module, return the result
     pass
+    
+    
 
     # END TODO

@@ -23,11 +23,12 @@ from action_utils import ActionUtils
 
 parser = argparse.ArgumentParser(
     description='Publish and subscribe to Cloud Pub/Sub.')
-parser.add_argument('-i',
-                    '--input',
-                    nargs='?',
-                    required=True,
-                    help='The file from which to grab the events to publish.')
+parser.add_argument(
+    '-i',
+    '--input',
+    nargs='?',
+    required=True,
+    help='The file from which to grab the events to publish.')
 parser.add_argument(
     '-p',
     '--project',
@@ -54,7 +55,7 @@ subscriber = ActionSubscriber(args.project, args.subscription)
 publisher = ActionPublisher(args.project, args.topic)
 
 for a in ActionUtils.parse_from_csv(args.input):
-    publisher.publish(a)
+  publisher.publish(a)
 
 time.sleep(10)
 

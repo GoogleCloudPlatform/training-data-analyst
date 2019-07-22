@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
 """Commmon helper functions
 
 This module imports all the pre-processing functions for the state space..
@@ -30,14 +32,10 @@ from absl import app
 from absl import flags
 
 FLAGS = flags.FLAGS
-GREY_FILTER = [0.299, 0.587, 0.114]
+GREY_FILTER= [0.299, 0.587, 0.114]
 
-
-def downsample_state(observation,
-                     image_height=84,
-                     image_width=84,
-                     image_channels=1):
-    """Downsamples the Observations to a lower resolution.
+def downsample_state(observation, image_height=84, image_width=84, image_channels=1):
+  """Downsamples the Observations to a lower resolution.
   Args:
     observation(array):
     downscale_height(int):
@@ -46,19 +44,19 @@ def downsample_state(observation,
   Returns:
      Downsampled image
   """
-    return np.resize(observation, (image_height, image_width, image_channels))
+  return np.resize(observation, (image_height, image_width, image_channels))
 
 
 def convert_greyscale(observation):
-    """Converts the RGB Image to greyscale.
+  """Converts the RGB Image to greyscale.
   Args:
     observation(array):
   Returns:
     Greyscale observation(array):
   """
-    greyscale_image = np.dot(observation[..., :3], GREY_FILTER)
-    greyscale_image = np.expand_dims(greyscale_image, axis=-1)
-    return greyscale_image
+  greyscale_image = np.dot(observation[..., :3], GREY_FILTER)
+  greyscale_image = np.expand_dims(greyscale_image, axis=-1)
+  return greyscale_image
 
 
 def anneal_exploration(eta,
@@ -68,7 +66,7 @@ def anneal_exploration(eta,
                        init_val=0.99,
                        min_eta=0.1,
                        type="linear"):
-    """ Anneals the probability of the agent to take random actions.
+  """ Anneals the probability of the agent to take random actions.
 
   Args:
     eta(float): current random value betwee 0 and 1
@@ -78,17 +76,16 @@ def anneal_exploration(eta,
   Returns:
 
   """
-    if type == "linear" and curr_step > train_step:
-        decay_value = (
-            (curr_step - train_step) / float(max_step)) * (init_val - min_eta)
-        eta = init_val - decay_value
-        eta = max(eta, min_eta)
-    #TODO:(praneetdutta): Add exponential decay function
-    return eta
-
+  if type == "linear" and curr_step > train_step:
+    decay_value = ((curr_step - train_step) / float(max_step)) * (
+        init_val - min_eta)
+    eta = init_val - decay_value
+    eta = max(eta, min_eta)
+  #TODO:(praneetdutta): Add exponential decay function
+  return eta
 
 def huber_loss(Q_true, Q_estimate):
-    """ Huber loss implemented  as per the original DQN paper.
+  """ Huber loss implemented  as per the original DQN paper.
 
     Args:
       Q_true: Ground truth Q-Value for future states
@@ -97,14 +94,14 @@ def huber_loss(Q_true, Q_estimate):
     Returns:
       tf.losses.huber_loss: Tensorflow Loss function
     """
-    return tf.losses.huber_loss(Q_true, Q_estimate)
+  return tf.losses.huber_loss(Q_true, Q_estimate)
 
 
 def hp_directory(model_dir):
-    """If running a hyperparam job, create subfolder name with trial ID.
+  """If running a hyperparam job, create subfolder name with trial ID.
 
   If not running a hyperparam job, just keep original model_dir."""
-    trial_id = json.loads(os.environ.get('TF_CONFIG',
-                                         '{}')).get('task',
-                                                    {}).get('trial', '')
-    return os.path.join(model_dir, trial_id)
+  trial_id = json.loads(
+            os.environ.get('TF_CONFIG', '{}')
+        ).get('task', {}).get('trial', '')
+  return os.path.join(model_dir, trial_id)

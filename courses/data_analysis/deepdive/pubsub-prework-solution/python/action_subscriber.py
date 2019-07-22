@@ -20,31 +20,32 @@ from google.cloud import pubsub_v1
 
 
 class ActionSubscriber:
-    def __init__(self, project, subscription):
-        self._subscriber = pubsub_v1.SubscriberClient()
-        self._subscription_path = self._subscriber.subscription_path(
-            project, subscription)
-        self._subscribe_future = self._subscriber.subscribe(
-            self._subscription_path, self.callback)
-        self._view_lock = threading.Lock()
-        self._view_ids = set()
 
-    def is_view_action(self, action):
-        return action.action == entities_pb2.Action.VIEW
+  def __init__(self, project, subscription):
+    self._subscriber = pubsub_v1.SubscriberClient()
+    self._subscription_path = self._subscriber.subscription_path(
+        project, subscription)
+    self._subscribe_future = self._subscriber.subscribe(self._subscription_path,
+                                                        self.callback)
+    self._view_lock = threading.Lock()
+    self._view_ids = set()
 
-    def callback(self, message):
-        action = ActionUtils.decode_action_from_json(message.data)
-        try:
-            if self.is_view_action(action):
-                self._view_lock.acquire()
-                self._view_ids.add(message.message_id)
-                self._view_lock.release()
-            message.ack()
-        except Exception as e:
-            print("ERROR " + str(e))
+  def is_view_action(self, action):
+    return action.action == entities_pb2.Action.VIEW
 
-    def get_view_count(self):
+  def callback(self, message):
+    action = ActionUtils.decode_action_from_json(message.data)
+    try:
+      if self.is_view_action(action):
         self._view_lock.acquire()
-        view_count = len(self._view_ids)
+        self._view_ids.add(message.message_id)
         self._view_lock.release()
-        return view_count
+      message.ack()
+    except Exception as e:
+      print("ERROR " + str(e))
+
+  def get_view_count(self):
+    self._view_lock.acquire()
+    view_count = len(self._view_ids)
+    self._view_lock.release()
+    return view_count

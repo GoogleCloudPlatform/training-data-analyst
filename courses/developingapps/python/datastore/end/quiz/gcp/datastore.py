@@ -18,6 +18,7 @@ from flask import current_app
 from google.cloud import datastore
 
 datastore_client = datastore.Client(project_id)
+
 """
 Returns a list of question entities for a given quiz
 - filter by quiz name, defaulting to gcp
@@ -25,17 +26,12 @@ Returns a list of question entities for a given quiz
 - add in the entity key as the id property 
 - if redact is true, remove the correctAnswer property from each entity
 """
-
-
 def list_entities(quiz='gcp', redact=True):
     return []
-
 
 """
 Create and persist and entity for each question
 """
-
-
 def save_question(question):
     key = datastore_client.key('Question')
     q_entity = datastore.Entity(key=key)

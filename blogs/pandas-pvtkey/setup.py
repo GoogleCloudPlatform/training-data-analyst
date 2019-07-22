@@ -13,15 +13,18 @@
 # limitations under the License.
 from setuptools import setup
 
-setup(
-    name='trainer',
-    version='1.0',
-    description='Showing how to use private key',
-    url='http://github.com/GoogleCloudPlatform/training-data-analyst',
-    author='Google',
-    author_email='nobody@google.com',
-    license='Apache2',
-    packages=['trainer'],
-    package_data={'': ['privatekey.json']},
-    install_requires=['pandas-gbq==0.4.1', 'urllib3', 'google-cloud-bigquery'],
-    zip_safe=False)
+setup(name='trainer',
+      version='1.0',
+      description='Showing how to use private key',
+      url='http://github.com/GoogleCloudPlatform/training-data-analyst',
+      author='Google',
+      author_email='nobody@google.com',
+      license='Apache2',
+      packages=['trainer'],
+      package_data={'': ['privatekey.json']},
+      install_requires=[
+          'pandas-gbq==0.4.1',
+          'urllib3',
+          'google-cloud-bigquery'
+      ],
+      zip_safe=False)

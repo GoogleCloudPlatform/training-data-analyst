@@ -21,14 +21,14 @@ from google.cloud import pubsub_v1
 
 # A basic Pub/Sub subscriber for purposes of demonstrating use of the API.
 class ActionSubscriber:
-    # Creates a new subscriber associated with the given project and subscription.
-    def __init__(self, project, subscription):
-        return
+  # Creates a new subscriber associated with the given project and subscription.
+  def __init__(self, project, subscription):
+    return
 
-    # Returns the number of VIEW action seen
-    def get_view_count(self):
-        return -1
+  # Returns the number of VIEW action seen
+  def get_view_count(self):
+    return -1
 
-    # Returns true if action is a VIEW action.
-    def is_view_action(self, action):
-        return action.action == entities_pb2.Action.VIEW
+  # Returns true if action is a VIEW action.
+  def is_view_action(self, action):
+    return action.action == entities_pb2.Action.VIEW

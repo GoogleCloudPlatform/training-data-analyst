@@ -19,10 +19,10 @@ from google.cloud import pubsub_v1
 
 # A basic Pub/Sub publisher for purposes of demonstrating use of the API.
 class ActionPublisher:
-    # Creates a new publisher associated with the given project and topic.
-    def __init__(self, project, topic):
-        return
+  # Creates a new publisher associated with the given project and topic.
+  def __init__(self, project, topic):
+    return
 
-    # Publishes the action on the topic associated with this publisher.
-    def publish(self, action):
-        return
+  # Publishes the action on the topic associated with this publisher.
+  def publish(self, action):
+    return

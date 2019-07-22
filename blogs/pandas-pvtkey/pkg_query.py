@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 
-
 def query_to_dataframe(query):
-    import pandas as pd
-    import pkgutil
-    privatekey = pkgutil.get_data('trainer', 'privatekey.json')
-    print(privatekey[:200])
-    return pd.read_gbq(query,
-                       project_id='cloud-training-demos',
-                       dialect='standard',
-                       private_key=privatekey)
-
+  import pandas as pd
+  import pkgutil
+  privatekey = pkgutil.get_data('trainer', 'privatekey.json')
+  print(privatekey[:200])
+  return pd.read_gbq(query,
+                     project_id='cloud-training-demos',
+                     dialect='standard',
+                     private_key=privatekey)
 
 query = """
 SELECT
@@ -26,3 +24,4 @@ GROUP BY
 
 df = query_to_dataframe(query)
 print(df.head())
+

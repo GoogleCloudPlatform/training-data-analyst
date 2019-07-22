@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 """Setup.py module for the workflow's worker utilities.
 
 All the workflow related code is gathered in a package that will be built as a
@@ -33,14 +34,14 @@ import setuptools
 
 # This class handles the pip install mechanism.
 class build(_build):  # pylint: disable=invalid-name
-    """A build command class that will be invoked during package install.
+  """A build command class that will be invoked during package install.
 
   The package built using the current setup.py will be staged and later
   installed in the worker using `pip install package'. This class will be
   instantiated during install for this specific scenario and will trigger
   running the custom commands specified.
   """
-    sub_commands = _build.sub_commands + [('CustomCommands', None)]
+  sub_commands = _build.sub_commands + [('CustomCommands', None)]
 
 
 # Some custom command to run during setup. The command is not essential for this
@@ -71,36 +72,36 @@ class build(_build):  # pylint: disable=invalid-name
 # The output of custom commands (including failures) will be logged in the
 # worker-startup log.
 CUSTOM_COMMANDS = [
-    'apt-get update'.split(), 'apt-get --assume-yes install python-tk'.split()
-]
+        'apt-get update'.split(),
+        'apt-get --assume-yes install python-tk'.split()
+        ]
 
 
 class CustomCommands(setuptools.Command):
-    """A setuptools Command class able to run arbitrary commands."""
+  """A setuptools Command class able to run arbitrary commands."""
 
-    def initialize_options(self):
-        pass
+  def initialize_options(self):
+    pass
 
-    def finalize_options(self):
-        pass
+  def finalize_options(self):
+    pass
 
-    def RunCustomCommand(self, command_list):
-        print('Running command: %s' % command_list)
-        p = subprocess.Popen(command_list,
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT)
-        # Can use communicate(input='y\n'.encode()) if the command run requires
-        # some confirmation.
-        stdout_data, _ = p.communicate()
-        print('Command output: %s' % stdout_data)
-        if p.returncode != 0:
-            raise RuntimeError('Command %s failed: exit code: %s' %
-                               (command_list, p.returncode))
+  def RunCustomCommand(self, command_list):
+    print('Running command: %s' % command_list)
+    p = subprocess.Popen(
+        command_list,
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    # Can use communicate(input='y\n'.encode()) if the command run requires
+    # some confirmation.
+    stdout_data, _ = p.communicate()
+    print('Command output: %s' % stdout_data)
+    if p.returncode != 0:
+      raise RuntimeError(
+          'Command %s failed: exit code: %s' % (command_list, p.returncode))
 
-    def run(self):
-        for command in CUSTOM_COMMANDS:
-            self.RunCustomCommand(command)
+  def run(self):
+    for command in CUSTOM_COMMANDS:
+      self.RunCustomCommand(command)
 
 
 # Configure the required packages and scripts to install.
@@ -109,7 +110,8 @@ class CustomCommands(setuptools.Command):
 # restriction is specified.
 REQUIRED_PACKAGES = [
     'pyresample netcdf4 matplotlib pillow google-cloud-storage'.split(),
-]
+    ]
+
 
 setuptools.setup(
     name='hurricanes',
@@ -121,4 +123,5 @@ setuptools.setup(
         # Command class instantiated and run during pip install scenarios.
         'build': build,
         'CustomCommands': CustomCommands,
-    })
+        }
+    )

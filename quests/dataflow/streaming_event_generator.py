@@ -11,53 +11,24 @@ import json
 from multiprocessing import Process
 
 parser = argparse.ArgumentParser(__file__, description="event_generator")
-parser.add_argument(
-    "--taxonomy",
-    "-x",
-    dest="taxonomy_fp",
-    help="A .json file representing a taxonomy of web resources",
-    default="taxonomy.json")
-parser.add_argument("--users_fp",
-                    "-u",
-                    dest="users_fp",
+parser.add_argument("--taxonomy", "-x", dest="taxonomy_fp",
+                    help="A .json file representing a taxonomy of web resources",
+                    default="taxonomy.json")
+parser.add_argument("--users_fp", "-u", dest="users_fp",
                     help="A .csv file of users",
                     default="users.csv")
-parser.add_argument(
-    "--off_to_on",
-    "-off",
-    dest="off_to_on_prob",
-    type=float,
-    help=
-    "A float representing the probability that a user who is offline will come online",
-    default=.25)
-parser.add_argument(
-    "--on_to_off",
-    "-on",
-    dest="on_to_off_prob",
-    type=float,
-    help=
-    "A float representing the probability that a user who is online will go offline",
-    default=.1)
-parser.add_argument(
-    "--max_lag_millis",
-    '-l',
-    dest="max_lag_millis",
-    type=int,
-    help="An integer representing the maximum amount of lag in millisecond",
-    default=250)
-parser.add_argument("--project_id",
-                    "-p",
-                    type=str,
-                    dest="project_id",
-                    help="A GCP Project ID",
-                    required=True)
-parser.add_argument(
-    "--topic_name",
-    "-t",
-    dest="topic_name",
-    type=str,
-    help="The name of the topic where the messages to be published",
-    required=True)
+parser.add_argument("--off_to_on", "-off", dest="off_to_on_prob", type=float,
+                    help="A float representing the probability that a user who is offline will come online",
+                    default=.25)
+parser.add_argument("--on_to_off", "-on", dest="on_to_off_prob", type=float,
+                    help="A float representing the probability that a user who is online will go offline",
+                    default=.1)
+parser.add_argument("--max_lag_millis", '-l', dest="max_lag_millis", type=int,
+                    help="An integer representing the maximum amount of lag in millisecond", default=250)
+parser.add_argument("--project_id", "-p", type=str, dest="project_id", help="A GCP Project ID", required=True)
+parser.add_argument("--topic_name", "-t", dest="topic_name", type=str,
+                    help="The name of the topic where the messages to be published", required=True)
+
 
 avg_secs_between_events = 5
 args = parser.parse_args()
@@ -73,11 +44,9 @@ max_file_size_bytes = 500
 verbs = ["GET"]
 responses = [200]
 
-log_fields = [
-    "ip", "user_id", "lat", "lng", "timestamp", "http_request",
-    "http_response", "num_bytes", "user_agent"
-]
 
+log_fields = ["ip", "user_id", "lat", "lng", "timestamp", "http_request",
+              "http_response", "num_bytes", "user_agent"]
 
 def extract_resources(taxonomy_filepath):
     """
@@ -113,7 +82,6 @@ def read_users(users_fp):
             users.append(user)
     return users
 
-
 def sleep_then_publish_burst(burst, publisher, topic_path):
     """
 
@@ -124,10 +92,9 @@ def sleep_then_publish_burst(burst, publisher, topic_path):
     :param topic_path: a topic path for PubSub
     :return:
     """
-    sleep_secs = random.uniform(0, max_lag_millis / 1000)
+    sleep_secs = random.uniform(0, max_lag_millis/1000)
     time.sleep(sleep_secs)
     publish_burst(burst, publisher, topic_path)
-
 
 def publish_burst(burst, publisher, topic_path):
     """
@@ -142,10 +109,7 @@ def publish_burst(burst, publisher, topic_path):
     for event_dict in burst:
         json_str = json.dumps(event_dict)
         data = json_str.encode('utf-8')
-        publisher.publish(topic_path,
-                          data=data,
-                          timestamp=event_dict['timestamp'])
-
+        publisher.publish(topic_path, data=data, timestamp=event_dict['timestamp'])
 
 def create_user_process(user, root):
     """
@@ -178,10 +142,8 @@ def create_user_process(user, root):
             user['offline_events'].append(event)
             if prob < offline_to_online_probability:
                 user['is_online'] = True
-                sleep_then_publish_burst(user['offline_events'], publisher,
-                                         topic_path)
+                sleep_then_publish_burst(user['offline_events'], publisher, topic_path)
                 user['offline_events'] = []
-
 
 def generate_event(user):
     """
@@ -193,19 +155,13 @@ def generate_event(user):
     uri = str(user['page'].name)
     event_time = datetime.now(tz=timezone.utc)
     current_time_str = event_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-    file_size_bytes = random.choice(
-        range(min_file_size_bytes, max_file_size_bytes))
+    file_size_bytes = random.choice(range(min_file_size_bytes, max_file_size_bytes))
     http_request = "\"{} {} HTTP/1.0\"".format(random.choice(verbs), uri)
     http_response = random.choice(responses)
-    event_values = [
-        user['ip'], user['id'],
-        float(user['lat']),
-        float(user['lng']), current_time_str, http_request, http_response,
-        file_size_bytes, user['user_agent']
-    ]
+    event_values = [user['ip'], user['id'], float(user['lat']), float(user['lng']), current_time_str, http_request,
+                    http_response, file_size_bytes, user['user_agent']]
 
     return dict(zip(log_fields, event_values))
-
 
 def get_next_page(user):
     """
@@ -225,10 +181,8 @@ def get_next_page(user):
 if __name__ == '__main__':
     users = read_users(users_fp)
     root = extract_resources(taxonomy_fp)
-    processes = [
-        Process(target=create_user_process, args=(user, root))
-        for user in users
-    ]
+    processes = [Process(target=create_user_process, args=(user, root))
+                 for user in users]
     [process.start() for process in processes]
     while True:
         time.sleep(1)

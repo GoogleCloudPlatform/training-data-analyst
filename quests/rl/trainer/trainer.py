@@ -24,22 +24,26 @@ from . import model
 def _parse_arguments(argv):
     """Parses command-line arguments."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('--game',
-                        help='Which open ai gym game to play',
-                        type=str,
-                        default='CartPole-v0')
-    parser.add_argument('--episodes',
-                        help='The number of episodes to simulate',
-                        type=int,
-                        default=500)
-    parser.add_argument('--learning_rate',
-                        help='Learning rate for the nueral network',
-                        type=float,
-                        default=0.002)
-    parser.add_argument('--hidden_neurons',
-                        help='The number of nuerons to use per layer',
-                        type=int,
-                        default=50)
+    parser.add_argument(
+        '--game',
+        help='Which open ai gym game to play',
+        type=str,
+        default='CartPole-v0')
+    parser.add_argument(
+        '--episodes',
+        help='The number of episodes to simulate',
+        type=int,
+        default=500)
+    parser.add_argument(
+        '--learning_rate',
+        help='Learning rate for the nueral network',
+        type=float,
+        default=0.002)
+    parser.add_argument(
+        '--hidden_neurons',
+        help='The number of nuerons to use per layer',
+        type=int,
+        default=50)
     parser.add_argument(
         '--gamma',
         help='The gamma or "discount" factor to discount future states',
@@ -50,10 +54,11 @@ def _parse_arguments(argv):
         help='The rate at which to decay the probability of a random action',
         type=float,
         default=0.01)
-    parser.add_argument('--memory_size',
-                        help='Size of the memory buffer',
-                        type=int,
-                        default=100000)
+    parser.add_argument(
+        '--memory_size',
+        help='Size of the memory buffer',
+        type=int,
+        default=100000)
     parser.add_argument(
         '--memory_batch_size',
         help='The amount of memories to sample from the buffer while training',
@@ -64,22 +69,26 @@ def _parse_arguments(argv):
         help='True for the model to train, False for the model to evaluate',
         type=bool,
         default=True)
-    parser.add_argument('--model_path',
-                        help='Directory where to save the given model',
-                        type=str,
-                        default='models/')
-    parser.add_argument('--save_model',
-                        help='Whether to save the model',
-                        type=bool,
-                        default=True)
-    parser.add_argument('--score_print_rate',
-                        help='How often to print the score, 0 if never',
-                        type=int,
-                        default=0)
-    parser.add_argument('--render_rate',
-                        help='How often to render an episode, 0 if never',
-                        type=int,
-                        default=0)
+    parser.add_argument(
+        '--model_path',
+        help='Directory where to save the given model',
+        type=str,
+        default='models/')
+    parser.add_argument(
+        '--save_model',
+        help='Whether to save the model',
+        type=bool,
+        default=True)
+    parser.add_argument(
+        '--score_print_rate',
+        help='How often to print the score, 0 if never',
+        type=int,
+        default=0)
+    parser.add_argument(
+        '--render_rate',
+        help='How often to render an episode, 0 if never',
+        type=int,
+        default=0)
     parser.add_argument(
         '--record_rate',
         help="""Record metrics to tensorboard every <record_rate> steps, 0 if
@@ -105,19 +114,19 @@ def _run(args):
         env = gym.make(args.game)
         space_size = env.observation_space.shape
         action_size = env.action_space.n
-        agent = model.Agent(space_size, action_size, args.learning_rate,
-                            args.hidden_neurons, args.gamma,
-                            args.explore_decay, args.memory_batch_size,
-                            args.memory_size, args.training_mode, sess,
-                            args.model_path)
+        agent = model.Agent(
+            space_size, action_size, args.learning_rate, args.hidden_neurons,
+            args.gamma, args.explore_decay, args.memory_batch_size,
+            args.memory_size, args.training_mode, sess, args.model_path)
 
         # Initialize the variables
         sess.run(tf.global_variables_initializer())
         saver = tf.train.Saver()
 
         for episode in range(args.episodes):
-            _play(agent, env, episode, args.render_rate, args.score_print_rate,
-                  args.record_rate)
+            _play(
+                agent, env, episode, args.render_rate, args.score_print_rate,
+                args.record_rate)
 
         # Save the model
         save_path = saver.save(sess, args.model_path)
@@ -176,7 +185,6 @@ def _play(agent, env, episode, render_rate, score_print_rate, record_rate):
 def main():
     args = _parse_arguments(sys.argv[1:])
     _run(args[0])
-
 
 if __name__ == '__main__':
     main()

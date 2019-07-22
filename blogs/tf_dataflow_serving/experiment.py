@@ -1,3 +1,4 @@
+
 PARAMS = None
 
 
@@ -38,12 +39,14 @@ def initialise_hyper_params(args_parser):
     ###########################################
     # batch parameters
 
-    args_parser.add_argument('--batch-sample-size',
-                             help="""
+    args_parser.add_argument(
+        '--batch-sample-size',
+        help="""
         Sample size to fetch from BigQuery table in batch pipelines\
         """,
-                             default=100,
-                             type=int)
+        default=100,
+        type=int
+    )
 
     args_parser.add_argument(
         '--sink-dir',
@@ -88,13 +91,26 @@ def initialise_hyper_params(args_parser):
         default='babyweight_estimates',
     )
 
-    args_parser.add_argument('--window-size',
-                             help="""
+    args_parser.add_argument(
+        '--window-size',
+        help="""
         window size in seconds in micro-batches streaming pipeline\
         """,
-                             default=1,
-                             type=int)
+        default=1,
+        type=int
+    )
 
     global PARAMS
 
     PARAMS = args_parser.parse_args()
+
+
+
+
+
+
+
+
+
+
+

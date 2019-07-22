@@ -41,6 +41,6 @@ model.LEARNING_RATE = float(arguments['--learning_rate'])
 model.N_HIDDEN = int(arguments['--n_hidden'])
 model.N_GAMES_PER_UPDATE = int(arguments['--n_games_per_update'])
 # Train.
-in_train_mode = not arguments['--eval']
+in_train_mode =  not arguments['--eval']
 print(arguments)
 model.run(arguments['--outdir'], in_train_mode)

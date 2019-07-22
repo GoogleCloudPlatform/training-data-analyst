@@ -19,12 +19,16 @@ import json
 
 # TODO: Load the pubsub, languageapi and spanner modules from the quiz.gcp package
 
+
+
 # END TODO
+
 """
 Configure logging
 """
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 log = logging.getLogger()
+
 """
 Receives pulled messages, analyzes and stores them
 - Acknowledge the message
@@ -35,57 +39,73 @@ Receives pulled messages, analyzes and stores them
 - call helper module to persist to spanner
 - log feedback saved
 """
-
-
 def pubsub_callback(message):
     data = json.loads(message.data)
 
+     
+
     # TODO: Acknowledge the message
 
+    
+
     # END TODO
+
+    
 
     # TODO: Log the message
 
+    
+
     # END TODO
 
+    
+
     # TODO: Use the languageapi module to analyze the sentiment
+
+    
 
     # END TODO
 
     # TODO: Log the sentiment score
 
+    
+
     # END TODO
 
     # TODO: Assign the sentiment score to a new score property
+
+    
 
     # END TODO
 
     # TODO: Use the spanner module to save the feedback
 
-    # END TODO
+    
+
+    # END TODO 
 
     # TODO: Log a message to say the feedback has been saved
 
-    # END TODO
+        
 
+    # END TODO
 
 """
 Pulls messages and loops forever while waiting
 - initiate pull 
 - loop once a minute, forever
 """
-
-
 def main():
     log.info('Worker starting...')
 
     # TODO: Register the callback
 
+    
+
     # END TODO
 
     while True:
         time.sleep(60)
-
 
 if __name__ == '__main__':
     main()

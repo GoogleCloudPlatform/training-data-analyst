@@ -25,7 +25,6 @@ from quiz.gcp import datastore
 
 # END TODO
 
-
 # """
 # Gets list of questions from datastore
 # - Create query
@@ -42,7 +41,6 @@ def get_questions(quiz_name):
     response.headers['Content-Type'] = 'application/json'
     return response
 
-
 # """
 # Grades submitted answers
 # - Get list of questions with correct answers from datastore
@@ -53,21 +51,18 @@ def get_questions(quiz_name):
 # """
 def get_grade(quiz_name, answers):
     questions = datastore.list_entities(quiz_name, False)
-    score = len(
-        list(
-            filter(
-                lambda x: x > 0,
-                list(
-                    map(
-                        lambda q: len(
-                            list(
-                                filter(
-                                    lambda answer: answer['id'] == q['id'] and
-                                    int(answer['answer']) == q['correctAnswer'
-                                                               ], answers))),
-                        questions)))))
+    score = len(list(filter(lambda x: x > 0,
+                    list(map(lambda q:
+                         len(list(filter(lambda answer:
+                            answer['id'] == q['id'] and
+                            int(answer['answer']) == q['correctAnswer'],
+                            answers)))
+                         , questions))
+                )))
     payload = {'correct': score, 'total': len(questions)}
     payload = json.dumps(payload, indent=2, sort_keys=True)
     response = Response(payload)
     response.headers['Content-Type'] = 'application/json'
     return response
+
+

@@ -17,12 +17,14 @@ from setuptools import setup
 
 REQUIRED_PACKAGES = ['docopt']
 
-setup(name='mnist classifier',
-      version='0.1',
-      author='Chris Rawles',
-      author_email='crawles@google.com',
-      install_requires=REQUIRED_PACKAGES,
-      packages=find_packages(),
-      include_package_data=True,
-      description='Test batch normalization using Google Cloud',
-      requires=[])
+setup(
+    name='mnist classifier',
+    version='0.1',
+    author = 'Chris Rawles',
+    author_email = 'crawles@google.com',
+    install_requires=REQUIRED_PACKAGES,
+    packages=find_packages(),
+    include_package_data=True,
+    description='Test batch normalization using Google Cloud',
+    requires=[]
+)

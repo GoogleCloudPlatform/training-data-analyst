@@ -15,14 +15,17 @@
 from setuptools import find_packages
 from setuptools import setup
 
-REQUIRED_PACKAGES = []
+REQUIRED_PACKAGES = [
+]
 
-setup(name='simplernn',
-      version='0.1',
-      author='Google',
-      author_email='lak@google.com',
-      install_requires=REQUIRED_PACKAGES,
-      packages=find_packages(),
-      include_package_data=True,
-      description='Simple RNN example',
-      requires=[])
+setup(
+    name='simplernn',
+    version='0.1',
+    author = 'Google',
+    author_email = 'lak@google.com',
+    install_requires=REQUIRED_PACKAGES,
+    packages=find_packages(),
+    include_package_data=True,
+    description='Simple RNN example',
+    requires=[]
+)

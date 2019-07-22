@@ -21,37 +21,28 @@ import tensorflow as tf
 import argparse
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--project',
-                        help='project where model is deployed',
-                        required=True)
-    parser.add_argument(
-        '--jpeg',
-        help='file whose contents are to be sent to service',
-        default=
-        'gs://cloud-ml-data/img/flower_photos/sunflowers/1022552002_2b93faf9e7_n.jpg'
-    )
-    args = parser.parse_args()
+  parser = argparse.ArgumentParser()
+  parser.add_argument(
+      '--project',
+      help='project where model is deployed',
+      required=True)
+  parser.add_argument(
+      '--jpeg',
+      help='file whose contents are to be sent to service',
+      default='gs://cloud-ml-data/img/flower_photos/sunflowers/1022552002_2b93faf9e7_n.jpg'
+      )
+  args = parser.parse_args()
 
-    with tf.gfile.FastGFile(args.jpeg, 'r') as ifp:
-        credentials = GoogleCredentials.get_application_default()
-        api = discovery.build(
-            'ml',
-            'v1',
-            credentials=credentials,
-            discoveryServiceUrl=
-            'https://storage.googleapis.com/cloud-ml/discovery/ml_v1_discovery.json'
-        )
+  with tf.gfile.FastGFile(args.jpeg, 'r') as ifp:
+    credentials = GoogleCredentials.get_application_default()
+    api = discovery.build('ml', 'v1', credentials=credentials,
+               discoveryServiceUrl='https://storage.googleapis.com/cloud-ml/discovery/ml_v1_discovery.json')
 
-        request_data = {
-            'instances': [{
-                "image_bytes": {
-                    "b64": base64.b64encode(ifp.read())
-                }
-            }]
-        }
-        parent = 'projects/%s/models/%s/versions/%s' % (args.project,
-                                                        'flowers', 'resnet')
-        response = api.projects().predict(body=request_data,
-                                          name=parent).execute()
-        print("response={0}".format(response))
+    request_data = {'instances':
+      [
+         {"image_bytes": {"b64": base64.b64encode(ifp.read())}}
+      ]
+    }
+    parent = 'projects/%s/models/%s/versions/%s' % (args.project, 'flowers', 'resnet')
+    response = api.projects().predict(body=request_data, name=parent).execute()
+    print("response={0}".format(response))
