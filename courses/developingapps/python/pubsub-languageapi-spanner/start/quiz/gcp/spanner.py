@@ -59,11 +59,11 @@ Persists feedback data into Spanner
 def save_feedback(data):
     # TODO: Create a batch object for database operations
 
-    
+
         # TODO: Create a key for the record
         # from the email, quiz and timestamp
 
-        
+
 
 
         # END TODO
@@ -72,16 +72,15 @@ def save_feedback(data):
         # into the feedback table
         # This needs the columns and values
 
-        
 
 
 
 
 
 
-        
+
+
 
         # END TODO
 
     # END TODO
-

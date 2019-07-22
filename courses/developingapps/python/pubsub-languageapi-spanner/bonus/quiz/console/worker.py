@@ -22,13 +22,11 @@ import json
 from quiz.gcp import pubsub, languageapi, spanner
 
 # END TODO
-
 """
 Configure logging
 """
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 log = logging.getLogger()
-
 """
 Receives pulled messages, analyzes and stores them
 - Acknowledge the message
@@ -39,6 +37,8 @@ Receives pulled messages, analyzes and stores them
 - call helper module to persist to spanner
 - log feedback saved
 """
+
+
 def pubsub_callback(message):
     # TODO: Acknowledge the message
 
@@ -78,29 +78,36 @@ def pubsub_callback(message):
 
     spanner.save_feedback(data)
 
-    # END TODO 
+    # END TODO
 
     # TODO: Log a message to say the feedback has been saved
 
-    log.info('Feedback saved')    
+    log.info('Feedback saved')
 
     # END TODO
+
+
 """
 Bonus: Answer subscription callback
 """
+
+
 def answer_callback(message):
     message.ack()
     log.info('Answer received')
     log.info(message)
     data = json.loads(message.data)
     spanner.save_answer(data)
-    log.info('Answer saved')    
+    log.info('Answer saved')
+
 
 """
 Pulls messages and loops forever while waiting
 - initiate pull 
 - loop once a minute, forever
 """
+
+
 def main():
     log.info('Worker starting...')
 
@@ -113,6 +120,7 @@ def main():
 
     while True:
         time.sleep(60)
+
 
 if __name__ == '__main__':
     main()

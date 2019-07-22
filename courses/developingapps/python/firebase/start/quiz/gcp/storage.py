@@ -38,11 +38,12 @@ storage_client = storage.Client()
 bucket = storage_client.get_bucket(bucket_name)
 
 # END TODO
-
 """
 Uploads a file to a given Cloud Storage bucket and returns the public url
 to the new object.
 """
+
+
 def upload_file(image_file, public):
 
     # TODO: Use the bucket to get a blob object
@@ -53,9 +54,8 @@ def upload_file(image_file, public):
 
     # TODO: Use the blob to upload the file
 
-    blob.upload_from_string(
-        image_file.read(),
-        content_type=image_file.content_type)
+    blob.upload_from_string(image_file.read(),
+                            content_type=image_file.content_type)
 
     # END TODO
 
@@ -65,7 +65,6 @@ def upload_file(image_file, public):
         blob.make_public()
 
     # END TODO
-
 
     # TODO: Modify to return the blob's Public URL
 

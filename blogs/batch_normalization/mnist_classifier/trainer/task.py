@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """MNIST classifier.
 
 Usage:
@@ -33,13 +32,13 @@ from docopt import docopt
 
 from . import model
 
-
 if __name__ == '__main__':
     arguments = docopt(__doc__)
     outdir = arguments['<outdir>']
     model.NUM_STEPS = int(arguments['--num_steps'])
     model.BATCH_SIZE = int(arguments['--batch_size'])
-    model.HIDDEN_UNITS = [int(h) for h in arguments['--hidden_units'].split(',')]
+    model.HIDDEN_UNITS = [
+        int(h) for h in arguments['--hidden_units'].split(',')
+    ]
     model.USE_BATCH_NORMALIZATION = arguments['--use_batch_normalization']
     model.train_and_evaluate(outdir)
-

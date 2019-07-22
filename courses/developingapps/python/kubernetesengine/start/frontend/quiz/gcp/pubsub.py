@@ -16,7 +16,7 @@ import logging
 import os
 project_id = os.getenv('GCLOUD_PROJECT')
 
-# TODO: Load the Cloud Pub/Sub module 
+# TODO: Load the Cloud Pub/Sub module
 
 from google.cloud import pubsub_v1
 
@@ -47,7 +47,6 @@ topic_path = publisher.topic_path(project_id, 'feedback')
 sub_path = sub_client.subscription_path(project_id, 'worker-subscription')
 
 # END TODO
-
 """
 Publishes feedback info 
 - jsonify feedback object
@@ -55,23 +54,27 @@ Publishes feedback info
 - publish message
 - return result
 """
+
+
 def publish_feedback(feedback):
 
-# TODO: Publish the feedback object to the feedback topic
+    # TODO: Publish the feedback object to the feedback topic
 
     payload = json.dumps(feedback, indent=2, sort_keys=True)
     data = payload.encode('utf-8')
     future = publisher.publish(topic_path, data=data)
     return future.result()
 
-# END TODO
 
+# END TODO
 """pull_feedback
 
 Starts pulling messages from subscription
 - receive callback function from calling module
 - initiate the pull providing the callback function
 """
+
+
 def pull_feedback(callback):
     # TODO: Subscriber to the worker-subscription,
     # invoking the callback

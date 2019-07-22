@@ -7,8 +7,8 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
 
-YESTERDAY = datetime.combine(
-    datetime.today() - timedelta(days=1), datetime.min.time())
+YESTERDAY = datetime.combine(datetime.today() - timedelta(days=1),
+                             datetime.min.time())
 
 default_args = {
     'owner': 'airflow',
@@ -21,6 +21,6 @@ default_args = {
 }
 
 with DAG('hello_world_email', default_args=default_args) as dag:
-  t1 = BashOperator(task_id='print_date', bash_command='date', dag=dag)
-  t2 = BashOperator(task_id='expect_failure', bash_command='exit 1', dag=dag)
-  t1 >> t2
+    t1 = BashOperator(task_id='print_date', bash_command='date', dag=dag)
+    t2 = BashOperator(task_id='expect_failure', bash_command='exit 1', dag=dag)
+    t1 >> t2

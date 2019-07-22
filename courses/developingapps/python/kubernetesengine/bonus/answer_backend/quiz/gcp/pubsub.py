@@ -19,8 +19,9 @@ project_id = os.getenv('GCLOUD_PROJECT')
 from google.cloud import pubsub_v1
 
 sub_client = pubsub_v1.SubscriberClient()
-answer_sub_path = sub_client.subscription_path(project_id, 'answer-subscription') 
+answer_sub_path = sub_client.subscription_path(project_id,
+                                               'answer-subscription')
+
 
 def pull_answer(callback):
     sub_client.subscribe(answer_sub_path, callback=callback)
-

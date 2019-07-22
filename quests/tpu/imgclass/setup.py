@@ -21,7 +21,5 @@ setup(name='trainer',
       author_email='nobody@google.com',
       license='Apache2',
       packages=['trainer'],
-      install_requires=[
-          'tensorflow'
-      ],
+      install_requires=['tensorflow'],
       zip_safe=False)

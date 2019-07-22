@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """A deep Q network to show reinforcement learning on the cloud."""
 
 import json
@@ -26,9 +25,12 @@ from enum import Enum
 
 # Create agent components
 class DQNetwork():
-    def __init__(
-        self, state_size, action_size, learning_rate, hidden_nuerons,
-            name='DQNetwork'):
+    def __init__(self,
+                 state_size,
+                 action_size,
+                 learning_rate,
+                 hidden_nuerons,
+                 name='DQNetwork'):
         """Creates a Deep Q Network to emulate Q-learning.
 
         Creates a two hidden-layer Deep Q Network. Similar to a typical nueral
@@ -46,25 +48,27 @@ class DQNetwork():
             name (str): What to call the network, as shown in tensorboard.
         """
         with tf.variable_scope(name):
-            self.states = tf.placeholder(
-                tf.float32, shape=((None,) + state_size), name='states')
-            self.actions = tf.placeholder(
-                tf.int32, shape=(None), name='actions')
+            self.states = tf.placeholder(tf.float32,
+                                         shape=((None, ) + state_size),
+                                         name='states')
+            self.actions = tf.placeholder(tf.int32,
+                                          shape=(None),
+                                          name='actions')
 
             # For tracking the reward in tensorboard and vizier
-            self.episode_reward = tf.placeholder(
-                dtype=tf.float32, shape=[], name='episode_reward')
+            self.episode_reward = tf.placeholder(dtype=tf.float32,
+                                                 shape=[],
+                                                 name='episode_reward')
             tf.summary.scalar('episode_reward', self.episode_reward)
 
             # target_Q is R(s,a) + ymax Qhat(s', a')
             self.target_Q = tf.placeholder(tf.float32, [None], name="target")
 
             # TODO(ddetering): Switch to keras.
-            self.fully_connected_1 = tf.layers.dense(
-                inputs=self.states,
-                units=hidden_nuerons,
-                activation=tf.nn.relu,
-                name="fully_connected_1")
+            self.fully_connected_1 = tf.layers.dense(inputs=self.states,
+                                                     units=hidden_nuerons,
+                                                     activation=tf.nn.relu,
+                                                     name="fully_connected_1")
 
             self.fully_connected_2 = tf.layers.dense(
                 inputs=self.fully_connected_1,
@@ -72,16 +76,15 @@ class DQNetwork():
                 activation=tf.nn.relu,
                 name="fully_connected_2")
 
-            self.output = tf.layers.dense(
-                inputs=self.fully_connected_2,
-                units=action_size,
-                activation=None)
+            self.output = tf.layers.dense(inputs=self.fully_connected_2,
+                                          units=action_size,
+                                          activation=None)
 
             # Hot encode and multiply across to select Q value for an action.
             self.actions_hot = tf.one_hot(self.actions, action_size)
             # Q is our predicted Q value.
-            self.Q = tf.reduce_sum(
-                tf.multiply(self.output, self.actions_hot), axis=1)
+            self.Q = tf.reduce_sum(tf.multiply(self.output, self.actions_hot),
+                                   axis=1)
 
             # The loss is the difference between predicted Q_values and
             # the Q_target Sum(Qtarget - Q)^2
@@ -100,6 +103,7 @@ class Memory():
     depending on how big of a difference there is between predicted Q values
     and target Q values.
     """
+
     def __init__(self, memory_size):
         self.buffer = deque(maxlen=memory_size)
 
@@ -127,8 +131,9 @@ class Memory():
             ]
         """
         buffer_size = len(self.buffer)
-        index = np.random.choice(
-            np.arange(buffer_size), size=batch_size, replace=False)
+        index = np.random.choice(np.arange(buffer_size),
+                                 size=batch_size,
+                                 replace=False)
 
         # Columns have different data types, so numpy array would be awkward.
         return np.array([self.buffer[i] for i in index]).T.tolist()
@@ -137,10 +142,10 @@ class Memory():
 # Create agent
 class Agent():
     """Sets up a reinforcement learning agent to play in a game environment."""
-    def __init__(
-            self, state_size, action_size, learning_rate, hidden_nuerons,
-            gamma, epsilon_decay, memory_batch_size, memory_size, train,
-            tensorflow_session, output_path):
+
+    def __init__(self, state_size, action_size, learning_rate, hidden_nuerons,
+                 gamma, epsilon_decay, memory_batch_size, memory_size, train,
+                 tensorflow_session, output_path):
         """Initializes the agent with DQN and memory sub-classes.
 
         Args:
@@ -162,8 +167,8 @@ class Agent():
             output_path (str): The directory to output TensorBoard summaries.
         """
         self.action_size = action_size
-        self.brain = DQNetwork(
-            state_size, action_size, learning_rate, hidden_nuerons)
+        self.brain = DQNetwork(state_size, action_size, learning_rate,
+                               hidden_nuerons)
         self.memory = Memory(memory_size)
         self.session = tensorflow_session
         self.train = train
@@ -173,8 +178,9 @@ class Agent():
         self.epsilon_decay = epsilon_decay
 
         # Setup TensorBoard Writer.
-        trial_id = json.loads(
-            os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
+        trial_id = json.loads(os.environ.get('TF_CONFIG',
+                                             '{}')).get('task',
+                                                        {}).get('trial', '')
         summary_path = os.path.join(output_path, trial_id)
         self.writer = tf.summary.FileWriter(summary_path, self.session.graph)
 
@@ -193,11 +199,11 @@ class Agent():
                 self.epsilon *= self.epsilon_decay
 
             if (self.epsilon > np.random.rand()):
-                return random.randint(0, self.action_size-1)
+                return random.randint(0, self.action_size - 1)
 
         # If not acting randomly, take action with highest predicted value.
-        Qs = self.session.run(
-            self.brain.output, feed_dict={self.brain.states: [state]})
+        Qs = self.session.run(self.brain.output,
+                              feed_dict={self.brain.states: [state]})
         return np.argmax(Qs)
 
     def learn(self, episode_reward, tensorboard_write):
@@ -221,8 +227,8 @@ class Agent():
         # Set Q_target = r if the episode ends at s+1.
         # Otherwise set Q_target = r + gamma*maxQ(s', a').
         target_Qs_batch = np.array([
-            rewards_mb[i] if dones_mb[i]
-            else rewards_mb[i] + self.gamma * np.max(Qs_next_state[i])
+            rewards_mb[i] if dones_mb[i] else rewards_mb[i] +
+            self.gamma * np.max(Qs_next_state[i])
             for i in range(len(rewards_mb))
         ])
 
@@ -234,11 +240,11 @@ class Agent():
             brain.episode_reward: episode_reward
         }
 
-        loss, _ = self.session.run(
-            [brain.loss, brain.optimizer], feed_dict=model_feed)
+        loss, _ = self.session.run([brain.loss, brain.optimizer],
+                                   feed_dict=model_feed)
 
         # Merge summaries for tensorboard.
         if tensorboard_write:
-            summary = self.session.run(
-                tf.summary.merge_all(), feed_dict=model_feed)
+            summary = self.session.run(tf.summary.merge_all(),
+                                       feed_dict=model_feed)
             self.writer.add_summary(summary)

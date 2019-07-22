@@ -13,22 +13,37 @@ import os
 from signal import SIGKILL
 
 parser = argparse.ArgumentParser(__file__, description="event_generator")
-parser.add_argument("--taxonomy", "-x", dest="taxonomy_fp",
-                    help="A .json file representing a taxonomy of web resources",
-                    default="taxonomy.json")
-parser.add_argument("--users_fp", "-u", dest="users_fp",
+parser.add_argument(
+    "--taxonomy",
+    "-x",
+    dest="taxonomy_fp",
+    help="A .json file representing a taxonomy of web resources",
+    default="taxonomy.json")
+parser.add_argument("--users_fp",
+                    "-u",
+                    dest="users_fp",
                     help="A .csv file of users",
                     default="users.csv")
 parser.add_argument("--num_e", "-e", dest="max_num_events", type=int,
                     help="The maximum number of events to generate before " \
                     " stopping. Defaults to None, which means run" \
                     " indefinitely", default=1000)
-parser.add_argument("--off_to_on", "-off", dest="off_to_on_prob", type=float,
-                    help="A float representing the probability that a user who is offline will come online",
-                    default=.25)
-parser.add_argument("--on_to_off", "-on", dest="on_to_off_prob", type=float,
-                    help="A float representing the probability that a user who is online will go offline",
-                    default=.1)
+parser.add_argument(
+    "--off_to_on",
+    "-off",
+    dest="off_to_on_prob",
+    type=float,
+    help=
+    "A float representing the probability that a user who is offline will come online",
+    default=.25)
+parser.add_argument(
+    "--on_to_off",
+    "-on",
+    dest="on_to_off_prob",
+    type=float,
+    help=
+    "A float representing the probability that a user who is online will go offline",
+    default=.1)
 
 page_read_secs = 5
 args = parser.parse_args()
@@ -43,8 +58,11 @@ max_file_size_bytes = 500
 verbs = ["GET"]
 responses = [200]
 
+log_fields = [
+    "ip", "user_id", "lat", "lng", "timestamp", "http_request",
+    "http_response", "num_bytes", "user_agent"
+]
 
-log_fields = ["ip", "user_id", "lat", "lng", "timestamp", "http_request", "http_response", "num_bytes", "user_agent"]
 
 def extract_resources(taxonomy_filepath):
     """
@@ -80,6 +98,7 @@ def read_users(users_fp):
             users.append(user)
     return users
 
+
 def publish_burst(burst, num_events_counter, fp):
     """
     Publishes and prints each event
@@ -94,6 +113,7 @@ def publish_burst(burst, num_events_counter, fp):
         json_str = json.dumps(event_dict)
         num_events_counter.value += 1
         fp.write(json_str + '\n')
+
 
 def create_user_process(user, root, num_events_counter):
     """
@@ -129,6 +149,7 @@ def create_user_process(user, root, num_events_counter):
                 user['offline_events'] = []
         fp.close()
 
+
 def generate_event(user):
     """
     Returns a dictionary representing an event
@@ -139,13 +160,19 @@ def generate_event(user):
     uri = str(user['page'].name)
     event_time = user['time']
     current_time_str = event_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-    file_size_bytes = random.choice(range(min_file_size_bytes, max_file_size_bytes))
+    file_size_bytes = random.choice(
+        range(min_file_size_bytes, max_file_size_bytes))
     http_request = "\"{} {} HTTP/1.0\"".format(random.choice(verbs), uri)
     http_response = random.choice(responses)
-    event_values = [user['ip'], user['id'], float(user['lat']), float(user['lng']), current_time_str, http_request,
-                    http_response, file_size_bytes, user['user_agent']]
+    event_values = [
+        user['ip'], user['id'],
+        float(user['lat']),
+        float(user['lng']), current_time_str, http_request, http_response,
+        file_size_bytes, user['user_agent']
+    ]
 
     return dict(zip(log_fields, event_values))
+
 
 def get_next_page(user):
     """
@@ -166,8 +193,11 @@ if __name__ == '__main__':
     num_events_counter = Value('i', 0)
     users = read_users(users_fp)
     root = extract_resources(taxonomy_fp)
-    processes = [Process(target=create_user_process, args=(deepcopy(user), deepcopy(root), num_events_counter))
-                 for user in users]
+    processes = [
+        Process(target=create_user_process,
+                args=(deepcopy(user), deepcopy(root), num_events_counter))
+        for user in users
+    ]
     [process.start() for process in processes]
     while num_events_counter.value <= max_num_events:
         time.sleep(1)

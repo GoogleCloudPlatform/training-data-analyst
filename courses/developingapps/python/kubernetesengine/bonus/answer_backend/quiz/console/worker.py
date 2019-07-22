@@ -17,15 +17,12 @@ import sys
 import time
 import json
 
-
 from quiz.gcp import pubsub, spanner
-
 """
 Configure logging
 """
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 log = logging.getLogger()
-
 """
 Receives pulled messages, analyzes and stores them
 - Acknowledge the message
@@ -34,24 +31,30 @@ Receives pulled messages, analyzes and stores them
 - call helper module to persist to spanner
 - log answer saved
 """
+
+
 def answer_callback(message):
     message.ack()
     log.info('Answer received')
     log.info(message)
     data = json.loads(message.data)
     spanner.save_answer(data)
-    log.info('Answer saved')   
+    log.info('Answer saved')
+
 
 """
 Pulls messages and loops forever while waiting
 - initiate pull 
 - loop once a minute, forever
 """
+
+
 def main():
     log.info('Worker starting...')
     pubsub.pull_answer(answer_callback)
     while True:
         time.sleep(60)
+
 
 if __name__ == '__main__':
     main()
