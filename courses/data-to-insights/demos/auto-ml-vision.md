@@ -1,5 +1,5 @@
 # Video: AutoML Vision Demo
-Goal: Explore how to create a custom image classification model with no code using AutoML Vision.
+Goal: Explore how to create a custom image classification model with no code using [AutoML Vision](https://cloud.google.com/vision/automl/docs/).
 
 ## Open the demo video
 * [AutoML Vision: classifying dog breeds (6min 19s)](https://youtu.be/5EntDh5Ylf4)
