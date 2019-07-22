@@ -13,19 +13,20 @@
 # limitations under the License.
 from setuptools import setup
 
-setup(name='trainer',
-      version='1.0',
-      description='Natality, with sklearn',
-      url='http://github.com/GoogleCloudPlatform/training-data-analyst',
-      author='Google',
-      author_email='nobody@google.com',
-      license='Apache2',
-      packages=['trainer'],
-      package_data={'': ['privatekey.json']},
-      install_requires=[
-          'pandas-gbq==0.3.0',
-          'urllib3',
-          'google-cloud-bigquery==0.29.0',
-          'cloudml-hypertune',  # Required for hyperparameter tuning.
-      ],
-      zip_safe=False)
+setup(
+    name='trainer',
+    version='1.0',
+    description='Natality, with sklearn',
+    url='http://github.com/GoogleCloudPlatform/training-data-analyst',
+    author='Google',
+    author_email='nobody@google.com',
+    license='Apache2',
+    packages=['trainer'],
+    package_data={'': ['privatekey.json']},
+    install_requires=[
+        'pandas-gbq==0.3.0',
+        'urllib3',
+        'google-cloud-bigquery==0.29.0',
+        'cloudml-hypertune',  # Required for hyperparameter tuning.
+    ],
+    zip_safe=False)

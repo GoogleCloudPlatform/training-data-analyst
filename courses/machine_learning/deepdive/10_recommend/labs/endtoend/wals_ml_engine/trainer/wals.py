@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """WALS model core functions."""
 
 import math
@@ -22,7 +21,7 @@ from tensorflow.contrib.factorization.python.ops import factorization_ops
 
 
 def get_rmse(output_row, output_col, actual):
-  """Compute rmse between predicted and actual ratings.
+    """Compute rmse between predicted and actual ratings.
 
   Args:
     output_row: evaluated numpy array of row_factor
@@ -32,19 +31,19 @@ def get_rmse(output_row, output_col, actual):
   Returns:
     rmse
   """
-  mse = 0
-  for i in xrange(actual.data.shape[0]):
-    row_pred = output_row[actual.row[i]]
-    col_pred = output_col[actual.col[i]]
-    err = actual.data[i] - np.dot(row_pred, col_pred)
-    mse += err * err
-  mse /= actual.data.shape[0]
-  rmse = math.sqrt(mse)
-  return rmse
+    mse = 0
+    for i in xrange(actual.data.shape[0]):
+        row_pred = output_row[actual.row[i]]
+        col_pred = output_col[actual.col[i]]
+        err = actual.data[i] - np.dot(row_pred, col_pred)
+        mse += err * err
+    mse /= actual.data.shape[0]
+    rmse = math.sqrt(mse)
+    return rmse
 
 
 def simple_train(model, input_tensor, num_iterations):
-  """Helper function to train model on input for num_iterations.
+    """Helper function to train model on input for num_iterations.
 
   Args:
     model:            WALSModel instance
@@ -54,23 +53,24 @@ def simple_train(model, input_tensor, num_iterations):
   Returns:
     tensorflow session, for evaluating results
   """
-  sess = tf.Session(graph=input_tensor.graph)
+    sess = tf.Session(graph=input_tensor.graph)
 
-  with input_tensor.graph.as_default():
-    row_update_op = model.update_row_factors(sp_input=input_tensor)[1]
-    col_update_op = model.update_col_factors(sp_input=input_tensor)[1]
+    with input_tensor.graph.as_default():
+        row_update_op = model.update_row_factors(sp_input=input_tensor)[1]
+        col_update_op = model.update_col_factors(sp_input=input_tensor)[1]
 
-    sess.run(model.initialize_op)
-    sess.run(model.worker_init)
-    for _ in xrange(num_iterations):
-      sess.run(model.row_update_prep_gramian_op)
-      sess.run(model.initialize_row_update_op)
-      sess.run(row_update_op)
-      sess.run(model.col_update_prep_gramian_op)
-      sess.run(model.initialize_col_update_op)
-      sess.run(col_update_op)
+        sess.run(model.initialize_op)
+        sess.run(model.worker_init)
+        for _ in xrange(num_iterations):
+            sess.run(model.row_update_prep_gramian_op)
+            sess.run(model.initialize_row_update_op)
+            sess.run(row_update_op)
+            sess.run(model.col_update_prep_gramian_op)
+            sess.run(model.initialize_col_update_op)
+            sess.run(col_update_op)
 
-  return sess
+    return sess
+
 
 LOG_RATINGS = 0
 LINEAR_RATINGS = 1
@@ -78,7 +78,7 @@ LINEAR_OBS_W = 100.0
 
 
 def make_wts(data, wt_type, obs_wt, feature_wt_exp, axis):
-  """Generate observed item weights.
+    """Generate observed item weights.
 
   Args:
     data:             coo_matrix of ratings data
@@ -90,27 +90,32 @@ def make_wts(data, wt_type, obs_wt, feature_wt_exp, axis):
   Returns:
     vector of weights for cols (items) or rows (users)
   """
-  # recipricol of sum of number of items across rows (if axis is 0)
-  frac = np.array(1.0/(data > 0.0).sum(axis))
+    # recipricol of sum of number of items across rows (if axis is 0)
+    frac = np.array(1.0 / (data > 0.0).sum(axis))
 
-  # filter any invalid entries
-  frac[np.ma.masked_invalid(frac).mask] = 0.0
+    # filter any invalid entries
+    frac[np.ma.masked_invalid(frac).mask] = 0.0
 
-  # normalize weights according to assumed distribution of ratings
-  if wt_type == LOG_RATINGS:
-    wts = np.array(np.power(frac, feature_wt_exp)).flatten()
-  else:
-    wts = np.array(obs_wt * frac).flatten()
+    # normalize weights according to assumed distribution of ratings
+    if wt_type == LOG_RATINGS:
+        wts = np.array(np.power(frac, feature_wt_exp)).flatten()
+    else:
+        wts = np.array(obs_wt * frac).flatten()
 
-  # check again for any numerically unstable entries
-  assert np.isfinite(wts).sum() == wts.shape[0]
-  return wts
+    # check again for any numerically unstable entries
+    assert np.isfinite(wts).sum() == wts.shape[0]
+    return wts
 
 
-def wals_model(data, dim, reg, unobs, weights=False,
-               wt_type=LINEAR_RATINGS, feature_wt_exp=None,
+def wals_model(data,
+               dim,
+               reg,
+               unobs,
+               weights=False,
+               wt_type=LINEAR_RATINGS,
+               feature_wt_exp=None,
                obs_wt=LINEAR_OBS_W):
-  """Create the WALSModel and input, row and col factor tensors.
+    """Create the WALSModel and input, row and col factor tensors.
 
   Args:
     data:           scipy coo_matrix of item ratings
@@ -128,34 +133,36 @@ def wals_model(data, dim, reg, unobs, weights=False,
     col_factor:     tensor for col_factor
     model:          WALSModel instance
   """
-  row_wts = None
-  col_wts = None
+    row_wts = None
+    col_wts = None
 
-  num_rows = data.shape[0]
-  num_cols = data.shape[1]
+    num_rows = data.shape[0]
+    num_cols = data.shape[1]
 
-  if weights:
-    assert feature_wt_exp is not None
-    row_wts = np.ones(num_rows)
-    col_wts = make_wts(data, wt_type, obs_wt, feature_wt_exp, 0)
+    if weights:
+        assert feature_wt_exp is not None
+        row_wts = np.ones(num_rows)
+        col_wts = make_wts(data, wt_type, obs_wt, feature_wt_exp, 0)
 
-  row_factor = None
-  col_factor = None
+    row_factor = None
+    col_factor = None
 
-  with tf.Graph().as_default():
+    with tf.Graph().as_default():
 
-    input_tensor = tf.SparseTensor(indices=zip(data.row, data.col),
-                                   values=(data.data).astype(np.float32),
-                                   dense_shape=data.shape)
+        input_tensor = tf.SparseTensor(indices=zip(data.row, data.col),
+                                       values=(data.data).astype(np.float32),
+                                       dense_shape=data.shape)
 
-    model = factorization_ops.WALSModel(num_rows, num_cols, dim,
-                                        unobserved_weight=unobs,
-                                        regularization=reg,
-                                        row_weights=row_wts,
-                                        col_weights=col_wts)
+        model = factorization_ops.WALSModel(num_rows,
+                                            num_cols,
+                                            dim,
+                                            unobserved_weight=unobs,
+                                            regularization=reg,
+                                            row_weights=row_wts,
+                                            col_weights=col_wts)
 
-    # retrieve the row and column factors
-    row_factor = model.row_factors[0]
-    col_factor = model.col_factors[0]
+        # retrieve the row and column factors
+        row_factor = model.row_factors[0]
+        col_factor = model.col_factors[0]
 
-  return input_tensor, row_factor, col_factor, model
+    return input_tensor, row_factor, col_factor, model

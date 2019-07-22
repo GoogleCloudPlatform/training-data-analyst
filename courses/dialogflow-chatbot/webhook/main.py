@@ -22,6 +22,7 @@ from google.appengine.ext import ndb
 
 app = Flask(__name__)
 
+
 @app.route('/webhook/', methods=['POST'])
 def handle():
     req = request.get_json(silent=True, force=True)
@@ -40,6 +41,7 @@ def handle():
     r.headers['Content-Type'] = 'application/json'
     return r
 
+
 def getResponse(topic):
     #Get the synonym
     synonym_text = getSynonym(topic)
@@ -48,10 +50,12 @@ def getResponse(topic):
 
     return buildReply(action_text)
 
+
 def buildReply(info):
     return {
         'fulfillmentText': info,
     }
+
 
 def getSynonym(query_text):
     synonym_key = ndb.Key('Synonym', query_text)
@@ -63,6 +67,7 @@ def getSynonym(query_text):
         break
 
     return synonym_text
+
 
 def getActionText(synonym_text):
     synonym_text = synonym_text.strip()
@@ -78,11 +83,13 @@ def getActionText(synonym_text):
 
     return action_text
 
+
 @app.errorhandler(500)
 def server_error(e):
     # Log the error and stacktrace.
     print e
     return 'An internal error occurred.', 500
+
 
 class Topic(ndb.Model):
     action_text = ndb.StringProperty()
@@ -90,6 +97,7 @@ class Topic(ndb.Model):
     @classmethod
     def query_topic(cls, ancestor_key):
         return cls.query(ancestor=ancestor_key)
+
 
 class Synonym(ndb.Model):
     synonym = ndb.StringProperty()

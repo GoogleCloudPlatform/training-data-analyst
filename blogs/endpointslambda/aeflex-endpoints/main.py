@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Google Cloud Endpoints sample application.
 
 Demonstrates how to create a simple API.
@@ -23,7 +22,6 @@ import logging
 
 from flask import Flask, jsonify, request
 from six.moves import http_client
-
 
 app = Flask(__name__)
 
@@ -41,7 +39,7 @@ def process():
     """Process messages with information about S3 objects"""
     message = request.get_json().get('inputMessage', '')
     # add other processing as needed
-    # for example, add event to PubSub topic or 
+    # for example, add event to PubSub topic or
     # download object using presigned URL, save in Cloud Storage, invoke ML APIs
     return jsonify({'In app code for endpoint, received message': message})
 
@@ -52,7 +50,8 @@ def unexpected_error(e):
     logging.exception('An error occured while processing the request.')
     response = jsonify({
         'code': http_client.INTERNAL_SERVER_ERROR,
-        'message': 'Exception: {}'.format(e)})
+        'message': 'Exception: {}'.format(e)
+    })
     response.status_code = http_client.INTERNAL_SERVER_ERROR
     return response
 

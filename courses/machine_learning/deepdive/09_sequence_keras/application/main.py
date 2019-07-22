@@ -40,33 +40,35 @@ t2t_usr_dir = os.getenv('T2T_USR_DIR', 'instance/poetry/trainer')
 hparams_name = os.getenv('HPARAMS', 'transformer_poetry')
 data_dir = os.getenv('DATADIR', 'gs://cloud-training-demos-ml/poetry/data')
 
+
 def get_prediction(features):
-  input_data = {'instances': [features]}
-  parent = 'projects/%s/models/%s/versions/%s' % (project, model_name, version_name)
-  prediction = api.projects().predict(body=input_data, name=parent).execute()
-  return prediction
+    input_data = {'instances': [features]}
+    parent = 'projects/%s/models/%s/versions/%s' % (project, model_name,
+                                                    version_name)
+    prediction = api.projects().predict(body=input_data, name=parent).execute()
+    return prediction
 
 
 @app.route('/')
 def index():
-  return render_template('form.html')
+    return render_template('form.html')
+
 
 @app.route('/form')
 def input_form():
-  return render_template('form.html')
+    return render_template('form.html')
 
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
-  data = json.loads(request.data.decode())
-  features = {}
-  tfrecord = encode_as_tfexample(data['first_line']).SerializeToString()
-  features['input'] = {'b64': base64.b64encode(tfrecord)}
-  prediction = get_prediction(features)
-  decoded = decode( prediction['predictions'][0]['outputs'] )
-  result = decoded.split('<EOS>')[0]
-  return jsonify({'result': result})
-
+    data = json.loads(request.data.decode())
+    features = {}
+    tfrecord = encode_as_tfexample(data['first_line']).SerializeToString()
+    features['input'] = {'b64': base64.b64encode(tfrecord)}
+    prediction = get_prediction(features)
+    decoded = decode(prediction['predictions'][0]['outputs'])
+    result = decoded.split('<EOS>')[0]
+    return jsonify({'result': result})
 
 
 # similar to T2T's query.py
@@ -80,36 +82,43 @@ import tensorflow as tf
 input_encoder = None
 output_decoder = None
 fname = None
+
+
 def init():
-   global input_encoder, output_decoder, fname
-   tf.logging.set_verbosity(tf.logging.INFO)
-   tf.logging.info("Trying to import poetry/trainer from {}".format(t2t_usr_dir))
-   usr_dir.import_usr_dir(t2t_usr_dir)
-   print(t2t_usr_dir)
-   problem = registry.problem(problem_name)
-   hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser(data_dir))
-   problem.get_hparams(hparams)
-   fname = "inputs" if problem.has_inputs else "targets"
-   input_encoder = problem.feature_info[fname].encoder
-   output_decoder = problem.feature_info["targets"].encoder
+    global input_encoder, output_decoder, fname
+    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.logging.info(
+        "Trying to import poetry/trainer from {}".format(t2t_usr_dir))
+    usr_dir.import_usr_dir(t2t_usr_dir)
+    print(t2t_usr_dir)
+    problem = registry.problem(problem_name)
+    hparams = tf.contrib.training.HParams(
+        data_dir=os.path.expanduser(data_dir))
+    problem.get_hparams(hparams)
+    fname = "inputs" if problem.has_inputs else "targets"
+    input_encoder = problem.feature_info[fname].encoder
+    output_decoder = problem.feature_info["targets"].encoder
+
 
 def encode_as_tfexample(inputs):
-   # read vocabulary once
-   if input_encoder is None:
-      init()
+    # read vocabulary once
+    if input_encoder is None:
+        init()
 
-   # encode the input string
-   input_ids = input_encoder.encode(inputs)
-   input_ids.append(text_encoder.EOS_ID)
-   
-   # convert to TF Record
-   features = {
-     fname: tf.train.Feature(int64_list=tf.train.Int64List(value=input_ids))
-   }
-   return tf.train.Example(features=tf.train.Features(feature=features))
+    # encode the input string
+    input_ids = input_encoder.encode(inputs)
+    input_ids.append(text_encoder.EOS_ID)
+
+    # convert to TF Record
+    features = {
+        fname: tf.train.Feature(int64_list=tf.train.Int64List(value=input_ids))
+    }
+    return tf.train.Example(features=tf.train.Features(feature=features))
+
 
 def decode(output_ids):
-  return output_decoder.decode(output_ids)
+    return output_decoder.decode(output_ids)
+
 
 @app.errorhandler(500)
 def server_error(e):
@@ -118,6 +127,7 @@ def server_error(e):
     An internal error occurred: <pre>{}</pre>
     See logs for full stacktrace.
     """.format(e), 500
+
 
 if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the

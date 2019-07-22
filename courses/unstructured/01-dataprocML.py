@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 '''
   This program takes a sample text line of text and passes to a Natural Language Processing
   services, sentiment analysis, and processes the results in Python.
@@ -28,32 +27,31 @@ from googleapiclient.discovery import build
 
 from pyspark import SparkContext
 sc = SparkContext("local", "Simple App")
-
 '''
 You must set these values for the job to run.
 '''
-APIKEY="your-api-key"   # CHANGE
+APIKEY = "your-api-key"  # CHANGE
 print(APIKEY)
-PROJECT_ID="your-project-id"  # CHANGE
-print(PROJECT_ID) 
-BUCKET="your-bucket"   # CHANGE
-
+PROJECT_ID = "your-project-id"  # CHANGE
+print(PROJECT_ID)
+BUCKET = "your-bucket"  # CHANGE
 
 ## Wrappers around the NLP REST interface
+
 
 def SentimentAnalysis(text):
     from googleapiclient.discovery import build
     lservice = build('language', 'v1beta1', developerKey=APIKEY)
 
-    response = lservice.documents().analyzeSentiment(
-        body={
-            'document': {
-                'type': 'PLAIN_TEXT',
-                'content': text
-            }
-        }).execute()
-    
+    response = lservice.documents().analyzeSentiment(body={
+        'document': {
+            'type': 'PLAIN_TEXT',
+            'content': text
+        }
+    }).execute()
+
     return response
+
 
 ## main
 
@@ -64,10 +62,9 @@ sampleline = 'There are places I remember, all my life though some have changed.
 #
 results = SentimentAnalysis(sampleline)
 
-# 
+#
 #  What is the service returning?
 #
 print("Function returns: ", type(results))
 
 print(json.dumps(results, sort_keys=True, indent=4))
-

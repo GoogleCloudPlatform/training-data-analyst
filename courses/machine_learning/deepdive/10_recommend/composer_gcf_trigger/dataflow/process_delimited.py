@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """process_delimited.py is a Dataflow pipeline which reads a delimited file,
 adds some additional metadata fields and loads the contents to a BigQuery table."""
 
@@ -65,27 +64,38 @@ def run(argv=None):
 
     # Add the arguments needed for this specific Dataflow job.
     parser.add_argument(
-        '--input', dest='input', required=True,
+        '--input',
+        dest='input',
+        required=True,
         help='Input file to read.  This can be a local file or '
-             'a file in a Google Storage Bucket.')
+        'a file in a Google Storage Bucket.')
 
-    parser.add_argument('--output', dest='output', required=True,
+    parser.add_argument('--output',
+                        dest='output',
+                        required=True,
                         help='Output BQ table to write results to.')
 
-    parser.add_argument('--delimiter', dest='delimiter', required=False,
+    parser.add_argument('--delimiter',
+                        dest='delimiter',
+                        required=False,
                         help='Delimiter to split input records.',
                         default=',')
 
-    parser.add_argument('--fields', dest='fields', required=True,
+    parser.add_argument('--fields',
+                        dest='fields',
+                        required=True,
                         help='Comma separated list of field names.')
 
-    parser.add_argument('--load_dt', dest='load_dt', required=True,
+    parser.add_argument('--load_dt',
+                        dest='load_dt',
+                        required=True,
                         help='Load date in YYYY-MM-DD format.')
 
     known_args, pipeline_args = parser.parse_known_args(argv)
     row_transformer = RowTransformer(delimiter=known_args.delimiter,
                                      header=known_args.fields,
-                                     filename=ntpath.basename(known_args.input),
+                                     filename=ntpath.basename(
+                                         known_args.input),
                                      load_dt=known_args.load_dt)
 
     p_opts = pipeline_options.PipelineOptions(pipeline_args)
@@ -97,7 +107,8 @@ def run(argv=None):
         # Read the file.  This is the source of the pipeline.  All further
         # processing starts with lines read from the file.  We use the input
         # argument from the command line.
-        rows = pipeline | "Read from text file" >> beam.io.ReadFromText(known_args.input)
+        rows = pipeline | "Read from text file" >> beam.io.ReadFromText(
+            known_args.input)
 
         # This stage of the pipeline translates from a delimited single row
         # input to a dictionary object consumable by BigQuery.
@@ -110,9 +121,10 @@ def run(argv=None):
         # This stage of the pipeline writes the dictionary records into
         # an existing BigQuery table.
         dict_records | "Write to BigQuery" >> beam.io.Write(
-            beam.io.BigQuerySink(known_args.output,
-                                 create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER,
-                                 write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND))
+            beam.io.BigQuerySink(
+                known_args.output,
+                create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER,
+                write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND))
 
 
 if __name__ == '__main__':

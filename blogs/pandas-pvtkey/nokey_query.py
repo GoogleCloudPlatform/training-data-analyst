@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
+
 def query_to_dataframe(query):
-  import pandas as pd
-  return pd.read_gbq(query,
-                     project_id='cloud-training-demos',
-                     dialect='standard')
+    import pandas as pd
+    return pd.read_gbq(query,
+                       project_id='cloud-training-demos',
+                       dialect='standard')
+
 
 query = """
 SELECT
@@ -20,4 +22,3 @@ GROUP BY
 
 df = query_to_dataframe(query)
 print(df.head())
-

@@ -12,18 +12,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '--output_dir',
         help='GCS location to write checkpoints and export models',
-        required=True
-    )
-    parser.add_argument(
-        '--train_data_path',
-        help='can be a local path or a GCS url (gs://...)',
-        required=True
-    )
-    parser.add_argument(
-        '--eval_data_path',
-        help='can be a local path or a GCS url (gs://...)',
-        required=True
-    )
+        required=True)
+    parser.add_argument('--train_data_path',
+                        help='can be a local path or a GCS url (gs://...)',
+                        required=True)
+    parser.add_argument('--eval_data_path',
+                        help='can be a local path or a GCS url (gs://...)',
+                        required=True)
     parser.add_argument(
         '--embedding_path',
         help='OPTIONAL: can be a local path or a GCS url (gs://...). \
@@ -33,20 +28,17 @@ if __name__ == '__main__':
         '--num_epochs',
         help='number of times to go through the data, default=10',
         default=10,
-        type=float
-    )
+        type=float)
     parser.add_argument(
         '--batch_size',
         help='number of records to read during each training step, default=128',
         default=128,
-        type=int
-    )
+        type=int)
     parser.add_argument(
         '--learning_rate',
         help='learning rate for gradient descent, default=.001',
         default=.001,
-        type=float
-    )
+        type=float)
     parser.add_argument(
         '--native',
         action='store_true',
@@ -56,7 +48,7 @@ if __name__ == '__main__':
     args, _ = parser.parse_known_args()
     hparams = args.__dict__
     output_dir = hparams.pop('output_dir')
-    
+
     # initiate training
     if hparams['native']:
         model_native.train_and_evaluate(output_dir, hparams)

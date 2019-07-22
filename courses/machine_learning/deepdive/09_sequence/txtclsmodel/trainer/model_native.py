@@ -24,9 +24,8 @@ tf.logging.set_verbosity(tf.logging.INFO)
 CLASSES = {'github': 0, 'nytimes': 1, 'techcrunch': 2}  # label-to-int mapping
 TOP_K = 20000  # Limit on the number vocabulary size used for tokenization
 MAX_SEQUENCE_LENGTH = 50  # Sentences will be truncated/padded to this length
-VOCAB_FILE_PATH = None # where vocabulary is saved, dynamically set in train_and_eval function
+VOCAB_FILE_PATH = None  # where vocabulary is saved, dynamically set in train_and_eval function
 PADWORD = 'ZYXW'
-
 """
 Helper function to download data from Google Cloud Storage
   # Arguments:
@@ -35,6 +34,8 @@ Helper function to download data from Google Cloud Storage
       ONLY, doesn't support folders. (e.g. 'file.csv', NOT 'folder/file.csv')
   # Returns: nothing, downloads file to local disk
 """
+
+
 def download_from_gcs(source, destination):
     search = re.search('gs://(.*?)/(.*)', source)
     bucket_name = search.group(1)
@@ -55,6 +56,8 @@ Parses raw tsv containing hacker news headlines and returns (sentence, integer l
       ((train_sentences, train_labels), (test_sentences, test_labels)):  sentences
         are lists of strings, labels are numpy integer arrays
 """
+
+
 def load_hacker_news_data(train_data_path, eval_data_path):
     if train_data_path.startswith('gs://'):
         download_from_gcs(train_data_path, destination='train.csv')
@@ -83,6 +86,8 @@ Create tf.estimator compatible input function
       tf.data.Dataset, produces feature and label
         tensors one batch at a time
 """
+
+
 def input_fn(texts, labels, batch_size, mode):
     # Convert texts from python strings to tensors
     x = tf.constant(texts)
@@ -97,13 +102,16 @@ def input_fn(texts, labels, batch_size, mode):
     dataset = dataset.map(pad)
 
     if mode == tf.estimator.ModeKeys.TRAIN:
-        num_epochs = None #loop indefinitley
-        dataset = dataset.shuffle(buffer_size=50000) # our input is already shuffled so this is redundant
+        num_epochs = None  #loop indefinitley
+        dataset = dataset.shuffle(
+            buffer_size=50000
+        )  # our input is already shuffled so this is redundant
     else:
         num_epochs = 1
 
     dataset = dataset.repeat(num_epochs).batch(batch_size)
     return dataset
+
 
 """
 Given an int tensor, remove 0s then pad to a fixed length representation. 
@@ -113,14 +121,17 @@ Given an int tensor, remove 0s then pad to a fixed length representation.
   #Returns:
     (int tensor, int) tuple.
 """
+
+
 def pad(feature, label):
     # 1. Remove 0s which represent out of vocabulary words
     nonzero_indices = tf.where(tf.not_equal(feature, tf.zeros_like(feature)))
-    without_zeros = tf.gather(feature,nonzero_indices)
+    without_zeros = tf.gather(feature, nonzero_indices)
     without_zeros = tf.squeeze(without_zeros, axis=1)
 
     # 2. Prepend 0s till MAX_SEQUENCE_LENGTH
-    padded = tf.pad(without_zeros, [[MAX_SEQUENCE_LENGTH, 0]])  # pad out with zeros
+    padded = tf.pad(without_zeros,
+                    [[MAX_SEQUENCE_LENGTH, 0]])  # pad out with zeros
     padded = padded[-MAX_SEQUENCE_LENGTH:]  # slice to constant length
     return (padded, label)
 
@@ -133,6 +144,8 @@ Given sentences, return an integer representation
       Integer representation of the sentence. Word-integer mapping is determined
         by VOCAB_FILE_PATH. Words out of vocabulary will map to 0
 """
+
+
 def vectorize_sentences(sentences):
     # 1. Remove punctuation
     sentences = tf.regex_replace(sentences, '[[:punct:]]', ' ')
@@ -173,6 +186,8 @@ Builds a CNN model using keras and converts to tf.estimator.Estimator
     # Returns
         A tf.estimator.Estimator 
 """
+
+
 def keras_estimator(model_dir,
                     config,
                     learning_rate,
@@ -190,40 +205,49 @@ def keras_estimator(model_dir,
     # Add embedding layer. If pre-trained embedding is used add weights to the
     # embeddings layer and set trainable to input is_embedding_trainable flag.
     if embedding_path != None:
-        embedding_matrix = get_embedding_matrix(word_index, embedding_path, embedding_dim)
+        embedding_matrix = get_embedding_matrix(word_index, embedding_path,
+                                                embedding_dim)
         is_embedding_trainable = True  # set to False to freeze embedding weights
 
-        model.add(Embedding(input_dim=num_features,
-                            output_dim=embedding_dim,
-                            input_length=MAX_SEQUENCE_LENGTH,
-                            weights=[embedding_matrix],
-                            trainable=is_embedding_trainable))
+        model.add(
+            Embedding(input_dim=num_features,
+                      output_dim=embedding_dim,
+                      input_length=MAX_SEQUENCE_LENGTH,
+                      weights=[embedding_matrix],
+                      trainable=is_embedding_trainable))
     else:
-        model.add(Embedding(input_dim=num_features,
-                            output_dim=embedding_dim,
-                            input_length=MAX_SEQUENCE_LENGTH))
+        model.add(
+            Embedding(input_dim=num_features,
+                      output_dim=embedding_dim,
+                      input_length=MAX_SEQUENCE_LENGTH))
 
     model.add(Dropout(rate=dropout_rate))
-    model.add(Conv1D(filters=filters,
-                              kernel_size=kernel_size,
-                              activation='relu',
-                              bias_initializer='random_uniform',
-                              padding='same'))
+    model.add(
+        Conv1D(filters=filters,
+               kernel_size=kernel_size,
+               activation='relu',
+               bias_initializer='random_uniform',
+               padding='same'))
 
     model.add(MaxPooling1D(pool_size=pool_size))
-    model.add(Conv1D(filters=filters * 2,
-                              kernel_size=kernel_size,
-                              activation='relu',
-                              bias_initializer='random_uniform',
-                              padding='same'))
+    model.add(
+        Conv1D(filters=filters * 2,
+               kernel_size=kernel_size,
+               activation='relu',
+               bias_initializer='random_uniform',
+               padding='same'))
     model.add(GlobalAveragePooling1D())
     model.add(Dropout(rate=dropout_rate))
     model.add(Dense(len(CLASSES), activation='softmax'))
 
     # Compile model with learning parameters.
     optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
-    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['acc'])
-    estimator = tf.keras.estimator.model_to_estimator(keras_model=model, model_dir=model_dir, config=config)
+    model.compile(optimizer=optimizer,
+                  loss='sparse_categorical_crossentropy',
+                  metrics=['acc'])
+    estimator = tf.keras.estimator.model_to_estimator(keras_model=model,
+                                                      model_dir=model_dir,
+                                                      config=config)
 
     return estimator
 
@@ -234,10 +258,13 @@ Defines the features to be passed to the model during inference
   # Arguments: none
   # Returns: tf.estimator.export.ServingInputReceiver
 """
+
+
 def serving_input_fn():
     feature_placeholder = tf.placeholder(tf.string, [None])
     features = vectorize_sentences(feature_placeholder)
-    return tf.estimator.export.TensorServingInputReceiver(features, feature_placeholder)
+    return tf.estimator.export.TensorServingInputReceiver(
+        features, feature_placeholder)
 
 
 """
@@ -251,6 +278,8 @@ Takes embedding for generic vocabulary and extracts the embeddings
   # Returns: numpy matrix of shape (vocabulary, embedding_dim) that contains the embedded
       representation of each word in the vocabulary.
 """
+
+
 def get_embedding_matrix(word_index, embedding_path, embedding_dim):
     # Read the pre-trained embedding file and get word to word vector mappings.
     embedding_matrix_all = {}
@@ -288,12 +317,17 @@ Main orchestrator. Responsible for calling all other functions in model.py
       hparams: dict, command line parameters passed from task.py
   # Returns: nothing, kicks off training and evaluation
 """
+
+
 def train_and_evaluate(output_dir, hparams):
-    tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
-  
+    tf.summary.FileWriterCache.clear(
+    )  # ensure filewriter cache is clear for TensorBoard events file
+
     # Load Data
-    ((train_texts, train_labels), (test_texts, test_labels)) = load_hacker_news_data(
-        hparams['train_data_path'], hparams['eval_data_path'])
+    ((train_texts, train_labels),
+     (test_texts,
+      test_labels)) = load_hacker_news_data(hparams['train_data_path'],
+                                            hparams['eval_data_path'])
 
     # Create vocabulary from training corpus.
     tokenizer = text.Tokenizer(num_words=TOP_K)
@@ -301,48 +335,45 @@ def train_and_evaluate(output_dir, hparams):
 
     # Generate vocabulary file from tokenizer object to enable
     # creating a native tensorflow lookup table later (used in vectorize_sentences())
-    tf.gfile.MkDir(output_dir) # directory must exist before we can use tf.gfile.open
-    global VOCAB_FILE_PATH; VOCAB_FILE_PATH = os.path.join(output_dir,'vocab.txt')
+    tf.gfile.MkDir(
+        output_dir)  # directory must exist before we can use tf.gfile.open
+    global VOCAB_FILE_PATH
+    VOCAB_FILE_PATH = os.path.join(output_dir, 'vocab.txt')
     with tf.gfile.Open(VOCAB_FILE_PATH, 'wb') as f:
         f.write("{},0\n".format(PADWORD))  # map padword to 0
         for word, index in tokenizer.word_index.items():
-            if index < TOP_K: # only save mappings for TOP_K words
+            if index < TOP_K:  # only save mappings for TOP_K words
                 f.write("{},{}\n".format(word, index))
 
     # Create estimator
     run_config = tf.estimator.RunConfig(save_checkpoints_steps=500)
-    estimator = keras_estimator(
-        model_dir=output_dir,
-        config=run_config,
-        learning_rate=hparams['learning_rate'],
-        embedding_path=hparams['embedding_path'],
-        word_index=tokenizer.word_index
-    )
+    estimator = keras_estimator(model_dir=output_dir,
+                                config=run_config,
+                                learning_rate=hparams['learning_rate'],
+                                embedding_path=hparams['embedding_path'],
+                                word_index=tokenizer.word_index)
 
     # Create TrainSpec
-    train_steps = hparams['num_epochs'] * len(train_texts) / hparams['batch_size']
+    train_steps = hparams['num_epochs'] * len(
+        train_texts) / hparams['batch_size']
     train_spec = tf.estimator.TrainSpec(
-        input_fn=lambda:input_fn(
-            train_texts,
-            train_labels,
-            hparams['batch_size'],
-            mode=tf.estimator.ModeKeys.TRAIN),
-        max_steps=train_steps
-    )
+        input_fn=lambda: input_fn(train_texts,
+                                  train_labels,
+                                  hparams['batch_size'],
+                                  mode=tf.estimator.ModeKeys.TRAIN),
+        max_steps=train_steps)
 
     # Create EvalSpec
     exporter = tf.estimator.LatestExporter('exporter', serving_input_fn)
     eval_spec = tf.estimator.EvalSpec(
-        input_fn=lambda:input_fn(
-            test_texts,
-            test_labels,
-            hparams['batch_size'],
-            mode=tf.estimator.ModeKeys.EVAL),
+        input_fn=lambda: input_fn(test_texts,
+                                  test_labels,
+                                  hparams['batch_size'],
+                                  mode=tf.estimator.ModeKeys.EVAL),
         steps=None,
         exporters=exporter,
         start_delay_secs=10,
-        throttle_secs=10
-    )
+        throttle_secs=10)
 
     # Start training
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)

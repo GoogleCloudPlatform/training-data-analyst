@@ -25,7 +25,10 @@ import shutil
 tf.logging.set_verbosity(tf.logging.INFO)
 
 # List the CSV columns
-CSV_COLUMNS = ['fare_amount', 'pickuplon','pickuplat','dropofflon','dropofflat','passengers', 'key']
+CSV_COLUMNS = [
+    'fare_amount', 'pickuplon', 'pickuplat', 'dropofflon', 'dropofflat',
+    'passengers', 'key'
+]
 
 #Choose which column is your label
 LABEL_COLUMN = 'fare_amount'
@@ -45,25 +48,31 @@ INPUT_COLUMNS = [
     tf.feature_column.numeric_column('passengers'),
 ]
 
+
 # Create a function that will augment your feature set
 def add_more_features(feats):
     # Nothing to add (yet!)
     return feats
 
+
 feature_cols = add_more_features(INPUT_COLUMNS)
+
 
 # Create your serving input function so that your trained model will be able to serve predictions
 def serving_input_fn():
     feature_placeholders = {
-        column.name: tf.placeholder(tf.float32, [None]) for column in INPUT_COLUMNS
+        column.name: tf.placeholder(tf.float32, [None])
+        for column in INPUT_COLUMNS
     }
 
     features = feature_placeholders
-    return tf.estimator.export.ServingInputReceiver(features, feature_placeholders)
+    return tf.estimator.export.ServingInputReceiver(features,
+                                                    feature_placeholders)
+
 
 # Create an estimator that we are going to train and evaluate
 def train_and_evaluate(args):
-    tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
-    
+    tf.summary.FileWriterCache.clear(
+    )  # ensure filewriter cache is clear for TensorBoard events file
+
     # TODO: Create tf.estimator.DNNRegressor train and evaluate function passing args['parsed_argument'] from task.py
-    

@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 '''
   This program reads a text file and passes to a Natural Language Processing
   service, sentiment analysis, and processes the results in Spark.
@@ -28,39 +27,38 @@ from googleapiclient.discovery import build
 
 from pyspark import SparkContext
 sc = SparkContext("local", "Simple App")
-
 '''
 You must set these values for the job to run.
 '''
-APIKEY="your-api-key"   # CHANGE
+APIKEY = "your-api-key"  # CHANGE
 print(APIKEY)
-PROJECT_ID="your-project-id"  # CHANGE
-print(PROJECT_ID) 
-BUCKET="your-bucket"   # CHANGE
-
+PROJECT_ID = "your-project-id"  # CHANGE
+print(PROJECT_ID)
+BUCKET = "your-bucket"  # CHANGE
 
 ## Wrappers around the NLP REST interface
+
 
 def SentimentAnalysis(text):
     from googleapiclient.discovery import build
     lservice = build('language', 'v1beta1', developerKey=APIKEY)
 
-    response = lservice.documents().analyzeSentiment(
-        body={
-            'document': {
-                'type': 'PLAIN_TEXT',
-                'content': text
-            }
-        }).execute()
-    
+    response = lservice.documents().analyzeSentiment(body={
+        'document': {
+            'type': 'PLAIN_TEXT',
+            'content': text
+        }
+    }).execute()
+
     return response
+
 
 ## main
 
 # We could use sc.textFiles(...)
 #
 #   However, that will read each line of text as a separate object.
-#   And using the REST API to NLP for each line will rapidly exhaust the rate-limit quota 
+#   And using the REST API to NLP for each line will rapidly exhaust the rate-limit quota
 #   producing HTTP 429 errors
 #
 #   Instead, it is more efficient to pass an entire document to NLP in a single call.
@@ -70,7 +68,8 @@ def SentimentAnalysis(text):
 #      This provides a file as a tuple.
 #      The first element is the file pathname, and second element is the content of the file.
 #
-sample = sc.wholeTextFiles("gs://{0}/sampledata/time-machine.txt".format(BUCKET))
+sample = sc.wholeTextFiles(
+    "gs://{0}/sampledata/time-machine.txt".format(BUCKET))
 
 # Calling the Natural Language Processing REST interface
 #
@@ -80,7 +79,7 @@ rdd1 = sample.map(lambda x: SentimentAnalysis(x[1]))
 # The RDD contains a dictionary, using the key 'sentences' picks up each individual sentence
 # The value that is returned is a list. And inside the list is another dictionary
 # The key 'sentiment' produces a value of another list.
-# And the keys magnitude and score produce values of floating numbers. 
+# And the keys magnitude and score produce values of floating numbers.
 #
 
 rdd2 =  rdd1.flatMap(lambda x: x['sentences'] )\
@@ -89,15 +88,11 @@ rdd2 =  rdd1.flatMap(lambda x: x['sentences'] )\
 # First item in the list tuple is magnitude
 # Filter on only the statements with the most intense sentiments
 #
-rdd3 =  rdd2.filter(lambda x: x[0]>.75)
-
+rdd3 = rdd2.filter(lambda x: x[0] > .75)
 
 results = sorted(rdd3.take(50))
 
-
 print('\n\n')
 for item in results:
-  print('Magnitude= ',item[0],' | Score= ',item[1], ' | Text= ',item[2],'\n')
- 
-
-
+    print('Magnitude= ', item[0], ' | Score= ', item[1], ' | Text= ', item[2],
+          '\n')

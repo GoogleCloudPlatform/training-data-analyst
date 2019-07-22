@@ -4,9 +4,10 @@ from kubespawner.spawner import KubeSpawner
 from jhub_remote_user_authenticator.remote_user_auth import RemoteUserAuthenticator
 from oauthenticator.github import GitHubOAuthenticator
 
+
 class KubeFormSpawner(KubeSpawner):
-  def _options_form_default(self):
-    return '''
+    def _options_form_default(self):
+        return '''
     <label for='image'>Image</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <input name='image' placeholder='repo/image:tag'></input>
     <br/><br/>
@@ -24,41 +25,45 @@ class KubeFormSpawner(KubeSpawner):
     <br/><br/>
     '''
 
-  def options_from_form(self, formdata):
-    options = {}
-    options['image'] = formdata.get('image', [''])[0].strip()
-    options['cpu_guarantee'] = formdata.get('cpu_guarantee', [''])[0].strip()
-    options['mem_guarantee'] = formdata.get('mem_guarantee', [''])[0].strip()
-    options['extra_resource_limits'] = formdata.get('extra_resource_limits', [''])[0].strip()
-    return options
+    def options_from_form(self, formdata):
+        options = {}
+        options['image'] = formdata.get('image', [''])[0].strip()
+        options['cpu_guarantee'] = formdata.get('cpu_guarantee',
+                                                [''])[0].strip()
+        options['mem_guarantee'] = formdata.get('mem_guarantee',
+                                                [''])[0].strip()
+        options['extra_resource_limits'] = formdata.get(
+            'extra_resource_limits', [''])[0].strip()
+        return options
 
-  @property
-  def singleuser_image_spec(self):
-    image = 'gcr.io/kubeflow/tensorflow-notebook-cpu'
-    if self.user_options.get('image'):
-      image = self.user_options['image']
-    return image
+    @property
+    def singleuser_image_spec(self):
+        image = 'gcr.io/kubeflow/tensorflow-notebook-cpu'
+        if self.user_options.get('image'):
+            image = self.user_options['image']
+        return image
 
-  @property
-  def cpu_guarantee(self):
-    cpu = '500m'
-    if self.user_options.get('cpu_guarantee'):
-      cpu = self.user_options['cpu_guarantee']
-    return cpu
+    @property
+    def cpu_guarantee(self):
+        cpu = '500m'
+        if self.user_options.get('cpu_guarantee'):
+            cpu = self.user_options['cpu_guarantee']
+        return cpu
 
-  @property
-  def mem_guarantee(self):
-    mem = '1Gi'
-    if self.user_options.get('mem_guarantee'):
-      mem = self.user_options['mem_guarantee']
-    return mem
+    @property
+    def mem_guarantee(self):
+        mem = '1Gi'
+        if self.user_options.get('mem_guarantee'):
+            mem = self.user_options['mem_guarantee']
+        return mem
 
-  @property
-  def extra_resource_limits(self):
-    extra = ''
-    if self.user_options.get('extra_resource_limits'):
-      extra = json.loads(self.user_options['extra_resource_limits'])
-    return extra
+    @property
+    def extra_resource_limits(self):
+        extra = ''
+        if self.user_options.get('extra_resource_limits'):
+            extra = json.loads(self.user_options['extra_resource_limits'])
+        return extra
+
 
 ###################################################
 ### JupyterHub Options
@@ -91,18 +96,13 @@ c.KubeSpawner.user_storage_pvc_ensure = True
 # How much disk space do we want?
 c.KubeSpawner.user_storage_capacity = '10Gi'
 c.KubeSpawner.pvc_name_template = 'claim-{username}{servername}'
-c.KubeSpawner.volumes = [
-  {
+c.KubeSpawner.volumes = [{
     'name': 'volume-{username}{servername}',
     'persistentVolumeClaim': {
-      'claimName': 'claim-{username}{servername}'
+        'claimName': 'claim-{username}{servername}'
     }
-  }
-]
-c.KubeSpawner.volume_mounts = [
-  {
+}]
+c.KubeSpawner.volume_mounts = [{
     'mountPath': '/home/jovyan/work',
     'name': 'volume-{username}{servername}'
-  }
-]
-
+}]

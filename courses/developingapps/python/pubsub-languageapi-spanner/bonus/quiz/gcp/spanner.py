@@ -19,7 +19,6 @@ import re
 from google.cloud import spanner
 
 # END TODO
-
 """
 Get spanner management objects
 """
@@ -29,7 +28,6 @@ Get spanner management objects
 spanner_client = spanner.Client()
 
 # END TODO
-
 
 # TODO: Get a reference to the Cloud Spanner quiz-instance
 
@@ -42,20 +40,23 @@ instance = spanner_client.instance('quiz-instance')
 database = instance.database('quiz-database')
 
 # END TODO
-
 """
 Takes an email address and reverses it (to be used as primary key)
 """
+
+
 def reverse_email(email):
-    return '_'.join(list(reversed(email.replace('@','_').
-                        replace('.','_').
-                        split('_'))))
+    return '_'.join(
+        list(reversed(email.replace('@', '_').replace('.', '_').split('_'))))
+
 
 """
 Persists feedback data into Spanner
 - create primary key value
 - do a batch insert (even though it's a single record)
 """
+
+
 def save_feedback(data):
     # TODO: Create a batch object for database operations
 
@@ -64,8 +65,7 @@ def save_feedback(data):
         # from the email, quiz and timestamp
 
         feedback_id = '{}_{}_{}'.format(reverse_email(data['email']),
-                                        data['quiz'],
-                                        data['timestamp'])
+                                        data['quiz'], data['timestamp'])
 
         # END TODO
 
@@ -73,75 +73,47 @@ def save_feedback(data):
         # into the feedback table
         # This needs the columns and values
 
-        batch.insert(
-            table='feedback',
-            columns=(
-                'feedbackId',
-                'email',
-                'quiz',
-                'timestamp',
-                'rating',
-                'score',
-                'feedback'
-            ),
-            values=[
-                (
-                    feedback_id,
-                    data['email'],
-                    data['quiz'],
-                    data['timestamp'],
-                    data['rating'],
-                    data['score'],
-                    data['feedback']
-                )
-            ]
-        )
+        batch.insert(table='feedback',
+                     columns=('feedbackId', 'email', 'quiz', 'timestamp',
+                              'rating', 'score', 'feedback'),
+                     values=[(feedback_id, data['email'], data['quiz'],
+                              data['timestamp'], data['rating'], data['score'],
+                              data['feedback'])])
 
         # END TODO
 
     # END TODO
 
+
 """
 Bonus: Save answer
 """
+
+
 def save_answer(data):
     with database.batch() as batch:
         answer_id = '{}_{}_{}'.format(reverse_email(data['email']),
-                                        data['quiz'],
-                                        data['timestamp'])
+                                      data['quiz'], data['timestamp'])
 
-        batch.insert(
-            table='answers',
-            columns=(
-                'answerId',
-                'id',
-                'email',
-                'quiz',
-                'answer',
-                'correct',
-                'timestamp'
-            ),
-            values=[
-                (
-                    answer_id,
-                    data['id'],
-                    data['email'],
-                    data['quiz'],
-                    data['answer'],
-                    data['correct'],
-                    data['timestamp']
-                )
-            ]
-        )
+        batch.insert(table='answers',
+                     columns=('answerId', 'id', 'email', 'quiz', 'answer',
+                              'correct', 'timestamp'),
+                     values=[
+                         (answer_id, data['id'], data['email'], data['quiz'],
+                          data['answer'], data['correct'], data['timestamp'])
+                     ])
+
 
 """
 Bonus: Get the leaderboard data
 """
+
+
 def get_leaderboard():
     with database.snapshot() as snapshot:
         results = snapshot.execute_sql(
             "SELECT quiz, email, COUNT(*) AS score FROM Answers"
-                " WHERE correct = answer"
-                " GROUP BY quiz, email"
-                " ORDER BY quiz, score DESC")
+            " WHERE correct = answer"
+            " GROUP BY quiz, email"
+            " ORDER BY quiz, score DESC")
         return list(results)

@@ -31,6 +31,7 @@ import paho.mqtt.client as mqtt
 
 import random
 
+
 def create_jwt(project_id, private_key_file, algorithm):
     """Creates a JWT (https://jwt.io) to establish an MQTT connection.
         Args:
@@ -47,12 +48,12 @@ def create_jwt(project_id, private_key_file, algorithm):
         """
 
     token = {
-            # The time that the token was issued at
-            'iat': datetime.datetime.utcnow(),
-            # The time the token expires.
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-            # The audience field should always be set to the GCP project id.
-            'aud': project_id
+        # The time that the token was issued at
+        'iat': datetime.datetime.utcnow(),
+        # The time the token expires.
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+        # The audience field should always be set to the GCP project id.
+        'aud': project_id
     }
 
     # Read the private key file.
@@ -60,7 +61,7 @@ def create_jwt(project_id, private_key_file, algorithm):
         private_key = f.read()
 
     print('Creating JWT using {} from private key file {}'.format(
-            algorithm, private_key_file))
+        algorithm, private_key_file))
 
     return jwt.encode(token, private_key, algorithm=algorithm)
 
@@ -88,50 +89,48 @@ def on_publish(unused_client, unused_userdata, unused_mid):
 def parse_command_line_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=(
-            'Example Google Cloud IoT Core MQTT device connection code.'))
+        'Example Google Cloud IoT Core MQTT device connection code.'))
+    parser.add_argument('--project_id',
+                        default=os.environ.get('GOOGLE_CLOUD_PROJECT'),
+                        help='GCP cloud project name')
+    parser.add_argument('--registry_id',
+                        required=True,
+                        help='Cloud IoT Core registry id')
+    parser.add_argument('--device_id',
+                        required=True,
+                        help='Cloud IoT Core device id')
+    parser.add_argument('--private_key_file',
+                        required=True,
+                        help='Path to private key file.')
     parser.add_argument(
-            '--project_id',
-            default=os.environ.get('GOOGLE_CLOUD_PROJECT'),
-            help='GCP cloud project name')
+        '--algorithm',
+        choices=('RS256', 'ES256'),
+        required=True,
+        help='Which encryption algorithm to use to generate the JWT.')
+    parser.add_argument('--cloud_region',
+                        default='us-central1',
+                        help='GCP cloud region')
+    parser.add_argument('--ca_certs',
+                        default='roots.pem',
+                        help=('CA root from https://pki.google.com/roots.pem'))
+    parser.add_argument('--num_messages',
+                        type=int,
+                        default=100,
+                        help='Number of messages to publish.')
     parser.add_argument(
-            '--registry_id', required=True, help='Cloud IoT Core registry id')
-    parser.add_argument(
-            '--device_id', required=True, help='Cloud IoT Core device id')
-    parser.add_argument(
-            '--private_key_file',
-            required=True, help='Path to private key file.')
-    parser.add_argument(
-            '--algorithm',
-            choices=('RS256', 'ES256'),
-            required=True,
-            help='Which encryption algorithm to use to generate the JWT.')
-    parser.add_argument(
-            '--cloud_region', default='us-central1', help='GCP cloud region')
-    parser.add_argument(
-            '--ca_certs',
-            default='roots.pem',
-            help=('CA root from https://pki.google.com/roots.pem'))
-    parser.add_argument(
-            '--num_messages',
-            type=int,
-            default=100,
-            help='Number of messages to publish.')
-    parser.add_argument(
-            '--message_type',
-            choices=('event', 'state'),
-            default='event',
-            required=True,
-            help=('Indicates whether the message to be published is a '
-                  'telemetry event or a device state message.'))
-    parser.add_argument(
-            '--mqtt_bridge_hostname',
-            default='mqtt.googleapis.com',
-            help='MQTT bridge hostname.')
-    parser.add_argument(
-            '--mqtt_bridge_port',
-            default=8883,
-            type=int,
-            help='MQTT bridge port.')
+        '--message_type',
+        choices=('event', 'state'),
+        default='event',
+        required=True,
+        help=('Indicates whether the message to be published is a '
+              'telemetry event or a device state message.'))
+    parser.add_argument('--mqtt_bridge_hostname',
+                        default='mqtt.googleapis.com',
+                        help='MQTT bridge hostname.')
+    parser.add_argument('--mqtt_bridge_port',
+                        default=8883,
+                        type=int,
+                        help='MQTT bridge port.')
 
     return parser.parse_args()
 
@@ -142,19 +141,16 @@ def main():
     # Create our MQTT client. The client_id is a unique string that identifies
     # this device. For Google Cloud IoT Core, it must be in the format below.
     client = mqtt.Client(
-            client_id=('projects/{}/locations/{}/registries/{}/devices/{}'
-                       .format(
-                               args.project_id,
-                               args.cloud_region,
-                               args.registry_id,
-                               args.device_id)))
+        client_id=('projects/{}/locations/{}/registries/{}/devices/{}'.format(
+            args.project_id, args.cloud_region, args.registry_id,
+            args.device_id)))
 
     # With Google Cloud IoT Core, the username field is ignored, and the
     # password field is used to transmit a JWT to authorize the device.
-    client.username_pw_set(
-            username='unused',
-            password=create_jwt(
-                    args.project_id, args.private_key_file, args.algorithm))
+    client.username_pw_set(username='unused',
+                           password=create_jwt(args.project_id,
+                                               args.private_key_file,
+                                               args.algorithm))
 
     # Enable SSL/TLS support.
     client.tls_set(ca_certs=args.ca_certs)
@@ -178,23 +174,24 @@ def main():
     mqtt_topic = '/devices/{}/{}'.format(args.device_id, sub_topic)
 
     random.seed(args.device_id)  # A given device ID will always generate
-                                 # the same random data
+    # the same random data
 
     simulated_temp = 10 + random.random() * 20
 
     if random.random() > 0.5:
-        temperature_trend = +1     # temps will slowly rise
+        temperature_trend = +1  # temps will slowly rise
     else:
-        temperature_trend = -1     # temps will slowly fall
+        temperature_trend = -1  # temps will slowly fall
 
     # Publish num_messages mesages to the MQTT bridge once per second.
     for i in range(1, args.num_messages + 1):
 
-        simulated_temp = simulated_temp + temperature_trend * random.normalvariate(0.01,0.005)
-        payload = '{}/{}-payload-{:.2f}'.format(
-                args.registry_id, args.device_id, simulated_temp)
+        simulated_temp = simulated_temp + temperature_trend * random.normalvariate(
+            0.01, 0.005)
+        payload = '{}/{}-payload-{:.2f}'.format(args.registry_id,
+                                                args.device_id, simulated_temp)
         print('Publishing message {}/{}: \'{}\''.format(
-                i, args.num_messages, payload))
+            i, args.num_messages, payload))
         # Publish "payload" to the MQTT topic. qos=1 means at least once
         # delivery. Cloud IoT Core also supports qos=0 for at most once
         # delivery.

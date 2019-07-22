@@ -17,6 +17,7 @@ import time
 
 import googleapiclient.discovery
 
+
 def list_instances(compute, project, zone):
     result = compute.instances().list(project=project, zone=zone).execute()
     return result['items']
@@ -37,10 +38,9 @@ if __name__ == '__main__':
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('project_id', help='Your Google Cloud project ID.')
-    parser.add_argument(
-        '--zone',
-        default='us-central1-f',
-        help='Compute Engine zone to deploy to.')
+    parser.add_argument('--zone',
+                        default='us-central1-f',
+                        help='Compute Engine zone to deploy to.')
 
     args = parser.parse_args()
 

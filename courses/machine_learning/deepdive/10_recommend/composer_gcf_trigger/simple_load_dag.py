@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """A simple Airflow DAG that is triggered externally by a Cloud Function when a
 file lands in a GCS bucket.
 Once triggered the DAG performs the following steps:
@@ -48,13 +47,13 @@ FAILURE_TAG = 'failure'
 # file to.
 
 # '_names' must appear in CSV filename to be ingested (adjust as needed)
-INPUT_BUCKET_CSV = models.Variable.get('gcp_input_location')+'/usa_names.csv' 
+INPUT_BUCKET_CSV = models.Variable.get('gcp_input_location') + '/usa_names.csv'
 
 # TODO: Populate the models.Variable.get() with the actual variable name for your output bucket
 COMPLETION_BUCKET = models.Variable.get('gcs_completion_bucket')
 DS_TAG = '{{ ds }}'
-DATAFLOW_FILE = os.path.join(
-    configuration.get('core', 'dags_folder'), 'dataflow', 'process_delimited.py')
+DATAFLOW_FILE = os.path.join(configuration.get('core', 'dags_folder'),
+                             'dataflow', 'process_delimited.py')
 
 # The following additional Airflow variables should be set:
 # gcp_project:         Google Cloud Platform project id.
@@ -92,13 +91,12 @@ def move_to_completion_bucket(target_bucket, target_infix, **kwargs):
 
     target_object = os.path.join(target_infix, completion_ds, source_object)
 
-    logging.info('Copying %s to %s',
-                 os.path.join(source_bucket, source_object),
+    logging.info('Copying %s to %s', os.path.join(source_bucket,
+                                                  source_object),
                  os.path.join(target_bucket, target_object))
     conn.copy(source_bucket, source_object, target_bucket, target_object)
 
-    logging.info('Deleting %s',
-                 os.path.join(source_bucket, source_object))
+    logging.info('Deleting %s', os.path.join(source_bucket, source_object))
     conn.delete(source_bucket, source_object)
 
 
@@ -113,7 +111,8 @@ def move_to_completion_bucket(target_bucket, target_infix, **kwargs):
 # TODO: Name the DAG id GcsToBigQueryTriggered
 with models.DAG(dag_id='GcsToBigQueryTriggered',
                 description='A DAG triggered by an external Cloud Function',
-                schedule_interval=None, default_args=DEFAULT_DAG_ARGS) as dag:
+                schedule_interval=None,
+                default_args=DEFAULT_DAG_ARGS) as dag:
     # Args required for the Dataflow job.
     job_args = {
         'input': INPUT_BUCKET_CSV,
@@ -135,23 +134,25 @@ with models.DAG(dag_id='GcsToBigQueryTriggered',
 
     # Here we create two conditional tasks, one of which will be executed
     # based on whether the dataflow_task was a success or a failure.
-    success_move_task = python_operator.PythonOperator(task_id='success-move-to-completion',
-                                                       python_callable=move_to_completion_bucket,
-                                                       # A success_tag is used to move
-                                                       # the input file to a success
-                                                       # prefixed folder.
-                                                       op_args=[COMPLETION_BUCKET, SUCCESS_TAG],
-                                                       provide_context=True,
-                                                       trigger_rule=TriggerRule.ALL_SUCCESS)
+    success_move_task = python_operator.PythonOperator(
+        task_id='success-move-to-completion',
+        python_callable=move_to_completion_bucket,
+        # A success_tag is used to move
+        # the input file to a success
+        # prefixed folder.
+        op_args=[COMPLETION_BUCKET, SUCCESS_TAG],
+        provide_context=True,
+        trigger_rule=TriggerRule.ALL_SUCCESS)
 
-    failure_move_task = python_operator.PythonOperator(task_id='failure-move-to-completion',
-                                                       python_callable=move_to_completion_bucket,
-                                                       # A failure_tag is used to move
-                                                       # the input file to a failure
-                                                       # prefixed folder.
-                                                       op_args=[COMPLETION_BUCKET, FAILURE_TAG],
-                                                       provide_context=True,
-                                                       trigger_rule=TriggerRule.ALL_FAILED)
+    failure_move_task = python_operator.PythonOperator(
+        task_id='failure-move-to-completion',
+        python_callable=move_to_completion_bucket,
+        # A failure_tag is used to move
+        # the input file to a failure
+        # prefixed folder.
+        op_args=[COMPLETION_BUCKET, FAILURE_TAG],
+        provide_context=True,
+        trigger_rule=TriggerRule.ALL_FAILED)
 
     # The success_move_task and failure_move_task are both downstream from the
     # dataflow_task.

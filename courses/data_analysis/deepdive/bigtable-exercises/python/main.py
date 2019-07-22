@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Demonstrates how to connect to Cloud Bigtable and run some basic operations.
 
 Prerequisites:
@@ -68,10 +67,7 @@ def main(project_id, instance_id, table_id):
         #     https://cloud.google.com/bigtable/docs/schema-design
         row_key = 'greeting{}'.format(i)
         row = table.row(row_key)
-        row.set_cell(
-            column_family_id,
-            column_id,
-            value.encode('utf-8'))
+        row.set_cell(column_family_id, column_id, value.encode('utf-8'))
         row.commit()
     # [END writing_rows]
 
@@ -108,10 +104,9 @@ if __name__ == '__main__':
     parser.add_argument('project_id', help='Your Cloud Platform project ID.')
     parser.add_argument(
         'instance_id', help='ID of the Cloud Bigtable instance to connect to.')
-    parser.add_argument(
-        '--table',
-        help='Table to create and destroy.',
-        default='Hello-Bigtable')
+    parser.add_argument('--table',
+                        help='Table to create and destroy.',
+                        default='Hello-Bigtable')
 
     args = parser.parse_args()
     main(args.project_id, args.instance_id, args.table)
