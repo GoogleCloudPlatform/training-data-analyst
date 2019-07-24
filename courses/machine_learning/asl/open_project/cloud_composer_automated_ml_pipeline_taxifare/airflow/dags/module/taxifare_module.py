@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""DAG definition for anadarko composer toy model training."""
+"""DAG definition for taxifare automated pipeline."""
 
 import airflow
 from airflow import DAG
