@@ -67,14 +67,14 @@ PACKAGE_URI = BUCKET + "/taxifare/code/taxifare-0.1.tar.gz"
 JOB_DIR = BUCKET + "/jobs"
 
 default_args = {
-  "owner": "airflow",
-  "depends_on_past": False,
-  "start_date": airflow.utils.dates.days_ago(2),
-  "email": ["airflow@example.com"],
-  "email_on_failure": True,
-  "email_on_retry": False,
-  "retries": 5,
-  "retry_delay": datetime.timedelta(minutes = 5)
+    "owner": "airflow",
+    "depends_on_past": False,
+    "start_date": airflow.utils.dates.days_ago(2),
+    "email": ["airflow@example.com"],
+    "email_on_failure": True,
+    "email_on_retry": False,
+    "retries": 5,
+    "retry_delay": datetime.timedelta(minutes=5)
 }
 
 # Default schedule interval using cronjob syntax - can be customized here
@@ -84,11 +84,11 @@ default_args = {
 # Reference: https://airflow.apache.org/scheduler.html
 schedule_interval = "00 21 * * *"
 
-# TODO: Title your DAG to be recommendations_training_v1
+# Title your DAG
 dag = DAG(
-  "training_multi", 
-  default_args = default_args,
-  schedule_interval = None
+    "taxifare_multi", 
+    default_args=default_args,
+    schedule_interval=None
 )
 
 dag.doc_md = __doc__
@@ -138,21 +138,21 @@ for model in SOURCE_DATASET_TABLE_NAMES:
   # Complete the BigQueryOperator task to truncate the table if it already exists before writing
   # Reference: https://airflow.apache.org/integration.html#bigqueryoperator
   bq_train_data_op = BigQueryOperator(
-    task_id = "bq_train_data_{}_task".format(model.replace(".","_")),
-    bql = bql_train,
-    destination_dataset_table = "{}.{}_train_data".format(DESTINATION_DATASET, model.replace(".","_")),
-    write_disposition = "WRITE_TRUNCATE", # specify to truncate on writes
-    use_legacy_sql = False,
-    dag = dag
+      task_id="bq_train_data_{}_task".format(model.replace(".","_")),
+      bql=bql_train,
+      destination_dataset_table="{}.{}_train_data".format(DESTINATION_DATASET, model.replace(".","_")),
+      write_disposition="WRITE_TRUNCATE", # specify to truncate on writes
+      use_legacy_sql=False,
+      dag=dag
   )
 
   bq_eval_data_op = BigQueryOperator(
-    task_id = "bq_eval_data_{}_task".format(model.replace(".","_")),
-    bql = bql_eval,
-    destination_dataset_table = "{}.{}_eval_data".format(DESTINATION_DATASET, model.replace(".","_")),
-    write_disposition = "WRITE_TRUNCATE", # specify to truncate on writes
-    use_legacy_sql = False,
-    dag = dag
+      task_id="bq_eval_data_{}_task".format(model.replace(".","_")),
+      bql=bql_eval,
+      destination_dataset_table="{}.{}_eval_data".format(DESTINATION_DATASET, model.replace(".","_")),
+      write_disposition="WRITE_TRUNCATE", # specify to truncate on writes
+      use_legacy_sql=False,
+      dag=dag
   )
 
   sql = """
@@ -164,45 +164,45 @@ for model in SOURCE_DATASET_TABLE_NAMES:
 
   # Check to make sure that the data tables won"t be empty
   bq_check_train_data_op = BigQueryCheckOperator(
-    task_id = "bq_check_train_data_{}_task".format(model.replace(".","_")),
-    sql = sql.format(PROJECT_ID, DESTINATION_DATASET, model.replace(".","_") + "_train_data"),
-    dag = dag
+      task_id="bq_check_train_data_{}_task".format(model.replace(".","_")),
+      sql=sql.format(PROJECT_ID, DESTINATION_DATASET, model.replace(".","_") + "_train_data"),
+      dag=dag
   )
 
   bq_check_eval_data_op = BigQueryCheckOperator(
-    task_id = "bq_check_eval_data_{}_task".format(model.replace(".","_")),
-    sql = sql.format(PROJECT_ID, DESTINATION_DATASET, model.replace(".","_") + "_eval_data"),
-    dag = dag
+      task_id="bq_check_eval_data_{}_task".format(model.replace(".","_")),
+      sql=sql.format(PROJECT_ID, DESTINATION_DATASET, model.replace(".","_") + "_eval_data"),
+      dag=dag
   )
 
   # BigQuery training data export to GCS
   bash_remove_old_data_op = BashOperator(
-    task_id = "bash_remove_old_data_{}_task".format(model.replace(".","_")),
-    bash_command = "if gsutil ls {0}/taxifare/data/{1} 2> /dev/null; then gsutil -m rm -rf {0}/taxifare/data/{1}/*; else true; fi".format(BUCKET, model.replace(".","_")),
-    dag = dag
+      task_id="bash_remove_old_data_{}_task".format(model.replace(".","_")),
+      bash_command="if gsutil ls {0}/taxifare/data/{1} 2> /dev/null; then gsutil -m rm -rf {0}/taxifare/data/{1}/*; else true; fi".format(BUCKET, model.replace(".","_")),
+      dag=dag
   )
 
   # Takes a BigQuery dataset and table as input and exports it to GCS as a CSV
   train_files = BUCKET + "/taxifare/data/"
 
   bq_export_gcs_train_csv_op = BigQueryToCloudStorageOperator(
-    task_id = "bq_export_gcs_train_csv_{}_task".format(model.replace(".","_")),
-    source_project_dataset_table = "{}.{}_train_data".format(DESTINATION_DATASET, model.replace(".","_")),
-    destination_cloud_storage_uris = [train_files + "{}/train-*.csv".format(model.replace(".","_"))],
-    export_format = "CSV",
-    print_header = False,
-    dag = dag
+      task_id="bq_export_gcs_train_csv_{}_task".format(model.replace(".","_")),
+      source_project_dataset_table="{}.{}_train_data".format(DESTINATION_DATASET, model.replace(".","_")),
+      destination_cloud_storage_uris=[train_files + "{}/train-*.csv".format(model.replace(".","_"))],
+      export_format="CSV",
+      print_header=False,
+      dag=dag
   )
 
   eval_files = BUCKET + "/taxifare/data/"
 
   bq_export_gcs_eval_csv_op = BigQueryToCloudStorageOperator(
-    task_id = "bq_export_gcs_eval_csv_{}_task".format(model.replace(".","_")),
-    source_project_dataset_table = "{}.{}_eval_data".format(DESTINATION_DATASET, model.replace(".","_")),
-    destination_cloud_storage_uris = [eval_files + "{}/eval-*.csv".format(model.replace(".","_"))],
-    export_format = "CSV",
-    print_header = False,
-    dag = dag
+      task_id="bq_export_gcs_eval_csv_{}_task".format(model.replace(".","_")),
+      source_project_dataset_table="{}.{}_eval_data".format(DESTINATION_DATASET, model.replace(".","_")),
+      destination_cloud_storage_uris=[eval_files + "{}/eval-*.csv".format(model.replace(".","_"))],
+      export_format="CSV",
+      print_header=False,
+      dag=dag
   )
 
 
@@ -225,17 +225,17 @@ for model in SOURCE_DATASET_TABLE_NAMES:
 
   # Reference: https://airflow.apache.org/integration.html#cloud-ml-engine
   ml_engine_training_op = MLEngineTrainingOperator(
-    task_id = "ml_engine_training_{}_task".format(model.replace(".","_")),
-    project_id = PROJECT_ID,
-    job_id = job_id,
-    package_uris = [PACKAGE_URI],
-    training_python_module = "trainer.task",
-    training_args = training_args,
-    region = REGION,
-    scale_tier = "BASIC",
-    runtime_version = "1.13", 
-    python_version = "3.5",
-    dag = dag
+      task_id="ml_engine_training_{}_task".format(model.replace(".","_")),
+      project_id=PROJECT_ID,
+      job_id=job_id,
+      package_uris=[PACKAGE_URI],
+      training_python_module="trainer.task",
+      training_args=training_args,
+      region=REGION,
+      scale_tier="BASIC",
+      runtime_version="1.13", 
+      python_version="3.5",
+      dag=dag
   )
 
   MODEL_NAME = "taxifare_"
@@ -243,28 +243,28 @@ for model in SOURCE_DATASET_TABLE_NAMES:
   MODEL_LOCATION = BUCKET + "/taxifare/saved_model/"
 
   bash_remove_old_saved_model_op = BashOperator(
-    task_id = "bash_remove_old_saved_model_{}_task".format(model.replace(".","_")),
-    bash_command = "if gsutil ls {0} 2> /dev/null; then gsutil -m rm -rf {0}/*; else true; fi".format(MODEL_LOCATION + model.replace(".","_")),
-    dag = dag
+      task_id="bash_remove_old_saved_model_{}_task".format(model.replace(".","_")),
+      bash_command="if gsutil ls {0} 2> /dev/null; then gsutil -m rm -rf {0}/*; else true; fi".format(MODEL_LOCATION + model.replace(".","_")),
+      dag=dag
   )
 
   bash_copy_new_saved_model_op = BashOperator(
-    task_id = "bash_copy_new_saved_model_{}_task".format(model.replace(".","_")),
-    bash_command = "gsutil -m rsync -d -r `gsutil ls {0}/export/exporter/ | tail -1` {1}".format(output_dir, MODEL_LOCATION + model.replace(".","_")),
-    dag = dag
+      task_id="bash_copy_new_saved_model_{}_task".format(model.replace(".","_")),
+      bash_command="gsutil -m rsync -d -r `gsutil ls {0}/export/exporter/ | tail -1` {1}".format(output_dir, MODEL_LOCATION + model.replace(".","_")),
+      dag=dag
   )
 
   # Create model on ML-Engine
   bash_ml_engine_models_list_op = BashOperator(
-    task_id = "bash_ml_engine_models_list_{}_task".format(model.replace(".","_")),
-    xcom_push = True,
-    bash_command = "gcloud ml-engine models list --filter='name:{0}'".format(MODEL_NAME + model.replace(".","_")),
-    dag = dag
+      task_id="bash_ml_engine_models_list_{}_task".format(model.replace(".","_")),
+      xcom_push=True,
+      bash_command="gcloud ml-engine models list --filter='name:{0}'".format(MODEL_NAME + model.replace(".","_")),
+      dag=dag
   )
 
   def check_if_model_already_exists(templates_dict, **kwargs):
     cur_model = templates_dict["model"].replace(".","_")
-    ml_engine_models_list = kwargs["ti"].xcom_pull(task_ids = "bash_ml_engine_models_list_{}_task".format(cur_model))
+    ml_engine_models_list = kwargs["ti"].xcom_pull(task_ids="bash_ml_engine_models_list_{}_task".format(cur_model))
     logging.info("check_if_model_already_exists: {}: ml_engine_models_list = \n{}".format(cur_model, ml_engine_models_list))
     create_model_task = "ml_engine_create_model_{}_task".format(cur_model)
     dont_create_model_task = "dont_create_model_dummy_branch_{}_task".format(cur_model)
@@ -273,49 +273,49 @@ for model in SOURCE_DATASET_TABLE_NAMES:
     return dont_create_model_task
 
   check_if_model_already_exists_op = BranchPythonOperator(
-    task_id = "check_if_model_already_exists_{}_task".format(model.replace(".","_")),
-    templates_dict={"model": model.replace(".","_")},
-    python_callable = check_if_model_already_exists,
-    provide_context = True,
-    dag = dag
+      task_id="check_if_model_already_exists_{}_task".format(model.replace(".","_")),
+      templates_dict={"model": model.replace(".","_")},
+      python_callable=check_if_model_already_exists,
+      provide_context=True,
+      dag=dag
   )
 
   ml_engine_create_model_op = MLEngineModelOperator(
-    task_id = "ml_engine_create_model_{}_task".format(model.replace(".","_")),
-    project_id = PROJECT_ID, 
-    model = {"name": MODEL_NAME + model.replace(".","_")}, 
-    operation = "create",
-    dag = dag
+      task_id="ml_engine_create_model_{}_task".format(model.replace(".","_")),
+      project_id=PROJECT_ID, 
+      model={"name": MODEL_NAME + model.replace(".","_")}, 
+      operation="create",
+      dag=dag
   )
 
   create_model_dummy_op = DummyOperator(
-    task_id = "create_model_dummy_{}_task".format(model.replace(".","_")),
-    trigger_rule = "all_done",
-    dag = dag
+      task_id="create_model_dummy_{}_task".format(model.replace(".","_")),
+      trigger_rule="all_done",
+      dag=dag
   )
 
   dont_create_model_dummy_branch_op = DummyOperator(
-    task_id = "dont_create_model_dummy_branch_{}_task".format(model.replace(".","_")),
-    dag = dag
+      task_id="dont_create_model_dummy_branch_{}_task".format(model.replace(".","_")),
+      dag=dag
   )
 
   dont_create_model_dummy_op = DummyOperator(
-    task_id = "dont_create_model_dummy_{}_task".format(model.replace(".","_")),
-    trigger_rule = "all_done",
-    dag = dag
+      task_id="dont_create_model_dummy_{}_task".format(model.replace(".","_")),
+      trigger_rule="all_done",
+      dag=dag
   )
 
   # Create version of model on ML-Engine
   bash_ml_engine_versions_list_op = BashOperator(
-    task_id = "bash_ml_engine_versions_list_{}_task".format(model.replace(".","_")),
-    xcom_push = True,
-    bash_command = "gcloud ml-engine versions list --model {0} --filter='name:{1}'".format(MODEL_NAME + model.replace(".","_"), MODEL_VERSION),
-    dag = dag
+      task_id="bash_ml_engine_versions_list_{}_task".format(model.replace(".","_")),
+      xcom_push=True,
+      bash_command="gcloud ml-engine versions list --model {0} --filter='name:{1}'".format(MODEL_NAME + model.replace(".","_"), MODEL_VERSION),
+      dag=dag
   )
 
   def check_if_model_version_already_exists(templates_dict, **kwargs):
     cur_model = templates_dict["model"].replace(".","_")
-    ml_engine_versions_list = kwargs["ti"].xcom_pull(task_ids = "bash_ml_engine_versions_list_{}_task".format(cur_model))
+    ml_engine_versions_list = kwargs["ti"].xcom_pull(task_ids="bash_ml_engine_versions_list_{}_task".format(cur_model))
     logging.info("check_if_model_version_already_exists: {}: ml_engine_versions_list = \n{}".format(cur_model, ml_engine_versions_list))
     create_version_task = "ml_engine_create_version_{}_task".format(cur_model)
     create_other_version_task = "ml_engine_create_other_version_{}_task".format(cur_model)
@@ -324,65 +324,65 @@ for model in SOURCE_DATASET_TABLE_NAMES:
     return create_other_version_task
 
   check_if_model_version_already_exists_op = BranchPythonOperator(
-    task_id = "check_if_model_version_already_exists_{}_task".format(model.replace(".","_")), 
+    task_id="check_if_model_version_already_exists_{}_task".format(model.replace(".","_")), 
     templates_dict={"model": model.replace(".","_")},
-    python_callable = check_if_model_version_already_exists,
-    provide_context = True,
-    dag = dag
+    python_callable=check_if_model_version_already_exists,
+    provide_context=True,
+    dag=dag
   )
 
   OTHER_VERSION_NAME = "v_{0}".format(datetime.datetime.now().strftime("%Y%m%d%H%M%S")[0:12])
 
   ml_engine_create_version_op = MLEngineVersionOperator(
-    task_id = "ml_engine_create_version_{}_task".format(model.replace(".","_")),
-    project_id = PROJECT_ID, 
-    model_name = MODEL_NAME + model.replace(".","_"), 
-    version_name = MODEL_VERSION, 
-    version = {
-        "name": MODEL_VERSION,
-        "deploymentUri": MODEL_LOCATION + model.replace(".","_"),
-        "runtimeVersion": "1.13",
-        "framework": "TENSORFLOW",
-        "pythonVersion": "3.5",
-    },
-    operation = "create",
-    dag = dag
+      task_id="ml_engine_create_version_{}_task".format(model.replace(".","_")),
+      project_id=PROJECT_ID, 
+      model_name=MODEL_NAME + model.replace(".","_"), 
+      version_name=MODEL_VERSION, 
+      version={
+          "name": MODEL_VERSION,
+          "deploymentUri": MODEL_LOCATION + model.replace(".","_"),
+          "runtimeVersion": "1.13",
+          "framework": "TENSORFLOW",
+          "pythonVersion": "3.5",
+      },
+      operation="create",
+      dag=dag
   )
 
   ml_engine_create_other_version_op = MLEngineVersionOperator(
-    task_id = "ml_engine_create_other_version_{}_task".format(model.replace(".","_")),
-    project_id = PROJECT_ID, 
-    model_name = MODEL_NAME + model.replace(".","_"), 
-    version_name = OTHER_VERSION_NAME, 
-    version = {
-        "name": OTHER_VERSION_NAME,
-        "deploymentUri": MODEL_LOCATION + model.replace(".","_"),
-        "runtimeVersion": "1.13",
-        "framework": "TENSORFLOW",
-        "pythonVersion": "3.5",
-    },
-    operation = "create",
-    dag = dag
+      task_id="ml_engine_create_other_version_{}_task".format(model.replace(".","_")),
+      project_id=PROJECT_ID, 
+      model_name=MODEL_NAME + model.replace(".","_"), 
+      version_name=OTHER_VERSION_NAME, 
+      version={
+          "name": OTHER_VERSION_NAME,
+          "deploymentUri": MODEL_LOCATION + model.replace(".","_"),
+          "runtimeVersion": "1.13",
+          "framework": "TENSORFLOW",
+          "pythonVersion": "3.5",
+      },
+      operation="create",
+      dag=dag
   )
 
   ml_engine_set_default_version_op = MLEngineVersionOperator(
-    task_id = "ml_engine_set_default_version_{}_task".format(model.replace(".","_")),
-    project_id = PROJECT_ID, 
-    model_name = MODEL_NAME + model.replace(".","_"), 
-    version_name = MODEL_VERSION, 
-    version = {"name": MODEL_VERSION}, 
-    operation = "set_default",
-    dag = dag
+      task_id="ml_engine_set_default_version_{}_task".format(model.replace(".","_")),
+      project_id=PROJECT_ID, 
+      model_name=MODEL_NAME + model.replace(".","_"), 
+      version_name=MODEL_VERSION, 
+      version={"name": MODEL_VERSION}, 
+      operation="set_default",
+      dag=dag
   )
 
   ml_engine_set_default_other_version_op = MLEngineVersionOperator(
-    task_id = "ml_engine_set_default_other_version_{}_task".format(model.replace(".","_")),
-    project_id = PROJECT_ID, 
-    model_name = MODEL_NAME + model.replace(".","_"), 
-    version_name = OTHER_VERSION_NAME, 
-    version = {"name": OTHER_VERSION_NAME}, 
-    operation = "set_default",
-    dag = dag
+      task_id="ml_engine_set_default_other_version_{}_task".format(model.replace(".","_")),
+      project_id=PROJECT_ID, 
+      model_name=MODEL_NAME + model.replace(".","_"), 
+      version_name=OTHER_VERSION_NAME, 
+      version={"name": OTHER_VERSION_NAME}, 
+      operation="set_default",
+      dag=dag
   )
 
   # Build dependency graph, set_upstream dependencies for all tasks

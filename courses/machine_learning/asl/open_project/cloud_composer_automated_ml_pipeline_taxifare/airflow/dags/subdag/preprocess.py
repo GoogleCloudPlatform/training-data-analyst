@@ -1,10 +1,18 @@
+from airflow import DAG
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.bigquery_check_operator import BigQueryCheckOperator
 from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
 from airflow.operators.bash_operator import BashOperator
 
 
-def preprocess_tasks(model, dag, PROJECT_ID, BUCKET, DATA_DIR):
+def preprocess_tasks(model, parent_dag_name, child_dag_name, default_args, PROJECT_ID, BUCKET, DATA_DIR):
+  # Create inner dag
+  dag = DAG(
+    "{0}.{1}".format(parent_dag_name, child_dag_name),
+    default_args=default_args,
+    schedule_interval=None
+  )
+
   # Constants
   # Specify your source BigQuery project, dataset, and table names
   SOURCE_BQ_PROJECT = "nyc-tlc"
@@ -113,10 +121,13 @@ def preprocess_tasks(model, dag, PROJECT_ID, BUCKET, DATA_DIR):
       dag=dag
   )
   
-  return (bq_train_data_op,
-          bq_eval_data_op,
-          bq_check_train_data_op,
-          bq_check_eval_data_op,
-          bash_remove_old_data_op,
-          bq_export_gcs_train_csv_op,
-          bq_export_gcs_eval_csv_op)
+  # Build dependency graph, set_upstream dependencies for all tasks
+  bq_check_train_data_op.set_upstream(bq_train_data_op)
+  bq_check_eval_data_op.set_upstream(bq_eval_data_op)
+
+  bash_remove_old_data_op.set_upstream([bq_check_train_data_op, bq_check_eval_data_op])
+
+  bq_export_gcs_train_csv_op.set_upstream([bash_remove_old_data_op])
+  bq_export_gcs_eval_csv_op.set_upstream([bash_remove_old_data_op])
+  
+  return dag

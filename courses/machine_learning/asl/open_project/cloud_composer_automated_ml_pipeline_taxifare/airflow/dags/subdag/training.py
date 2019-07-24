@@ -1,10 +1,18 @@
 import datetime
 
+from airflow import DAG
 from airflow.contrib.operators.mlengine_operator import MLEngineTrainingOperator
 from airflow.operators.bash_operator import BashOperator
 
 
-def training_tasks(model, dag, PROJECT_ID, BUCKET, DATA_DIR, MODEL_NAME, MODEL_VERSION, MODEL_LOCATION):
+def training_tasks(model, parent_dag_name, child_dag_name, default_args, PROJECT_ID, BUCKET, DATA_DIR, MODEL_NAME, MODEL_VERSION, MODEL_LOCATION):
+  # Create inner dag
+  dag = DAG(
+    "{0}.{1}".format(parent_dag_name, child_dag_name),
+    default_args=default_args,
+    schedule_interval=None
+  )
+
   # Constants
   # The code package name comes from the model code in the module directory
   REGION = "us-east1"
@@ -56,7 +64,9 @@ def training_tasks(model, dag, PROJECT_ID, BUCKET, DATA_DIR, MODEL_NAME, MODEL_V
       bash_command="gsutil -m rsync -d -r `gsutil ls {0}/export/exporter/ | tail -1` {1}".format(output_dir, MODEL_LOCATION + model.replace(".","_")),
       dag=dag
   )
+
+  # Build dependency graph, set_upstream dependencies for all tasks
+  bash_remove_old_saved_model_op.set_upstream(ml_engine_training_op)
+  bash_copy_new_saved_model_op.set_upstream(bash_remove_old_saved_model_op)
   
-  return (ml_engine_training_op,
-          bash_remove_old_saved_model_op,
-          bash_copy_new_saved_model_op)
+  return dag

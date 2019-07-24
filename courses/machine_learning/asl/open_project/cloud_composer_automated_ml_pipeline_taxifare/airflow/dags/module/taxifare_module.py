@@ -19,27 +19,16 @@ from airflow import DAG
 
 # Reference for all available airflow operators: 
 # https://github.com/apache/incubator-airflow/tree/master/airflow/contrib/operators
-# from airflow.contrib.operators.bigquery_operator import BigQueryOperator
-# from airflow.contrib.operators.bigquery_check_operator import BigQueryCheckOperator
-# from airflow.contrib.operators.bigquery_to_gcs import BigQueryToCloudStorageOperator
-# from airflow.operators.bash_operator import BashOperator
-# from airflow.operators.python_operator import BranchPythonOperator
-# from airflow.operators.dummy_operator import DummyOperator
 from airflow.hooks.base_hook import BaseHook
 
-# from airflow.contrib.operators.mlengine_operator import MLEngineTrainingOperator, MLEngineModelOperator, MLEngineVersionOperator
 from airflow.models import TaskInstance
 
 import datetime
-# import logging
 
 from module import preprocess
 from module import training
 from module import deploy
 
-# from module.preprocess import preprocess_tasks
-# from module.training import training_tasks
-# from module.deploy import deploy_tasks
 
 def _get_project_id():
   """Get project ID from default GCP connection."""
@@ -70,14 +59,14 @@ MODEL_VERSION = "v1"
 MODEL_LOCATION = BUCKET + "/taxifare/saved_model/"
 
 default_args = {
-  "owner": "airflow",
-  "depends_on_past": False,
-  "start_date": airflow.utils.dates.days_ago(2),
-  "email": ["airflow@example.com"],
-  "email_on_failure": True,
-  "email_on_retry": False,
-  "retries": 5,
-  "retry_delay": datetime.timedelta(minutes = 5)
+    "owner": "airflow",
+    "depends_on_past": False,
+    "start_date": airflow.utils.dates.days_ago(2),
+    "email": ["airflow@example.com"],
+    "email_on_failure": True,
+    "email_on_retry": False,
+    "retries": 5,
+    "retry_delay": datetime.timedelta(minutes=5)
 }
 
 # Default schedule interval using cronjob syntax - can be customized here
@@ -87,11 +76,11 @@ default_args = {
 # Reference: https://airflow.apache.org/scheduler.html
 schedule_interval = "00 21 * * *"
 
-# TODO: Title your DAG to be recommendations_training_v1
+# Title your DAG
 dag = DAG(
-  "training_module", 
-  default_args = default_args,
-  schedule_interval = None
+    "taxifare_module", 
+    default_args=default_args,
+    schedule_interval=None
 )
 
 dag.doc_md = __doc__

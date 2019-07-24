@@ -1,13 +1,21 @@
 import datetime
 import logging
 
+from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.contrib.operators.mlengine_operator import MLEngineModelOperator, MLEngineVersionOperator
 
 
-def deploy_tasks(model, dag, PROJECT_ID, MODEL_NAME, MODEL_VERSION, MODEL_LOCATION):
+def deploy_tasks(model, parent_dag_name, child_dag_name, default_args, PROJECT_ID, MODEL_NAME, MODEL_VERSION, MODEL_LOCATION):
+  # Create inner dag
+  dag = DAG(
+    "{0}.{1}".format(parent_dag_name, child_dag_name),
+    default_args=default_args,
+    schedule_interval=None
+  )
+
   # Constants
   OTHER_VERSION_NAME = "v_{0}".format(datetime.datetime.now().strftime("%Y%m%d%H%M%S")[0:12])
 
@@ -139,16 +147,22 @@ def deploy_tasks(model, dag, PROJECT_ID, MODEL_NAME, MODEL_VERSION, MODEL_LOCATI
       operation="set_default",
       dag=dag
   )
+
+  # Build dependency graph, set_upstream dependencies for all tasks
+  check_if_model_already_exists_op.set_upstream(bash_ml_engine_models_list_op)
+
+  ml_engine_create_model_op.set_upstream(check_if_model_already_exists_op)
+  create_model_dummy_op.set_upstream(ml_engine_create_model_op)
+  dont_create_model_dummy_branch_op.set_upstream(check_if_model_already_exists_op)
+  dont_create_model_dummy_op.set_upstream(dont_create_model_dummy_branch_op)
+
+  bash_ml_engine_versions_list_op.set_upstream([dont_create_model_dummy_op, create_model_dummy_op])
+  check_if_model_version_already_exists_op.set_upstream(bash_ml_engine_versions_list_op)
+
+  ml_engine_create_version_op.set_upstream(check_if_model_version_already_exists_op)
+  ml_engine_create_other_version_op.set_upstream(check_if_model_version_already_exists_op)
+
+  ml_engine_set_default_version_op.set_upstream(ml_engine_create_version_op)
+  ml_engine_set_default_other_version_op.set_upstream(ml_engine_create_other_version_op)
   
-  return (bash_ml_engine_models_list_op,
-          check_if_model_already_exists_op,
-          ml_engine_create_model_op,
-          create_model_dummy_op,
-          dont_create_model_dummy_branch_op,
-          dont_create_model_dummy_op,
-          bash_ml_engine_versions_list_op,
-          check_if_model_version_already_exists_op,
-          ml_engine_create_version_op,
-          ml_engine_create_other_version_op,
-          ml_engine_set_default_version_op,
-          ml_engine_set_default_other_version_op)
+  return dag
