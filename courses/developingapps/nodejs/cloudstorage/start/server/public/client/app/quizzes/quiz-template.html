@@ -15,6 +15,9 @@ limitations under the License.
 <div class='row'>
     <div class='col-xs-12' ng-hide='qc.gameOver || qc.questions.length == 0'>
         <div class='thumbnail' ng-switch='qc.question.imageUrl.substring(qc.question.imageUrl.lastIndexOf("."))'>
+            <div ng-switch-when='.svg'>
+                <img class='img-responsive' ng-src='{{qc.question.imageUrl}}'>
+            </div>
             <div ng-switch-when='.png'>
                 <img class='img-responsive' ng-src='{{qc.question.imageUrl}}'>
             </div>
