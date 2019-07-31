@@ -146,7 +146,7 @@ def read_dataset(filename, mode, batch_size, params):
     # Decode the CSV file into a features dictionary of tensors
     dataset = dataset.map(
         map_func=lambda x: decode_csv(
-            value_column=x, mode=mode, batch_size = batch_size, params=params))
+            value_column=x, mode=mode, batch_size=batch_size, params=params))
 
     # Determine amount of times to repeat file if we are training or evaluating
     if mode == tf.estimator.ModeKeys.TRAIN:
