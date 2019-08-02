@@ -42,8 +42,8 @@ echo "Enabling Stackdriver Trace API"
 gcloud beta services enable cloudtrace.googleapis.com 
 
 echo "Creating Cloud Functions"
-gcloud beta functions deploy process-feedback --trigger-topic feedback --source ./functions/feedback --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
-gcloud beta functions deploy process-answer --trigger-topic answers --source ./functions/answer --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+gcloud beta functions deploy process-feedback --runtime nodejs8 --trigger-topic feedback --source ./functions/feedback --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+gcloud beta functions deploy process-answer --runtime nodejs8 --trigger-topic answers --source ./functions/answer --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 
 echo "Creating quiz-account Service Account"
 gcloud iam service-accounts create quiz-account --display-name "Quiz Account"
