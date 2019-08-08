@@ -1,0 +1,4 @@
+gym==0.10.5
+subprocess32==3.5.2
+tensorboard==1.10.0
+tensorflow==1.10.1

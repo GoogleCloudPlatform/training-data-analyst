@@ -10,15 +10,15 @@ exports.subscribe = function subscribe(event) {
   // The Cloud Pub/Sub Message object.
   const pubsubMessage = event.data;
 
-  let answerObject = JSON.parse(Buffer.from(pubsubMessage.data, 'base64').toString()).data;
+  let answerObject = JSON.parse(Buffer.from(pubsubMessage, 'base64').toString()).data;
   console.log('Answer object data:' + JSON.stringify(answerObject));
-  
+
   return answerStorage.saveAnswer(answerObject).then(() => {
   	console.log('answer saved...');
   	return 'success';
-  	
+
   }).catch(console.error);
-  
+
 };
 
 

@@ -1,0 +1,6 @@
+__pycache*
+connections_by_protocol.csv
+kddcup.data_*
+report.png
+requirements.txt
+main.py

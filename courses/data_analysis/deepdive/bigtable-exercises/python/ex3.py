@@ -20,26 +20,19 @@ transaction volume drops more than 50%.
 """
 
 import argparse
-
 from google.cloud import bigtable
 
 
 def main(project_id, instance_id, table_id):
   client = bigtable.Client(project=project_id)
   instance = client.instance(instance_id)
-
   table = instance.table(table_id)
 
   partial_rows = table.read_rows(start_key="hourly")
   partial_rows.consume_all()
 
-  #for row_key, row in partial_rows.rows.items():
-    # TODO: Print a message if there is a > 50% drop minute over minute.
-    # Remember our data model: each row has a single column the "rollups"
-    # family with a name of empty string (""). There is one cell per minute
-    # that contains the # of actions in that minute.
-    # Documentation on the way Python exposes this is here:
-    # https://googlecloudplatform.github.io/google-cloud-python/latest/bigtable/data-api.html
+  for row_key, row in partial_rows.rows.items():
+    # TODO: Iterate and print a message if there is a > 50% drop minute over minute.
 
 
 if __name__ == '__main__':

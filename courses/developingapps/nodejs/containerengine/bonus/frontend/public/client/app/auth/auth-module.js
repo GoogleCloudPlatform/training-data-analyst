@@ -10,9 +10,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-(function () {
+((() => {
 
-    var module = angular.module('qiqAuth', ['ngRoute']);
+    const module = angular.module('qiqAuth', ['ngRoute']);
 
     module.config(['$routeProvider', config]);
 
@@ -21,9 +21,9 @@
         $routeProvider.when('/register', {
             controller: 'AuthController',
             controllerAs: 'ac',
-            templateUrl: 'app/auth/auth-register-template.html'
+            templateUrl: 'app/auth/auth-register-template.html',
         });
     }
 
 
-})();
+}))();

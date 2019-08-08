@@ -1,11 +1,13 @@
 #!/bin/bash
 
+# CHANGE as needed. Note that not all zones support all gke versions!
+GKEVERSION=1.11.2-gke.26
 CLUSTERNAME=mykfp3
 ZONE=us-central1-a
 
 gcloud config set compute/zone $ZONE
 gcloud beta container clusters create $CLUSTERNAME \
-  --cluster-version 1.11.2-gke.26 --enable-autoupgrade \
+  --cluster-version $GKEVERSION --enable-autoupgrade \
   --zone $ZONE \
   --scopes cloud-platform \
   --enable-cloud-logging \

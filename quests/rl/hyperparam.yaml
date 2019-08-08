@@ -1,0 +1,35 @@
+# Creating a .yaml File
+trainingInput:
+  scaleTier: BASIC_GPU
+  hyperparameters:
+    maxTrials: 50
+    maxParallelTrials: 30
+    enableTrialEarlyStopping: False
+    goal: MAXIMIZE
+    hyperparameterMetricTag: DQNetwork/episode_reward_1
+    params:
+    - parameterName: learning_rate
+      type: DOUBLE
+      minValue: 0.0
+      maxValue: 1.0
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: hidden_neurons
+      type: INTEGER
+      minValue: 1
+      maxValue: 50
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: gamma
+      type: DOUBLE
+      minValue: 0.8
+      maxValue: 1.0
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: memory_batch_size
+      type: DISCRETE
+      discreteValues:
+      - 4
+      - 16
+      - 32
+      - 64
+      - 128
+      - 256
+      - 512
