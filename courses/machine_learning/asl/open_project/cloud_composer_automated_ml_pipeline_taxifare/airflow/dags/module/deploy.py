@@ -140,15 +140,21 @@ def deploy_tasks(model, dag, PROJECT_ID, MODEL_NAME, MODEL_VERSION, MODEL_LOCATI
       dag=dag
   )
   
+  # Build dependency graph, set_upstream dependencies for all tasks
+  check_if_model_already_exists_op.set_upstream(bash_ml_engine_models_list_op)
+
+  ml_engine_create_model_op.set_upstream(check_if_model_already_exists_op)
+  create_model_dummy_op.set_upstream(ml_engine_create_model_op)
+  dont_create_model_dummy_branch_op.set_upstream(check_if_model_already_exists_op)
+  dont_create_model_dummy_op.set_upstream(dont_create_model_dummy_branch_op)
+
+  bash_ml_engine_versions_list_op.set_upstream([dont_create_model_dummy_op, create_model_dummy_op])
+  check_if_model_version_already_exists_op.set_upstream(bash_ml_engine_versions_list_op)
+
+  ml_engine_set_default_version_op.set_upstream(ml_engine_create_version_op)
+  ml_engine_set_default_other_version_op.set_upstream(ml_engine_create_other_version_op)
+  
   return (bash_ml_engine_models_list_op,
-          check_if_model_already_exists_op,
-          ml_engine_create_model_op,
-          create_model_dummy_op,
-          dont_create_model_dummy_branch_op,
-          dont_create_model_dummy_op,
-          bash_ml_engine_versions_list_op,
           check_if_model_version_already_exists_op,
           ml_engine_create_version_op,
-          ml_engine_create_other_version_op,
-          ml_engine_set_default_version_op,
-          ml_engine_set_default_other_version_op)
+          ml_engine_create_other_version_op)

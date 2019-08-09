@@ -57,6 +57,9 @@ def training_tasks(model, dag, PROJECT_ID, BUCKET, DATA_DIR, MODEL_NAME, MODEL_V
       dag=dag
   )
   
+  # Build dependency graph, set_upstream dependencies for all tasks
+  bash_remove_old_saved_model_op.set_upstream(ml_engine_training_op)
+  bash_copy_new_saved_model_op.set_upstream(bash_remove_old_saved_model_op)
+  
   return (ml_engine_training_op,
-          bash_remove_old_saved_model_op,
           bash_copy_new_saved_model_op)

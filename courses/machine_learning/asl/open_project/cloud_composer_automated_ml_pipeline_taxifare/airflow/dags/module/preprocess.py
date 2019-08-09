@@ -113,10 +113,14 @@ def preprocess_tasks(model, dag, PROJECT_ID, BUCKET, DATA_DIR):
       dag=dag
   )
   
-  return (bq_train_data_op,
-          bq_eval_data_op,
-          bq_check_train_data_op,
-          bq_check_eval_data_op,
-          bash_remove_old_data_op,
-          bq_export_gcs_train_csv_op,
+  # Build dependency graph, set_upstream dependencies for all tasks
+  bq_check_train_data_op.set_upstream(bq_train_data_op)
+  bq_check_eval_data_op.set_upstream(bq_eval_data_op)
+
+  bash_remove_old_data_op.set_upstream([bq_check_train_data_op, bq_check_eval_data_op])
+
+  bq_export_gcs_train_csv_op.set_upstream(bash_remove_old_data_op)
+  bq_export_gcs_eval_csv_op.set_upstream(bash_remove_old_data_op)
+  
+  return (bq_export_gcs_train_csv_op,
           bq_export_gcs_eval_csv_op)

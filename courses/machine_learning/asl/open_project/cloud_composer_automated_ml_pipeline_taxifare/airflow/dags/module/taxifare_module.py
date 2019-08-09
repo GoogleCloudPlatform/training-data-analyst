@@ -93,62 +93,25 @@ dag.doc_md = __doc__
 #
 
 for model in SOURCE_DATASET_TABLE_NAMES:
-  (bq_train_data_op,
-   bq_eval_data_op,
-   bq_check_train_data_op,
-   bq_check_eval_data_op,
-   bash_remove_old_data_op,
-   bq_export_gcs_train_csv_op,
+  (bq_export_gcs_train_csv_op,
    bq_export_gcs_eval_csv_op) = preprocess.preprocess_tasks(
        model, dag, PROJECT_ID, BUCKET, DATA_DIR)
 
 
   (ml_engine_training_op,
-   bash_remove_old_saved_model_op,
    bash_copy_new_saved_model_op) = training.training_tasks(
        model, dag, PROJECT_ID, BUCKET, DATA_DIR, MODEL_NAME, MODEL_VERSION, MODEL_LOCATION)
 
   (bash_ml_engine_models_list_op,
-   check_if_model_already_exists_op,
-   ml_engine_create_model_op,
-   create_model_dummy_op,
-   dont_create_model_dummy_branch_op,
-   dont_create_model_dummy_op,
-   bash_ml_engine_versions_list_op,
    check_if_model_version_already_exists_op,
    ml_engine_create_version_op,
-   ml_engine_create_other_version_op,
-   ml_engine_set_default_version_op,
-   ml_engine_set_default_other_version_op) = deploy.deploy_tasks(
+   ml_engine_create_other_version_op) = deploy.deploy_tasks(
        model, dag, PROJECT_ID, MODEL_NAME, MODEL_VERSION, MODEL_LOCATION)
 
   # Build dependency graph, set_upstream dependencies for all tasks
-  bq_check_train_data_op.set_upstream(bq_train_data_op)
-  bq_check_eval_data_op.set_upstream(bq_eval_data_op)
-
-  bash_remove_old_data_op.set_upstream([bq_check_train_data_op, bq_check_eval_data_op])
-
-  bq_export_gcs_train_csv_op.set_upstream([bash_remove_old_data_op])
-  bq_export_gcs_eval_csv_op.set_upstream([bash_remove_old_data_op])
-
   ml_engine_training_op.set_upstream([bq_export_gcs_train_csv_op, bq_export_gcs_eval_csv_op])
 
-  bash_remove_old_saved_model_op.set_upstream(ml_engine_training_op)
-  bash_copy_new_saved_model_op.set_upstream(bash_remove_old_saved_model_op)
-
   bash_ml_engine_models_list_op.set_upstream(ml_engine_training_op)
-  check_if_model_already_exists_op.set_upstream(bash_ml_engine_models_list_op)
-
-  ml_engine_create_model_op.set_upstream(check_if_model_already_exists_op)
-  create_model_dummy_op.set_upstream(ml_engine_create_model_op)
-  dont_create_model_dummy_branch_op.set_upstream(check_if_model_already_exists_op)
-  dont_create_model_dummy_op.set_upstream(dont_create_model_dummy_branch_op)
-
-  bash_ml_engine_versions_list_op.set_upstream([dont_create_model_dummy_op, create_model_dummy_op])
-  check_if_model_version_already_exists_op.set_upstream(bash_ml_engine_versions_list_op)
 
   ml_engine_create_version_op.set_upstream([bash_copy_new_saved_model_op, check_if_model_version_already_exists_op])
   ml_engine_create_other_version_op.set_upstream([bash_copy_new_saved_model_op, check_if_model_version_already_exists_op])
-
-  ml_engine_set_default_version_op.set_upstream(ml_engine_create_version_op)
-  ml_engine_set_default_other_version_op.set_upstream(ml_engine_create_other_version_op)
