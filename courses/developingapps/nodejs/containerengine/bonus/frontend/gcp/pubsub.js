@@ -34,8 +34,6 @@ function registerFeedbackNotification(cb) {
   subscription.on('error', err => {
     console.error(err);
   });
-});
-
 }
 
 function publishAnswer(answer) {
