@@ -108,12 +108,11 @@ def run(argv=None):
             lambda r: row_transformer.parse(r))
 
         # This stage of the pipeline writes the dictionary records into
-        # an existing BigQuery table. The sink is also configured to truncate
-        # the table if it contains any existing records.
+        # an existing BigQuery table.
         dict_records | "Write to BigQuery" >> beam.io.Write(
             beam.io.BigQuerySink(known_args.output,
                                  create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER,
-                                 write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE))
+                                 write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND))
 
 
 if __name__ == '__main__':

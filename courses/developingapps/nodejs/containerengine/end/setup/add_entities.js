@@ -23,7 +23,7 @@ const questions = [
         answer3: 'IBM',
         answer4: 'Microsoft',
         correctAnswer: 2,
-        imageUrl: ''
+        imageUrl: '',
     },
     {
         quiz: 'gcp',
@@ -34,7 +34,7 @@ const questions = [
         answer3: 'Spanner',
         answer4: 'BigQuery',
         correctAnswer: 2,
-        imageUrl: ''
+        imageUrl: '',
     },
     {
         quiz: 'gcp',
@@ -45,7 +45,7 @@ const questions = [
         answer3: 'Big Table',
         answer4: 'All of the above',
         correctAnswer: 1,
-        imageUrl: ''
+        imageUrl: '',
     },
     {
         quiz: 'places',
@@ -56,7 +56,7 @@ const questions = [
         answer3: 'Paris',
         answer4: 'Stockholm',
         correctAnswer: 3,
-        imageUrl: ''
+        imageUrl: '',
     },
 ];
 

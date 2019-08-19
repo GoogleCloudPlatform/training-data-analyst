@@ -10,19 +10,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-(function () {
+((() => {
 
-    var module = angular.module('qiqAuth');
+    const module = angular.module('qiqAuth');
 
     module.component('qiqLogin', {
         controller: LoginComponentController,
-        templateUrl: 'app/auth/qiq-login-template.html'
+        templateUrl: 'app/auth/qiq-login-template.html',
     });
 
     LoginComponentController.$inject = ['$location', 'authFactory']
 
     function LoginComponentController($location, authFactory) {
-        var lc = this;
+        const lc = this;
         lc.login = login;
         lc.logout = logout;
         lc.user = authFactory.user
@@ -35,10 +35,10 @@
 
         function login() {
             authFactory.login(lc.email, lc.password)
-                .then(function () {
+                .then(() => {
                     lc.errorMessage = '';
                     $location.path('/quiz/gcp');
-                }).catch(function (err) {
+                }).catch((err) => {
                     lc.errorMessage = 'Login failed';
                 });
         }
@@ -47,4 +47,4 @@
         function logout() {
         }
     }
-})();
+}))();

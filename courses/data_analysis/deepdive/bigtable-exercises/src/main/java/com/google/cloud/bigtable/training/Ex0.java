@@ -13,9 +13,7 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
 package com.google.cloud.bigtable.training;
-
 import com.google.cloud.bigtable.hbase.BigtableConfiguration;
 import com.google.cloud.bigtable.training.common.DataGenerator;
 import com.google.cloud.bigtable.training.common.ThreadPoolWriter;
@@ -43,44 +41,46 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
-
-
 /**
  * This just makes sure you can compile and run a trivial program that reads and writes to bigtable
  */
 public class Ex0 {
-
   public static void main(String[] args) {
     String projectId = System.getProperty("bigtable.project");
     String instanceId = System.getProperty("bigtable.instance");
     String tableName = System.getProperty("bigtable.table");
     try (Connection connection = BigtableConfiguration.connect(projectId, instanceId)) {
-      // The admin API lets us create, manage and delete tables
-      Admin admin = connection.getAdmin();
 
       // Create a table with a single column family
       HTableDescriptor descriptor = new HTableDescriptor(TableName.valueOf(tableName));
-      descriptor.addFamily(new HColumnDescriptor("cf"));
+      descriptor.addFamily(new HColumnDescriptor("column_family"));
 
-      System.out.println("Create table " + descriptor.getNameAsString());
+      // Adding column families for later exercises
+      // You'll need these for Exs 1-4
+      descriptor.addFamily(new HColumnDescriptor("data"));
+      descriptor.addFamily(new HColumnDescriptor("rollups"));
+
+      // The admin API lets us create, manage and delete tables
+      Admin admin = connection.getAdmin();
+
+      System.out.println("Creating table " + descriptor.getNameAsString());
       try {
         admin.createTable(descriptor);
       } catch (TableExistsException e) {
-        // No problem!
+		System.err.println("Could not create table!");
       }
-
       Table table = connection.getTable(TableName.valueOf(tableName));
 
       // Write something
-      Put put = new Put(Bytes.toBytes("row"));
-      put.addColumn(Bytes.toBytes("cf"), Bytes.toBytes("col"),
+      Put put = new Put(Bytes.toBytes("row_1"));
+      put.addColumn(Bytes.toBytes("column_family"), Bytes.toBytes("column_key_name"),
           Bytes.toBytes("It worked!"));
       table.put(put);
 
       // Now read it back
-      Result getResult = table.get(new Get(Bytes.toBytes("row")));
+      Result getResult = table.get(new Get(Bytes.toBytes("row_1")));
       String val =
-          Bytes.toString(getResult.getValue(Bytes.toBytes("cf"), Bytes.toBytes("col")));
+          Bytes.toString(getResult.getValue(Bytes.toBytes("column_family"), Bytes.toBytes("column_key_name")));
       System.out.println(val);
       System.exit(0);
     } catch (IOException e) {

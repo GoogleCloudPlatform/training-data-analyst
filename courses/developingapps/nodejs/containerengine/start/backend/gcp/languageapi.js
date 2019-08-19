@@ -10,18 +10,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+'use strict';
+
 const config = require('../config');
 const Language = require('@google-cloud/language');
 
-const language = Language({
-    projectID: config.get('GCLOUD_PROJECT')
-});
+const GCLOUD_PROJECT = config.get('GCLOUD_PROJECT');
+const language = new Language.LanguageServiceClient({GCLOUD_PROJECT});
 
 
 function analyze(text) {
     const document = {
         content: text,
-        type: 'PLAIN_TEXT'
+        type: 'PLAIN_TEXT',
     };
     return language.analyzeSentiment({ document })
        .then(results => {
@@ -32,5 +34,5 @@ function analyze(text) {
 
 
 module.exports = {
-    analyze
+    analyze,
 };

@@ -112,7 +112,9 @@ def engineered_features(img, halfsize):
     ], axis=1)
     return engfeat
 
-
+def bias_value(img, halfsize):
+    center_ref = img[:, halfsize, halfsize, 0:1] # [?]
+    return tf.ones_like(center_ref)
 
 def create_combined_model(params):
   # input is a 2-channel image
@@ -125,17 +127,14 @@ def create_combined_model(params):
 
   # deep learning part of model
   deep = {
-    'feateng': None,
+    'feateng': keras.layers.Lambda(lambda x: bias_value(x, height//2))(img),
     'convnet': convnet.create_cnn_model(img, params),
     'resnet': resnet.create_resnet_model(img, params),
     'dnn': dnn.create_dnn_model(img, params)
   }.get(params['arch'], None)
 
   # concatenate the two parts
-  if deep != None:
-    both = keras.layers.concatenate([deep, engfeat])
-  else:
-    both = engfeat
+  both = keras.layers.concatenate([deep, engfeat])
 
   ltgprob = keras.layers.Dense(1, activation='sigmoid')(both)
 
@@ -338,7 +337,7 @@ def export_keras(model, trained_model, output_dir, hparams):
   serving_model = keras.Model(json_input, model_output)
 
   # export
-  if hparams['skipexport'] is None:
+  if not hparams['skipexport']:
     export_path = tf.contrib.saved_model.save_keras_model(serving_model,
                                                           os.path.join(output_dir, 'export/exporter'))
     export_path = export_path.decode('utf-8')
