@@ -19,7 +19,6 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-import numpy as np
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
