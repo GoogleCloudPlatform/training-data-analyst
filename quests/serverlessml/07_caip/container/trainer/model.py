@@ -7,7 +7,7 @@ import os, json, math, shutil
 import datetime
 import numpy as np
 import tensorflow as tf
-logging.info(tf.__version__)
+logging.info(tf.version.VERSION)
 ### END Cell #1 ###
 
 ### BEGIN PARAMS from notebook ###
@@ -15,7 +15,6 @@ logging.info(tf.__version__)
 # These are parameters that we will configure so that we can schedule this notebook
 DATADIR = '../data'
 OUTDIR = './trained_model'
-EXPORT_DIR = os.path.join(OUTDIR,'export/savedmodel')
 NBUCKETS = 10  # for feature crossing
 TRAIN_BATCH_SIZE = 32
 NUM_TRAIN_EXAMPLES = 10000 * 5 # remember the training dataset repeats, so this will wrap around
@@ -24,14 +23,14 @@ NUM_EVAL_EXAMPLES = 10000 # enough to get a reasonable sample, but no so much th
 ### END PARAMS from notebook ###
 
 ### BEGIN PARAMS from YAML ###
+DATADIR = "gs://cloud-training-demos-ml/quests/serverlessml/data"
+NUM_EVAL_EXAMPLES = 100000
+TRAIN_BATCH_SIZE = 32
+NUM_EVALS = 5
 NBUCKETS = 10
 NUM_TRAIN_EXAMPLES = 5000000
 OUTDIR = "gs://cloud-training-demos-ml/quests/serverlessml/"
-NUM_EVALS = 5
 EXPORT_DIR = "gs://cloud-training-demos-ml/quests/serverlessml/export/savedmodel"
-TRAIN_BATCH_SIZE = 32
-NUM_EVAL_EXAMPLES = 100000
-DATADIR = "gs://cloud-training-demos-ml/quests/serverlessml/data"
 ### END PARAMS from YAML ###
 
 ### BEGIN Cell #4 ###
@@ -63,16 +62,12 @@ def load_dataset(pattern, batch_size=1, mode=tf.estimator.ModeKeys.EVAL):
     return dataset
 ### END Cell #5 ###
 
-### BEGIN Cell #21 ###
+### BEGIN Cell #6 ###
 def parse_datetime(s):
     if type(s) is not str:
         s = s.numpy().decode('utf-8') # if it is a Tensor
-    try:
-        # Python 3.5 doesn't handle timezones of the form 00:00, only 0000
-        return datetime.datetime.strptime(s.replace(':',''), "%Y-%m-%d %H%M%S%z")
-    except:
-        return datetime.datetime.strptime(s, "%Y-%m-%d %H:%M:%S %Z")
-### END Cell #21 ###
+    return datetime.datetime.strptime(s, "%Y-%m-%d %H:%M:%S %Z")
+### END Cell #6 ###
 
 ### BEGIN Cell #8 ###
 ## Add transformations
@@ -87,75 +82,88 @@ def get_dayofweek(s):
     ts = parse_datetime(s)
     return DAYS[ts.weekday()]
 
+@tf.function
 def dayofweek(ts_in):
     return tf.map_fn(
         lambda s: tf.py_function(get_dayofweek, inp=[s], Tout=tf.string),
         ts_in
     )
 
+@tf.function
+def fare_thresh(x):
+    return 60 * tf.keras.activations.relu(x)
+
 def transform(inputs, NUMERIC_COLS, STRING_COLS):
-    transformed = inputs.copy()
     logging.info("BEFORE TRANSFORMATION")
     logging.info("INPUTS:", inputs.keys())
-    logging.info(inputs['pickup_longitude'].shape)
+    
+    # Pass-through columns
+    transformed = inputs.copy()
+    del transformed['pickup_datetime']
+    
     feature_columns = {
         colname: tf.feature_column.numeric_column(colname)
            for colname in NUMERIC_COLS
     }
     
     # scale the lat, lon values to be in 0, 1
-    for lon_col in ['pickup_longitude', 'dropoff_longitude']:  # in range -70 to -78
-        transformed[lon_col] = tf.keras.layers.Lambda(
-            lambda x: (x+78)/8.0, 
-            name='scale_{}'.format(lon_col)
-        )(inputs[lon_col])
-    for lat_col in ['pickup_latitude', 'dropoff_latitude']: # in range 37 to 45
-        transformed[lat_col] = tf.keras.layers.Lambda(
-            lambda x: (x-37)/8.0, 
-            name='scale_{}'.format(lat_col)
-        )(inputs[lat_col])
+    if True:
+        for lon_col in ['pickup_longitude', 'dropoff_longitude']:  # in range -70 to -78
+            transformed[lon_col] = tf.keras.layers.Lambda(
+                lambda x: (x+78)/8.0, 
+                name='scale_{}'.format(lon_col)
+            )(inputs[lon_col])
+        for lat_col in ['pickup_latitude', 'dropoff_latitude']: # in range 37 to 45
+            transformed[lat_col] = tf.keras.layers.Lambda(
+                lambda x: (x-37)/8.0, 
+                name='scale_{}'.format(lat_col)
+            )(inputs[lat_col])
 
     # add Euclidean distance. Doesn't have to be accurate calculation because NN will calibrate it
-    transformed['euclidean'] = tf.keras.layers.Lambda(euclidean, name='euclidean')([
-        inputs['pickup_longitude'],
-        inputs['pickup_latitude'],
-        inputs['dropoff_longitude'],
-        inputs['dropoff_latitude']
-    ])
-    feature_columns['euclidean'] = tf.feature_column.numeric_column('euclidean')
+    if True:
+        transformed['euclidean'] = tf.keras.layers.Lambda(euclidean, name='euclidean')([
+            inputs['pickup_longitude'],
+            inputs['pickup_latitude'],
+            inputs['dropoff_longitude'],
+            inputs['dropoff_latitude']
+        ])
+        feature_columns['euclidean'] = tf.feature_column.numeric_column('euclidean')
     
     # hour of day from timestamp of form '2010-02-08 09:17:00+00:00'
-    transformed['hourofday'] = tf.keras.layers.Lambda(
-        lambda x: tf.strings.to_number(tf.strings.substr(x, 11, 2), out_type=tf.dtypes.int32),
-        name='hourofday'
-    )(inputs['pickup_datetime'])
-    feature_columns['hourofday'] = tf.feature_column.indicator_column(
-        tf.feature_column.categorical_column_with_identity('hourofday', num_buckets=24))
+    if True:
+        transformed['hourofday'] = tf.keras.layers.Lambda(
+            lambda x: tf.strings.to_number(tf.strings.substr(x, 11, 2), out_type=tf.dtypes.int32),
+            name='hourofday'
+        )(inputs['pickup_datetime'])
+        feature_columns['hourofday'] = tf.feature_column.indicator_column(
+            tf.feature_column.categorical_column_with_identity('hourofday', num_buckets=24))
 
-
-    # day of week is hard because there is no TensorFlow function for date handling
-    transformed['dayofweek'] = tf.keras.layers.Lambda(
-        lambda x: dayofweek(x),
-        name='dayofweek_pyfun'
-    )(inputs['pickup_datetime'])
-    transformed['dayofweek'] = tf.keras.layers.Reshape((), name='dayofweek')(transformed['dayofweek'])
-    feature_columns['dayofweek'] = tf.feature_column.indicator_column(
-        tf.feature_column.categorical_column_with_vocabulary_list(
-          'dayofweek', vocabulary_list = DAYS))
+    if False:
+        # https://buganizer.corp.google.com/issues/137795281
+        # day of week is hard because there is no TensorFlow function for date handling
+        transformed['dayofweek'] = tf.keras.layers.Lambda(
+            lambda x: dayofweek(x),
+            name='dayofweek_pyfun'
+        )(inputs['pickup_datetime'])
+        transformed['dayofweek'] = tf.keras.layers.Reshape((), name='dayofweek')(transformed['dayofweek'])
+        feature_columns['dayofweek'] = tf.feature_column.indicator_column(
+            tf.feature_column.categorical_column_with_vocabulary_list(
+              'dayofweek', vocabulary_list = DAYS))
     
-    # featurecross lat, lon into nxn buckets, then embed
-    # b/135479527
-    #nbuckets = NBUCKETS
-    #latbuckets = np.linspace(0, 1, nbuckets).tolist()
-    #lonbuckets = np.linspace(0, 1, nbuckets).tolist()
-    #b_plat = tf.feature_column.bucketized_column(feature_columns['pickup_latitude'], latbuckets)
-    #b_dlat = tf.feature_column.bucketized_column(feature_columns['dropoff_latitude'], latbuckets)
-    #b_plon = tf.feature_column.bucketized_column(feature_columns['pickup_longitude'], lonbuckets)
-    #b_dlon = tf.feature_column.bucketized_column(feature_columns['dropoff_longitude'], lonbuckets)
-    #ploc = tf.feature_column.crossed_column([b_plat, b_plon], nbuckets * nbuckets)
-    #dloc = tf.feature_column.crossed_column([b_dlat, b_dlon], nbuckets * nbuckets)
-    #pd_pair = tf.feature_column.crossed_column([ploc, dloc], nbuckets ** 4 )
-    #feature_columns['pickup_and_dropoff'] = tf.feature_column.embedding_column(pd_pair, 100)
+    if True:
+        # https://buganizer.corp.google.com/issues/135479527
+        # featurecross lat, lon into nxn buckets, then embed
+        nbuckets = NBUCKETS
+        latbuckets = np.linspace(0, 1, nbuckets).tolist()
+        lonbuckets = np.linspace(0, 1, nbuckets).tolist()
+        b_plat = tf.feature_column.bucketized_column(feature_columns['pickup_latitude'], latbuckets)
+        b_dlat = tf.feature_column.bucketized_column(feature_columns['dropoff_latitude'], latbuckets)
+        b_plon = tf.feature_column.bucketized_column(feature_columns['pickup_longitude'], lonbuckets)
+        b_dlon = tf.feature_column.bucketized_column(feature_columns['dropoff_longitude'], lonbuckets)
+        ploc = tf.feature_column.crossed_column([b_plat, b_plon], nbuckets * nbuckets)
+        dloc = tf.feature_column.crossed_column([b_dlat, b_dlon], nbuckets * nbuckets)
+        pd_pair = tf.feature_column.crossed_column([ploc, dloc], nbuckets ** 4 )
+        feature_columns['pickup_and_dropoff'] = tf.feature_column.embedding_column(pd_pair, 100)
 
     logging.info("AFTER TRANSFORMATION")
     logging.info("TRANSFORMED:", transformed.keys())
@@ -188,14 +196,15 @@ def build_dnn_model():
     h1 = tf.keras.layers.Dense(32, activation='relu', name='h1')(dnn_inputs)
     h2 = tf.keras.layers.Dense(8, activation='relu', name='h2')(h1)
 
-    # final output would normally have a linear activation because this is regression
-    # However, we know something about the taxi problem (fares are +ve and tend to be below $60).
-    # Use that here. (You can verify by running this query):
-    # SELECT APPROX_QUANTILES(fare_amount, 100) FROM serverlessml.cleaned_training_data
-    # b/136476088
-    #fare_thresh = lambda x: 60 * tf.keras.activations.relu(x)
-    #output = tf.keras.layers.Dense(1, activation=fare_thresh, name='fare')(h2)
-    output = tf.keras.layers.Dense(1, name='fare')(h2)
+    if False:
+        # https://buganizer.corp.google.com/issues/136476088
+        # final output would normally have a linear activation because this is regression
+        # However, we know something about the taxi problem (fares are +ve and tend to be below $60).
+        # Use that here. (You can verify by running this query):
+        # SELECT APPROX_QUANTILES(fare_amount, 100) FROM serverlessml.cleaned_training_data
+        output = tf.keras.layers.Dense(1, activation=fare_thresh, name='fare')(h2)
+    else:
+        output = tf.keras.layers.Dense(1, name='fare')(h2)
     
     model = tf.keras.models.Model(inputs, output)
     model.compile(optimizer='adam', loss='mse', metrics=[rmse, 'mse'])
@@ -205,7 +214,7 @@ model = build_dnn_model()
 logging.info(model.summary())
 ### END Cell #8 ###
 
-### BEGIN Cell #10 ###
+### BEGIN Cell #12 ###
 trainds = load_dataset('taxi-train*', TRAIN_BATCH_SIZE, tf.estimator.ModeKeys.TRAIN)
 evalds = load_dataset('taxi-valid*', 1000, tf.estimator.ModeKeys.EVAL).take(NUM_EVAL_EXAMPLES//10000) # evaluate on 1/10 final evaluation set
 
@@ -221,30 +230,69 @@ history = model.fit(trainds,
                     validation_data=evalds,
                     epochs=NUM_EVALS, 
                     steps_per_epoch=steps_per_epoch,
+                    verbose=2, # 0=silent, 1=progress bar, 2=one line per epoch
                     callbacks=[cp_callback])
-### END Cell #10 ###
-
-### BEGIN Cell #12 ###
-evalds = load_dataset('taxi-valid*', 1000, tf.estimator.ModeKeys.EVAL).take(NUM_EVAL_EXAMPLES//1000)
-model.evaluate(evalds)
 ### END Cell #12 ###
 
 ### BEGIN Cell #14 ###
-export_dir = os.path.join(EXPORT_DIR, datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
-tf.keras.experimental.export_saved_model(model, export_dir)
-logging.info(export_dir)
-
-# Recreate the exact same model
-new_model = tf.keras.experimental.load_from_saved_model(export_dir)
-
-# try predicting with this model
-new_model.predict({
-    'pickup_longitude': tf.convert_to_tensor([-73.982683]),
-    'pickup_latitude': tf.convert_to_tensor([40.742104]),
-    'dropoff_longitude': tf.convert_to_tensor([-73.983766]),
-    'dropoff_latitude': tf.convert_to_tensor([40.755174]),
-    'passenger_count': tf.convert_to_tensor([3.0]),  
-    'pickup_datetime': tf.convert_to_tensor(['2010-02-08 09:17:00+00:00'], dtype=tf.string),
-})
+evalds = load_dataset('taxi-valid*', 1000, tf.estimator.ModeKeys.EVAL).take(NUM_EVAL_EXAMPLES//1000)
+model.evaluate(evalds)
 ### END Cell #14 ###
+
+### BEGIN Cell #16 ###
+import shutil, os, datetime
+OUTPUT_DIR = os.path.join(OUTDIR, 'export/savedmodel')
+if OUTPUT_DIR[:5] != 'gs://':
+    shutil.rmtree(OUTPUT_DIR, ignore_errors=True)
+EXPORT_PATH = os.path.join(OUTPUT_DIR, datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
+tf.saved_model.save(model, EXPORT_PATH) # with default serving function
+### END Cell #16 ###
+
+### BEGIN Cell #17 ###
+#!saved_model_cli show --tag_set serve --signature_def serving_default --dir {EXPORT_PATH}
+### END Cell #17 ###
+
+### BEGIN Cell #18 ###
+#!find {EXPORT_PATH}
+os.environ['EXPORT_PATH'] = EXPORT_PATH
+### END Cell #18 ###
+
+### BEGIN Cell #20 ###
+#%%bash
+#PROJECT=$(gcloud config get-value project)
+#BUCKET=${PROJECT}-ml
+#REGION=us-east1
+#MODEL_NAME=taxifare
+#VERSION_NAME=v2
+#
+#if [[ $(gcloud ai-platform models list --format='value(name)' | grep $MODEL_NAME) ]]; then
+#    echo "$MODEL_NAME already exists"
+#else
+#    # create model
+#    echo "Creating $MODEL_NAME"
+#    gcloud ai-platform models create --regions=$REGION $MODEL_NAME
+#fi
+#
+#if [[ $(gcloud ai-platform versions list --model $MODEL_NAME --format='value(name)' | grep $VERSION_NAME) ]]; then
+#    echo "Deleting already existing $MODEL_NAME:$VERSION_NAME ... "
+#    gcloud ai-platform versions delete --model=$MODEL_NAME $VERSION_NAME
+#    echo "Please run this cell again if you don't see a Creating message ... "
+#    sleep 10
+#fi
+#
+## create model
+#echo "Creating $MODEL_NAME:$VERSION_NAME"
+#gcloud ai-platform versions create --model=$MODEL_NAME $VERSION_NAME --async \
+#       --framework=tensorflow --python-version=3.5 --runtime-version=1.14 \
+#       --origin=$EXPORT_PATH --staging-bucket=gs://$BUCKET
+### END Cell #20 ###
+
+### BEGIN Cell #21 ###
+#%%writefile repro.json
+#{"pickup_longitude": -73.982683, "pickup_latitude": 40.742104, "dropoff_longitude": -73.983766, "dropoff_latitude": 40.755174, "passenger_count": 3.0, "pickup_datetime": "2010-02-08 09:17:00 UTC"}
+### END Cell #21 ###
+
+### BEGIN Cell #22 ###
+#!gcloud ai-platform predict --model taxifare --json-instances repro.json --version v2
+### END Cell #22 ###
 
