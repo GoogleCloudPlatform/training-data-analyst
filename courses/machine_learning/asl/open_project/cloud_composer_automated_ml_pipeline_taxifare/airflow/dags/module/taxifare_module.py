@@ -59,14 +59,14 @@ MODEL_VERSION = "v1"
 MODEL_LOCATION = BUCKET + "/taxifare/saved_model/"
 
 default_args = {
-    "owner": "airflow",
-    "depends_on_past": False,
-    "start_date": airflow.utils.dates.days_ago(2),
-    "email": ["airflow@example.com"],
-    "email_on_failure": True,
-    "email_on_retry": False,
-    "retries": 5,
-    "retry_delay": datetime.timedelta(minutes=5)
+  "owner": "airflow",
+  "depends_on_past": False,
+  "start_date": airflow.utils.dates.days_ago(2),
+  "email": ["airflow@example.com"],
+  "email_on_failure": True,
+  "email_on_retry": False,
+  "retries": 5,
+  "retry_delay": datetime.timedelta(minutes=5)
 }
 
 # Default schedule interval using cronjob syntax - can be customized here
@@ -78,9 +78,9 @@ schedule_interval = "00 21 * * *"
 
 # Title your DAG
 dag = DAG(
-    "taxifare_module", 
-    default_args=default_args,
-    schedule_interval=None
+  "taxifare_module", 
+  default_args=default_args,
+  schedule_interval=None
 )
 
 dag.doc_md = __doc__
