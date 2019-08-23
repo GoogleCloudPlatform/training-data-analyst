@@ -14,11 +14,18 @@
 
 import argparse
 import gym
+import json
 import numpy as np
+import os
 import sys
 import tensorflow as tf
 
 from . import model
+from google.cloud import storage
+from gym.wrappers.monitoring.video_recorder import VideoRecorder
+from pyvirtualdisplay import Display
+
+RECORDING_NAME = "recording.mp4"
 
 
 def _parse_arguments(argv):
@@ -65,35 +72,26 @@ def _parse_arguments(argv):
         type=int,
         default=64)
     parser.add_argument(
-        '--training_mode',
+        '--training',
         help='True for the model to train, False for the model to evaluate',
         type=bool,
         default=True)
     parser.add_argument(
-        '--model_path',
+        '--job-dir',
         help='Directory where to save the given model',
         type=str,
         default='models/')
-    parser.add_argument(
-        '--save_model',
-        help='Whether to save the model',
-        type=bool,
-        default=True)
     parser.add_argument(
         '--score_print_rate',
         help='How often to print the score, 0 if never',
         type=int,
         default=0)
     parser.add_argument(
-        '--render_rate',
-        help='How often to render an episode, 0 if never',
-        type=int,
-        default=0)
-    parser.add_argument(
-        '--record_rate',
-        help="""Record metrics to tensorboard every <record_rate> steps, 0 if
-        never. Use higher values to avoid hyperparameter tuning
-        "too many metrics" error""",
+        '--eval_rate',
+        help="""While training, perform an on-policy simulation and record
+        metrics to tensorboard every <record_rate> steps, 0 if never. Use
+        higher values to avoid hyperparameter tuning "too many metrics"
+        error""",
         type=int,
         default=100)
     return parser.parse_known_args(argv)
@@ -117,22 +115,72 @@ def _run(args):
         agent = model.Agent(
             space_size, action_size, args.learning_rate, args.hidden_neurons,
             args.gamma, args.explore_decay, args.memory_batch_size,
-            args.memory_size, args.training_mode, sess, args.model_path)
-
-        # Initialize the variables
+            args.memory_size, sess)
         sess.run(tf.global_variables_initializer())
+
+        # Setup TensorBoard Writer.
+        trial_id = json.loads(
+            os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
+        output_path = args.job_dir if not trial_id else args.job_dir + '/'
+        train_writer = tf.summary.FileWriter(output_path + "train", sess.graph)
+        eval_writer = tf.summary.FileWriter(output_path + "eval", sess.graph)
         saver = tf.train.Saver()
 
+        def _train_or_evaluate(print_score, get_summary, training=False):
+            """Runs a gaming simulation and writes results for tensorboard.
+
+            Args:
+              print_score (bool): True to print a score to the console.
+              get_summary (bool): True to write results for tensorboard.
+              training (bool): True if the agent is training, False to eval.
+            """
+            reward = _play(agent, env, episode, training, print_score)
+            writer = train_writer if training else eval_writer
+            if training:
+                get_loss = not trial_id and get_summary
+                loss_summary = agent.learn(get_loss) if training else None
+                if not loss_summary:
+                    return
+
+                writer.add_summary(loss_summary, global_step=episode)
+                writer.flush()
+
+            reward_summary = tf.Summary()
+            reward_summary.value.add(
+                tag='episode_reward', simple_value=reward)
+            writer.add_summary(reward_summary, global_step=episode)
+            writer.flush()
+
         for episode in range(args.episodes):
-            _play(
-                agent, env, episode, args.render_rate, args.score_print_rate,
-                args.record_rate)
+            get_summary = args.eval_rate and episode % args.eval_rate == 0
+            print_score = (args.score_print_rate and
+                episode % args.score_print_rate == 0)
+            if args.training:
+                _train_or_evaluate(print_score, get_summary, training=True)
 
-        # Save the model
-        save_path = saver.save(sess, args.model_path)
+            if not args.training or get_summary:
+                _train_or_evaluate(print_score, get_summary, training=False)
+
+        # Save the model and video.
+        virtual_display = Display(visible=0, size=(1400, 900))
+        virtual_display.start()
+        video_recorder = VideoRecorder(env, RECORDING_NAME)
+        _play(agent, env, episode, False, False, recorder=video_recorder)
+        video_recorder.close()
+        env.close()
+
+        # Check if output directory is google cloud and save there if so.
+        if output_path.startswith("gs://"):
+            [bucket_name, blob_path] = output_path[5:].split("/", 1)
+            storage_client = storage.Client()
+            bucket = storage_client.get_bucket(bucket_name)
+            blob = bucket.blob(blob_path + RECORDING_NAME)
+            blob.upload_from_filename(RECORDING_NAME)
+
+        saver.save(sess, output_path + "model.ckpt")
 
 
-def _play(agent, env, episode, render_rate, score_print_rate, record_rate):
+def _play(agent, env, episode, training, print_score, recorder=None):
     """Plays through one episode of the game.
 
     Initializes TensorFlow, the training agent, and the game environment.
@@ -145,41 +193,36 @@ def _play(agent, env, episode, render_rate, score_print_rate, record_rate):
         use with OpenAI Gym, but the user can alter the code to provide their
         own environment.
       episode (int): The current number of simulaions the agent has completed.
-      render_rate (int): The episode frequency in which to render the game
-        being played by the agent.
-      score_print_rate (int): The episode frequency in which to print the total
+      training (bool): True is the agent is training.
+      print_score (true): The episode frequency in which to print the total
         episode reward.
-      record_rate (int): The episode frequency in which to record the episode
-        reward into tensorboard.
+      recorder (optional): A gym video recorder object to save the simulation
+        to a movie. 
     """
     episode_reward = 0  # The total reward for an episode.
     state = env.reset()  # Set up Environment and get start state.
     done = False
+    if recorder:
+        recorder.capture_frame()
 
     while not done:
-        action = agent.act(state)
+        action = agent.act(state, training)
         state_prime, reward, done, info = env.step(action)
         episode_reward += reward
         agent.memory.add((state, action, reward, state_prime, done))
 
-        # Render only enough to "check in" on the agent to speed up training.
-        if render_rate and episode % render_rate == 0:
-            env.render()
-
+        if recorder:
+            recorder.capture_frame()
         if done:
-            if score_print_rate and episode % score_print_rate == 0:
+            if print_score:
                 print(
-                    'Training: {}'.format(agent.train),
+                    'Training - ' if training else 'Evaluating - ',
                     'Episode: {}'.format(episode),
                     'Total reward: {}'.format(episode_reward),
                 )
         else:
             state = state_prime  # st+1 is now our current state.
-
-    if agent.train:
-        # TODO: Eval every x steps instead of recording training rewards.
-        tensorboard_write = episode % record_rate == 0
-        agent.learn(episode_reward, tensorboard_write)
+    return episode_reward
 
 
 def main():

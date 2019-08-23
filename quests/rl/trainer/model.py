@@ -14,9 +14,7 @@
 
 """A deep Q network to show reinforcement learning on the cloud."""
 
-import json
 import numpy as np
-import os
 import random
 import tensorflow as tf
 
@@ -50,11 +48,6 @@ class DQNetwork():
                 tf.float32, shape=((None,) + state_size), name='states')
             self.actions = tf.placeholder(
                 tf.int32, shape=(None), name='actions')
-
-            # For tracking the reward in tensorboard and vizier
-            self.episode_reward = tf.placeholder(
-                dtype=tf.float32, shape=[], name='episode_reward')
-            tf.summary.scalar('episode_reward', self.episode_reward)
 
             # target_Q is R(s,a) + ymax Qhat(s', a')
             self.target_Q = tf.placeholder(tf.float32, [None], name="target")
@@ -139,8 +132,8 @@ class Agent():
     """Sets up a reinforcement learning agent to play in a game environment."""
     def __init__(
             self, state_size, action_size, learning_rate, hidden_nuerons,
-            gamma, epsilon_decay, memory_batch_size, memory_size, train,
-            tensorflow_session, output_path):
+            gamma, epsilon_decay, memory_batch_size, memory_size,
+            tensorflow_session):
         """Initializes the agent with DQN and memory sub-classes.
 
         Args:
@@ -156,38 +149,30 @@ class Agent():
                 replay memory during training.
             memory_size (int): The maximum number of experinces the memory 
                 buffer can hold.
-            train (bool): True if the agent is in training mode.
             tensorflow_session: The Tensorflow session the simulation is taking
                 place in.
-            output_path (str): The directory to output TensorBoard summaries.
         """
         self.action_size = action_size
         self.brain = DQNetwork(
             state_size, action_size, learning_rate, hidden_nuerons)
         self.memory = Memory(memory_size)
         self.session = tensorflow_session
-        self.train = train
         self.memory_batch_size = memory_batch_size
         self.gamma = gamma
         self.epsilon = 1  # The chance to take a random action.
         self.epsilon_decay = epsilon_decay
 
-        # Setup TensorBoard Writer.
-        trial_id = json.loads(
-            os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
-        summary_path = os.path.join(output_path, trial_id)
-        self.writer = tf.summary.FileWriter(summary_path, self.session.graph)
-
-    def act(self, state):
+    def act(self, state, training=False):
         """Selects an action for the agent to take given a game state.
 
         Args:
             state (list of numbers): The state of the environment to act on.
+            traning (bool): True if the agent is training.
 
         Returns:
             (int) The index of the action to take.
         """
-        if self.train:
+        if training:
             # Random actions until enough simulations to train the model.
             if len(self.memory.buffer) >= self.memory_batch_size:
                 self.epsilon *= self.epsilon_decay
@@ -200,14 +185,17 @@ class Agent():
             self.brain.output, feed_dict={self.brain.states: [state]})
         return np.argmax(Qs)
 
-    def learn(self, episode_reward, tensorboard_write):
+    def learn(self, get_summary):
         """Trains the Deep Q Network based on stored experiences.
+
         Args:
-            episode_reward (number): The latest episode reward for tracking.
-            tensorboard_write (bool): True if writing to tensorboard.
+            get_summary (bool): True if the loss summary is requested.
+
+        Returns: 
+            None or a Tensorboard Summary for the training loss.
         """
         if len(self.memory.buffer) < self.memory_batch_size:
-            return np.inf
+            return
         brain = self.brain
 
         # Obtain random mini-batch from memory.
@@ -231,14 +219,14 @@ class Agent():
             brain.states: states_mb,
             brain.target_Q: targets_mb,
             brain.actions: actions_mb,
-            brain.episode_reward: episode_reward
         }
 
-        loss, _ = self.session.run(
-            [brain.loss, brain.optimizer], feed_dict=model_feed)
-
         # Merge summaries for tensorboard.
-        if tensorboard_write:
-            summary = self.session.run(
-                tf.summary.merge_all(), feed_dict=model_feed)
-            self.writer.add_summary(summary)
+        if get_summary:
+            _, _, summary = self.session.run(
+                [brain.loss, brain.optimizer, tf.summary.merge_all()],
+                feed_dict=model_feed)
+            return summary
+
+        self.session.run([brain.loss, brain.optimizer], feed_dict=model_feed)
+        return

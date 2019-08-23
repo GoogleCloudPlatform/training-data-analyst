@@ -40,11 +40,12 @@ class build(_build):
 # The list of required libraries is taken from:
 # https://github.com/openai/gym#installing-everything
 _LIBS = ('python-numpy python-dev cmake zlib1g-dev libjpeg-dev xvfb libav-tools'
-         ' xorg-dev python-opengl libboost-all-dev libsdl2-dev swig').split()
+         ' xorg-dev x11-utils python-opengl libboost-all-dev libsdl2-dev swig').split()
 
 CUSTOM_COMMANDS = [
     ['apt-get', 'update'],
     ['apt-get', 'install', '-y'] + _LIBS,
+    
 ]
 
 
@@ -79,15 +80,17 @@ class CustomCommands(setuptools.Command):
 
 #####
 
-REQUIRED_PACKAGES = ['numpy==1.14.2', 'gym[box2d]==0.10.4', 'keras']
+REQUIRED_PACKAGES = [
+  'numpy==1.14.2', 'gym==0.12.5', 'keras', "Pillow==6.0.0",
+  'PyVirtualDisplay==0.2.4', 'pyglet==1.3.2']
 
 setup(
     name='deep_q_learning',
-    version='0.1',
+    version='0.2',
     install_requires=REQUIRED_PACKAGES,
     packages=find_packages(),
     include_package_data=True,
-    description='Deep Q for learning to play box2d games.',
+    description='Deep Q for learning to play ai gym games.',
     cmdclass={
         # Command class instantiated and run during pip install scenarios.
         'build': build,
