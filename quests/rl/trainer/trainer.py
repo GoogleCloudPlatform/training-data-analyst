@@ -153,7 +153,8 @@ def _run(args):
 
         for episode in range(args.episodes):
             get_summary = args.eval_rate and episode % args.eval_rate == 0
-            print_score = (args.score_print_rate and
+            print_score = (
+                args.score_print_rate and
                 episode % args.score_print_rate == 0)
             if args.training:
                 _train_or_evaluate(print_score, get_summary, training=True)
@@ -197,7 +198,7 @@ def _play(agent, env, episode, training, print_score, recorder=None):
       print_score (true): The episode frequency in which to print the total
         episode reward.
       recorder (optional): A gym video recorder object to save the simulation
-        to a movie. 
+        to a movie.
     """
     episode_reward = 0  # The total reward for an episode.
     state = env.reset()  # Set up Environment and get start state.
@@ -228,6 +229,7 @@ def _play(agent, env, episode, training, print_score, recorder=None):
 def main():
     args = _parse_arguments(sys.argv[1:])
     _run(args[0])
+
 
 if __name__ == '__main__':
     main()

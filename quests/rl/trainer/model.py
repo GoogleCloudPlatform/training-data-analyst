@@ -25,8 +25,8 @@ from enum import Enum
 # Create agent components
 class DQNetwork():
     def __init__(
-        self, state_size, action_size, learning_rate, hidden_nuerons,
-            name='DQNetwork'):
+        self, state_size, action_size, learning_rate,
+            hidden_nuerons, name='DQNetwork'):
         """Creates a Deep Q Network to emulate Q-learning.
 
         Creates a two hidden-layer Deep Q Network. Similar to a typical nueral
@@ -110,7 +110,7 @@ class Memory():
         Uniformally and randomly selects experiences to train the nueral
         network on. Transposes the experiences to allow batch math one
         the experience components.
-        
+
         Args:
             batch_size (int): the number of experiences to sample
 
@@ -147,7 +147,7 @@ class Agent():
             epsilon_decay (float): The rate at which to decay random actions.
             memory_batch_size (int): The number of experiences to pull from the
                 replay memory during training.
-            memory_size (int): The maximum number of experinces the memory 
+            memory_size (int): The maximum number of experiences the memory
                 buffer can hold.
             tensorflow_session: The Tensorflow session the simulation is taking
                 place in.
@@ -191,7 +191,7 @@ class Agent():
         Args:
             get_summary (bool): True if the loss summary is requested.
 
-        Returns: 
+        Returns:
             None or a Tensorboard Summary for the training loss.
         """
         if len(self.memory.buffer) < self.memory_batch_size:
