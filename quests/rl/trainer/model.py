@@ -26,7 +26,7 @@ from enum import Enum
 class DQNetwork():
     def __init__(
         self, state_size, action_size, learning_rate,
-            hidden_nuerons, name='DQNetwork'):
+            hidden_neurons, name='DQNetwork'):
         """Creates a Deep Q Network to emulate Q-learning.
 
         Creates a two hidden-layer Deep Q Network. Similar to a typical nueral
@@ -39,7 +39,7 @@ class DQNetwork():
             action_size (int): the number of different actions the agent can
                 take.
             learning_rated (float): the nueral network's learning rate.
-            hidden_nuerons (int): the number of nuerons to use per hidden
+            hidden_neurons (int): the number of neurons to use per hidden
                 layer.
             name (str): What to call the network, as shown in tensorboard.
         """
@@ -55,13 +55,13 @@ class DQNetwork():
             # TODO(ddetering): Switch to keras.
             self.fully_connected_1 = tf.layers.dense(
                 inputs=self.states,
-                units=hidden_nuerons,
+                units=hidden_neurons,
                 activation=tf.nn.relu,
                 name="fully_connected_1")
 
             self.fully_connected_2 = tf.layers.dense(
                 inputs=self.fully_connected_1,
-                units=hidden_nuerons,
+                units=hidden_neurons,
                 activation=tf.nn.relu,
                 name="fully_connected_2")
 
