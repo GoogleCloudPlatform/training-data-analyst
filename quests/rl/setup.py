@@ -40,9 +40,9 @@ class build(_build):
 # The list of required libraries is taken from:
 # https://github.com/openai/gym#installing-everything
 _LIBS = [
-    'python-numpy', 'python-dev', 'cmake zlib1g-dev', 'libjpeg-dev', 'xvfb',
-    'libav-tools', 'xorg-dev', 'x11-utils', 'python-opengl', 'libboost-all-dev',
-    'libsdl2-dev', 'swig'
+    'python-numpy', 'python-dev', 'cmake', 'zlib1g-dev', 'libjpeg-dev', 'xvfb',
+    'libav-tools', 'xorg-dev', 'x11-utils', 'python-opengl',
+    'libboost-all-dev', 'libsdl2-dev', 'swig'
 ]
 
 CUSTOM_COMMANDS = [
@@ -83,7 +83,7 @@ class CustomCommands(setuptools.Command):
 
 
 REQUIRED_PACKAGES = [
-  'numpy==1.14.2', 'gym==0.12.5', 'keras', 'PyVirtualDisplay==0.2.4',
+  'numpy==1.14.2', 'gym[all]==0.12.5', 'PyVirtualDisplay==0.2.4',
   'pyglet==1.3.2'
 ]
 
