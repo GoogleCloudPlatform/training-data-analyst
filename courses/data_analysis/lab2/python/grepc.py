@@ -26,7 +26,7 @@ BUCKET=os.environ.get('BUCKET')
 def run():
    argv = [
       '--project={0}'.format(PROJECT),
-      '--job_name=examplejob3',
+      '--job_name=examplejob2',
       '--save_main_session',
       '--staging_location=gs://{0}/staging/'.format(BUCKET),
       '--temp_location=gs://{0}/staging/'.format(BUCKET),
