@@ -59,7 +59,7 @@ public class Ex1 {
 
     try (Connection connection = BigtableConfiguration.connect(projectId, instanceId)) {
 
-      CreateTable(connection, tableName);
+      createTable(connection, tableName);
 
       final Table table = connection.getTable(TableName.valueOf(tableName));
 
@@ -88,9 +88,9 @@ public class Ex1 {
 
         // Send the data as a Map into one of the write methods
         if (useBufferedMutator) {
-          WriteWithBufferedMutator(bufferedMutator, rowData);
+          writeWithBufferedMutator(bufferedMutator, rowData);
         } else {
-          SinglePut(table, writer, rowData);
+          singlePut(table, writer, rowData);
         }
 
         rowCount.incrementAndGet();
@@ -110,7 +110,6 @@ public class Ex1 {
       long rps = rowCount.get() / (totalTime / 1000);
       System.out.println("You wrote " + rowCount.get() + " rows at " + rps + " rows per second");
 
-      // TODO: Try running `cbt count <table>` to make sure the actual row count matches
     } catch (IOException e) {
       System.err.println("Exception while running Ex1: " + e.getMessage());
       e.printStackTrace();
@@ -118,10 +117,10 @@ public class Ex1 {
     }
   }
 
-  private static void CreateTable(Connection connection, String tableName) throws Exception {
+  private static void createTable(Connection connection, String tableName) throws Exception {
     Admin admin = connection.getAdmin();
 
-    // Don't recreate the table, it's surprisingly slow to delete and then recreate a table with
+    // Don't recreate the table, it's slow to delete and then recreate a table with
     // the same name.
     if (admin.tableExists(TableName.valueOf(tableName))) {
       admin.truncateTable(TableName.valueOf(tableName), false);
@@ -146,7 +145,7 @@ public class Ex1 {
 
   private static Put getPut(Map<String, String> data) {
     Put put = new Put(Bytes.toBytes(getRowKey(data)), Long.parseLong(data.get("time")) * 1000);
-    byte[] family = Bytes.toBytes("data");
+    byte[] family = Bytes.toBytes("column_family");
 
     for (String tag : data.keySet()) {
       // TODO: For each key/value pair in the map, add a column to the Put.
@@ -154,16 +153,13 @@ public class Ex1 {
     return put;
   }
 
-  private static void SinglePut(final Table table, ThreadPoolWriter writer, Map<String, String> data) throws Exception {
-    // TODO: For each data point, write a single row into Bigtable.
-    // Experiment with the number of threads in ThreadPoolWriter to see how Bigtable scales with concurrent writes.
+  private static void singlePut(final Table table, ThreadPoolWriter writer, Map<String, String> data) throws Exception {
     writer.execute(() -> {
-
+        // TODO: For each data point, write a single row into Bigtable.
     }, data);
   }
 
-  private static void WriteWithBufferedMutator(BufferedMutator bm, Map<String, String> data) throws Exception {
+  private static void writeWithBufferedMutator(BufferedMutator bm, Map<String, String> data) throws Exception {
     // TODO: Add the mutation to the BufferedMutator
-
   }
 }

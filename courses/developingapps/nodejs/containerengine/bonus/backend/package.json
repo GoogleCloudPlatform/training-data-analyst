@@ -9,9 +9,9 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@google-cloud/language": "^0.11.0",
-    "@google-cloud/pubsub": "^0.13.2",
-    "@google-cloud/spanner": "^0.7.1",
+    "@google-cloud/language": "^3.2.3",
+    "@google-cloud/pubsub": "^0.30.1",
+    "@google-cloud/spanner": "^3.1.0",
     "lodash": "~4.17.4",
     "nconf": "~0.8.4"
   },

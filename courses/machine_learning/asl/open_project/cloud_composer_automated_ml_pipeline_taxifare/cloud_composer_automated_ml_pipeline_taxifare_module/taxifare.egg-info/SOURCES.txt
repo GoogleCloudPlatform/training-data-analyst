@@ -1,0 +1,11 @@
+README.md
+setup.cfg
+setup.py
+taxifare.egg-info/PKG-INFO
+taxifare.egg-info/SOURCES.txt
+taxifare.egg-info/dependency_links.txt
+taxifare.egg-info/requires.txt
+taxifare.egg-info/top_level.txt
+trainer/__init__.py
+trainer/model.py
+trainer/task.py

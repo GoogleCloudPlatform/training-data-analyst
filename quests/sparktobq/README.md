@@ -49,7 +49,7 @@
 
 ### Part 4
 * Start a AI Platform Notebooks instance
-* git clone this repository
+* git clone this repository by opening a Terminal and typing ```git clone https://github.com/GoogleCloudPlatform/training-data-analyst```
 * Run ```04_bigquery.ipynb```
 
 ### Part 5

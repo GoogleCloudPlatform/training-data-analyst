@@ -1,7 +1,5 @@
 import tensorflow as tf
 
-from .globals import *
-
 from .autoencoder_dense import dense_autoencoder_model
 from .autoencoder_lstm import lstm_enc_dec_autoencoder_model
 from .autoencoder_pca import pca_model
@@ -13,8 +11,9 @@ from .reconstruction import reconstruction_evaluation
 from .tune_anomaly_threshold_vars import create_both_confusion_matrix_thresh_vars
 from .tune_anomaly_threshold_vars import create_both_mahalanobis_unsupervised_thresh_vars
 from .tune_anomaly_thresholds_supervised import tune_anomaly_thresholds_supervised_training
-from .tune_anomaly_thresholds_supervised import tune_anomaly_thresholds_evaluation
+from .tune_anomaly_thresholds_supervised import tune_anomaly_thresholds_supervised_eval
 from .tune_anomaly_thresholds_unsupervised import tune_anomaly_thresholds_unsupervised_training
+from .tune_anomaly_thresholds_unsupervised import tune_anomaly_thresholds_unsupervised_eval
 
 
 # Create our model function to be used in our custom estimator
@@ -41,17 +40,18 @@ def anomaly_detection(features, labels, mode, params):
   # Get input sequence tensor into correct shape
   # Get dynamic batch size in case there was a partially filled batch
   cur_batch_size = tf.shape(
-      input=features[UNLABELED_CSV_COLUMNS[0]], out_type=tf.int64)[0]
-
-  # Get the number of features
-  num_feat = len(UNLABELED_CSV_COLUMNS)
+      input=features[params["feat_names"][0]], out_type=tf.int64)[0]
 
   # Stack all of the features into a 3-D tensor
   # shape = (cur_batch_size, seq_len, num_feat)
   X = tf.stack(
-      values=[features[key] for key in UNLABELED_CSV_COLUMNS], axis=2)
+      values=[features[key] for key in params["feat_names"]], axis=2)
 
   ##############################################################################
+  
+  # Important to note that flags determining which variables should be created 
+  # need to remain the same through all stages or else they won't be in the
+  # checkpoint.
 
   # Variables for calculating error distribution statistics
   (abs_err_count_time_var,
@@ -62,7 +62,7 @@ def anomaly_detection(features, labels, mode, params):
    abs_err_mean_feat_var,
    abs_err_cov_feat_var,
    abs_err_inv_cov_feat_var) = create_both_mahalanobis_dist_vars(
-       seq_len=params["seq_len"], num_feat=num_feat)
+       seq_len=params["seq_len"], num_feat=params["num_feat"])
 
   # Variables for automatically tuning anomaly thresh
   if params["labeled_tune_thresh"]:
@@ -110,7 +110,9 @@ def anomaly_detection(features, labels, mode, params):
      fn_thresh_eval_feat_var,
      fp_thresh_eval_feat_var,
      tn_thresh_eval_feat_var) = create_both_confusion_matrix_thresh_vars(
-         scope="anom_thresh_eval_vars", time_thresh_size=[], feat_thresh_size=[])
+         scope="anom_thresh_eval_vars",
+         time_thresh_size=[],
+         feat_thresh_size=[])
 
   # Create dummy variable for graph dependency requiring a gradient for TRAIN
   dummy_var = tf.get_variable(
@@ -140,7 +142,7 @@ def anomaly_detection(features, labels, mode, params):
 
   # Build selected model
   loss, train_op, X_time_orig, X_time_recon, X_feat_orig, X_feat_recon = \
-    model_function(X, mode, params, cur_batch_size, num_feat, dummy_var)
+    model_function(X, mode, params, cur_batch_size, dummy_var)
 
   if not (mode == tf.estimator.ModeKeys.TRAIN and
           params["training_mode"] == "reconstruction"):
@@ -157,7 +159,6 @@ def anomaly_detection(features, labels, mode, params):
         params["training_mode"] == "calculate_error_distribution_statistics"):
       loss, train_op = calculate_error_distribution_statistics_training(
           cur_batch_size,
-          num_feat,
           X_time_abs_recon_err,
           abs_err_count_time_var,
           abs_err_mean_time_var,
@@ -194,7 +195,7 @@ def anomaly_detection(features, labels, mode, params):
             err_vec=X_feat_abs_recon_err,
             mean_vec=abs_err_mean_feat_var,
             inv_cov=abs_err_inv_cov_feat_var,
-            final_shape=num_feat)
+            final_shape=params["num_feat"])
 
       if mode != tf.estimator.ModeKeys.PREDICT:
         if params["labeled_tune_thresh"]:
@@ -221,7 +222,7 @@ def anomaly_detection(features, labels, mode, params):
                 mode,
                 dummy_var)
           elif mode == tf.estimator.ModeKeys.EVAL:
-            loss, eval_metric_ops = tune_anomaly_thresholds_evaluation(
+            loss, eval_metric_ops = tune_anomaly_thresholds_supervised_eval(
                 labels_norm_mask,
                 labels_anom_mask,
                 time_anom_thresh_var,
@@ -242,7 +243,6 @@ def anomaly_detection(features, labels, mode, params):
           if mode == tf.estimator.ModeKeys.TRAIN:
             loss, train_op = tune_anomaly_thresholds_unsupervised_training(
                 cur_batch_size,
-                num_feat,
                 time_anom_thresh_var,
                 mahalanobis_dist_time,
                 count_thresh_time_var,
@@ -255,11 +255,18 @@ def anomaly_detection(features, labels, mode, params):
                 var_thresh_feat_var,
                 params,
                 dummy_var)
+          elif mode == tf.estimator.ModeKeys.EVAL:
+            loss, eval_metric_ops = tune_anomaly_thresholds_unsupervised_eval(
+                cur_batch_size,
+                time_anom_thresh_var,
+                mahalanobis_dist_time,
+                feat_anom_thresh_var,
+                mahalanobis_dist_feat)
       else:  # mode == tf.estimator.ModeKeys.PREDICT
         predictions_dict, export_outputs = anomaly_detection_predictions(
             cur_batch_size,
             params["seq_len"],
-            num_feat,
+            params["num_feat"],
             mahalanobis_dist_time,
             mahalanobis_dist_feat,
             time_anom_thresh_var,

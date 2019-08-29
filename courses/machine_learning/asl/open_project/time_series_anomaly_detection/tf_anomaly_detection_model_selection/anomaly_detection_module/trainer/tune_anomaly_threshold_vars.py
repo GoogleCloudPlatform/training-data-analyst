@@ -96,6 +96,7 @@ def create_both_confusion_matrix_thresh_vars(
           fp_thresh_feat_var,
           tn_thresh_feat_var)
 
+
 def create_mahalanobis_unsupervised_thresh_vars(scope, var_name):
   """Creates mahalanobis unsupervised threshold variables.
 

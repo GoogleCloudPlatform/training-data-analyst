@@ -34,7 +34,27 @@ if __name__ == "__main__":
       "--seq_len",
       help="Number of timesteps to include in each example.",
       type=int,
-      default=32
+      default=30
+  )
+  parser.add_argument(
+      "--num_feat",
+      help="Number of features for each example.",
+      type=int,
+      default=5
+  )
+  
+  # Feature hyperparameters
+  parser.add_argument(
+      "--feat_names",
+      help="Names of features.",
+      type=str,
+      required=True
+  )
+  parser.add_argument(
+      "--feat_defaults",
+      help="Default values of features.",
+      type=str,
+      required=True
   )
 
   # Training parameters
@@ -51,10 +71,28 @@ if __name__ == "__main__":
       default=32
   )
   parser.add_argument(
-      "--train_steps",
-      help="Number of batches to train.",
+      "--previous_train_steps",
+      help="Number of batches previously train in other stages.",
       type=int,
-      default=2000
+      default=0
+  )
+  parser.add_argument(
+      "--reconstruction_epochs",
+      help="Number of times to go through the reconstruction dataset",
+      type=float,
+      default=1.0
+  )
+  parser.add_argument(
+      "--train_examples",
+      help="Number of examples in train file.",
+      type=int,
+      default=1024
+  )
+  parser.add_argument(
+      "--eval_examples",
+      help="Number of examples in train file.",
+      type=int,
+      default=1024
   )
   parser.add_argument(
       "--learning_rate",
@@ -87,7 +125,8 @@ if __name__ == "__main__":
   parser.add_argument(
       "--enc_dnn_hidden_units",
       help="Hidden layer sizes to use for encoder DNN.",
-      default="1024 256 64"
+      type=str,
+      default="1024,256,64"
   )
   parser.add_argument(
       "--latent_vector_size",
@@ -98,7 +137,8 @@ if __name__ == "__main__":
   parser.add_argument(
       "--dec_dnn_hidden_units",
       help="Hidden layer sizes to use for decoder DNN.",
-      default="64 256 1024"
+      type=str,
+      default="64,256,1024"
   )
   parser.add_argument(
       "--time_loss_weight",
@@ -116,35 +156,51 @@ if __name__ == "__main__":
   parser.add_argument(
       "--reverse_labels_sequence",
       help="Whether we should reverse the labels sequence dimension or not.",
-      type=bool,
-      default=True
+      type=str,
+      default="True"
   )
   parser.add_argument(
       "--enc_lstm_hidden_units",
       help="Hidden layer sizes to use for LSTM encoder.",
-      default="64 32 16"
+      type=str,
+      default="64,32,16"
   )
   parser.add_argument(
       "--dec_lstm_hidden_units",
       help="Hidden layer sizes to use for LSTM decoder.",
-      default="16 32 64"
+      type=str,
+      default="16,32,64"
   )
   parser.add_argument(
       "--lstm_dropout_output_keep_probs",
       help="Keep probabilties for LSTM outputs.",
-      default="1.0 1.0 1.0"
+      type=str,
+      default="1.0,1.0,1.0"
   )
   parser.add_argument(
       "--dnn_hidden_units",
       help="Hidden layer sizes to use for DNN.",
-      default="1024 256 64"
+      type=str,
+      default="1024,256,64"
   )
   ## PCA
   parser.add_argument(
-      "--k_principal_components",
-      help="Top k principal components to keep after eigendecomposition.",
+      "--autotune_principal_components",
+      help="Whether we should autotune the number of principal components.",
+      type=str,
+      default="False"
+  )
+  parser.add_argument(
+      "--k_principal_components_time",
+      help="Top time k principal components to keep after eigendecomposition.",
       type=int,
-      default=3
+      default=None
+  )
+  parser.add_argument(
+      "--k_principal_components_feat",
+      help="Top feat k principal components to keep after eigendecomposition.",
+      type=int,
+      default=None
   )
 
   # Anomaly detection
@@ -159,8 +215,8 @@ if __name__ == "__main__":
   parser.add_argument(
       "--labeled_tune_thresh",
       help="If we have a labeled dataset for supervised anomaly tuning.",
-      type=bool,
-      default=True
+      type=str,
+      default="True"
   )
   parser.add_argument(
       "--num_time_anom_thresh",
@@ -242,26 +298,49 @@ if __name__ == "__main__":
   # Unused args provided by service
   arguments.pop("job_dir", None)
   arguments.pop("job-dir", None)
+  
+  # Fix booleans
+  if arguments["reverse_labels_sequence"].lower() in ("yes", "true", "t", "y", "1"):
+    arguments["reverse_labels_sequence"] = True
+  else:
+    arguments["reverse_labels_sequence"] = False
+    
+  if arguments["autotune_principal_components"].lower() in ("yes", "true", "t", "y", "1"):
+    arguments["autotune_principal_components"] = True
+  else:
+    arguments["autotune_principal_components"] = False
+    
+  if arguments["labeled_tune_thresh"].lower() in ("yes", "true", "t", "y", "1"):
+    arguments["labeled_tune_thresh"] = True
+  else:
+    arguments["labeled_tune_thresh"] = False
 
   # Fix list arguments
+  arguments["feat_names"] = arguments["feat_names"].split(",")
+  arguments["feat_defaults"] = [[item] for item in arguments["feat_defaults"].split(",")]
+
   ## Dense Autoencoder
   arguments["enc_dnn_hidden_units"] = [
-      int(x) for x in arguments["enc_dnn_hidden_units"].split(" ")]
+      int(x) for x in arguments["enc_dnn_hidden_units"].split(",")]
   arguments["dec_dnn_hidden_units"] = [
-      int(x) for x in arguments["dec_dnn_hidden_units"].split(" ")]
+      int(x) for x in arguments["dec_dnn_hidden_units"].split(",")]
 
   ## LSTM Encoder-Decoder Autoencoder
   arguments["enc_lstm_hidden_units"] = [
-      int(x) for x in arguments["enc_lstm_hidden_units"].split(" ")]
+      int(x) for x in arguments["enc_lstm_hidden_units"].split(",")]
   arguments["dec_lstm_hidden_units"] = [
-      int(x) for x in arguments["dec_lstm_hidden_units"].split(" ")]
+      int(x) for x in arguments["dec_lstm_hidden_units"].split(",")]
   arguments["lstm_dropout_output_keep_probs"] = [
-      float(x) for x in arguments["lstm_dropout_output_keep_probs"].split(" ")]
+      float(x) for x in arguments["lstm_dropout_output_keep_probs"].split(",")]
   arguments["dnn_hidden_units"] = [
-      int(x) for x in arguments["dnn_hidden_units"].split(" ")]
+      int(x) for x in arguments["dnn_hidden_units"].split(",")]
 
   # Fix eps argument
   arguments["eps"] = float(arguments["eps"])
+  
+  # If doing PCA, then add autotune PC key to dictionary
+  if arguments["model_type"] == "pca":
+    arguments["autotune_principal_components"] = False
 
   # Append trial_id to path if we are doing hptuning
   # This code can be removed if you are not using hyperparameter tuning

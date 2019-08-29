@@ -10,13 +10,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+'use strict';
+
 const config = require('../config');
-const Spanner = require('@google-cloud/spanner');
+const {Spanner} = require('@google-cloud/spanner');
 
-const spanner = Spanner({
-    projectID: config.get('GCLOUD_PROJECT')
-});
+const GCLOUD_PROJECT = config.get('GCLOUD_PROJECT');
 
+const spanner = new Spanner({GCLOUD_PROJECT});
 const instance = spanner.instance('quiz-instance');
 const database = instance.database('quiz-database');
 const table = database.table('feedback');
@@ -43,5 +45,5 @@ function saveFeedback(
 
 
 module.exports = {
-    saveFeedback
+    saveFeedback,
 };

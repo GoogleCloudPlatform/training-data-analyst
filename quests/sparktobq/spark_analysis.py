@@ -66,6 +66,6 @@ import google.cloud.storage as gcs
 bucket = gcs.Client().get_bucket(BUCKET)
 for blob in bucket.list_blobs(prefix='sparktobq/'):
     blob.delete()
-bucket.blob('sparktobq/report.pdf').upload_from_filename('report.pdf')
+bucket.blob('sparktobq/report.png').upload_from_filename('report.png')
 connections_by_protocol.write.format("csv").mode("overwrite").save(
     "gs://{}/sparktobq/connections_by_protocol".format(BUCKET))

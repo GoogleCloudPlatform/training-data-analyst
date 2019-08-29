@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-from .globals import *
 
 # Serving input functions
 def fix_shape_and_type_for_serving(placeholder):
@@ -63,12 +62,13 @@ def get_shape_and_set_modified_shape_2D(tensor, additional_dimension_sizes):
   return tensor
 
 
-def serving_input_fn(seq_len):
+def serving_input_fn(feat_names, seq_len):
   """Serving input function.
 
   Given the sequence length, return ServingInputReceiver object.
 
   Args:
+    feat_names: List of string names of features.
     seq_len: Number of timesteps in sequence.
 
   Returns:
@@ -80,7 +80,7 @@ def serving_input_fn(seq_len):
   feature_placeholders = {
       feature: tf.placeholder(
           dtype=tf.string, shape=[None])
-      for feature in UNLABELED_CSV_COLUMNS
+      for feature in feat_names
   }
 
   # Create feature tensors
