@@ -14,74 +14,36 @@
 
 """A deep Q network to show reinforcement learning on the cloud."""
 
-import numpy as np
-import random
-import tensorflow as tf
-
 from collections import deque
-from enum import Enum
+import random
+
+import numpy as np
+import tensorflow as tf
 
 
 # Create agent components
-class DQNetwork():
-    def __init__(
-        self, state_size, action_size, learning_rate,
-            hidden_neurons, name='DQNetwork'):
-        """Creates a Deep Q Network to emulate Q-learning.
+def deep_q_network(state_shape, action_size, learning_rate, hidden_neurons):
+    """Creates a Deep Q Network to emulate Q-learning.
 
-        Creates a two hidden-layer Deep Q Network. Similar to a typical nueral
-        network, the loss function is altered to reduce the difference between
-        predicted Q-values and Target Q-values.
+    Creates a two hidden-layer Deep Q Network. Similar to a typical nueral
+    network, the loss function is altered to reduce the difference between
+    predicted Q-values and Target Q-values.
 
-        Args:
-            state_size (int): the number of parameters used to define the state
-                the agent is in.
-            action_size (int): the number of different actions the agent can
-                take.
-            learning_rated (float): the nueral network's learning rate.
-            hidden_neurons (int): the number of neurons to use per hidden
-                layer.
-            name (str): What to call the network, as shown in tensorboard.
-        """
-        with tf.variable_scope(name):
-            self.states = tf.placeholder(
-                tf.float32, shape=((None,) + state_size), name='states')
-            self.actions = tf.placeholder(
-                tf.int32, shape=(None), name='actions')
-
-            # target_Q is R(s,a) + ymax Qhat(s', a')
-            self.target_Q = tf.placeholder(tf.float32, [None], name="target")
-
-            # TODO(ddetering): Switch to keras.
-            self.fully_connected_1 = tf.layers.dense(
-                inputs=self.states,
-                units=hidden_neurons,
-                activation=tf.nn.relu,
-                name="fully_connected_1")
-
-            self.fully_connected_2 = tf.layers.dense(
-                inputs=self.fully_connected_1,
-                units=hidden_neurons,
-                activation=tf.nn.relu,
-                name="fully_connected_2")
-
-            self.output = tf.layers.dense(
-                inputs=self.fully_connected_2,
-                units=action_size,
-                activation=None)
-
-            # Hot encode and multiply across to select Q value for an action.
-            self.actions_hot = tf.one_hot(self.actions, action_size)
-            # Q is our predicted Q value.
-            self.Q = tf.reduce_sum(
-                tf.multiply(self.output, self.actions_hot), axis=1)
-
-            # The loss is the difference between predicted Q_values and
-            # the Q_target Sum(Qtarget - Q)^2
-            self.loss = tf.reduce_mean(tf.square(self.target_Q - self.Q))
-            self.optimizer = (
-                tf.train.RMSPropOptimizer(learning_rate).minimize(self.loss))
-            tf.summary.scalar("loss", self.loss)  # Track in Tensorboard.
+    Args:
+        space_shapes ():
+        learning_rate (float): the nueral network's learning rate.
+        hidden_neurons (int): the number of neurons to use per hidden
+            layer.
+    """
+    model = tf.keras.Sequential([
+        tf.keras.layers.Dense(
+            hidden_neurons, activation='relu', input_shape=state_shape),
+        tf.keras.layers.Dense(hidden_neurons, activation='relu'),
+        tf.keras.layers.Dense(action_size)
+    ])
+    optimizer = tf.keras.optimizers.RMSprop(lr=learning_rate)
+    model.compile(loss='mse', optimizer=optimizer)
+    return model
 
 
 class Memory():
@@ -92,9 +54,16 @@ class Memory():
     other methods. For instance, a weight could be given to each memory
     depending on how big of a difference there is between predicted Q values
     and target Q values.
+
+    Args:
+        memory_size (int): How many elements to hold in the memory buffer.
+        batch_size (int): The number of elements to include in a replay batch.
+        gamma (float): The "discount rate" used to assess Q values.
     """
-    def __init__(self, memory_size):
+    def __init__(self, memory_size, batch_size, gamma):
         self.buffer = deque(maxlen=memory_size)
+        self.batch_size = batch_size
+        self.gamma = gamma
 
     def add(self, experience):
         """Adds an experience into the memory buffer.
@@ -104,15 +73,12 @@ class Memory():
         """
         self.buffer.append(experience)
 
-    def sample(self, batch_size):
+    def sample(self):
         """Uniformally selects from the replay memory buffer.
 
         Uniformally and randomly selects experiences to train the nueral
-        network on. Transposes the experiences to allow batch math one
+        network on. Transposes the experiences to allow batch math on
         the experience components.
-
-        Args:
-            batch_size (int): the number of experiences to sample
 
         Returns:
             (list): A list of lists with structure [
@@ -121,44 +87,32 @@ class Memory():
         """
         buffer_size = len(self.buffer)
         index = np.random.choice(
-            np.arange(buffer_size), size=batch_size, replace=False)
+            np.arange(buffer_size), size=self.batch_size, replace=False)
 
         # Columns have different data types, so numpy array would be awkward.
-        return np.array([self.buffer[i] for i in index]).T.tolist()
+        batch = np.array([self.buffer[i] for i in index]).T.tolist()
+        states_mb = tf.convert_to_tensor(np.array(batch[0], dtype=np.float32))
+        actions_mb = np.array(batch[1], dtype=np.int8)
+        rewards_mb = np.array(batch[2], dtype=np.float32)
+        states_prime_mb = np.array(batch[3], dtype=np.float32)
+        dones_mb = batch[4]
+        return states_mb, actions_mb, rewards_mb, states_prime_mb, dones_mb
 
 
 # Create agent
 class Agent():
     """Sets up a reinforcement learning agent to play in a game environment."""
-    def __init__(
-            self, state_size, action_size, learning_rate, hidden_nuerons,
-            gamma, epsilon_decay, memory_batch_size, memory_size,
-            tensorflow_session):
+    def __init__(self, network, memory, epsilon_decay, action_size):
         """Initializes the agent with DQN and memory sub-classes.
 
         Args:
-            state_size (tuple of ints): The shape and size of the parameters
-                outputed by the game environment.
-            action_size (int): The number of actions the agent may choose from.
-            learning_rate (int): The nueral network learning rate.
-            hidden_nuerons (int): The number of hidden nuerons per layer of
-                the DQN.
-            gamma (float): The "discount rate" used to assess Q values.
+            network:
+            memory:
             epsilon_decay (float): The rate at which to decay random actions.
-            memory_batch_size (int): The number of experiences to pull from the
-                replay memory during training.
-            memory_size (int): The maximum number of experiences the memory
-                buffer can hold.
-            tensorflow_session: The Tensorflow session the simulation is taking
-                place in.
         """
+        self.network = network
         self.action_size = action_size
-        self.brain = DQNetwork(
-            state_size, action_size, learning_rate, hidden_nuerons)
-        self.memory = Memory(memory_size)
-        self.session = tensorflow_session
-        self.memory_batch_size = memory_batch_size
-        self.gamma = gamma
+        self.memory = memory
         self.epsilon = 1  # The chance to take a random action.
         self.epsilon_decay = epsilon_decay
 
@@ -174,59 +128,47 @@ class Agent():
         """
         if training:
             # Random actions until enough simulations to train the model.
-            if len(self.memory.buffer) >= self.memory_batch_size:
+            if len(self.memory.buffer) >= self.memory.batch_size:
                 self.epsilon *= self.epsilon_decay
 
-            if (self.epsilon > np.random.rand()):
+            if self.epsilon > np.random.rand():
                 return random.randint(0, self.action_size-1)
 
         # If not acting randomly, take action with highest predicted value.
-        Qs = self.session.run(
-            self.brain.output, feed_dict={self.brain.states: [state]})
-        return np.argmax(Qs)
+        state_batch = np.expand_dims(state, axis=0)
+        action_qs = self.network.predict(state_batch)
+        return np.argmax(action_qs)
 
-    def learn(self, get_summary):
+    def learn(self):
         """Trains the Deep Q Network based on stored experiences.
-
-        Args:
-            get_summary (bool): True if the loss summary is requested.
 
         Returns:
             None or a Tensorboard Summary for the training loss.
         """
-        if len(self.memory.buffer) < self.memory_batch_size:
-            return
-        brain = self.brain
+        batch_size = self.memory.batch_size
+        if len(self.memory.buffer) < batch_size:
+            return None
 
         # Obtain random mini-batch from memory.
         states_mb, actions_mb, rewards_mb, states_prime_mb, dones_mb = (
-            self.memory.sample(self.memory_batch_size))
+            self.memory.sample())
 
         # Get Q values for next_state.
-        Qs_next_state = self.session.run(
-            brain.output, feed_dict={brain.states: states_prime_mb})
+        qs_state_prime = self.network.predict(states_prime_mb)
+        qs_state_prime = tf.math.reduce_max(qs_state_prime, axis=1)
 
-        # Set Q_target = r if the episode ends at s+1.
-        # Otherwise set Q_target = r + gamma*maxQ(s', a').
-        target_Qs_batch = np.array([
-            rewards_mb[i] if dones_mb[i]
-            else rewards_mb[i] + self.gamma * np.max(Qs_next_state[i])
-            for i in range(len(rewards_mb))
-        ])
+        target_qs = (qs_state_prime * self.memory.gamma) + rewards_mb
+        target_qs = tf.where(dones_mb, rewards_mb, target_qs)
+        actions_hot = tf.one_hot(actions_mb, self.action_size)
+        actions_mask = tf.greater(actions_hot, 0)
+        target_mask = tf.multiply(tf.expand_dims(target_qs, -1), actions_hot)
 
-        targets_mb = np.array(target_Qs_batch)
-        model_feed = {
-            brain.states: states_mb,
-            brain.target_Q: targets_mb,
-            brain.actions: actions_mb,
-        }
+        qs_current_state = self.network.predict(states_mb, steps=1)
+        training_feed = tf.where(actions_mask, target_mask, qs_current_state)
 
-        # Merge summaries for tensorboard.
-        if get_summary:
-            _, _, summary = self.session.run(
-                [brain.loss, brain.optimizer, tf.summary.merge_all()],
-                feed_dict=model_feed)
-            return summary
+        self.network.fit(
+            states_mb, training_feed, batch_size=batch_size, epochs=1,
+            steps_per_epoch=1, verbose=0
+        )
 
-        self.session.run([brain.loss, brain.optimizer], feed_dict=model_feed)
-        return
+        return None

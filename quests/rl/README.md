@@ -14,7 +14,7 @@ From this directory, to run on GCP's hyperparameter tuning service:
 
 ```
 BUCKET=<my-awesome-bucket>
-JOBNAME=<my-awesome-job-name>
+JOBNAME=<my-awesome-job-name>_$(date -u +%y%m%d_%H%M%S)
 REGION='us-central1'
 
 gcloud ml-engine jobs submit training $JOBNAME --package-path=$PWD/trainer --module-name=trainer.trainer --region=$REGION --staging-bucket=gs://$BUCKET --scale-tier=BASIC --runtime-version=1.10 --job-dir=gs://$BUCKET/$JOBNAME --config=hyperparam.yaml
