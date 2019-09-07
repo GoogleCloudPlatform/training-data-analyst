@@ -31,4 +31,4 @@ cd training-data-analyst/courses/bdml_fundamentals/demos/earthquakevm
 * Refresh the Storage | Browser to verify that you have new files in Cloud Storage
 * Edit the bucket permissions and add a new member named ```allUsers``` 
 and give this member Cloud Storage Object Viewer permissions
-* Visit https://storageapis.google.com/BUCKET/earthquakes.htm
+* Visit https://storage.googleapis.com/BUCKET/earthquakes.htm
