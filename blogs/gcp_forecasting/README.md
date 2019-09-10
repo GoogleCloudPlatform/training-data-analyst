@@ -1,6 +1,6 @@
 ## How to quickly solve machine learning forecasting problems using Pandas and BigQuery
 
-Read more about this solution in the [article](TODO).
+Read more about this solution in the [article](https://cloud.google.com/blog/products/ai-machine-learning/how-to-quickly-solve-machine-learning-forecasting-problems-using-pandas-and-bigquery).
 
 Below is a good workflow for tackling forecasting problems:
 
