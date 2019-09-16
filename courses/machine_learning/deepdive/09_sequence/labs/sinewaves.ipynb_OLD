@@ -21,7 +21,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# You must update BUCKET, PROJECT, and REGION to proceed with the lab\n",
+    "# change these to try this notebook out\n",
     "BUCKET = 'cloud-training-demos-ml'\n",
     "PROJECT = 'cloud-training-demos'\n",
     "REGION = 'us-central1'\n",
@@ -57,9 +57,6 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "import warnings\n",
-    "warnings.filterwarnings(\"ignore\")\n",
-    "\n",
     "import tensorflow as tf\n",
     "print(tf.__version__)"
    ]
@@ -103,9 +100,6 @@
     "  os.makedirs('data/sines/')\n",
     "except OSError:\n",
     "  pass\n",
-    "\n",
-    "np.random.seed(1) # makes data generation reproducible\n",
-    "\n",
     "to_csv('data/sines/train-1.csv', 1000)  # 1000 sequences\n",
     "to_csv('data/sines/valid-1.csv', 250)"
    ]
@@ -127,12 +121,11 @@
     "\n",
     "Make sure the code works as intended.\n",
     "\n",
-    "Please remember to update the \"--model=\" variable on the last line of the command\n",
+    "The `model.py` and `task.py` containing the model code is in <a href=\"sinemodel\">sinemodel/</a>\n",
     "\n",
-    "You may ignore any tensorflow deprecation warnings.\n",
+    "**Complete the TODOs in `model.py` before proceeding!**\n",
     "\n",
-    "<b>Note:</b> This step will be complete when you see a message similar to the following: \n",
-    "\"INFO : tensorflow :Loss for final step: N.NNN...N\""
+    "Once you've completed the TODOs, set `--model` below to the appropriate model (linear,dnn,cnn,rnn,rnn2 or rnnN) and run it locally for a few steps to test the code."
    ]
   },
   {
@@ -145,7 +138,7 @@
     "DATADIR=$(pwd)/data/sines\n",
     "OUTDIR=$(pwd)/trained/sines\n",
     "rm -rf $OUTDIR\n",
-    "gcloud ai-platform local train \\\n",
+    "gcloud ml-engine local train \\\n",
     "   --module-name=sinemodel.task \\\n",
     "   --package-path=${PWD}/sinemodel \\\n",
     "   -- \\\n",
@@ -159,9 +152,9 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "<h3> Cloud AI Platform</h3>\n",
+    "<h3> Cloud ML Engine </h3>\n",
     "\n",
-    "Now to train on Cloud AI Platform with more data."
+    "Now to train on Cloud ML Engine with more data."
    ]
   },
   {
@@ -173,7 +166,6 @@
     "import shutil\n",
     "shutil.rmtree('data/sines', ignore_errors=True)\n",
     "os.makedirs('data/sines/')\n",
-    "np.random.seed(1) # makes data generation reproducible\n",
     "for i in range(0,10):\n",
     "  to_csv('data/sines/train-{}.csv'.format(i), 1000)  # 1000 sequences\n",
     "  to_csv('data/sines/valid-{}.csv'.format(i), 250)"
@@ -201,12 +193,13 @@
     "  OUTDIR=gs://${BUCKET}/sinewaves/${MODEL}\n",
     "  JOBNAME=sines_${MODEL}_$(date -u +%y%m%d_%H%M%S)\n",
     "  gsutil -m rm -rf $OUTDIR\n",
-    "  gcloud ai-platform jobs submit training $JOBNAME \\\n",
+    "  gcloud ml-engine jobs submit training $JOBNAME \\\n",
     "     --region=$REGION \\\n",
     "     --module-name=sinemodel.task \\\n",
     "     --package-path=${PWD}/sinemodel \\\n",
     "     --job-dir=$OUTDIR \\\n",
-    "     --scale-tier=BASIC \\\n",
+    "     --staging-bucket=gs://$BUCKET \\\n",
+    "     --scale-tier=BASIC_GPU \\\n",
     "     --runtime-version=$TFVERSION \\\n",
     "     -- \\\n",
     "     --train_data_path=\"gs://${BUCKET}/sines/train*.csv\" \\\n",
@@ -222,11 +215,28 @@
    "source": [
     "## Monitor training with TensorBoard\n",
     "\n",
-    "To activate TensorBoard within the JupyterLab UI navigate to \"<b>File</b>\" - \"<b>New Launcher</b>\".   Then double-click the 'Tensorboard' icon on the bottom row.\n",
-    "\n",
-    "TensorBoard 1 will appear in the new tab.  Navigate through the three tabs to see the active TensorBoard.   The 'Graphs' and 'Projector' tabs offer very interesting information including the ability to replay the tests.\n",
-    "\n",
-    "You may close the TensorBoard tab when you are finished exploring."
+    "Use this cell to launch tensorboard. If tensorboard appears blank try refreshing after 5 minutes"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from google.datalab.ml import TensorBoard\n",
+    "TensorBoard().start('gs://{}/sinewaves'.format(BUCKET))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "for pid in TensorBoard.list()['pid']:\n",
+    "  TensorBoard().stop(pid)\n",
+    "  print('Stopped TensorBoard with pid {}'.format(pid))"
    ]
   },
   {
@@ -235,21 +245,16 @@
    "source": [
     "## Results\n",
     "\n",
-    "When I ran it, these were the RMSEs that I got for different models. Your results will vary:\n",
+    "Complete the below table with your own results! Then compare your results to the results in the solution notebook.\n",
     "\n",
     "| Model | Sequence length | # of steps | Minutes | RMSE |\n",
     "| --- | ----| --- | --- | --- | \n",
-    "| linear | 50 | 3000 | 10 min | 0.150 |\n",
-    "| dnn | 50 | 3000 | 10 min | 0.101 |\n",
-    "| cnn | 50 | 3000 | 10 min | 0.105 |\n",
-    "| rnn | 50 | 3000 | 11 min | 0.100 |\n",
-    "| rnn2 | 50 | 3000 | 14 min |0.105 |\n",
-    "| rnnN | 50 | 3000 | 15 min | 0.097 |\n",
-    "\n",
-    "### Analysis\n",
-    "You can see there is a significant improvement when switching from the linear model to non-linear models. But within the the non-linear models (DNN/CNN/RNN) performance for all is pretty similar. \n",
-    "\n",
-    "Perhaps it's because this is too simple of a problem to require advanced deep learning models. In the next lab we'll deal with a problem where an RNN is more appropriate."
+    "| linear | 50 | 3000 | - | - |\n",
+    "| dnn | 50 | 3000 | - | - |\n",
+    "| cnn | 50 | 3000 | - | - |\n",
+    "| rnn | 50 | 3000 | - | - |\n",
+    "| rnn2 | 50 | 3000 | - | - |\n",
+    "| rnnN | 50 | 3000 | - | - |"
    ]
   },
   {
@@ -276,9 +281,9 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.5.3"
+   "version": "3.5.5"
   }
  },
  "nbformat": 4,
- "nbformat_minor": 4
+ "nbformat_minor": 2
 }
