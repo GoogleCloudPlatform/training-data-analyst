@@ -147,7 +147,7 @@ class Agent():
         """
         batch_size = self.memory.batch_size
         if len(self.memory.buffer) < batch_size:
-            return None
+            return
 
         # Obtain random mini-batch from memory.
         states_mb, actions_mb, rewards_mb, states_prime_mb, dones_mb = (
@@ -171,4 +171,4 @@ class Agent():
             steps_per_epoch=1, verbose=0
         )
 
-        return None
+        return

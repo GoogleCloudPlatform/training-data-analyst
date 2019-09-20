@@ -19,15 +19,19 @@ import json
 import os
 import sys
 
+sys.path.append('/root/.local/lib/python3.6/site-packages')
+
 from google.cloud import storage
 import gym
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
+import hypertune
 from pyvirtualdisplay import Display
 import tensorflow as tf
 
 from . import model
 
 RECORDING_NAME = "recording.mp4"
+sys.stdout.flush()
 
 
 def _parse_arguments(argv):
@@ -87,7 +91,7 @@ def _parse_arguments(argv):
         '--score_print_rate',
         help='How often to print the score, 0 if never',
         type=int,
-        default=0)
+        default=20)
     parser.add_argument(
         '--eval_rate',
         help="""While training, perform an on-policy simulation and record
@@ -118,9 +122,8 @@ def _run(args):
         trial_id = json.loads(
             os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
         output_path = args.job_dir if not trial_id else args.job_dir + '/'
-        #train_writer = tf.compat.v1.summary.FileWriter(output_path + "train", sess.graph)
-        #eval_writer = tf.compat.v1.summary.FileWriter(output_path + "eval", sess.graph)
         saver = tf.compat.v1.train.Saver()
+        hpt = hypertune.HyperTune()
 
         def _train_or_evaluate(print_score, get_summary, training=False):
             """Runs a gaming simulation and writes results for tensorboard.
@@ -138,21 +141,14 @@ def _run(args):
                     'Total reward: {}'.format(reward),
                 )
 
-            #writer = train_writer if training else eval_writer
             if training:
-                #get_loss = not trial_id and get_summary
-                loss_summary = agent.learn() if training else None
-                if not loss_summary:
-                    return
+                agent.learn()
+                return
 
-                #writer.add_summary(loss_summary, global_step=episode)
-                #writer.flush()
-
-            reward_value = tf.compat.v1.Summary.Value(
-                tag='episode_reward', simple_value=reward)
-            reward_summary = tf.compat.v1.Summary(value=[reward_value])
-            #writer.add_summary(reward_summary, global_step=episode)
-            #writer.flush()
+            hpt.report_hyperparameter_tuning_metric(
+                hyperparameter_metric_tag='episode_reward',
+                metric_value=reward,
+                global_step=episode)
 
         for episode in range(1, args.episodes+1):
             get_summary = args.eval_rate and episode % args.eval_rate == 0
@@ -252,4 +248,5 @@ def main():
 
 
 if __name__ == '__main__':
+    print("hi")
     main()

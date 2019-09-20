@@ -7,7 +7,7 @@ Demonstrates how to use GCP Hyperparamter tuning for Deep Q Networks.
 From this directory, to run locally:
 
 ```
-gcloud ml-engine local train --module-name=trainer.trainer --package-path=$PWD/trainer/
+gcloud ai-platform local train --module-name=trainer.trainer --package-path=$PWD/trainer/
 ```
 
 From this directory, to run on GCP's hyperparameter tuning service:
@@ -17,7 +17,7 @@ BUCKET=<my-awesome-bucket>
 JOBNAME=<my-awesome-job-name>_$(date -u +%y%m%d_%H%M%S)
 REGION='us-central1'
 
-gcloud ml-engine jobs submit training $JOBNAME --package-path=$PWD/trainer --module-name=trainer.trainer --region=$REGION --staging-bucket=gs://$BUCKET --scale-tier=BASIC --runtime-version=1.10 --job-dir=gs://$BUCKET/$JOBNAME --config=hyperparam.yaml
+gcloud ai-platform jobs submit training $JOBNAME --package-path=$PWD/trainer --module-name=trainer.trainer --region=$REGION --staging-bucket=gs://$BUCKET --scale-tier=BASIC --runtime-version=1.10 --job-dir=gs://$BUCKET/$JOBNAME --config=hyperparam.yaml
 ```
 
 ## Resources
@@ -27,7 +27,7 @@ This code was inspired by the following resources:
 * [Georgia Tech's Machine Learning Specialization](https://www.omscs.gatech.edu/specialization-machine-learning)
 
 
-## Todos
-* Add more detail to this readme
-* Move to keras and TF2.0
-* Reduce the amount of time to finish training (currently 20 minutes)
+export IMAGE_REPO_NAME=ai_gym_tf2_container
+export IMAGE_URI=gcr.io/$BUCKET/$IMAGE_REPO_NAME
+
+gcloud builds submit --tag IMAGE_URI .
