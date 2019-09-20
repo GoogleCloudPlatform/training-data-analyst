@@ -25,9 +25,3 @@ This code was inspired by the following resources:
 * [An introduction to Deep Q-Learning: let’s play Doom](https://www.freecodecamp.org/news/an-introduction-to-deep-q-learning-lets-play-doom-54d02d8017d8/) by Thomas Simonini
 * [Deep reinforcement learning on GCP: using hyperparameter tuning and Cloud ML Engine to best OpenAI Gym games](https://cloud.google.com/blog/products/ai-machine-learning/deep-reinforcement-learning-on-gcp-using-hyperparameters-and-cloud-ml-engine-to-best-openai-gym-games) by Praneet Dutta, Chris Rawles, and Yujin Tang
 * [Georgia Tech's Machine Learning Specialization](https://www.omscs.gatech.edu/specialization-machine-learning)
-
-
-export IMAGE_REPO_NAME=ai_gym_tf2_container
-export IMAGE_URI=gcr.io/$BUCKET/$IMAGE_REPO_NAME
-
-gcloud builds submit --tag IMAGE_URI .
