@@ -13,7 +13,7 @@ This one day workshop provides a hands-on introduction to designing and building
 
 ## Coursework: Slide Presentations
 - [Student PDF version](https://storage.cloud.google.com/cloud-training/serverlessml/1.0/slides/Serverless%20ML%20with%20TensorFlow%20and%20BigQuery.pdf?folder=true&organizationId=true)
-- [Instructor Google Slides version](https://docs.google.com/presentation/d/1ZLEK1aQOUXjly1tTDKrY_1YvRciGbW6WF8ipXCEk_Kw/edit)
+- Instructor Version: (See link in Qwiklabs classroom)
 
 ## Coursework: Hands-On Labs
 
