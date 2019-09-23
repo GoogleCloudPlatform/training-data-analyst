@@ -12,7 +12,6 @@ This one day workshop provides a hands-on introduction to designing and building
 - Basic familiarity with [Python](https://en.wikipedia.org/wiki/Python_(programming_language))
 
 ## Coursework: Slide Presentations
-- [9/23 Strata Workshop - Qwiklabs Lab Signup](https://forms.gle/2TjwjeSr2XMBFZYc8)
 - [Student PDF version](https://storage.cloud.google.com/cloud-training/serverlessml/1.0/slides/Serverless%20ML%20with%20TensorFlow%20and%20BigQuery.pdf?folder=true&organizationId=true)
 - Instructor Version: (See link in Qwiklabs classroom)
 
