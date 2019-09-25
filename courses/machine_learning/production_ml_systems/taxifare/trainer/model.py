@@ -165,7 +165,7 @@ def rmse(y_true, y_pred):
     return tf.sqrt(tf.reduce_mean(tf.square(y_pred - y_true)))
 
 
-def build_dnn_model(nbuckets, hidden_layers_neurons):
+def build_dnn_model(nbuckets, nnsize):
     # input layer is all float except for pickup_datetime which is a string
     STRING_COLS = ['pickup_datetime']
     NUMERIC_COLS = (
@@ -186,7 +186,7 @@ def build_dnn_model(nbuckets, hidden_layers_neurons):
     dnn_inputs = DenseFeatures(feature_columns.values())(transformed)
 
     x = dnn_inputs
-    for layer, neurons in enumerate(hidden_layers_neurons):
+    for layer, neurons in enumerate(nnsize):
         x = Dense(neurons, activation='relu', name='h{}'.format(layer))(x)
     output = Dense(1, name='fare')(x)
 
@@ -197,13 +197,13 @@ def build_dnn_model(nbuckets, hidden_layers_neurons):
 
 def train_and_evaluate(hparams):
     batch_size = hparams['batch_size']
-    train_data_path = hparams['train_data_path']
     eval_data_path = hparams['eval_data_path']
-    num_train_examples = hparams['num_train_examples']
-    num_evals = hparams['num_evals']
-    output_dir = hparams['output_dir']
+    nnsize = hparams['nnsize']
     nbuckets = hparams['nbuckets']
-    hidden_layers_neurons = hparams['hidden_layers_neurons']
+    num_evals = hparams['num_evals']
+    num_examples_to_train_on = hparams['num_examples_to_train_on']
+    output_dir = hparams['output_dir']
+    train_data_path = hparams['train_data_path']
 
     timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     savedmodel_dir = os.path.join(output_dir, 'export/savedmodel')
@@ -214,13 +214,16 @@ def train_and_evaluate(hparams):
     if tf.io.gfile.exists(output_dir):
         tf.io.gfile.rmtree(output_dir)
 
-    model = build_dnn_model(nbuckets, hidden_layers_neurons)
+    model = build_dnn_model(nbuckets, nnsize)
     logging.info(model.summary())
 
     trainds = create_train_dataset(train_data_path, batch_size)
     evalds = create_eval_dataset(eval_data_path, batch_size)
 
-    steps_per_epoch = num_train_examples // (batch_size * num_evals)
+    steps_per_epoch = num_examples_to_train_on // (batch_size * num_evals)
+    print("num_examples_to_train_on", num_examples_to_train_on)
+    print("batch_size * num_evals", batch_size * num_evals)
+    print("STEP PER EPOCH", steps_per_epoch)
 
     checkpoint_cb = ModelCheckpoint(
         checkpoint_path,
@@ -233,7 +236,7 @@ def train_and_evaluate(hparams):
         trainds,
         validation_data=evalds,
         epochs=num_evals,
-        steps_per_epoch=steps_per_epoch,
+        steps_per_epoch=max(1, steps_per_epoch),
         verbose=2,  # 0=silent, 1=progress bar, 2=one line per epoch
         callbacks=[checkpoint_cb, tensorboard_cb]
     )
@@ -241,3 +244,4 @@ def train_and_evaluate(hparams):
     # Exporting the model with default serving function.
     tf.saved_model.save(model, model_export_path)
     return history
+
