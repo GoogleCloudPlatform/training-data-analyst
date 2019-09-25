@@ -7,4 +7,4 @@ RUN apt update && \
     pip3 install /code 
 
 
-ENTRYPOINT ["python3", "/trainer/task.py"]
+ENTRYPOINT ["python3", "/code/trainer/task.py"]
