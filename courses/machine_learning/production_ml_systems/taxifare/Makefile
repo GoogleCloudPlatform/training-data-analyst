@@ -24,10 +24,14 @@ build: pyclean
 push: 
 	@./scripts/push.sh
 
+.PHONY: submit
+submit: 
+	@./scripts/submit.sh
+
 .PHONY: login
 login: 
 	@./scripts/login.sh
 
-.PHONY: tests
-tests: 
-	@./scripts/tests.sh
+.PHONY: test
+test: 
+	@./scripts/test.sh
