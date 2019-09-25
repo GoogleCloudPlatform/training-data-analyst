@@ -221,9 +221,6 @@ def train_and_evaluate(hparams):
     evalds = create_eval_dataset(eval_data_path, batch_size)
 
     steps_per_epoch = num_examples_to_train_on // (batch_size * num_evals)
-    print("num_examples_to_train_on", num_examples_to_train_on)
-    print("batch_size * num_evals", batch_size * num_evals)
-    print("STEP PER EPOCH", steps_per_epoch)
 
     checkpoint_cb = ModelCheckpoint(
         checkpoint_path,
