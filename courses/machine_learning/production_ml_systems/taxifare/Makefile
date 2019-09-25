@@ -15,3 +15,19 @@ pyclean:
 .PHONY: clean
 clean: pyclean
 	@rm -r ./venv || echo OK
+
+.PHONY: build
+build: pyclean
+	@./scripts/build.sh
+
+.PHONY: push
+push: 
+	@./scripts/push.sh
+
+.PHONY: login
+login: 
+	@./scripts/login.sh
+
+.PHONY: tests
+tests: 
+	@./scripts/tests.sh
