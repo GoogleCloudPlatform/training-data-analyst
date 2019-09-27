@@ -19,13 +19,10 @@ import json
 import os
 import sys
 
-sys.path.append('/root/.local/lib/python3.6/site-packages')
-
 from google.cloud import storage
 import gym
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 import hypertune
-from pyvirtualdisplay import Display
 import tensorflow as tf
 
 from . import model
@@ -91,7 +88,7 @@ def _parse_arguments(argv):
         '--score_print_rate',
         help='How often to print the score, 0 if never',
         type=int,
-        default=20)
+        default=0)
     parser.add_argument(
         '--eval_rate',
         help="""While training, perform an on-policy simulation and record
@@ -99,7 +96,7 @@ def _parse_arguments(argv):
         higher values to avoid hyperparameter tuning "too many metrics"
         error""",
         type=int,
-        default=400)
+        default=20)
     return parser.parse_known_args(argv)
 
 
@@ -122,7 +119,6 @@ def _run(args):
         trial_id = json.loads(
             os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
         output_path = args.job_dir if not trial_id else args.job_dir + '/'
-        saver = tf.compat.v1.train.Saver()
         hpt = hypertune.HyperTune()
 
         def _train_or_evaluate(print_score, get_summary, training=False):
@@ -224,12 +220,9 @@ def _record_video(env, agent, output_path):
       agent: An RL agent created by _create_agent.
       output_path (str): The directory path of where to save the recording.
     """
-    virtual_display = Display(visible=0, size=(1400, 900))
-    virtual_display.start()
     video_recorder = VideoRecorder(env, RECORDING_NAME)
     _play(agent, env, False, recorder=video_recorder)
     video_recorder.close()
-    virtual_display.stop()
     env.close()
 
     # Check if output directory is google cloud and save there if so.
@@ -248,5 +241,4 @@ def main():
 
 
 if __name__ == '__main__':
-    print("hi")
     main()
