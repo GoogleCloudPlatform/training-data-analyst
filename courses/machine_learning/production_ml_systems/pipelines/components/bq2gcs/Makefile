@@ -1,4 +1,4 @@
-all: clean build push
+all: clean substitute build push
 
 
 .PHONY: pyclean
@@ -27,3 +27,7 @@ login:
 .PHONY: test
 test: 
 	@./scripts/test.sh
+
+.PHONY: substitute
+substitute: 
+	@./scripts/substitute.sh
