@@ -4,4 +4,4 @@
 
 BUCKET=$PROJECT_ID
 
-$SCRIPTS_DIR/run.sh $BUCKET
+$SCRIPTS_DIR/run.sh --bucket $BUCKET
