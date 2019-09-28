@@ -9,7 +9,7 @@ inputs:
 
 implementation:
   container:
-    image: gcr.io/dherin-sandbox/taxifare-component-bq2gcs
+    image: gcr.io/PROJECT/taxifare-component-bq2gcs
     args: [
       "--bucket", {inputValue: Input Bucket},
     ]
