@@ -1,6 +1,5 @@
 all: clean substitute build push
 
-
 .PHONY: pyclean
 pyclean:
 	@find . -name '*.pyc' -delete
