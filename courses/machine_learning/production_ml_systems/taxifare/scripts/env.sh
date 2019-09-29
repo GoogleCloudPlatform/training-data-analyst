@@ -1,5 +1,5 @@
 # Replace with appropriate values.
-IMAGE_NAME=taxifare_training_container
+IMAGE_NAME=taxifare-trainer
 BUCKET=ml-on-gcp-test
 REGION=us-west1
 
