@@ -1,4 +1,4 @@
-all: venv
+all: clean build push
 
 .PHONY: venv
 venv:
