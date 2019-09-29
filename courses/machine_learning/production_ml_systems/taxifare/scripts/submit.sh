@@ -3,6 +3,15 @@
 . $(cd $(dirname $BASH_SOURCE) && pwd)/env.sh
 
 
+BATCH_SIZE=5
+NUM_EXAMPLES_TO_TRAIN_ON=100
+NUM_EVALS=1
+NBUCKETS=10
+NNSIZE="32 8"
+MACHINE_TYPE=n1-standard-4
+SCALE_TIER=CUSTOM
+
+
 gcloud beta ai-platform jobs submit training $JOBID \
    --staging-bucket=gs://$BUCKET \
    --region=$REGION \

@@ -1,18 +1,8 @@
 # Replace with appropriate values.
-IMAGE_NAME=taxifare-trainer
 BUCKET=ml-on-gcp-test
 REGION=us-west1
 
-BATCH_SIZE=5
-NUM_EXAMPLES_TO_TRAIN_ON=100
-NUM_EVALS=1
-NBUCKETS=10
-NNSIZE="32 8"
-
-MACHINE_TYPE=n1-standard-4
-SCALE_TIER=CUSTOM
-
-# Generated.
+IMAGE_NAME=taxifare-trainer
 GCS_PROJECT_PATH=gs://$BUCKET/taxifare
 DATA_PATH=$GCS_PROJECT_PATH/data
 OUTPUT_DIR=$GCS_PROJECT_PATH/model
