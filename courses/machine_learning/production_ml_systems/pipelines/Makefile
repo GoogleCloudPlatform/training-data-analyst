@@ -1,6 +1,6 @@
 KUBEFLOW=https://storage.googleapis.com/ml-pipeline/release/0.1.20/kfp.tar.gz
 
-all: venv pipeline
+all: components venv pipeline 
 
 .PHONY: venv
 venv:
@@ -11,6 +11,12 @@ venv:
 pipeline:
 	@. ./venv/bin/activate && python create_pipeline.py
 
+.PHONY: components
+components:
+	@(cd ./components/bq2gcs && make)
+	@(cd ./components/trainjob && make)
+	@(cd ./components/deploymodel && make)
+
 .PHONY: pyclean
 pyclean:
 	@find . -name '*.pyc' -delete
@@ -18,3 +24,6 @@ pyclean:
 .PHONY: clean
 clean: pyclean
 	@rm -r ./venv text2hub.tar.gz || echo OK
+	@(cd ./components/bq2gcs && make clean)
+	@(cd ./components/trainjob && make clean)
+	@(cd ./components/deploymodel && make clean)

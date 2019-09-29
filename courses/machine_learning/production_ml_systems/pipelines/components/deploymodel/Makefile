@@ -9,7 +9,7 @@ pyclean:
 
 .PHONY: clean
 clean: pyclean
-	@rm -r ./venv || echo OK
+	@rm -r ./venv ./component.yaml || echo OK
 
 .PHONY: build
 build: pyclean
