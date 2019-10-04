@@ -26,11 +26,9 @@ Each folder in this repository represents one lab and will contain:
  What follows is a recommended list of labs for this workshop in order:
 
 __Pre-work: [Create a Cloud AI Platform Notebook instance](http://console.cloud.google.com/mlengine/notebooks/create-instance)__
-   * Choose TensorFlow 2.0.  This installs the beta version. However, we will have you upgrade to nightly version.
+   * Choose TensorFlow 2.0.
    * Choose 2 vCPUs and no GPUs.
    * On the instance, use the Git menu to clone https://github.com/GoogleCloudPlatform/training-data-analyst
-   * Navigate to quests/serverlessml and open the install_nightly.ipynb notebook
-   * Run the cell that installs the nightly version of TensorFlow.
 
 __0. [Classify Images of Clouds with AutoML](https://www.qwiklabs.com/focuses/1779?parent=catalog)__ students will use the GCP UI to train multiple image classification models using [AutoML Vision](https://cloud.google.com/vision/automl/docs/) without having to code. 
    * Optional lab - 30 minutes
