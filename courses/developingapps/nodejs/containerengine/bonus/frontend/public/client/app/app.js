@@ -10,8 +10,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-(function () {
+((() => {
 
-    var app = angular.module('qiqApp', ['ui.bootstrap', 'qiqAuth', 'qiqQuiz']);
+    const app = angular.module('qiqApp', ['ui.bootstrap', 'qiqAuth', 'qiqQuiz']);
 
-})();
+}))();

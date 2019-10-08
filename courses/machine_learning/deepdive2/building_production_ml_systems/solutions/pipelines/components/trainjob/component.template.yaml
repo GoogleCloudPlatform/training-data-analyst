@@ -1,0 +1,15 @@
+name: trainjob
+description: |
+  This component trains a model to predict that taxi fare in NY.
+  It takes as argument a GCS bucket and expects its training and
+  eval data to be at gs://<BUCKET>/taxifare/data/ and will export
+  the trained model at  gs://<BUCKET>/taxifare/model/.
+inputs:
+  - {name: Input Bucket , type: String, description: 'GCS directory path.'}
+
+implementation:
+  container:
+    image: gcr.io/PROJECT/taxifare-trainjob
+    args: [
+       {inputValue: Input Bucket},
+    ]
