@@ -8,6 +8,7 @@ BENCHMARK_ERROR = .12
 BENCHMARK_ACCURACY = 1 - BENCHMARK_ERROR
 BATCH_SIZE = 100
 
+
 class TestInputFunction(unittest.TestCase):
     def create_shape_test(self, training):
         mnist = tf.keras.datasets.mnist.load_data()
@@ -18,22 +19,22 @@ class TestInputFunction(unittest.TestCase):
         expected_label_ndim = 2
         self.assertEqual(images.shape, expected_image_shape)
         self.assertEqual(labels.numpy().ndim, expected_label_ndim)
-        
+
     def test_train_dataset_batches_has_correct_shapes(self):
         self.create_shape_test(True)
 
     def test_eval_dataset_batches_has_correct_shapes(self):
         self.create_shape_test(False)
-        
-        
+
+
 class TestModel(unittest.TestCase):
-  
+
     @classmethod
     def setUpClass(cls):
         # Add or remove types below ['linear', 'dnn', 'dnn_dropout', 'cnn']
         cls.model_types = ['linear', 'dnn', 'dnn_dropout', 'cnn']
         cls.histories = {}
-        
+
         epochs = 10
         steps = 100
         for model_type in cls.model_types:
@@ -42,7 +43,7 @@ class TestModel(unittest.TestCase):
             _, history = model.create_and_train_model(
                 layers, epochs, steps, None)
             cls.histories[model_type] = history.history
-    
+
     def test_beats_benchmark(self):
         for model_type in self.model_types:
             with self.subTest(model_type=model_type):
@@ -50,7 +51,7 @@ class TestModel(unittest.TestCase):
                 self.assertGreater(result['accuracy'][-1], BENCHMARK_ACCURACY)
                 self.assertGreater(
                     result['val_accuracy'][-1], BENCHMARK_ACCURACY)
-        
+
     def test_accuracy_is_improving(self):
         for model_type in self.model_types:
             with self.subTest(model_type=model_type):
@@ -61,7 +62,7 @@ class TestModel(unittest.TestCase):
                 self.assertLess(accuracy[1], accuracy[-1])
                 self.assertLess(val_accuracy[0], val_accuracy[1])
                 self.assertLess(val_accuracy[1], val_accuracy[-1])
-    
+
     def test_loss_is_decreasing(self):
         for model_type in self.model_types:
             with self.subTest(model_type=model_type):
@@ -72,7 +73,7 @@ class TestModel(unittest.TestCase):
                 self.assertGreater(loss[1], loss[-1])
                 self.assertGreater(val_loss[0], val_loss[1])
                 self.assertGreater(val_loss[1], val_loss[-1])
-    
+
 
 if __name__ == '__main__':
     unittest.main()
