@@ -98,5 +98,22 @@ __7. [Productionize the models](07_caip/)__
 
 
    
-   
+## Instructor Guide
+### Troubleshooting tips
+Here are some known issues:
+   * On Qwiklabs, they should not hit End Lab until the end of the day.
+   * On Qwiklabs, links in notebooks to BigQuery tables and datasets sometimes take the user to the wrong Google account (where the dataset/table in question is not visible). A quick workaround in those situations is to navigate to BigQuery from the Google Cloud Console instead.
+   * Note that a valid region name is ```us-west1```. A string such as ```us-west1-b``` is a zone. Many gcloud commands will fail with resource unavailable errors if you pass in a zone where the notebook asks for a ```REGION```
 
+### Timing guide
+   * 9.15am start
+   * 10am to 10.30am Lab 1
+   * 11am to 11.30am Lab 2
+   * 11.55am to 12.30pm Lab 3
+   * 12.30pm to 1.00pm Lunch
+   * 1.45pm to 2.15pm Lab 4
+   * 2.45pm to 3.15pm Lab 5
+   * 3.30pm to 4.00pm Lab 6
+   * 4.15pm to 4.30pm Lab 7
+   * 4.45pm end
+ 
