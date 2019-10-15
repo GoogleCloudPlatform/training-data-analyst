@@ -30,8 +30,8 @@ virtualenv -p python3 ~/venvs/developingapps
 source ~/venvs/developingapps/bin/activate
 
 echo "Installing Python libraries"
-sudo pip install --upgrade pip
-sudo pip install -r requirements.txt
+pip install --upgrade pip
+pip install -r requirements.txt
 
 echo "Creating Datastore entities"
 python add_entities.py
