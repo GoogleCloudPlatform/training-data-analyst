@@ -28,7 +28,7 @@ function handler(message) {
     })
     .then(feedbackStorage.saveFeedback)
     .then(() => {
-        console.log('Feedback saved');	
+        console.log('Feedback saved');
     });
 
 }

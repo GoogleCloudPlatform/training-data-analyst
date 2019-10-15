@@ -12,3 +12,4 @@
 9. [Creating an Authorized View to Limit Access](authorized-view.sql)
 10. [Creating a Machine Learning Model with SQL](bqml-classification-model.sql)
 11. [Using Pre-Built Models for Image Classification](vision-api.md)
+12. [Creating a Custom Image Classification Model with AutoML Vision](auto-ml-vision.md)

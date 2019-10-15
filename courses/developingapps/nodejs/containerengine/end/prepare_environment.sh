@@ -28,7 +28,8 @@ echo "Creating Datastore entities"
 node setup/add_entities.js
 
 echo "Creating Cloud Pub/Sub topic"
-gcloud beta pubsub topics create feedback
+gcloud pubsub topics create feedback
+gcloud pubsub subscriptions create worker-subscription --topic=feedback
 
 echo "Creating Cloud Spanner Instance, Database, and Table"
 gcloud spanner instances create quiz-instance --config=regional-us-central1 --description="Quiz instance" --nodes=1

@@ -10,40 +10,38 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+'use strict';
+
 const config = require('../config');
-const Pubsub = require('@google-cloud/pubsub');
+const {PubSub} = require('@google-cloud/pubsub');
 
-const pubsub = Pubsub({
-  projectId: config.get('GCLOUD_PROJECT')
-});
+const GCLOUD_PROJECT = config.get('GCLOUD_PROJECT');
 
+const pubsub = new PubSub({GCLOUD_PROJECT});
 const topic = pubsub.topic('feedback');
+const subscription = pubsub.subscription('worker-subscription');
 
 function publishFeedback(feedback) {
   return topic.publish({
-    data: feedback
+    data: feedback,
   });
 }
 
 function registerFeedbackNotification(cb) {
-  topic.subscribe('worker-subscription', { autoAck: true })
-  .then(results => {
-  const subscription = results[0];
-
   subscription.on('message', message => {
+    message.ack()
     cb(message.data);
   });
 
   subscription.on('error', err => {
     console.error(err);
   });
-});
-
 }
 
 // [START exports]
 module.exports = {
   publishFeedback,
-  registerFeedbackNotification
+  registerFeedbackNotification,
 };
 // [END exports]

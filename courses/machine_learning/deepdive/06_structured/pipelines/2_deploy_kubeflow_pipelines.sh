@@ -16,4 +16,4 @@ kubectl get job
 
 # This is an alternate method
 # jobname=$(kubectl get job | tail -1 | awk '{print $1}')
-# kubectl wait --for=condition=complete --timeout=5m $jobname
+# kubectl wait --for=condition=complete --timeout=5m job/$jobname

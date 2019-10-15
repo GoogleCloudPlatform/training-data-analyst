@@ -10,27 +10,27 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-(function () {
+((() => {
 
-    var module = angular.module('qiqAuth');
+    const module = angular.module('qiqAuth');
 
     module.controller('AuthController', AuthController);
 
     AuthController.$inject = ['$location', 'authFactory']
 
     function AuthController($location, authFactory) {
-        var ac = this;
+        const ac = this;
         ac.register = register;
         init();
 
         function init() {
-            
+
         }
 
         function register() {
-            authFactory.register(ac.email, ac.password).then(function () {
+            authFactory.register(ac.email, ac.password).then(() => {
                 $location.path('/quiz/gcp');
             });
         }
     }
-})();
+}))();

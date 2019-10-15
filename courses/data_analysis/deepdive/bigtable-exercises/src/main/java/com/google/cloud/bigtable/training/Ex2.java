@@ -99,7 +99,7 @@ public class Ex2 {
         CloudBigtableTableConfiguration.fromCBTOptions(options);
 
     Scan scan = new Scan();
-    // TODO: Do a scan of rows being with "action"
+    // TODO: Do a scan of rows beginning with the string "action"
 
     CloudBigtableScanConfiguration scanConfiguration =
         new CloudBigtableScanConfiguration.Builder()
