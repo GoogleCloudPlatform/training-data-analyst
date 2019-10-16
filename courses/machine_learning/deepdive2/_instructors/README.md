@@ -34,6 +34,8 @@
 - All labs should only have one h1 title at the very beginning
 - Each lab should have Learning Objectives 
 - Each student lab should have `TODOs` in the notebook that map to learning objectives
+- Each lab should follow these pedagocial (training) best practices:
+	1. TBD :)
 
 #### Commonly used code
 - Getting the GCP project name
