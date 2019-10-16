@@ -12,21 +12,21 @@
 
 ![img/ folder-structure.png](img/folder-structure.png)
 
-	- __Labs__ folders contain 
-		1. Partially completed ipynbs with TODOs that map to learning objectives stated at the top of the lab (ideally with a number like TODO 1)
-		2. These ipynbs (or PDFs etc) should be numbered in the order of the labs for that modue
-		3. Any depedency code or images etc should be in sub-folders within `labs` so that the main `labs` folder only contains work the students need to complete. Example: images could be stored in an `assets` folder or similar
+- __Labs__ folders contain 
+1. Partially completed ipynbs with TODOs that map to learning objectives stated at the top of the lab (ideally with a number like TODO 1)
+2. These ipynbs (or PDFs etc) should be numbered in the order of the labs for that modue
+3. Any depedency code or images etc should be in sub-folders within `labs` so that the main `labs` folder only contains work the students need to complete. Example: images could be stored in an `assets` folder or similar
 
-	- __Solutions__ folders contain 
-		1. The fully completed and working solution code. Generally these are written and tested first before the lab notebooks are created.
+- __Solutions__ folders contain 
+1. The fully completed and working solution code. Generally these are written and tested first before the lab notebooks are created.
 
 ### Reviews
-- clone the training-data-analyst repo locally
-- create a new branch
-- make commits
-- submit a pull request and assign reviewers
-- work through comments and get LGTM
-- merge the PR
+- clone the training-data-analyst repo locally `https://github.com/GoogleCloudPlatform/training-data-analyst.git`
+- create a new [branch](https://github.com/Kunena/Kunena-Forum/wiki/Create-a-new-branch-with-git-and-manage-branches)
+- make [commits](https://help.github.com/en/desktop/contributing-to-projects/committing-and-reviewing-changes-to-your-project) and have [descriptive commit messages](https://chris.beams.io/posts/git-commit/)
+- submit a [pull request](https://help.github.com/en/articles/about-pull-requests) and assign reviewers
+- work through comments and get approval
+- merge the PR (don't merge before approval)
 - delete the branch
 - work with TCD team to create a Qwiklab version and testing setup
 
