@@ -8,9 +8,9 @@
 
 - __Numbering:__ Folders should be unnumbered `feature_engineering` and not `1_feature_engineering`. We will have a top level README that will handle the ordering. This provides flexibility if we need to add or remove modules.
 
-- __Sub-folders:__ Each parent folder in `deepdive` should represent a course module or roughly 1 day's worth of instructor-led training. Generally this is 4 - 8 labs depending on complexity. Inside the module folder there should only be two sub-folders `labs` and `solutions`. 
+- __Sub-folders:__ Each parent folder in `deepdive2` should represent a course module or roughly 1 day's worth of instructor-led training. Generally this is 4 - 8 labs depending on complexity. Inside the module folder there should only be two sub-folders `labs` and `solutions`. 
 
-![folder-structure.png](folder-structure.png)
+![img/ folder-structure.png](img/folder-structure.png)
 
 	- __Labs__ folders contain 
 		1. Partially completed ipynbs with TODOs that map to learning objectives stated at the top of the lab (ideally with a number like TODO 1)
@@ -46,6 +46,7 @@ echo "Your current GCP Project Name is: "$PROJECT
 
 - Environment variables
 ```bash
+%%bash
 import os
 
 PROJECT = "your-gcp-project-here" # REPLACE WITH YOUR PROJECT NAME
