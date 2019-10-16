@@ -34,6 +34,7 @@
 - All labs should only have one h1 title at the very beginning
 - Each lab should have Learning Objectives 
 - Each student lab should have `TODOs` in the notebook that map to learning objectives
+- All Python code must be [PEP8 style](https://www.python.org/dev/peps/pep-0008/) compliant ([online checker](http://pep8online.com/))
 - Each lab should follow these pedagocial (training) best practices:
 	1. TBD :)
 
