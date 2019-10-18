@@ -40,8 +40,9 @@ class TestModel(unittest.TestCase):
         for model_type in cls.model_types:
             print('\n*** Building model for', model_type, '***\n')
             layers = model.get_layers(model_type)
-            _, history = model.create_and_train_model(
-                layers, epochs, steps, None)
+            image_model = model.build_model(layers, None)
+            history = model.train_and_evaluate(
+                image_model, epochs, steps, None)
             cls.histories[model_type] = history.history
 
     def test_beats_benchmark(self):
