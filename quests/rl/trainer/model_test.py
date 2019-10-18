@@ -1,8 +1,9 @@
 import unittest
 
-import model
 import numpy as np
 import tensorflow as tf
+
+from . import model
 
 SPACE_SHAPE = (4,)
 ACTION_SIZE = 2
@@ -21,6 +22,8 @@ FAKE_NEW_STATES = np.array([[-.9, -.3], [.4, .5], [0, 0]], dtype=np.float32)
 FAKE_REWARD = np.array([0, 0, 100], dtype=np.float32)
 FAKE_DONE = np.array([False, False, True])
 
+ONE_HOT_ACTIONS = tf.constant([[1., 0.], [0., 1.], [0., 1.]])
+
 
 class TestAgentMethods(unittest.TestCase):
 
@@ -33,7 +36,7 @@ class TestAgentMethods(unittest.TestCase):
     def test_get_target_qs(self):
         self.agent.memory.buffer = ["fake_memory", "fake_memory", "fake_memory"]
         self.agent.memory.sample = unittest.mock.MagicMock(return_value=(
-            FAKE_STATES, FAKE_ACTIONS, FAKE_NEW_STATES, FAKE_REWARD, FAKE_DONE)
+            FAKE_STATES, FAKE_ACTIONS, FAKE_REWARD, FAKE_NEW_STATES, FAKE_DONE)
         )
         self.agent.network.fit = unittest.mock.MagicMock()
 
@@ -41,13 +44,22 @@ class TestAgentMethods(unittest.TestCase):
         fake_qs_state_prime = tf.constant([[4., 3.], [5., 6.], [8., 7.]])
         self.agent.network.predict = unittest.mock.MagicMock(
             side_effect=[fake_qs_state_prime, fake_qs_current_state])
-        expected_target_qs = tf.constant([[2., 2.], [4., 3.], [5., 100.]])
+        expected_target_qs = tf.constant([[2., 0.], [0., 3.], [0., 100.]])
         self.agent.learn()
-        
-        self.agent.network.fit.assert_called_with(
-            FAKE_STATES, expected_target_qs,
-            batch_size=MEMORY_BATCH_SIZE, epochs=1, verbose=0
-        )
+
+        actual_args = self.agent.network.fit.call_args[0]
+        np.testing.assert_array_equal(FAKE_STATES, actual_args[0][0])
+        np.testing.assert_array_equal(ONE_HOT_ACTIONS, actual_args[0][1])
+        np.testing.assert_array_equal(expected_target_qs, actual_args[1])
+
+        expected_kwargs = {
+            'batch_size': MEMORY_BATCH_SIZE,
+            'epochs': 1,
+            'steps_per_epoch': 1,
+            'verbose': 0,
+        }
+        actual_kwargs = self.agent.network.fit.call_args[1]
+        self.assertDictEqual(expected_kwargs, actual_kwargs)
 
 
 if __name__ == '__main__':

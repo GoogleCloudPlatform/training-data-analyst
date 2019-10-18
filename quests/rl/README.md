@@ -14,16 +14,18 @@ From this directory, to run on GCP's hyperparameter tuning service:
 
 ```
 BUCKET=<my-awesome-bucket>
-JOBNAME=<my-awesome-job-name>_$(date -u +%y%m%d_%H%M%S)
+JOB_NAME=dqn_on_gcp_$(date -u +%y%m%d_%H%M%S)
 REGION='us-central1'
+IMAGE_URI='gcr.io/$PROJECT/dqn_on_gcp'
 
-gcloud ai-platform jobs submit training $JOBNAME --package-path=$PWD/trainer --module-name=trainer.trainer --region=$REGION --staging-bucket=gs://$BUCKET --scale-tier=BASIC --runtime-version=1.10 --job-dir=gs://$BUCKET/$JOBNAME --config=hyperparam.yaml
+gcloud builds submit --tag $IMAGE_URI .
+
+gcloud ai-platform jobs submit training $JOB_NAME --staging-bucket=gs://$BUCKET  --region=$REGION    --master-image-uri=$IMAGE_URI --scale-tier=BASIC_GPU --job-dir=gs://$BUCKET/$JOB_NAME --config=hyperparam.yaml
 ```
 
 ## Resources
 This code was inspired by the following resources:
 * [An introduction to Deep Q-Learning: let’s play Doom](https://www.freecodecamp.org/news/an-introduction-to-deep-q-learning-lets-play-doom-54d02d8017d8/) by Thomas Simonini
+* [Beat Atari with Deep Reinforcement Learning! (Part 1: DQN)](https://becominghuman.ai/lets-build-an-atari-ai-part-1-dqn-df57e8ff3b26) by Adrien Lucas Ecoffet
 * [Deep reinforcement learning on GCP: using hyperparameter tuning and Cloud ML Engine to best OpenAI Gym games](https://cloud.google.com/blog/products/ai-machine-learning/deep-reinforcement-learning-on-gcp-using-hyperparameters-and-cloud-ml-engine-to-best-openai-gym-games) by Praneet Dutta, Chris Rawles, and Yujin Tang
 * [Georgia Tech's Machine Learning Specialization](https://www.omscs.gatech.edu/specialization-machine-learning)
-
-gcloud beta ai-platform jobs submit training $JOBID    --staging-bucket=gs://$BUCKET  --region=$REGION    --master-image-uri=$IMAGE_URI --master-machine-type=n1-standard-4 --scale-tier=CUSTOM --config=hyperparam.yaml

@@ -1,4 +1,4 @@
-FROM gcr.io/deeplearning-platform-release/tf2-cpu
+FROM gcr.io/deeplearning-platform-release/tf2-gpu
 RUN apt-get update
 RUN apt-get install --yes python3-pip ffmpeg xvfb python-opengl
 RUN pip3 install --upgrade --quiet tf-nightly-2.0-preview

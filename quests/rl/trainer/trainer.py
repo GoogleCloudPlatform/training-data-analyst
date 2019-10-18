@@ -28,7 +28,6 @@ import tensorflow as tf
 from . import model
 
 RECORDING_NAME = "recording.mp4"
-sys.stdout.flush()
 
 
 def _parse_arguments(argv):
@@ -43,27 +42,27 @@ def _parse_arguments(argv):
         '--episodes',
         help='The number of episodes to simulate',
         type=int,
-        default=400)
+        default=200)
     parser.add_argument(
         '--learning_rate',
         help='Learning rate for the nueral network',
         type=float,
-        default=0.002)
+        default=0.2)
     parser.add_argument(
         '--hidden_neurons',
         help='The number of nuerons to use per layer',
         type=int,
-        default=50)
+        default=30)
     parser.add_argument(
         '--gamma',
         help='The gamma or "discount" factor to discount future states',
         type=float,
-        default=0.9)
+        default=0.5)
     parser.add_argument(
         '--explore_decay',
         help='The rate at which to decay the probability of a random action',
         type=float,
-        default=0.01)
+        default=0.1)
     parser.add_argument(
         '--memory_size',
         help='Size of the memory buffer',
@@ -73,19 +72,14 @@ def _parse_arguments(argv):
         '--memory_batch_size',
         help='The amount of memories to sample from the buffer while training',
         type=int,
-        default=64)
-    parser.add_argument(
-        '--training',
-        help='True for the model to train, False for the model to evaluate',
-        type=bool,
-        default=True)
+        default=8)
     parser.add_argument(
         '--job-dir',
         help='Directory where to save the given model',
         type=str,
         default='models/')
     parser.add_argument(
-        '--score_print_rate',
+        '--print_rate',
         help='How often to print the score, 0 if never',
         type=int,
         default=0)
@@ -100,7 +94,7 @@ def _parse_arguments(argv):
     return parser.parse_known_args(argv)
 
 
-def _run(args):
+def _run(game, network_params, memory_params, explore_decay, ops):
     """Sets up and runs the gaming simulation.
 
     Initializes TensorFlow, the training agent, and the game environment.
@@ -110,24 +104,24 @@ def _run(args):
     Args:
       args: The arguments from the command line parsed by_parse_arguments.
     """
+    # Setup TensorBoard Writer.
+    trial_id = json.loads(
+        os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
+    output_path = ops.job_dir if not trial_id else ops.job_dir + '/'
+    hpt = hypertune.HyperTune()
+
     graph = tf.Graph()
     with graph.as_default():
-        env = gym.make(args.game)
-        agent = _create_agent(env, args)
+        env = gym.make(game)
+        agent = _create_agent(
+            env, network_params, memory_params, explore_decay)
 
-        # Setup TensorBoard Writer.
-        trial_id = json.loads(
-            os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
-        output_path = args.job_dir if not trial_id else args.job_dir + '/'
-        hpt = hypertune.HyperTune()
-
-        def _train_or_evaluate(print_score, get_summary, training=False):
+        def _train_or_evaluate(print_score, training=False):
             """Runs a gaming simulation and writes results for tensorboard.
 
             Args:
-              print_score (bool): True to print a score to the console.
-              get_summary (bool): True to write results for tensorboard.
-              training (bool): True if the agent is training, False to eval.
+                print_score (bool): True to print a score to the console.
+                training (bool): True if the agent is training, False to eval.
             """
             reward = _play(agent, env, training)
             if print_score:
@@ -145,19 +139,18 @@ def _run(args):
                 hyperparameter_metric_tag='episode_reward',
                 metric_value=reward,
                 global_step=episode)
+            return
 
-        for episode in range(1, args.episodes+1):
-            get_summary = args.eval_rate and episode % args.eval_rate == 0
-            print_score = (
-                args.score_print_rate and
-                episode % args.score_print_rate == 0)
-            if args.training:
-                _train_or_evaluate(print_score, get_summary, training=True)
+        for episode in range(1, ops.episodes+1):
+            print_score = ops.print_rate and episode % ops.print_rate == 0
+            get_summary = ops.eval_rate and episode % ops.eval_rate == 0
+            _train_or_evaluate(print_score, training=True)
 
-            if not args.training or get_summary:
-                _train_or_evaluate(print_score, get_summary)
+            if get_summary:
+                _train_or_evaluate(print_score)
 
         _record_video(env, agent, output_path)
+        agent.network.save(output_path, save_format='tf')
 
 
 def _play(agent, env, training, recorder=None):
@@ -191,10 +184,11 @@ def _play(agent, env, training, recorder=None):
         if recorder:
             recorder.capture_frame()
         state = state_prime  # st+1 is now our current state.
+
     return episode_reward
 
 
-def _create_agent(env, args):
+def _create_agent(env, network_params, memory_params, explore_decay):
     """Creates a Reinforcement Learning agent.
 
     Args:
@@ -207,9 +201,9 @@ def _create_agent(env, args):
     space_shape = env.observation_space.shape
     action_size = env.action_space.n
     network = model.deep_q_network(
-        space_shape, action_size, args.learning_rate, args.hidden_neurons)
-    memory = model.Memory(args.memory_size, args.memory_batch_size, args.gamma)
-    return model.Agent(network, memory, args.explore_decay, action_size)
+        space_shape, action_size, *network_params)
+    memory = model.Memory(*memory_params)
+    return model.Agent(network, memory, explore_decay, action_size)
 
 
 def _record_video(env, agent, output_path):
@@ -236,8 +230,16 @@ def _record_video(env, agent, output_path):
 
 def main():
     """Parses command line arguments and kicks off the gaming simulation."""
-    args = _parse_arguments(sys.argv[1:])
-    _run(args[0])
+    args = _parse_arguments(sys.argv[1:])[0]
+    network_params = (args.learning_rate, args.hidden_neurons)
+    memory_params = (args.memory_size, args.memory_batch_size, args.gamma)
+    ops = argparse.Namespace(**{
+        'job_dir': args.job_dir,
+        'episodes': args.episodes,
+        'print_rate': args.print_rate,
+        'eval_rate': args.eval_rate
+    })
+    _run(args.game, network_params, memory_params, args.explore_decay, ops)
 
 
 if __name__ == '__main__':
