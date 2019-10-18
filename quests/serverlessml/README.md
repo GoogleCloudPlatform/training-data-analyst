@@ -11,10 +11,6 @@ This one day workshop provides a hands-on introduction to designing and building
 - Familiarity with [SQL](https://en.wikipedia.org/wiki/SQL)
 - Basic familiarity with [Python](https://en.wikipedia.org/wiki/Python_(programming_language))
 
-## Coursework: Slide Presentations
-- [Student PDF version](https://storage.cloud.google.com/cloud-training/serverlessml/1.0/slides/Serverless%20ML%20with%20TensorFlow%20and%20BigQuery.pdf?folder=true&organizationId=true)
-- Instructor Version: (See link in Qwiklabs classroom)
-
 ## Coursework: Hands-On Labs
 
 Note: If you are an instructor teaching this class via [Qwiklabs](https://www.qwiklabs.com) you can ignore the Pre-work as the student Qwiklabs will automatically create new GCP accounts and walk them through how to clone this repository. 
