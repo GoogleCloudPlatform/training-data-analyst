@@ -33,7 +33,7 @@ credentials = GoogleCredentials.get_application_default()
 api = discovery.build('ml', 'v1', credentials=credentials)
 project = app_identity.get_application_id()
 model_name = os.getenv('MODEL_NAME', 'babyweight')
-version_name = os.getenv('VERSION_NAME', 'ml_on_gcp')
+version_name = os.getenv('VERSION_NAME', 'dnn')
 
 
 app = Flask(__name__)
@@ -43,7 +43,7 @@ def get_prediction(features):
   input_data = {'instances': [features]}
   parent = 'projects/%s/models/%s/versions/%s' % (project, model_name, version_name)
   prediction = api.projects().predict(body=input_data, name=parent).execute()
-  return prediction['predictions'][0]['predictions'][0]
+  return prediction['predictions'][0]['babyweight'][0]
 
 
 @app.route('/')
