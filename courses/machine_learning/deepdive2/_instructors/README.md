@@ -24,7 +24,7 @@
 - clone the training-data-analyst repo locally `https://github.com/GoogleCloudPlatform/training-data-analyst.git`
 - create a new [branch](https://github.com/Kunena/Kunena-Forum/wiki/Create-a-new-branch-with-git-and-manage-branches)
 - make [commits](https://help.github.com/en/desktop/contributing-to-projects/committing-and-reviewing-changes-to-your-project) and have [descriptive commit messages](https://chris.beams.io/posts/git-commit/)
-- submit a [pull request](https://help.github.com/en/articles/about-pull-requests) and assign reviewers
+- submit a [pull request](https://help.github.com/en/articles/about-pull-requests) comparing to the `master` branch and assign reviewers
 - work through comments and get approval
 - merge the PR (don't merge before approval)
 - delete the branch
@@ -36,6 +36,8 @@
 - Each student lab should have `TODOs` in the notebook that map to learning objectives
 - All Python code must be [PEP8 style](https://www.python.org/dev/peps/pep-0008/) compliant ([online checker](http://pep8online.com/))
 - Each lab should follow these pedagocial (training) best practices:
+	1. Basic labs should take 30-45 minutes
+	2. Advanced labs should take abut 60 minutes
 	1. TBD :)
 
 #### Commonly used code
