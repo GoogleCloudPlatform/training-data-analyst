@@ -19,14 +19,14 @@ from flask import Blueprint, render_template
 from flask import send_from_directory
 from flask import request, redirect
 
-import questions
+from quiz.webapp import questions
 
 """
 configure blueprint
 """
 webapp_blueprint = Blueprint(
-    'webapp', 
-    __name__, 
+    'webapp',
+    __name__,
     template_folder='templates',
 )
 
@@ -67,6 +67,5 @@ def add_question():
         image_file = request.files.get('image')
         questions.save_question(data, image_file)
         return redirect('/', code=302)
-    else:        
+    else:
         return "Method not supported for /questions/add"
-

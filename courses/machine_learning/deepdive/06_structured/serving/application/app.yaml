@@ -11,3 +11,4 @@ handlers:
 
 env_variables:
   MODEL_NAME: 'babyweight'
+  VERSION_NAME: 'dnn'

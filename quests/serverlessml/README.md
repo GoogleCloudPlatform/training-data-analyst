@@ -11,10 +11,6 @@ This one day workshop provides a hands-on introduction to designing and building
 - Familiarity with [SQL](https://en.wikipedia.org/wiki/SQL)
 - Basic familiarity with [Python](https://en.wikipedia.org/wiki/Python_(programming_language))
 
-## Coursework: Slide Presentations
-- [Student PDF version](https://storage.cloud.google.com/cloud-training/serverlessml/1.0/slides/Serverless%20ML%20with%20TensorFlow%20and%20BigQuery.pdf?folder=true&organizationId=true)
-- Instructor Version: (See link in Qwiklabs classroom)
-
 ## Coursework: Hands-On Labs
 
 Note: If you are an instructor teaching this class via [Qwiklabs](https://www.qwiklabs.com) you can ignore the Pre-work as the student Qwiklabs will automatically create new GCP accounts and walk them through how to clone this repository. 
@@ -26,11 +22,9 @@ Each folder in this repository represents one lab and will contain:
  What follows is a recommended list of labs for this workshop in order:
 
 __Pre-work: [Create a Cloud AI Platform Notebook instance](http://console.cloud.google.com/mlengine/notebooks/create-instance)__
-   * Choose TensorFlow 2.0.  This installs the beta version. However, we will have you upgrade to nightly version.
+   * Choose TensorFlow 2.0.
    * Choose 2 vCPUs and no GPUs.
    * On the instance, use the Git menu to clone https://github.com/GoogleCloudPlatform/training-data-analyst
-   * Navigate to quests/serverlessml and open the install_nightly.ipynb notebook
-   * Run the cell that installs the nightly version of TensorFlow.
 
 __0. [Classify Images of Clouds with AutoML](https://www.qwiklabs.com/focuses/1779?parent=catalog)__ students will use the GCP UI to train multiple image classification models using [AutoML Vision](https://cloud.google.com/vision/automl/docs/) without having to code. 
    * Optional lab - 30 minutes
@@ -100,5 +94,22 @@ __7. [Productionize the models](07_caip/)__
 
 
    
-   
+## Instructor Guide
+### Troubleshooting tips
+Here are some known issues:
+   * On Qwiklabs, they should not hit End Lab until the end of the day.
+   * On Qwiklabs, links in notebooks to BigQuery tables and datasets sometimes take the user to the wrong Google account (where the dataset/table in question is not visible). A quick workaround in those situations is to navigate to BigQuery from the Google Cloud Console instead.
+   * Note that a valid region name is ```us-west1```. A string such as ```us-west1-b``` is a zone. Many gcloud commands will fail with resource unavailable errors if you pass in a zone where the notebook asks for a ```REGION```
 
+### Timing guide
+   * 9.15am start
+   * 10am to 10.30am Lab 1
+   * 11am to 11.30am Lab 2
+   * 11.55am to 12.30pm Lab 3
+   * 12.30pm to 1.00pm Lunch
+   * 1.45pm to 2.15pm Lab 4
+   * 2.45pm to 3.15pm Lab 5
+   * 3.30pm to 4.00pm Lab 6
+   * 4.15pm to 4.30pm Lab 7
+   * 4.45pm end
+ 

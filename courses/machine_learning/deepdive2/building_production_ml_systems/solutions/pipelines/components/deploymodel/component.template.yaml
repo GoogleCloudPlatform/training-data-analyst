@@ -1,0 +1,14 @@
+name: deploymodel
+description: |
+  This component deploys a trained taxifare model on GCP as taxifare:dnn.
+  It takes as argument a GCS bucket and expects the model to deploy 
+  to be found at gs://<BUCKET>/taxifare/model/export/savedmodel/
+inputs:
+  - {name: Input Bucket , type: String, description: 'GCS directory path.'}
+
+implementation:
+  container:
+    image: gcr.io/PROJECT/taxifare-deploymodel
+    args: [
+       {inputValue: Input Bucket},
+    ]
