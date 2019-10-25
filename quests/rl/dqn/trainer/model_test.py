@@ -11,7 +11,6 @@ LEARNING_RATE = .2
 HIDDEN_NEURONS = 20
 
 MEMORY_SIZE = 3
-MEMORY_BATCH_SIZE = 3
 GAMMA = .5
 
 EXPLORE_DECAY = .9
@@ -53,12 +52,9 @@ class TestAgentMethods(unittest.TestCase):
         np.testing.assert_array_equal(expected_target_qs, actual_args[1])
 
         expected_kwargs = {
-            'batch_size': MEMORY_BATCH_SIZE,
-            'epochs': 1,
-            'steps_per_epoch': 1,
-            'verbose': 0,
+            'reset_metrics': False,
         }
-        actual_kwargs = self.agent.network.fit.call_args[1]
+        actual_kwargs = self.agent.network.train_on_batch.call_args[1]
         self.assertDictEqual(expected_kwargs, actual_kwargs)
 
 

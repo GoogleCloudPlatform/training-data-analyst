@@ -13,10 +13,11 @@ gcloud ai-platform local train --module-name=trainer.trainer --package-path=$PWD
 From this directory, to run on GCP's hyperparameter tuning service:
 
 ```
+PROJECT=<my-awesome-project>
 BUCKET=<my-awesome-bucket>
 JOB_NAME=dqn_on_gcp_$(date -u +%y%m%d_%H%M%S)
 REGION='us-central1'
-IMAGE_URI='gcr.io/$PROJECT/dqn_on_gcp'
+IMAGE_URI=gcr.io/$PROJECT/dqn_on_gcp
 
 gcloud builds submit --tag $IMAGE_URI .
 
