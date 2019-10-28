@@ -1,5 +1,6 @@
 
 # Instructor Demos for Data Engineering
 
-0. [Nested and Repeated Columns](nested.md)
-1. [Clustering](clustering.md)
+1. [Exploring schemas with SQL in BigQuery](information_schema.md)
+2. [Nested and Repeated Columns](nested.md)
+3. [Clustering](clustering.md)
