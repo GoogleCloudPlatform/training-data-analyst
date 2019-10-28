@@ -9,6 +9,8 @@ __Step 1:__ [Labs Signup Form](https://forms.gle/mri1vWinsFAoPBHA7)
 
 __Step 2:__ [Access the Labs and Course PDFs](https://www.qwiklabs.com/classrooms/in-session)
 
+Tip: Use an __Incognito Window__ for this course to prevent single sign-on issues!
+
 ## Audience
 - Data Engineers
 - Data Scientists
