@@ -2,6 +2,10 @@
 
 This one day workshop provides a hands-on introduction to designing and building machine learning models on structured data on Google Cloud Platform. You will learn machine learning (ML) concepts and how to implement them using both BigQuery Machine Learning and TensorFlow/Keras. You will apply the lessons to a large out-of-memory dataset and develop hands-on skills in developing, evaluating, and productionizing ML models.
 
+## TensorFlow World - Santa Clara CA 
+October 28-29th 
+[Labs Signup Form](https://forms.gle/LmwsTgLmMPAVxTGi9)
+
 ## Audience
 - Data Engineers
 - Data Scientists
