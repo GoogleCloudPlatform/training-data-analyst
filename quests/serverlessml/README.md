@@ -4,7 +4,10 @@ This one day workshop provides a hands-on introduction to designing and building
 
 ## TensorFlow World - Santa Clara CA 
 October 28-29th 
-[Labs Signup Form](https://forms.gle/LmwsTgLmMPAVxTGi9)
+
+__Step 1:__ [Labs Signup Form](https://forms.gle/mri1vWinsFAoPBHA7)
+
+__Step 2:__ [Access the Labs and Course PDFs](https://www.qwiklabs.com/classrooms/in-session)
 
 ## Audience
 - Data Engineers
