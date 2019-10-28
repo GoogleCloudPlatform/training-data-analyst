@@ -11,7 +11,7 @@ __Step 2:__ [Access the Labs and Course PDFs](https://www.qwiklabs.com/classroom
 
 Tip: Use an __Incognito Window__ for this course to prevent single sign-on issues!
 
-__Step 3:__ [Access today's lab}(https://googlecloud.qwiklabs.com/focuses/41539)
+__Step 3:__ [Access today's lab](https://googlecloud.qwiklabs.com/focuses/41539)
 
 ## Audience
 - Data Engineers
