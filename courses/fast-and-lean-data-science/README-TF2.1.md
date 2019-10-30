@@ -14,7 +14,7 @@ Here are two test Notebook with a Keras model:
 Regular Keras using model.fit():<br/>
 [keras_flowers_gputputpupod_tf2.1.ipynb](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb)
 
-Custom training loop, distributed:
+Custom training loop, distributed:<br/>
 [keras_flowers_customtrainloop_tf2.1.ipynb](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb)
 
 Please follow the instructions below
