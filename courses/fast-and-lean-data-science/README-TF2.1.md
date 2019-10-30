@@ -4,6 +4,9 @@
  * support for TPU pods
  * support for custom training loops on TPUs and TPU pods
  
+ ![TPU v3](https://cloud.google.com/images/products/tpu/cloud-tpu-v3-img_2x.png)
+ <br/>Cloud TPU v3 with 8 TPU cores
+ 
 # You can test now in tf-nightly
 
 Here is a test Notebook with a Keras model:
@@ -11,6 +14,9 @@ Here is a test Notebook with a Keras model:
 [keras_flowers_gputputpupod_tf2.1.ipynb](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb)
 
 Please follow the instructions below
+
+![TPU v3 pod](https://cloud.google.com/images/products/tpu/google-cloud-ai_2x.png)
+ <br/>A Cloud TPU v3 pod with 2048 TPU cores
 
 ## How to get a tf-nightly TPU ?
 
