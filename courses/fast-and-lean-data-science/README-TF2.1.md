@@ -4,14 +4,20 @@
  * support for TPU pods
  * support for custom training loops on TPUs and TPU pods
  
-**You can test now in tf-nightly**
+# You can test now in tf-nightly
+
+Here is a test Notebook with a Keras model:
+
+[keras_flowers_gputputpupod_tf2.1.ipynb](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb)
+
+Please follow the instructions below
 
 ## How to get a tf-nightly TPU ?
 
 We suggest you use the following script to create an AI Platform Notebook VM
 along with a TPU in one go:
 
-create-tpu-deep-learning-vm.sh
+[create-tpu-deep-learning-vm.sh](https://raw.githubusercontent.com/GoogleCloudPlatform/training-data-analyst/master/courses/fast-and-lean-data-science/create-tpu-deep-learning-vm.sh)
 
 Please follow these steps:
  * Go to [Google cloud console](https://console.cloud.google.com/), create a new project with billing
@@ -22,12 +28,12 @@ Please follow these steps:
  Compute Engine > TPUs > CREATE TPU NODE by playing with the zone and tpu type fields. For this
  demo, you can use an 8-core TPU or a 32-core TPU pod. Both TPU v2 and v3 will work.
  Select a zone that has v3-8, v2-32, v2-8 or v3-128 availability depending on what you want to test.
- * run the TPU and VM creation script:<b/>
+ * run the TPU and VM creation script:<br/>
  `./create-tpu-deep-learning-vm.sh choose-a-name --tpu-type v3-8 --nightly`
  * If you get an error about an unavailable IP range, just run the script again, it will pick another one.
  * When the machines are up, go to [Google cloud console](https://console.cloud.google.com/) AI Platform > Notebooks
  and click OPEN JUPYTERLAB in fron of the VM you just created.
- * Once in Jupyter, open a terminal and clone this repository:<b/>
+ * Once in Jupyter, open a terminal and clone this repository:<br/>
  `git clone https://github.com/GoogleCloudPlatform/training-data-analyst.git`
  * Open the demo notebook using the file browser in Jupyter:
  training-data-analyst/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb
