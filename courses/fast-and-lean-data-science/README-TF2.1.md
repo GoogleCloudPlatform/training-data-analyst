@@ -27,16 +27,16 @@ Please follow these steps:
  has TPUs. You can check TPU availability in different zones in [Google cloud console](https://console.cloud.google.com/)
  Compute Engine > TPUs > CREATE TPU NODE by playing with the zone and tpu type fields. For this
  demo, you can use an 8-core TPU or a 32-core TPU pod. Both TPU v2 and v3 will work.
- Select a zone that has v3-8, v2-32, v2-8 or v3-128 availability depending on what you want to test.
+ Select a zone that has v3-8, v2-32, v2-8 or v3-32 availability depending on what you want to test.
  * run the TPU and VM creation script:<br/>
  `./create-tpu-deep-learning-vm.sh choose-a-name --tpu-type v3-8 --nightly`
  * If you get an error about an unavailable IP range, just run the script again, it will pick another one.
  * When the machines are up, go to [Google cloud console](https://console.cloud.google.com/) AI Platform > Notebooks
- and click OPEN JUPYTERLAB in fron of the VM you just created.
+ and click OPEN JUPYTERLAB in front of the VM you just created.
  * Once in Jupyter, open a terminal and clone this repository:<br/>
  `git clone https://github.com/GoogleCloudPlatform/training-data-analyst.git`
  * Open the demo notebook using the file browser in Jupyter:
- training-data-analyst/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb
+ `training-data-analyst/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb`
  * Run through all the cells.
 
 You can also the [Google cloud console](https://console.cloud.google.com/). Go to
