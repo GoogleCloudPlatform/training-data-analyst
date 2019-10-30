@@ -45,7 +45,7 @@ Please follow these steps:
  `training-data-analyst/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb`
  * Run through all the cells.
 
-You can also the [Google cloud console](https://console.cloud.google.com/). Go to
+You can also use the [Google cloud console](https://console.cloud.google.com/). Go to
 Compute Engine > TPUs > CREATE TPU NODE. The version selector has a "nightly-2.x"
 option that will give you a TPU with the latest nightly build.
 
