@@ -21,7 +21,7 @@ Please follow the instructions below
 ## How to get a tf-nightly TPU ?
 
 We suggest you use the following script to create an AI Platform Notebook VM
-along with a TPU in one go:
+along with a TPU in one go. Both your VM and the TPU myst have a nightly build of Tensorflow:
 
 [create-tpu-deep-learning-vm.sh](https://raw.githubusercontent.com/GoogleCloudPlatform/training-data-analyst/master/courses/fast-and-lean-data-science/create-tpu-deep-learning-vm.sh)
 
