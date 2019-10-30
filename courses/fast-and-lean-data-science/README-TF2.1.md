@@ -4,6 +4,9 @@
  * support for TPU pods
  * support for custom training loops on TPUs and TPU pods
  
+ The slide deck of the Oct 2019 Tensorflow World session is available here: 
+ [bit.ly/keras-tpu-presentation](https://docs.google.com/presentation/d/e/2PACX-1vRqvlSpX5CVRC2oQ_e_nRNahOSPoDVL6I36kdjuPR_4y_tCPb-_k98Du1QXBwx4sBvVrzsCPulmuPn8/pub)
+ 
  ![TPU v3](https://cloud.google.com/images/products/tpu/cloud-tpu-v3-img_2x.png)
  <br/>Cloud TPU v3 with 8 TPU cores
  
