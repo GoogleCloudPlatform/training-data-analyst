@@ -9,9 +9,13 @@
  
 # You can test now in tf-nightly
 
-Here is a test Notebook with a Keras model:
+Here are two test Notebook with a Keras model:
 
+Regular Keras using model.fit():<br/>
 [keras_flowers_gputputpupod_tf2.1.ipynb](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb)
+
+Custom training loop, distributed:
+[keras_flowers_customtrainloop_tf2.1.ipynb](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb)
 
 Please follow the instructions below
 
@@ -41,9 +45,11 @@ Please follow these steps:
  and click OPEN JUPYTERLAB in front of the VM you just created.
  * Once in Jupyter, open a terminal and clone this repository:<br/>
  `git clone https://github.com/GoogleCloudPlatform/training-data-analyst.git`
- * Open the demo notebook using the file browser in Jupyter:
+ * Open the demo notebook using the file browser in Jupyter:<br/>
  `training-data-analyst/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb`
  * Run through all the cells.
+ * you can then try the custom training loop example notebook:<br/>
+ `training-data-analyst/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb`
 
 You can also use the [Google cloud console](https://console.cloud.google.com/). Go to
 Compute Engine > TPUs > CREATE TPU NODE. The version selector has a "nightly-2.x"
