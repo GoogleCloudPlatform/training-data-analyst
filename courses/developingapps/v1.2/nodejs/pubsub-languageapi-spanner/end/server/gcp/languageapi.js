@@ -19,7 +19,7 @@ const Language = require('@google-cloud/language');
 // TODO: Create a client object against the Language API
 // using the Language.LanguageServiceClient function
 // The LanguageServiceClient function accepts an options 
-/ object which is used to specify which project should be 
+// object which is used to specify which project should be 
 // billed for use of the API via the projectId property. 
 // The projectId is retrieved from the config module. 
 // This module retrieves the project ID from the 

@@ -46,7 +46,7 @@ const feedbackTable = database.table('feedback');
 
 // END TODO
 
-function saveFeedback(
+async function saveFeedback(
     { email, quiz, timestamp, rating, feedback, score }) {
     // TODO: Declare rev_email constant
     // TODO: Produce a 'reversed' email address

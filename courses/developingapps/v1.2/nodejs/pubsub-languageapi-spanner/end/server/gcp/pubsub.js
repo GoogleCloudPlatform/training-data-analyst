@@ -56,58 +56,68 @@ function publishFeedback(feedback) {
 }
 
 // The worker application will pass a callback to this 
-// method as the cb argument so it is notified when 
-// feedback is received
+// method as the cb argument so it is notified when a
+// feedback PubSub message is received
 function registerFeedbackNotification(cb) {
 
   // TODO: Create a subscription called worker-subscription
-  // TODO: Have it auto-acknowledge messages and trap errors
-  // TODO: err.code == 6 means subscription already exists
-  feedbackTopic.createSubscription('worker-subscription', { autoAck: true }, (err, subscription) => {
-    // subscription already exists
+  // TODO: Have it auto-acknowledge messages 
+
+  feedbackTopic.createSubscription('worker-subscription', { autoAck: true }, (err, feedbackSubscription) => {
+
+    // TODO: Trap errors where the subscription already exists 
+    // Create a subscription object for worker-subscription if
+    // the subscrioption already exists
+    // err.code == 6 means subscription already exists
     if (err && err.code == 6) {
-        console.log("Feedback subscription already exists")
+        // subscription already exists
+        console.log("Feedback subscription already exists");
+        feedbackSubscription=feedbackTopic.subscription('worker-subscription')
     }
+    // END TODO
+  
+
+    // TODO: Use the get() method on the subscription object to call 
+    // the API request to return a promise
+    feedbackSubscription.get().then(results => {
+      
+      // The results argument in the promise is an array - the 
+      // first element in this array is the subscription object.
+
+      // TODO: Declare a subscription constant
+      const subscription    = results[0];
+      
+      // END TODO
+
+      // TODO: Register an event handler for message events
+      // Use an arrow function to handle the event
+      // When a message arrives, invoke a callback
+      subscription.on('message', message => {
+          cb(message.data);
+      });
+
+      // END TODO
+
+      // TODO: Register an event handler for error events
+      // Print the error to the console
+      subscription.on('error', err => {
+          
+          console.error(err);
+      });
+
+      // END TODO
+
+    })
+    // END TODO for the get() method promise 
+
+    // TODO
+    // Add a final catch to the promise to handle errors
+    .catch(error => { console.log("Error getting feedback subscription", error)});
+
+    // END TODO
+  
   });
-
-  // TODO: Create a subscription object for worker-subscription 
-  // Then use the get() method to call the API request to 
-  // return a promise
-  const feedbackSubscription=feedbackTopic.subscription('worker-subscription', { autoAck: true });    
-  feedbackSubscription.get().then(results => {
-    
-    // END TODO
-
-    // The results argument in the promise is an array - the 
-    // first element in this array is the subscription object.
-
-    // TODO: Declare a subscription constant
-    const subscription    = results[0];
-    
-    // END TODO
-
-    // TODO: Register an event handler for message events
-    // TODO: Use an arrow function to handle the event
-    subscription.on('message', message => {
-        cb(message.data);
-    });
-
-    // END TODO
-
-
-    // TODO: Register an event handler for error events and
-    // TODO: Print the error to the console
-    subscription.on('error', err => {
-        
-        console.error(err);
-    });
-
-    // END TODO
-  })
-  // Add a final catch to the promise chain to handle errors
-  .catch(error => { console.log("Error getting feedback subscription", error)});
- 
-  // END TODO
+  // END TODO for the create subscription method
 }
 
 

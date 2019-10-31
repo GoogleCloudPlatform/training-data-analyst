@@ -54,7 +54,7 @@ const config = require('../config');
 
 
 
-function saveFeedback({ email, quiz, timestamp, rating, feedback, score }) {
+async function saveFeedback({ email, quiz, timestamp, rating, feedback, score }) {
     // TODO: Declare rev_email constant
     // TODO: Produce a 'reversed' email address
     // eg app.dev.student@example.org -> org_example_student_dev_app
