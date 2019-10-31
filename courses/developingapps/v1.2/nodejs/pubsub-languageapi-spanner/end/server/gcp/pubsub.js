@@ -57,7 +57,7 @@ function publishFeedback(feedback) {
 
 // The worker application will pass a callback to this 
 // method as the cb argument so it is notified when a
-// feedback PubSub message is received
+// feedback PubSub message is received 
 function registerFeedbackNotification(cb) {
 
   // TODO: Create a subscription called worker-subscription
