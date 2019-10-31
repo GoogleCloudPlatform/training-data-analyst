@@ -60,7 +60,7 @@ router.post('/:quiz', (req, res, next) => {
         funcs.reduce((promise, func) =>
           promise.then(result => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]));
 
-
+      // Executes a set of promises in parallel
       const parallel = funcs => Promise.all(funcs.map(func => func()));
 
       // TODO: Sends the answers to Pub/Sub in parallel 

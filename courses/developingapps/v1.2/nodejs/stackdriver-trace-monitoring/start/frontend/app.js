@@ -13,9 +13,6 @@
 'use strict';
 
 const config = require('./config');
-const path = require('path');
-const express = require('express');
-const scores = require('./gcp/spanner');
 
 // TODO: Load the trace-agent and start it
 // Trace must be started before any other code in the 
@@ -26,11 +23,13 @@ const scores = require('./gcp/spanner');
 
 // END TODO
 
-
-
 require('@google-cloud/debug-agent').start({
 	allowExpressions: true
 });
+
+const path = require('path');
+const express = require('express');
+const scores = require('./gcp/spanner');
 
 const {ErrorReporting} = require('@google-cloud/error-reporting');
 const errorReporting = new ErrorReporting({
