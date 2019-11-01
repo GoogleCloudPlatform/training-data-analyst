@@ -25,17 +25,17 @@ function publishAnswer(answer) {
   return answersTopic.publish(dataBuffer);
 }
 
-function registerAnswerNotification(cb) {
+function registerFeedbackNotification(cb) {
+
+  feedbackTopic.createSubscription('feedback-subscription', { autoAck: true }, (err, feedbackSubscription) => {
     
-  answersTopic.createSubscription('answer-subscription', { autoAck: true }, (err, subscription) => {
-    // subscription already exists
     if (err && err.code == 6) {
-        console.log("Answer subscription already exists")
+      // subscription already exists
+      console.log("Feedback subscription already exists");
+      feedbackSubscription=feedbackTopic.subscription('feedback-subscription')
     }
-  });
-  
-  const answersSubscription = answersTopic.subscription('answer-subscription', { autoAck: true });
-  answersSubscription.get().then(results => {
+
+    feedbackSubscription.get().then(results => {
         const subscription    = results[0];
         
         subscription.on('message', message => {
@@ -45,8 +45,10 @@ function registerAnswerNotification(cb) {
         subscription.on('error', err => {
             console.error(err);
         });
-    }).catch(error => { console.log("Error getting answer subscription", error)});
-    
+    }).catch(error => { console.log("Error getting feedback subscription", error)});
+
+  });
+
 }
 
 // [START exports]

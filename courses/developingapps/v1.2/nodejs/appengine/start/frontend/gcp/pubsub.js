@@ -26,25 +26,27 @@ function publishFeedback(feedback) {
 
 function registerFeedbackNotification(cb) {
 
-  feedbackTopic.createSubscription('feedback-subscription', { autoAck: true }, (err, subscription) => {
+  feedbackTopic.createSubscription('feedback-subscription', { autoAck: true }, (err, feedbackSubscription) => {
+    
+    if (err && err.code == 6) {
       // subscription already exists
-      if (err && err.code == 6) {
-          console.log("Feedback subscription already exists")
-      }
+      console.log("Feedback subscription already exists");
+      feedbackSubscription=feedbackTopic.subscription('feedback-subscription')
+    }
+
+    feedbackSubscription.get().then(results => {
+        const subscription    = results[0];
+        
+        subscription.on('message', message => {
+            cb(message.data);
+        });
+
+        subscription.on('error', err => {
+            console.error(err);
+        });
+    }).catch(error => { console.log("Error getting feedback subscription", error)});
+
   });
-
-  const feedbackSubscription=feedbackTopic.subscription('feedback-subscription', { autoAck: true });    
-  feedbackSubscription.get().then(results => {
-      const subscription    = results[0];
-      
-      subscription.on('message', message => {
-          cb(message.data);
-      });
-
-      subscription.on('error', err => {
-          console.error(err);
-      });
-  }).catch(error => { console.log("Error getting feedback subscription", error)});;
 
 }
 
