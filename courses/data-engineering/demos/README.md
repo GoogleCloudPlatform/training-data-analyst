@@ -8,3 +8,4 @@
 4. [Clustering](clustering.md)
 5. [Optional: Using Cloud Composer to orchestrate GCS --> BQ](composer_gcf_trigger/composertriggered.ipynb)
 6. [BigQuery GeoViz - growing zip code population](bigquery_geoviz.md)
+7. [Creating a simple health check on BigQuery ETL SQL](simple_healthcheck.md)
