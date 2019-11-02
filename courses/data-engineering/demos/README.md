@@ -9,3 +9,4 @@
 5. [Optional: Using Cloud Composer to orchestrate GCS --> BQ](composer_gcf_trigger/composertriggered.ipynb)
 6. [BigQuery GeoViz - growing zip code population](bigquery_geoviz.md)
 7. [Creating a simple health check on BigQuery ETL SQL](simple_healthcheck.md)
+8. [Train a taxi fare prediction model in BigQuery ML](predict_taxi_bigqueryml.md)
