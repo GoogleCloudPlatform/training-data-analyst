@@ -32,53 +32,43 @@ console.log('Worker starting...');
 function handler(message) {
   console.log('Message received');
   
-  // TODO: Use try {} catch {} to ensure valid feedback JSON
-  try{
-    // TODO: Log the message to the console
-    var messageData = JSON.parse(message.toString());
-    console.log(messageData);
+  // TODO: Log the message to the console
+  var messageData = JSON.parse(message.toString());
+  console.log(messageData);
+  // END TODO
+  
+  
+  // TODO: Invoke the languageapi module method
+  // with the feedback from the student
+  languageAPI.analyze(messageData.feedback)
+  .then(score => {
+    // TODO: Log sentiment score
+    console.log(`Score: ${score}`);
+    
     // END TODO
-    
-    
-    // TODO: Invoke the languageapi module method
-    // with the feedback from the student
-    languageAPI.analyze(messageData.feedback)
-    .then(score => {
-      // TODO: Log sentiment score
-      console.log(`Score: ${score}`);
-      
+
+    // TODO: Add a score property to feedback object
+    messageData.score = score;
+    return messageData;
+  })
+  // TODO: Pass on the feedback object
+  // to next Promise handler
+  .then(feedbackStorage.saveFeedback)
+  
+  // END TODO
+
+  // TODO: Add third .then(...)
+  .then(() => {
+      // TODO Log feedback saved message
+      console.log('Feedback saved');	
+
       // END TODO
+  })
+  // END TODO 
+  // TODO close off the promise with a catch and log
+  // any errors
+  .catch(console.error);
 
-      // TODO: Add a score property to feedback object
-      messageData.score = score;
-      return messageData;
-    })
-    // TODO: Pass on the feedback object
-    // to next Promise handler
-    .then(feedbackStorage.saveFeedback)
-    
-    // END TODO
-
-    // TODO: Add third .then(...)
-    .then(() => {
-        // TODO Log feedback saved message
-        console.log('Feedback saved');	
-
-        // END TODO
-    })
-    // END TODO 
-    // TODO close off the promise with a catch and log
-    // any errors
-    .catch(console.error);
-
-    // END TODO
-
-  // TODO Close the try block and catch errors 
-  // Log an error indicating the message was not valid JSON 
-
-  } catch { 
-      console.log("Invalid feedback message- no JSON data:", message.toString()) 
-  };
   // END TODO
 
 }

@@ -39,7 +39,6 @@ console.log('Worker starting...');
 function handler(message) {
     console.log('Message received');
 
-  // TODO:  Use try {} to ensure a valid feedback JSON
 
     // TODO: Log the message to the console
 
@@ -83,11 +82,6 @@ function handler(message) {
     // any errors to the console
 
     // END TODO
-
-// TODO Close the try block and catch errors 
-// Log an error indicating the message was not valid JSON 
-
-// END TODO
 
 }
 
