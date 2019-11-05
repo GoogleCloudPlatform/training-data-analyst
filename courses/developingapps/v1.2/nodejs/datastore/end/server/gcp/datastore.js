@@ -97,13 +97,6 @@ function create({ quiz, author, title, answer1, answer2, answer3, answer4, corre
   // END TODO
 }
 
-// TODO: Save the entity, return a promise
-// The ds.save(...) method returns a Promise to the
-// caller, as it runs asynchronously.
-
-
-
-// END TODO
 
 // Lists all questions in a Quiz (defaults to 'gcp').
 // Returns a promise

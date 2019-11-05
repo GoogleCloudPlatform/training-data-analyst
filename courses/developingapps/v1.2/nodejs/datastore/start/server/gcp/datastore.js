@@ -58,41 +58,24 @@ function create({ quiz, author, title, answer1, answer2, answer3, answer4, corre
 
   // END TODO
 
-  // TODO: Declare the entity key, 
-  // with a Datastore generated id
 
-
+  // TODO: Declare the entity key, with a Datastore generated id
 
   // END TODO
+
 
   // TODO: Declare the entity object, with the key and data
 
-
-
-  // The entity's members are represented in a data property.
-  // This is an array where each element represents one
-  // member in the entity. Each element is an object with a // name and a value
-
-
-
   // END TODO
+
 
   // TODO: Save the entity, return a promise
   // The ds.save(...) method returns a Promise to the  
   // caller, as it runs asynchronously.
 
-
-
   // END TODO
 }
 
-  // TODO: Save the entity, return a promise
-  // The ds.save(...) method returns a Promise to the
-  // caller, as it runs asynchronously.
-
-
-
-  // END TODO
 
 // Lists all questions in a Quiz (defaults to 'gcp').
 // Returns a promise
