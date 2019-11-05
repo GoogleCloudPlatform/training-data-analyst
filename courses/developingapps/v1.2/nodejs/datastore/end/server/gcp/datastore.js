@@ -1,4 +1,3 @@
-//START
 // Copyright 2017, Google, Inc.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,19 +38,13 @@ const ds = new Datastore({
 // END TODO
 
 // TODO: Declare a constant named kind
-//The Datastore key is the equivalent of a primary key in a // relational database.
+// The Datastore key is the equivalent of a primary key in a // relational database.
 // There are two main ways of writing a key:
 // 1. Specify the kind, and let Datastore generate a unique //    numeric id
 // 2. Specify the kind and a unique string id
 const kind = 'Question';
 
 // END TODO
-
-// TODO: Remove Placeholder statement
-
-  //return Promise.resolve({});
-
-  // END TODO
 
 // The create({quiz, author, title, answer1, answer2,
 // answer3, answer4, correctAnswer}) function uses an
@@ -60,43 +53,46 @@ const kind = 'Question';
 
 function create({ quiz, author, title, answer1, answer2, answer3, answer4, correctAnswer }) {
 
+  // TODO: Remove Placeholder statement
+
+  // return Promise.resolve({});
+
+  // END TODO
+
   // TODO: Declare the entity key, 
   // with a Datastore generated id
 
- const key = ds.key(kind);
-
+  const key = ds.key(kind);
+  
   // END TODO
 
   // TODO: Declare the entity object, with the key and data
 
- const entity = {
-   key,
+  const entity = {
+    key,
+
+    // The entity's members are represented in a data property.
+    // This is an array where each element represents one
+    // member in the entity. Each element is an object with a // name and a value
+    data: [
+      { name: 'quiz', value: quiz },
+      { name: 'author', value: author },
+      { name: 'title', value: title },
+      { name: 'answer1', value: answer1 },
+      { name: 'answer2', value: answer2 },
+      { name: 'answer3', value: answer3 },
+      { name: 'answer4', value: answer4 },
+      { name: 'correctAnswer', value: correctAnswer },
+    ]
+  };
 
   // END TODO
-
-// The entity's members are represented in a data property.
-// This is an array where each element represents one
-// member in the entity. Each element is an object with a // name and a value
-
-   data: [
-     { name: 'quiz', value: quiz },
-     { name: 'author', value: author },
-     { name: 'title', value: title },
-     { name: 'answer1', value: answer1 },
-     { name: 'answer2', value: answer2 },
-     { name: 'answer3', value: answer3 },
-     { name: 'answer4', value: answer4 },
-     { name: 'correctAnswer', value: correctAnswer },
-   ]
- };
-
-// END TODO
 
   // TODO: Save the entity, return a promise
   // The ds.save(...) method returns a Promise to the  
   // caller, as it runs asynchronously.
 
-return ds.save(entity);
+  return ds.save(entity);
 
   // END TODO
 }
