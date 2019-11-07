@@ -33,26 +33,29 @@
         <div ng-view></div>
     </div>
 
-    <!-- The core Firebase JS SDK is always required and must be listed first -->
-<script src="https://www.gstatic.com/firebasejs/6.6.1/firebase-app.js"></script>
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/7.2.3/firebase-app.js"></script>
 
 <!-- TODO: Add SDKs for Firebase products that you want to use
-     https://firebase.google.com/docs/web/setup#config-web-app -->
-<script src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+<script src="https://www.gstatic.com/firebasejs/7.2.3/firebase-auth.js"> </script>
+<script src="https://www.gstatic.com/firebasejs/7.2.3/firebase-analytics.js"></script>
 
 <script>
   // Your web app's Firebase configuration
   var firebaseConfig = {
-    apiKey: "AIzaSyDM4DDsuQxdd-BJjUz91TlW6TMaxq1jZVU",
-    authDomain: "qwiklabs-gcp-9f4ca6b522d4e4d1.firebaseapp.com",
-    databaseURL: "https://qwiklabs-gcp-9f4ca6b522d4e4d1.firebaseio.com",
-    projectId: "qwiklabs-gcp-9f4ca6b522d4e4d1",
-    storageBucket: "qwiklabs-gcp-9f4ca6b522d4e4d1.appspot.com",
-    messagingSenderId: "313711267383",
-    appId: "1:313711267383:web:5d5b4f1b76896c36b0b9b2"
+    apiKey: "AIzaSyCBEd_bnUPJBsbTFyHC1jsB2DrKub2YKac",
+    authDomain: "qwiklabs-gcp-e7ce91f4ea914d13.firebaseapp.com",
+    databaseURL: "https://qwiklabs-gcp-e7ce91f4ea914d13.firebaseio.com",
+    projectId: "qwiklabs-gcp-e7ce91f4ea914d13",
+    storageBucket: "qwiklabs-gcp-e7ce91f4ea914d13.appspot.com",
+    messagingSenderId: "454652037893",
+    appId: "1:454652037893:web:0f7ec091e8205b5033456c",
+    measurementId: "G-LV01MSSDB8"
   };
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
 </script>
 
     <script src='//ajax.googleapis.com/ajax/libs/angularjs/1.7.8/angular.js'></script>
