@@ -1,0 +1,112 @@
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Baby Weight Predictor</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic">
+  <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.4/angular-material.min.css">
+</head>
+
+<body ng-app="myApp" ng-cloak style="background-color: #efefef" ng-controller="myCtrl" layout="column">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <span>Baby weight predictor</span>
+    </div>
+  </md-toolbar>
+  <md-content flex style="width:420">
+    <md-card>
+      <md-card-content>
+        <p><em>Example application to predict a baby's weight.</em></p>
+       </md-card-content>
+    </md-card>
+    <md-card>
+      <md-card-content>
+        <div layout="row" layout-align="space-between center">
+          <span>Mother's age</span>
+          <md-slider-container>
+              {: data.mother_age :}&nbsp;
+            <md-slider aria-label="Slider" min="15" max="49"
+                       ng-model="data.mother_age" id="age-slider">
+            </md-slider>
+          </md-slider-container>
+        </div>
+
+        <div layout="row" layout-align="space-between center">
+          <span>Gestation weeks</span>
+          <md-slider-container>
+              {: data.gestation_weeks :}&nbsp;
+            <md-slider aria-label="Slider" min="30" max="49"
+                       ng-model="data.gestation_weeks" id="age-slider">
+            </md-slider>
+          </md-slider-container>
+        </div>
+
+        <div layout="row" layout-align="space-between center">
+          <span>Plurality</span>
+          <md-select ng-model="data.plurality" placeholder="Select">
+            <md-option value="1">Single</md-option>
+            <md-option value="2">Twins</md-option>
+            <md-option value="3">Triplets</md-option>
+          </md-select>
+        </div>
+
+        <div style="margin-bottom:32px" layout="row" layout-align="space-between center">
+          <span>Baby's gender</span>
+          <md-radio-group ng-model="data.baby_gender" layout="row">
+            <md-radio-button value="male">Male</md-radio-button>
+            <md-radio-button value="female">Female</md-radio-button>
+            <md-radio-button value="unknown">Unknown</md-radio-button>
+          </md-radio-group>
+        </div>
+      </md-card-content>
+      <md-card-actions layout="row" layout-align="end center">
+        <md-button ng-click="submit()" class="md-accent md-raised">Predict</md-button>
+      </md-card-actions>
+    </md-card>
+    <md-card>
+      <md-card-content>
+        <div layout="row" layout-align="space-between center">
+          <span>Prediction</span>
+          <span>{: result :}</span>
+        </div>
+      </md-card-content>
+    </md-card>
+  </md-content>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.4/angular-material.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.js"></script>
+
+  <script>
+    var app = angular.module("myApp", ["ngMaterial"]);
+    app.config(["$interpolateProvider", function($interpolateProvider) {
+      $interpolateProvider.startSymbol("{:");
+      $interpolateProvider.endSymbol(":}");
+    }]);
+    app.config(function($mdThemingProvider) {
+      $mdThemingProvider.theme("default")
+        .primaryPalette("blue-grey")
+        .accentPalette("orange");
+    });
+    app.controller("myCtrl", ["$scope", "$http",
+      function($scope, $http) {
+        $scope.data = {};
+        $scope.submit = function() {
+          $scope.result = "Wait...";
+          $http({
+            method : "POST",
+            url : "/api/predict",
+            data: $scope.data
+          }).success(function(data, status, headers, config) {
+            $scope.result = data.result;
+          }).error(function(data, status, headers, config) {
+            $scope.result = "Error";
+          });
+        }
+      }
+    ]);
+  </script>
+</body>
+</html>
