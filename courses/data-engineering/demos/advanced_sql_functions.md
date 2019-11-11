@@ -258,6 +258,11 @@ GROUP BY bike_id
 ORDER BY most_distance_km_rank LIMIT 10
 ```
 
+## Query Results
+
+We used two levels of `RANK()` functions to first rank each trip for a given bike and then we ranked the bikes themselves based on their overall distance travelled. The final table shows both aggregate metrics (comparing between bikes) and also per-bike per-ride metrics in an `ARRAY`. BigQuery natively supports [repeated fields (ARRAYs)](https://cloud.google.com/bigquery/docs/reference/standard-sql/arrays#arrays-and-aggregation) so you can have both levels of granularity in a single table: 
+
+![Bike Maintenance](img/bike_maintenance.png)
 
 
 
