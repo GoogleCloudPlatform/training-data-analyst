@@ -85,6 +85,97 @@ You can quickly connect your BigQuery project to [BigQuery GeoViz](https://bigqu
 ![Query Results](img/fastest_commuters.png)
 
 
+## Analyzing Bike Turnover: Working with Window functions
+
+For our next problem, we want to see how long bikes are idle at each station on averge before they are picked up by another rider. This could help avoid stock-outs for high-demand stations if we setup a program to incentivize bike rentals from slower turnover stations to highly demanded ones. 
+
+__Questions__
+- Which 10 stations turn over bikes the quickest (lowest time at station)?
+- Which 10 stations are the slowest at turning over bikes?
+
+```sql
+WITH staging AS (
+  SELECT 
+    STRUCT(
+      start_stn.name,
+      ST_GEOGPOINT(start_stn.longitude, start_stn.latitude) AS point,
+      start_stn.docks_count,
+      start_stn.install_date
+    ) AS starting,
+    STRUCT(
+      end_stn.name,
+      ST_GEOGPOINT(end_stn.longitude, end_stn.latitude) AS point,
+      end_stn.docks_count,
+      end_stn.install_date
+    ) AS ending,
+    STRUCT(
+      rental_id,
+      bike_id,
+      duration, -- seconds
+      ST_DISTANCE(
+        ST_GEOGPOINT(start_stn.longitude, start_stn.latitude),
+        ST_GEOGPOINT(end_stn.longitude, end_stn.latitude)
+        ) AS distance, -- meters
+      ST_MAKELINE(
+        ST_GEOGPOINT(start_stn.longitude, start_stn.latitude),
+        ST_GEOGPOINT(end_stn.longitude, end_stn.latitude)
+        ) AS trip_line, -- straight line (for GeoViz)
+      start_date,
+      end_date
+    ) AS bike
+  FROM `bigquery-public-data.london_bicycles.cycle_stations` AS start_stn
+  LEFT JOIN `bigquery-public-data.london_bicycles.cycle_hire` AS b
+  ON start_stn.id = b.start_station_id
+  LEFT JOIN `bigquery-public-data.london_bicycles.cycle_stations` AS end_stn
+  ON end_stn.id = b.end_station_id
+),
+lag_end_date AS (
+-- Find how long after one ride ends, another one begins (on average)
+SELECT
+  starting.name,
+  starting.docks_count,
+  starting.install_date,
+  bike.bike_id,
+  LAG(bike.end_date) OVER (
+    PARTITION BY bike.bike_id 
+    ORDER BY bike.start_date)
+  AS last_end_date,
+  bike.start_date,
+  bike.end_date
+FROM staging
+)
+
+SELECT
+  name,
+  docks_count,
+  install_date,
+  COUNT(bike_id) AS total_trips,
+  ROUND(
+    AVG(
+      TIMESTAMP_DIFF(start_date, last_end_date, HOUR)
+      )
+  ,2) AS time_at_station_hrs
+FROM lag_end_date
+GROUP BY 
+  name,
+  docks_count,
+  install_date
+HAVING total_trips > 0
+ORDER BY time_at_station_hrs ASC -- fastest turnover first
+LIMIT 10;
+```
+
+__Notes to interpret the query:__
+- The tricky part of this query is getting the last bike's return time and then calculating the time until the next rental for that `bike_id`. If you're focused on the previous of something or the next something you want to use SQL `LAG` or `LEAD` [functions](https://cloud.google.com/bigquery/docs/reference/standard-sql/navigation_functions). 
+- Here we want the previous rental return date __for a given bike__ which should alert you that you need to break apart your data into separate windows for analysis. It would do us no good to get the last return time for any bike at any time. That is why we want the `LAG(end_date)` over a window of all the same `bike_id` ensuring that the return dates are in order from oldest to newest. That is what the `PARTITION BY` analytical window function does in the code above. 
+- Note: You could absolutely combine the `lag_end_date` common table expression into the final query by doing the `TIMESTAMP_DIFF` and the analytical window function in one go. I broke them out here for readability. 
+
+## Query Results: Stations with the best turnover 
+![Best Turnover](img/best_turnover.png)
+
+## Query Results: Stations with the slowest turnover
+Simply change the `ORDER BY` to `DESC` and now you get the highest idle time for bikes at these stations:
+![Worst Turnover](img/worst_turnover.png)
 
 
 
