@@ -77,12 +77,13 @@ __Notes to interpret the query:__
 
 ## Query results
 Below are the fastest (on average) bike station pairs
-![Query Results](img/fastest_commuters.png)
+![BigQuery GeoViz of London Bike Share](img/london_pace_bikes.png)
 
 ## Mapping the GIS values with BigQuery GeoViz
 You can quickly connect your BigQuery project to [BigQuery GeoViz](https://bigquerygeoviz.appspot.com/) and use a UI to build a map based on your geographic columns. Here we mapped the straight line path of the fastest bike commutes with the thicker lines being the faster riders. 
 
-![BigQuery GeoViz of London Bike Share](img/london_pace_bikes.png)
+![Query Results](img/fastest_commuters.png)
+
 
 
 
