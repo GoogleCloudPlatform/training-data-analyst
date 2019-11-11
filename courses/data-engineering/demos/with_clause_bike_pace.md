@@ -167,7 +167,7 @@ LIMIT 10;
 
 __Notes to interpret the query:__
 - The tricky part of this query is getting the last bike's return time and then calculating the time until the next rental for that `bike_id`. If you're focused on the previous of something or the next something you want to use SQL `LAG` or `LEAD` [functions](https://cloud.google.com/bigquery/docs/reference/standard-sql/navigation_functions). 
-- Here we want the previous rental return date __for a given bike__ which should alert you that you need to break apart your data into separate windows for analysis. It would do us no good to get the last return time for any bike at any time. That is why we want the `LAG(end_date)` over a window of all the same `bike_id` ensuring that the return dates are in order from oldest to newest. That is what the `PARTITION BY` analytical window function does in the code above. 
+- Here we want the previous rental return date __for a given bike__ which should alert you that you need to break apart your data into separate windows for analysis. It would do us no good to get the last return time for any bike at any time. That is why we want the `LAG(end_date)` over a window of all the same `bike_id` ensuring that the return dates are in order from oldest to newest. That is what the `PARTITION BY` [analytical window function](https://cloud.google.com/bigquery/docs/reference/standard-sql/analytic-function-concepts) does in the code above. 
 - Note: You could absolutely combine the `lag_end_date` common table expression into the final query by doing the `TIMESTAMP_DIFF` and the analytical window function in one go. I broke them out here for readability. 
 
 ## Query Results: Stations with the best turnover 
@@ -178,6 +178,85 @@ Simply change the `ORDER BY` to `DESC` and now you get the highest idle time for
 ![Worst Turnover](img/worst_turnover.png)
 
 
+## Ranking Bike Maintenance: Working with Window functions and ARRAYs
+
+Lastly, let's use our new knowledge of window functions to create a list of bikes which are in the most need of maintenance. 
+
+```sql
+WITH staging AS (
+  SELECT 
+    STRUCT(
+      start_stn.name,
+      ST_GEOGPOINT(start_stn.longitude, start_stn.latitude) AS point,
+      start_stn.docks_count,
+      start_stn.install_date
+    ) AS starting,
+    STRUCT(
+      end_stn.name,
+      ST_GEOGPOINT(end_stn.longitude, end_stn.latitude) AS point,
+      end_stn.docks_count,
+      end_stn.install_date
+    ) AS ending,
+    STRUCT(
+      rental_id,
+      bike_id,
+      duration, -- seconds
+      ST_DISTANCE(
+        ST_GEOGPOINT(start_stn.longitude, start_stn.latitude),
+        ST_GEOGPOINT(end_stn.longitude, end_stn.latitude)
+        ) AS distance, -- meters
+      ST_MAKELINE(
+        ST_GEOGPOINT(start_stn.longitude, start_stn.latitude),
+        ST_GEOGPOINT(end_stn.longitude, end_stn.latitude)
+        ) AS trip_line, -- straight line (for GeoViz)
+      start_date,
+      end_date
+    ) AS bike
+  FROM `bigquery-public-data.london_bicycles.cycle_stations` AS start_stn
+  LEFT JOIN `bigquery-public-data.london_bicycles.cycle_hire` AS b
+  ON start_stn.id = b.start_station_id
+  LEFT JOIN `bigquery-public-data.london_bicycles.cycle_stations` AS end_stn
+  ON end_stn.id = b.end_station_id
+)
+-- Collect key stats for each bike on total usage
+, maintenance_stats AS (
+SELECT
+  bike.bike_id,
+
+STRUCT(
+  RANK() OVER(
+    PARTITION BY bike.bike_id
+    ORDER BY bike.start_date
+    ) AS current_trip_number,
+
+  SUM(bike.duration/60/60) OVER(
+    PARTITION BY bike.bike_id
+    ORDER BY bike.start_date
+    ) AS cumulative_duration_hr,
+
+  SUM(bike.distance/1000) OVER(
+    PARTITION BY bike.bike_id
+    ORDER BY bike.start_date
+    ) AS cumulative_distance_km,
+    
+  bike.start_date,
+  bike.end_date
+  ) AS stats
+FROM staging
+)
+SELECT
+  -- High level summary
+  RANK() OVER(
+    ORDER BY MAX(stats.cumulative_distance_km) DESC
+    ) AS most_distance_km_rank,
+  bike_id,
+  MAX(stats.cumulative_distance_km) AS distance_travelled,
+  -- Detail within array (show 10 most recent rides)
+  ARRAY_AGG(stats ORDER BY stats.end_date DESC LIMIT 10) AS maint_stats
+FROM maintenance_stats
+GROUP BY bike_id
+ORDER BY most_distance_km_rank LIMIT 10
+```
 
 
 
