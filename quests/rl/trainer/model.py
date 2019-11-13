@@ -14,74 +14,43 @@
 
 """A deep Q network to show reinforcement learning on the cloud."""
 
-import numpy as np
-import random
-import tensorflow as tf
-
 from collections import deque
-from enum import Enum
+import random
+
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras import layers, models
 
 
 # Create agent components
-class DQNetwork():
-    def __init__(
-        self, state_size, action_size, learning_rate,
-            hidden_neurons, name='DQNetwork'):
-        """Creates a Deep Q Network to emulate Q-learning.
+def deep_q_network(
+        state_shape, action_size, learning_rate, hidden_neurons):
+    """Creates a Deep Q Network to emulate Q-learning.
 
-        Creates a two hidden-layer Deep Q Network. Similar to a typical nueral
-        network, the loss function is altered to reduce the difference between
-        predicted Q-values and Target Q-values.
+    Creates a two hidden-layer Deep Q Network. Similar to a typical nueral
+    network, the loss function is altered to reduce the difference between
+    predicted Q-values and Target Q-values.
 
-        Args:
-            state_size (int): the number of parameters used to define the state
-                the agent is in.
-            action_size (int): the number of different actions the agent can
-                take.
-            learning_rated (float): the nueral network's learning rate.
-            hidden_neurons (int): the number of neurons to use per hidden
-                layer.
-            name (str): What to call the network, as shown in tensorboard.
-        """
-        with tf.variable_scope(name):
-            self.states = tf.placeholder(
-                tf.float32, shape=((None,) + state_size), name='states')
-            self.actions = tf.placeholder(
-                tf.int32, shape=(None), name='actions')
+    Args:
+        space_shape: a tuple of ints representing the observation space.
+        action_size (int): the number of possible actions.
+        learning_rate (float): the nueral network's learning rate.
+        hidden_neurons (int): the number of neurons to use per hidden
+            layer.
+    """
+    state_input = layers.Input(state_shape, name='frames')
+    actions_input = layers.Input((action_size,), name='mask')
 
-            # target_Q is R(s,a) + ymax Qhat(s', a')
-            self.target_Q = tf.placeholder(tf.float32, [None], name="target")
+    hidden_1 = layers.Dense(hidden_neurons, activation='relu')(state_input)
+    hidden_2 = layers.Dense(hidden_neurons, activation='relu')(hidden_1)
+    q_values = layers.Dense(action_size)(hidden_2)
+    masked_q_values = layers.Multiply()([q_values, actions_input])
 
-            # TODO(ddetering): Switch to keras.
-            self.fully_connected_1 = tf.layers.dense(
-                inputs=self.states,
-                units=hidden_neurons,
-                activation=tf.nn.relu,
-                name="fully_connected_1")
-
-            self.fully_connected_2 = tf.layers.dense(
-                inputs=self.fully_connected_1,
-                units=hidden_neurons,
-                activation=tf.nn.relu,
-                name="fully_connected_2")
-
-            self.output = tf.layers.dense(
-                inputs=self.fully_connected_2,
-                units=action_size,
-                activation=None)
-
-            # Hot encode and multiply across to select Q value for an action.
-            self.actions_hot = tf.one_hot(self.actions, action_size)
-            # Q is our predicted Q value.
-            self.Q = tf.reduce_sum(
-                tf.multiply(self.output, self.actions_hot), axis=1)
-
-            # The loss is the difference between predicted Q_values and
-            # the Q_target Sum(Qtarget - Q)^2
-            self.loss = tf.reduce_mean(tf.square(self.target_Q - self.Q))
-            self.optimizer = (
-                tf.train.RMSPropOptimizer(learning_rate).minimize(self.loss))
-            tf.summary.scalar("loss", self.loss)  # Track in Tensorboard.
+    model = models.Model(
+        inputs=[state_input, actions_input], outputs=masked_q_values)
+    optimizer = tf.keras.optimizers.RMSprop(lr=learning_rate)
+    model.compile(loss='mse', optimizer=optimizer)
+    return model
 
 
 class Memory():
@@ -92,73 +61,66 @@ class Memory():
     other methods. For instance, a weight could be given to each memory
     depending on how big of a difference there is between predicted Q values
     and target Q values.
+
+    Args:
+        memory_size (int): How many elements to hold in the memory buffer.
+        batch_size (int): The number of elements to include in a replay batch.
+        gamma (float): The "discount rate" used to assess Q values.
     """
-    def __init__(self, memory_size):
+    def __init__(self, memory_size, batch_size, gamma):
         self.buffer = deque(maxlen=memory_size)
+        self.batch_size = batch_size
+        self.gamma = gamma
 
     def add(self, experience):
         """Adds an experience into the memory buffer.
 
         Args:
-            experience: a (state, action, state_prime, reward, done) tuple.
+            experience: a (state, action, reward, state_prime, done) tuple.
         """
         self.buffer.append(experience)
 
-    def sample(self, batch_size):
+    def sample(self):
         """Uniformally selects from the replay memory buffer.
 
         Uniformally and randomly selects experiences to train the nueral
-        network on. Transposes the experiences to allow batch math one
+        network on. Transposes the experiences to allow batch math on
         the experience components.
-
-        Args:
-            batch_size (int): the number of experiences to sample
 
         Returns:
             (list): A list of lists with structure [
-                [states], [actions], [state_primes], [rewards], [dones]
+                [states], [actions], [rewards], [state_primes], [dones]
             ]
         """
         buffer_size = len(self.buffer)
         index = np.random.choice(
-            np.arange(buffer_size), size=batch_size, replace=False)
+            np.arange(buffer_size), size=self.batch_size, replace=False)
 
         # Columns have different data types, so numpy array would be awkward.
-        return np.array([self.buffer[i] for i in index]).T.tolist()
+        batch = np.array([self.buffer[i] for i in index]).T.tolist()
+        states_mb = tf.convert_to_tensor(np.array(batch[0], dtype=np.float32))
+        actions_mb = np.array(batch[1], dtype=np.int8)
+        rewards_mb = np.array(batch[2], dtype=np.float32)
+        states_prime_mb = np.array(batch[3], dtype=np.float32)
+        dones_mb = batch[4]
+        return states_mb, actions_mb, rewards_mb, states_prime_mb, dones_mb
 
 
 # Create agent
 class Agent():
     """Sets up a reinforcement learning agent to play in a game environment."""
-    def __init__(
-            self, state_size, action_size, learning_rate, hidden_nuerons,
-            gamma, epsilon_decay, memory_batch_size, memory_size,
-            tensorflow_session):
+    def __init__(self, network, memory, epsilon_decay, action_size):
         """Initializes the agent with DQN and memory sub-classes.
 
         Args:
-            state_size (tuple of ints): The shape and size of the parameters
-                outputed by the game environment.
-            action_size (int): The number of actions the agent may choose from.
-            learning_rate (int): The nueral network learning rate.
-            hidden_nuerons (int): The number of hidden nuerons per layer of
-                the DQN.
-            gamma (float): The "discount rate" used to assess Q values.
+            network: A neural network created from deep_q_network().
+            memory: A Memory class object.
             epsilon_decay (float): The rate at which to decay random actions.
-            memory_batch_size (int): The number of experiences to pull from the
-                replay memory during training.
-            memory_size (int): The maximum number of experiences the memory
-                buffer can hold.
-            tensorflow_session: The Tensorflow session the simulation is taking
-                place in.
+            action_size (int): The number of possible actions to take.
         """
+        self.network = network
         self.action_size = action_size
-        self.brain = DQNetwork(
-            state_size, action_size, learning_rate, hidden_nuerons)
-        self.memory = Memory(memory_size)
-        self.session = tensorflow_session
-        self.memory_batch_size = memory_batch_size
-        self.gamma = gamma
+        self.memory = memory
         self.epsilon = 1  # The chance to take a random action.
         self.epsilon_decay = epsilon_decay
 
@@ -174,59 +136,45 @@ class Agent():
         """
         if training:
             # Random actions until enough simulations to train the model.
-            if len(self.memory.buffer) >= self.memory_batch_size:
+            if len(self.memory.buffer) >= self.memory.batch_size:
                 self.epsilon *= self.epsilon_decay
 
-            if (self.epsilon > np.random.rand()):
+            if self.epsilon > np.random.rand():
                 return random.randint(0, self.action_size-1)
 
         # If not acting randomly, take action with highest predicted value.
-        Qs = self.session.run(
-            self.brain.output, feed_dict={self.brain.states: [state]})
-        return np.argmax(Qs)
+        state_batch = np.expand_dims(state, axis=0)
+        predict_mask = np.ones((1, self.action_size,))
+        action_qs = self.network.predict([state_batch, predict_mask])
+        return np.argmax(action_qs[0])
 
-    def learn(self, get_summary):
-        """Trains the Deep Q Network based on stored experiences.
-
-        Args:
-            get_summary (bool): True if the loss summary is requested.
-
-        Returns:
-            None or a Tensorboard Summary for the training loss.
-        """
-        if len(self.memory.buffer) < self.memory_batch_size:
+    def learn(self):
+        """Trains the Deep Q Network based on stored experiences."""
+        batch_size = self.memory.batch_size
+        if len(self.memory.buffer) < batch_size:
             return
-        brain = self.brain
 
         # Obtain random mini-batch from memory.
-        states_mb, actions_mb, rewards_mb, states_prime_mb, dones_mb = (
-            self.memory.sample(self.memory_batch_size))
+        state_mb, action_mb, reward_mb, next_state_mb, done_mb = (
+            self.memory.sample())
 
         # Get Q values for next_state.
-        Qs_next_state = self.session.run(
-            brain.output, feed_dict={brain.states: states_prime_mb})
+        predict_mask = np.ones(action_mb.shape + (self.action_size,))
+        next_q_mb = self.network.predict([next_state_mb, predict_mask])
+        next_q_mb = tf.math.reduce_max(next_q_mb, axis=1)
 
-        # Set Q_target = r if the episode ends at s+1.
-        # Otherwise set Q_target = r + gamma*maxQ(s', a').
-        target_Qs_batch = np.array([
-            rewards_mb[i] if dones_mb[i]
-            else rewards_mb[i] + self.gamma * np.max(Qs_next_state[i])
-            for i in range(len(rewards_mb))
-        ])
+        # Apply the Bellman Equation
+        target_qs = (next_q_mb * self.memory.gamma) + reward_mb
+        target_qs = tf.where(done_mb, reward_mb, target_qs)
 
-        targets_mb = np.array(target_Qs_batch)
-        model_feed = {
-            brain.states: states_mb,
-            brain.target_Q: targets_mb,
-            brain.actions: actions_mb,
-        }
+        # Match training batch to network output:
+        # target_q where action taken, 0 otherwise.
+        action_mb = tf.convert_to_tensor(action_mb, dtype=tf.int32)
+        action_hot = tf.one_hot(action_mb, self.action_size)
+        target_mask = tf.multiply(tf.expand_dims(target_qs, -1), action_hot)
 
-        # Merge summaries for tensorboard.
-        if get_summary:
-            _, _, summary = self.session.run(
-                [brain.loss, brain.optimizer, tf.summary.merge_all()],
-                feed_dict=model_feed)
-            return summary
-
-        self.session.run([brain.loss, brain.optimizer], feed_dict=model_feed)
+        self.network.fit(
+            [state_mb, action_hot], target_mask, batch_size=batch_size,
+            epochs=1, steps_per_epoch=1, verbose=0
+        )
         return

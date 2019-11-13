@@ -2,8 +2,8 @@
 trainingInput:
   scaleTier: BASIC_GPU
   hyperparameters:
-    maxTrials: 50
-    maxParallelTrials: 30
+    maxTrials: 15
+    maxParallelTrials: 15
     enableTrialEarlyStopping: False
     goal: MAXIMIZE
     hyperparameterMetricTag: episode_reward
@@ -15,7 +15,7 @@ trainingInput:
       scaleType: UNIT_LINEAR_SCALE
     - parameterName: hidden_neurons
       type: INTEGER
-      minValue: 1
+      minValue: 10
       maxValue: 50
       scaleType: UNIT_LINEAR_SCALE
     - parameterName: gamma
@@ -32,4 +32,3 @@ trainingInput:
       - 64
       - 128
       - 256
-      - 512

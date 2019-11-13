@@ -1,0 +1,14 @@
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /
+  script: main.app
+- url: /.*
+  script: main.app
+  login: required
+
+env_variables:
+  MODEL_NAME: # TODO: Add model name string
+  VERSION_NAME: # TODO: Add model version string

@@ -15,7 +15,7 @@ GCS_OUTPUT_DIR=$3/${INSTANCE_NAME}
 INPUT_PARAMS=$4
 
 # gcloud compute images list --project deeplearning-platform-release --no-standard-images
-export IMAGE_FAMILY="tf-2-0-cu100-experimental"
+export IMAGE_FAMILY="tf2-latest-cu10"
 export ZONE="us-west1-b"
 export INSTANCE_TYPE="n1-standard-4"
 
