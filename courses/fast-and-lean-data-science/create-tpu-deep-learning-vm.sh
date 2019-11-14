@@ -3,8 +3,8 @@
 # please configure your login, project region and zone first by running gcloud init
 # region us-central1 zone us-central1-b usually have TPUs available
 
-DEFAULT_TF_VERSION="1.14"
-DEFAULT_IMAGE_FAMILY="tf-"${DEFAULT_TF_VERSION//./-}"-cpu"
+DEFAULT_TF_VERSION="1.15"
+DEFAULT_IMAGE_FAMILY="tf-1-15-cpu"
 
 usage()
 {
@@ -19,10 +19,11 @@ create_vm() # params: machine_name, machine_type, tfnightly
     extra_install=""
     if [ "$3" != 0 ];
     then
-        extra_install="python3 -m pip install --upgrade pip; python3 -m pip install tf-nightly-2.0-preview";
-        version_msg="tf-nightly-2.0-preview";
+        extra_install="pip install tf-nightly; pip install behave";
+        version_msg="tf-nightly (2.x)";
     else
-        version=$DEFAULT_TF_VERSION
+        version=$DEFAULT_TF_VERSION;
+        version_msg=$DEFAULT_TF_VERSION;
     fi
     echo "Creating VM named $1 of type $2 with Tensorflow $version_msg. Check for it with \"gcloud compute instances list\""
     gcloud compute instances create $1 \
@@ -30,7 +31,6 @@ create_vm() # params: machine_name, machine_type, tfnightly
         --image-project deeplearning-platform-release \
         --image-family $DEFAULT_IMAGE_FAMILY \
         --scopes cloud-platform \
-        --boot-disk-size=300GB \
         --metadata proxy-mode=project_editors,startup-script="echo \"export TPU_NAME=$1\" > /etc/profile.d/tpu-env.sh; $extra_install" \
         --async
 
@@ -42,7 +42,7 @@ create_tpu() # params: machine_name, tpu_type, tfnightly
 {
     if [ "$3" != 0 ];
     then
-        version="nightly";
+        version="nightly-2.x";
     else
         version=$DEFAULT_TF_VERSION
     fi

@@ -24,6 +24,7 @@ import com.google.cloud.sme.Entities;
 import com.google.cloud.sme.common.ActionReader;
 import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.common.FileActionReader;
+import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.ProjectTopicName;
 import java.util.concurrent.Executors;
@@ -53,11 +54,14 @@ public class Publisher {
   private ActionReader actionReader;
   private AtomicLong awaitedFutures;
   private ExecutorService executor = Executors.newCachedThreadPool();
+  private ByteString extraInfo;
 
   private Publisher(Args args, ActionReader actionReader) {
     this.args = args;
     this.actionReader = actionReader;
     this.awaitedFutures = new AtomicLong();
+    byte[] extraBytes = new byte[102400];
+    this.extraInfo = ByteString.copyFrom(extraBytes);
 
     ProjectTopicName topic = ProjectTopicName.of(args.project, TOPIC);
     com.google.cloud.pubsub.v1.Publisher.Builder builder =
@@ -72,6 +76,7 @@ public class Publisher {
 
   private void Publish(Entities.Action publishAction) {
     awaitedFutures.incrementAndGet();
+    publishAction = Entities.Action.newBuilder(publishAction).setExtraInfo(this.extraInfo).build();
     final long publishTime = DateTime.now().getMillis();
     PubsubMessage message =
         PubsubMessage.newBuilder()
