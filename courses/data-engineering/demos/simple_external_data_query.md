@@ -15,6 +15,7 @@ Refer to the [documentation](https://cloud.google.com/bigquery/external-data-sou
 1. Navigate to: [sheets.new](sheets.new) (or [docs.google.com/spreadsheets/](docs.google.com/spreadsheets/) --> CREATE)
 
 2. Paste in the below table at the very top of the sheet (cell A1)
+
 | Message     | Language    | Translation |
 | ----------- | ----------- | ----------- |
 | The weather is quite nice out | es | =GOOGLETRANSLATE(A2,"en",B2)
