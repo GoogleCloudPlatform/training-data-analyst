@@ -23,4 +23,4 @@ echo "Switching to virtual environment"
 source ~/venvs/developingapps/bin/activate
 
 echo "Starting worker"
-python2 -m quiz.console.worker
+python -m quiz.console.worker

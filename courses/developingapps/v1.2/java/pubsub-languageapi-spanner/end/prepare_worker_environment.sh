@@ -24,7 +24,7 @@ gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID \
 export GOOGLE_APPLICATION_CREDENTIALS=key.json
 
 echo "Creating Cloud Pub/Sub topic"
-gcloud beta pubsub topics create feedback
+gcloud pubsub topics create feedback
 
 echo "Creating Cloud Spanner Instance, Database, and Table"
 gcloud spanner instances create quiz-instance --config=regional-us-central1 --description="Quiz instance" --nodes=1

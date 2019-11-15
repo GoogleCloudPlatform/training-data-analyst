@@ -23,7 +23,7 @@ datastore_client = datastore.Client(project_id)
 Returns a list of question entities for a given quiz
 - filter by quiz name, defaulting to gcp
 - no paging
-- add in the entity key as the id property 
+- add in the entity key as the id property
 - if redact is true, remove the correctAnswer property from each entity
 """
 def list_entities(quiz='gcp', redact=True):

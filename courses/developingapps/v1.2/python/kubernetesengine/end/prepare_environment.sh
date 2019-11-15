@@ -26,15 +26,12 @@ export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media
 
 echo "Creating virtual environment"
 mkdir ~/venvs
-pip2 install virtualenv
-virtualenv --python=/usr/bin/python2.7 ~/venvs/developingapps
-#virtualenv ~/venvs/developingapps
+virtualenv -p python3 ~/venvs/developingapps
 source ~/venvs/developingapps/bin/activate
 
 echo "Installing Python libraries"
-pip2 install --upgrade pip
-pip2 install -r requirements.txt
-pip2 freeze > requirements.txt
+pip install --upgrade pip
+pip install -r requirements.txt
 
 echo "Creating Datastore entities"
 python add_entities.py
@@ -60,14 +57,14 @@ gcloud container clusters create quiz-cluster --zone us-central1-a --scopes clou
 gcloud container clusters get-credentials quiz-cluster --zone us-central1-a
 
 echo "Building Containers"
-gcloud builds submit -t gcr.io/$DEVSHELL_PROJECT_ID/quiz-frontend ./frontend/
-gcloud builds submit -t gcr.io/$DEVSHELL_PROJECT_ID/quiz-backend ./backend/
+gcloud container builds submit -t gcr.io/$DEVSHELL_PROJECT_ID/quiz-frontend ./frontend/
+gcloud container builds submit -t gcr.io/$DEVSHELL_PROJECT_ID/quiz-backend ./backend/
 
 echo "Deploying to Container Engine"
 sed -i -e "s/\[GCLOUD_PROJECT\]/$DEVSHELL_PROJECT_ID/g" ./frontend-deployment.yaml
 sed -i -e "s/\[GCLOUD_PROJECT\]/$DEVSHELL_PROJECT_ID/g" ./backend-deployment.yaml
-kubectl apply -f ./frontend-deployment.yaml
-kubectl apply -f ./backend-deployment.yaml
-kubectl apply -f ./frontend-service.yaml
+kubectl create -f ./frontend-deployment.yaml
+kubectl create -f ./backend-deployment.yaml
+kubectl create -f ./frontend-service.yaml
 
 echo "Project ID: $DEVSHELL_PROJECT_ID"

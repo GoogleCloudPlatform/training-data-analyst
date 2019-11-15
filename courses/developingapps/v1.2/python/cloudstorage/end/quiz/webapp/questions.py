@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#training-data-analyst/courses/developingapps/python/cloudstorage/end/quiz/webapp
+
 # TODO: Import the storage module
 
 from quiz.gcp import storage, datastore
@@ -55,7 +55,7 @@ def save_question(data, image_file):
     # If there isn't, assign an empty string
     
     if image_file:
-        data['imageUrl'] = str(upload_file(image_file, True))
+        data['imageUrl'] = unicode(upload_file(image_file, True))
     else:
         data['imageUrl'] = u''
 

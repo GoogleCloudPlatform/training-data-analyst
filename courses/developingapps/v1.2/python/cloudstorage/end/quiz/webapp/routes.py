@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#training-data-analyst/courses/developingapps/python/cloudstorage/end/quiz/webapp
+
 
 """
 Set up Flask stuff
@@ -19,7 +19,7 @@ from flask import Blueprint, render_template
 from flask import send_from_directory
 from flask import request, redirect
 
-from.import questions
+import questions
 
 """
 configure blueprint
@@ -69,3 +69,4 @@ def add_question():
         return redirect('/', code=302)
     else:        
         return "Method not supported for /questions/add"
+

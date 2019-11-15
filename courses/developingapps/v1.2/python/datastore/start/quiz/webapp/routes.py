@@ -19,14 +19,14 @@ from flask import Blueprint, render_template
 from flask import send_from_directory
 from flask import request, redirect
 
-from.import questions
+from quiz.webapp import questions
 
 """
 configure blueprint
 """
 webapp_blueprint = Blueprint(
-    'webapp', 
-    __name__, 
+    'webapp',
+    __name__,
     template_folder='templates',
 )
 
@@ -65,6 +65,5 @@ def add_question():
         data = request.form.to_dict(flat=True)
         questions.save_question(data)
         return redirect('/', code=302)
-    else:        
+    else:
         return "Method not supported for /questions/add"
-

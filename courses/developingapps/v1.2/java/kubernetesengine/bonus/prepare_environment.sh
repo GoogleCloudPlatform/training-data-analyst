@@ -43,8 +43,8 @@ echo "Copying answer backend output into answer_backend folder"
 cp ./target/quiz-answer-backend-0.0.1.jar ./answer_backend/
 
 echo "Creating Cloud Pub/Sub topics"
-gcloud beta pubsub topics create feedback
-gcloud beta pubsub topics create answers
+gcloud pubsub topics create feedback
+gcloud pubsub topics create answers
 
 echo "Creating Cloud Spanner Instance, Database, and Tables"
 gcloud spanner instances create quiz-instance --config=regional-us-central1 --description="Quiz instance" --nodes=1
