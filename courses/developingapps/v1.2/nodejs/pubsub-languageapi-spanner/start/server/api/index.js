@@ -58,23 +58,22 @@ router.post('/feedback/:quiz', (req, res, next) => {
   // TODO: Publish the message into Cloud Pub/Sub
 
 
-  // TODO: Move the statement that returns a message to 
-  // the client app here
+    // TODO: Move the statement that returns a message to 
+    // the client app here
 
 
 
-  // END TODO
+    // END TODO
 
-  // TODO: Add a catch
+      // TODO: Add a catch
 
-  // TODO: There was an error, invoke the next middleware
-
-
-
-  // END TODO
+        // TODO: There was an error, invoke the next middleware
 
 
-  // END TODO
+
+      // END TODO
+
+    // END TODO
 
 });
 
