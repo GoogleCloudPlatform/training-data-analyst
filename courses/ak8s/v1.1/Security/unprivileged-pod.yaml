@@ -1,0 +1,8 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: unprivileged-pod
+spec:
+  containers:
+    - name: unprivileged-pod
+      image: nginx

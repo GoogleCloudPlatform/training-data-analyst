@@ -1,0 +1,17 @@
+<span>
+    <form class='navbar-form navbar-right' ng-if='!$ctrl.isLoggedIn'>
+        <a href='#!/register' class='navbar-link'>Register</a>
+        <div class='form-group'>
+            <input type='text' class='form-control' ng-model='$ctrl.email' placeholder='Email'>
+        </div>
+        <div class='form-group'>
+            <input type='password' class='form-control' ng-model='$ctrl.password' placeholder='Password'>
+        </div>
+        <button ng-click='$ctrl.login()' class='btn btn-default'>Login</button>
+        {{$ctrl.errorMessage}}
+    </form>
+    <p class='navbar-text navbar-right' ng-if='$ctrl.isLoggedIn'>
+        Hello {{$ctrl.email}}
+        <a href='#' class='navbar-link' ng-click='$ctrl.logout()'>Logout</a>
+    </p>
+</span>
