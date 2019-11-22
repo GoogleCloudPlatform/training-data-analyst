@@ -48,9 +48,13 @@ function handler(message) {
     // END TODO
 
     // TODO: Add a score property to feedback object
+    // and return updated feedback object
     messageData.score = score;
     return messageData;
+    // END TODO
   })
+  // END TODO
+
   // TODO: Pass on the feedback object
   // to next Promise handler
   .then(feedbackStorage.saveFeedback)
@@ -65,6 +69,7 @@ function handler(message) {
       // END TODO
   })
   // END TODO 
+  
   // TODO close off the promise with a catch and log
   // any errors
   .catch(console.error);
