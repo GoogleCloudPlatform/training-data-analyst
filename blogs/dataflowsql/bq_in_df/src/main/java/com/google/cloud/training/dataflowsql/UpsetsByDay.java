@@ -74,8 +74,6 @@ public class UpsetsByDay {
 			options.setTempLocation("gs://" + options.getBucket() + "/ncaa/tmp");
 		}
 
-		options.setPlannerName("org.apache.beam.sdk.extensions.sql.zetasql.ZetaSQLQueryPlanner");
-
 		Pipeline p = Pipeline.create(options);
 
 		String inFilenamePattern = "gs://" + options.getBucket() + "/ncaa/mbb_*.avro";
@@ -103,8 +101,8 @@ public class UpsetsByDay {
 		PCollection<Row> games = p.apply("ReadAvro", avroParser).setRowSchema(schema);
 
 		// apply the query; because we haven't done any TUMBLE, the group by is global
-		String query = "SELECT day, COUNTIF(win_seed > lose_seed)/COUNT(*) AS upset_ratio "
-				+ "FROM PCOLLECTION GROUP BY day ORDER BY upset_ratio DESC";
+		String query = "SELECT `day`, CAST(SUM(CASE WHEN win_seed > lose_seed THEN 1 ELSE 0 END) AS FLOAT)/COUNT(*) AS upset_ratio "
+				+ "FROM PCOLLECTION GROUP BY `day` ORDER BY upset_ratio DESC LIMIT 1000";
 		PCollection<Row> upsets_by_day = games.apply("sql", SqlTransform.query(query));
 
 		// write output
@@ -113,11 +111,11 @@ public class UpsetsByDay {
 				MapElements.via(new SimpleFunction<Row, String>() {
 					@Override
 					public String apply(Row r) {
-						String line = r.getString("day") + "," + r.getString("upsets_by_day");
+						String line = r.getString("day") + "," + r.getFloat("upset_ratio").toString();
 						return line;
 					}
 				}));
-		csvLines.apply(TextIO.write().to(outputPath).withSuffix(".csv"));
+		csvLines.apply(TextIO.write().to(outputPath).withSuffix(".csv").withoutSharding());
 
 		if (options.isStreaming()) {
 			p.run();

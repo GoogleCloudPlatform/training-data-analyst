@@ -11,7 +11,7 @@ MAX_NUM_WORKERS=$2
 
 cd bq_in_df
 
-~/apache-maven*/bin/mvn compile exec:java \
+mvn compile exec:java \
  -Dexec.mainClass=com.google.cloud.training.dataflowsql.UpsetsByDay \
  -Dexec.args="--project=$PROJECT --bucket=$BUCKET --autoscalingAlgorithm=THROUGHPUT_BASED"
 
