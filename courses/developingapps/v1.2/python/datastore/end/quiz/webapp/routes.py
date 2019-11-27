@@ -19,7 +19,7 @@ from flask import Blueprint, render_template
 from flask import send_from_directory
 from flask import request, redirect
 
-import questions
+from quiz.webapp import questions
 
 """
 configure blueprint
