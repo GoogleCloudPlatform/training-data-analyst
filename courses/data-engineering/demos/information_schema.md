@@ -7,7 +7,6 @@ BigQuery stores metadata about each object stored in it. You can query these met
 Choose a public dataset name from the previous query. We will choose `baseball` for this example but feel free to modify (try other datasets like `new_york` or `san_francisco`).
 
 ```sql
--- QUERY 2
 -- Querying table metadata to get table size
 -- Pick any dataset in the bigquery-public-dataset and tell me
 
@@ -38,7 +37,6 @@ ORDER BY size_gb DESC;
 ## Query 2: How many columns of data are present?
 
 ```sql
--- QUERY 3
 -- For the dataset you chose, how many columns of data are present?
 
 SELECT * FROM 
@@ -49,7 +47,6 @@ SELECT * FROM
 ## Query 3: Are any columns partitioned or clustered columns?
 
 ```sql
--- QUERY 4
 -- Are there any partitioned or clustered columns?
 
 SELECT * FROM 
@@ -62,7 +59,6 @@ WHERE
 ## Query 4: Querying metadata across datasets
 
 ```sql
--- QUERY 5
 -- Question: If you wanted to query across multiple datasets, how could you do it?
 -- https://stackoverflow.com/questions/43457651/bigquery-select-tables-from-all-tables-within-project
 -- Answer: With a UNION or a python script to iterate through each dataset in `bq ls`
