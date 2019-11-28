@@ -48,11 +48,6 @@ def packageUse(line, keyword):
    for p in packages:
       yield (p, 1)
 
-def by_value(kv1, kv2):
-   key1, value1 = kv1
-   key2, value2 = kv2
-   return value1 < value2
-
 if __name__ == '__main__':
    parser = argparse.ArgumentParser(description='Find the most used Java packages')
    parser.add_argument('--output_prefix', default='/tmp/output', help='Output prefix')
