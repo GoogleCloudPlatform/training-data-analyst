@@ -71,9 +71,8 @@ if __name__ == '__main__':
       | 'GetImports' >> beam.FlatMap(lambda line: startsWith(line, keyword))
       | 'PackageUse' >> beam.FlatMap(lambda line: packageUse(line, keyword))
       | 'TotalUse' >> beam.CombinePerKey(sum)
-      | 'Top_5' >> beam.transforms.combiners.Top.Of(5, by_value)
+      | 'Top_5' >> beam.transforms.combiners.Top.Of(5, key=lambda kv: kv[1])
       | 'write' >> beam.io.WriteToText(output_prefix)
    )
 
    p.run().wait_until_finish()
-
