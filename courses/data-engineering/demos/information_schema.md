@@ -3,34 +3,10 @@
 ## Querying dataset metadata
 BigQuery stores metadata about each object stored in it. You can query these metadata tables to get a better understanding of a dataset and it's contents. [See documentation.](https://cloud.google.com/bigquery/docs/dataset-metadata)
 
-## Query 1: How new are the BigQuery Public Datasets?
-```sql
--- QUERY 1
--- Most recently modified BigQuery Public Datasets and how long they have been around:
-SELECT
- s.*,
- TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), creation_time, DAY) AS days_live,
- option_value AS dataset_description
-FROM
- `bigquery-public-data.INFORMATION_SCHEMA.SCHEMATA` AS s
- LEFT JOIN `bigquery-public-data.INFORMATION_SCHEMA.SCHEMATA_OPTIONS` AS so
- USING (schema_name)
-
-WHERE so.option_name = 'description'
- 
-ORDER BY last_modified_time DESC
-
-LIMIT 15;
-```
-
--- Advanced example: Using Dataset and Table metadata to create SQL DDL for version control
--- https://cloud.google.com/bigquery/docs/information-schema-tables#advanced_example
-
-## Query 2: How large are the tables within a given dataset?
-Choose a public dataset name from the previous query. We will choose `baseball` for this example but feel free to modify.
+## Query 1: How large are the tables within a given dataset?
+Choose a public dataset name from the previous query. We will choose `baseball` for this example but feel free to modify (try other datasets like `new_york` or `san_francisco`).
 
 ```sql
--- QUERY 2
 -- Querying table metadata to get table size
 -- Pick any dataset in the bigquery-public-dataset and tell me
 
@@ -58,10 +34,9 @@ FROM
 ORDER BY size_gb DESC;
 ```
 
-## Query 3: How many columns of data are present?
+## Query 2: How many columns of data are present?
 
 ```sql
--- QUERY 3
 -- For the dataset you chose, how many columns of data are present?
 
 SELECT * FROM 
@@ -69,10 +44,9 @@ SELECT * FROM
  `bigquery-public-data.baseball.INFORMATION_SCHEMA.COLUMNS`;
 ```
 
-## Query 4: Are any columns partitioned or clustered columns?
+## Query 3: Are any columns partitioned or clustered columns?
 
 ```sql
--- QUERY 4
 -- Are there any partitioned or clustered columns?
 
 SELECT * FROM 
@@ -82,10 +56,9 @@ WHERE
   is_partitioning_column = 'YES' OR clustering_ordinal_position IS NOT NULL;
 ```
 
-## Query 3: Querying metadata across datasets
+## Query 4: Querying metadata across datasets
 
 ```sql
--- QUERY 5
 -- Question: If you wanted to query across multiple datasets, how could you do it?
 -- https://stackoverflow.com/questions/43457651/bigquery-select-tables-from-all-tables-within-project
 -- Answer: With a UNION or a python script to iterate through each dataset in `bq ls`
@@ -121,3 +94,28 @@ LIMIT 10;
 ```
 
 Which table had the most rows in the previous example?
+
+## Optional: Query 5: Viewing all datasets within a GCP project
+
+If you already have BigQuery datasets and tables stored on your project, you can quickly view metadata for all your datasets using `INFORMATION_SCHEMA`. The below query shows just a simple example of viewing when each dataset in your project was created. 
+
+```sql
+SELECT
+ s.*,
+ TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), creation_time, DAY) AS days_live,
+ option_value AS dataset_description
+FROM
+ `<your-project-name>.INFORMATION_SCHEMA.SCHEMATA` AS s
+ LEFT JOIN `<your-project-name>.INFORMATION_SCHEMA.SCHEMATA_OPTIONS` AS so
+ USING (schema_name)
+
+WHERE so.option_name = 'description'
+ 
+ORDER BY last_modified_time DESC
+
+LIMIT 15;
+```
+
+Note: You will need to replace <your-project-name> with a BigQuery project you can query against that has existing datasets. 
+ 
+Final Note: You can use the data from `INFORMATION_SCHEMA` to creatively 're-create' your entire dataset with SQL DDL. See the below example link: https://cloud.google.com/bigquery/docs/information-schema-tables#advanced_example

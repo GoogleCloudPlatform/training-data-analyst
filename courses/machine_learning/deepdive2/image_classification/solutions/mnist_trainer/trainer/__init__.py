@@ -1,1 +1,0 @@
-"""Initializaion file for the mnist_trainer python module."""
