@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: hello-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.global-static-ip-name: "global-ingress"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /v1
+        backend:
+          serviceName: hello-svc
+          servicePort: 80
+      - path: /v2
+        backend:
+          serviceName: hello-lb-svc
+          servicePort: 80

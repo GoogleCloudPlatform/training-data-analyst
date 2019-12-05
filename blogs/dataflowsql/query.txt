@@ -1,0 +1,6 @@
+SELECT 
+  day
+  , COUNTIF(win_seed > lose_seed)/COUNT(*) AS upset_ratio
+FROM `bigquery-public-data`.ncaa_basketball.mbb_historical_tournament_games
+GROUP BY day
+ORDER BY upset_ratio DESC
