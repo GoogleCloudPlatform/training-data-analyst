@@ -25,7 +25,7 @@ if __name__ == '__main__':
       assert compute_fuel(input) == output
    print('Assertions passed')
 
-   parser = argparse.ArgumentParser(description='Plot images at a specific location in near-real-time')
+   parser = argparse.ArgumentParser(description='Solutions to https://adventofcode.com/2019/ using Apache Beam')
    parser.add_argument('--input', required=True, help='Specify input file')
    parser.add_argument('--output', required=True, help='Specify output file')
    
