@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: gcp-gke-monitor-test
+  name: gcp-gke-monitor-test
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: gcp-gke-monitor-test
+  template:
+    metadata:
+      labels:
+        name: gcp-gke-monitor-test
+    spec:
+      containers:
+      - image: [DOCKER-IMAGE]
+        name: gcp-gke-monitor-test
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        env:
+        - name: POD_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NAMESPACE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: gcp-gke-monitor-test
+  name: gcp-gke-monitor-test-service
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    name: gcp-gke-monitor-test
+  type: LoadBalancer

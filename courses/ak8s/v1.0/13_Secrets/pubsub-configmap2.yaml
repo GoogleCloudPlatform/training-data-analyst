@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pubsub
+spec:
+  selector:
+    matchLabels:
+      app: pubsub
+  template:
+    metadata:
+      labels:
+        app: pubsub
+    spec:
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: pubsub-key
+      - name: config-3
+        configMap:
+          name: sample3
+      containers:
+      - name: subscriber
+        image: gcr.io/google-samples/pubsub-sample:v1
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        - name: config-3
+          mountPath: /etc/config
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
+        - name: INSIGHTS
+          valueFrom:
+            configMapKeyRef:
+              name: sample3
+              key: meme

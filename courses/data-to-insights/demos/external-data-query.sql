@@ -52,7 +52,7 @@ SELECT
 	message,
 	code,
 	translation
-FROM ecommerce.translation
+FROM `ecommerce.translation`
 
 /*
 
