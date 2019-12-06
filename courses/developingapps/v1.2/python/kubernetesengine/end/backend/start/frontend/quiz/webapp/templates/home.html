@@ -1,0 +1,15 @@
+{% extends 'master.html' %}
+{% block head %}
+
+    <title>Quiz - Python</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Welcome to the Quite Interesting Quiz</h1>
+    <div class="jumbotron">
+      <p>Welcome to the Quite Interesting Quiz where you can create a question, take a test or review feedback</p>
+    </div>
+    <h3 class="col-md-4"> <a href="/questions/add">Create Question</a></h3>
+    <h3 class="col-md-4"> <a href="/client/">Take Test</a></h3>
+    <h3 class="col-md-4"><a href="/leaderboard">Leaderboard</a></h3>
+{% endblock %}
