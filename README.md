@@ -7,6 +7,7 @@ Labs and demos for Google Cloud Platform courses (http://cloud.google.com/traini
 * Small edits are welcome! Please submit a Pull-Request. See also [CONTRIBUTING.md](./CONTRIBUTING.md)
 * For larger edits, please submit an issue, and we will create a branch for you. Then, get the code reviewed (in the branch) before submitting.
 
+
 ## Organization of this repo
 
 ### Try out the code on Google Cloud Platform
