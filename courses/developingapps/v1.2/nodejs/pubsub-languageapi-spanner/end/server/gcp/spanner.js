@@ -13,6 +13,7 @@
 const config = require('../config');
 
 // TODO: Import the @google-cloud/spanner module
+
 const {Spanner} = require('@google-cloud/spanner');
 
 // END TODO
@@ -48,6 +49,7 @@ const feedbackTable = database.table('feedback');
 
 async function saveFeedback(
     { email, quiz, timestamp, rating, feedback, score }) {
+
     // TODO: Declare rev_email constant
     // TODO: Produce a 'reversed' email address
     // eg app.dev.student@example.org -> org_example_student_dev_app
@@ -60,6 +62,7 @@ async function saveFeedback(
     // END TODO
 
     // TODO: Create record object to be inserted into Spanner
+    // USe Spanner.float() to convert the score property
     const record = {
         feedbackId: `${rev_email}_${quiz}_${timestamp}`,
         email,
@@ -71,7 +74,7 @@ async function saveFeedback(
     };
     // END TODO
 
-    // TODO: Insert the record into the table
+    // TODO: Insert the record into the table using await
     // use try {} catch {} and check for err.code==6 to trap
     // insert errors caused by duplicated PubSub messages
     try {
@@ -85,7 +88,6 @@ async function saveFeedback(
         }
     }
     // END TODO
-  
 }
 
 
