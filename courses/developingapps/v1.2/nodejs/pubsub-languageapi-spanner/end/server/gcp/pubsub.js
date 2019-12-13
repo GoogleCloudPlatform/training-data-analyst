@@ -85,7 +85,7 @@ function registerFeedbackNotification(cb) {
       // first element in this array is the subscription object.
 
       // TODO: Declare a subscription constant
-      const subscription    = results[0];
+      const subscription = results[0];
       
       // END TODO
 

@@ -42,7 +42,8 @@ topic_path = publisher.topic_path(project_id, 'feedback')
 
 # END TODO
 
-# TODO: Create a Subscription object named worker-subscription
+# TODO: Create a Subscription object named 
+# worker-subscription
 
 sub_path = sub_client.subscription_path(project_id, 'worker-subscription')
 

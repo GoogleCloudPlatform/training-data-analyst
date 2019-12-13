@@ -31,7 +31,6 @@ exports.subscribe = function subscribe(event) {
   // the data submitted by students is in a data property     
   
   const pubsubMessage = Buffer.from(event.data, 'base64').toString();
-      console.log(`${pubsubMessage}!`);
 
   let feedbackObject = JSON.parse(pubsubMessage);
   console.log('Feedback object data before Language API:' + JSON.stringify(feedbackObject));
@@ -57,12 +56,14 @@ exports.subscribe = function subscribe(event) {
 
     // END TODO
 
-   // TODO: Pass feedback object to the next handler
+    // TODO: Pass feedback object to the next handler
     
   	return feedbackObject;
 
     // END TODO
-  }) // TODO: insert record
+  })
+  
+  // TODO: insert record
   .then(feedbackStorage.saveFeedback).then(() => {
   	// TODO: Log and return success
 
@@ -71,6 +72,11 @@ exports.subscribe = function subscribe(event) {
 
     // END TODO
 
-  }).catch(console.error); // TODO: Log error
+  })
+  // END TODO
+
+  // TODO: Catch and Log error
+  .catch(console.error); 
+  // End TODO
 
 };

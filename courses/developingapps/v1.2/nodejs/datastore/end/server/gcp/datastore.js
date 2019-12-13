@@ -26,9 +26,12 @@ const {Datastore} = require('@google-cloud/datastore');
 // END TODO
 
 // TODO: Create a Datastore client object, ds
-// The Datastore(...) factory function accepts an options // object which is used to specify which project's  
+// The Datastore(...) factory function accepts an options 
+// object which is used to specify which project's  
 // Datastore should be used via the projectId property. 
-// The projectId is retrieved from the config module. This // module retrieves the project ID from the GCLOUD_PROJECT // environment variable.
+// The projectId is retrieved from the config module. This 
+// module retrieves the project ID from the GCLOUD_PROJECT 
+// environment variable.
 
 const ds = new Datastore({
  projectId: config.get('GCLOUD_PROJECT')
@@ -38,9 +41,11 @@ const ds = new Datastore({
 // END TODO
 
 // TODO: Declare a constant named kind
-// The Datastore key is the equivalent of a primary key in a // relational database.
+// The Datastore key is the equivalent of a primary key in a 
+// relational database.
 // There are two main ways of writing a key:
-// 1. Specify the kind, and let Datastore generate a unique //    numeric id
+// 1. Specify the kind, and let Datastore generate a unique 
+//    numeric id
 // 2. Specify the kind and a unique string id
 const kind = 'Question';
 
@@ -73,7 +78,8 @@ function create({ quiz, author, title, answer1, answer2, answer3, answer4, corre
 
     // The entity's members are represented in a data property.
     // This is an array where each element represents one
-    // member in the entity. Each element is an object with a // name and a value
+    // member in the entity. Each element is an object with a 
+    // name and a value
     data: [
       { name: 'quiz', value: quiz },
       { name: 'author', value: author },

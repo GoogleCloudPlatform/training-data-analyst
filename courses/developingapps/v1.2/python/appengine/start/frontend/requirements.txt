@@ -9,4 +9,5 @@ google-cloud-storage>=1.4.0
 google-cloud-language>=0.31.0
 grpcio>=1.24.1
 grpcio-gcp>=0.2.0
-grpcio-tools>= 1.25.0
+grpcio-tools>=1.25.0
+gunicorn>=19.7.1
