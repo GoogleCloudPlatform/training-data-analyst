@@ -1,0 +1,32 @@
+[
+  {
+    "description": "row number",
+    "mode": "REQUIRED",
+    "name": "rowno",
+    "type": "INTEGER"
+  },
+  {
+    "description": "column number",
+    "mode": "REQUIRED",
+    "name": "colno",
+    "type": "INTEGER"
+  },
+  {
+    "description": "centroid location",
+    "mode": "REQUIRED",
+    "name": "location",
+    "type": "GEOGRAPHY"
+  },
+  {
+    "description": "polygon representing boundary of pixel",
+    "mode": "REQUIRED",
+    "name": "bounds",
+    "type": "GEOGRAPHY"
+  },
+  {
+    "description": "population density (persons per sq km)",
+    "mode": "REQUIRED",
+    "name": "population_density",
+    "type": "FLOAT"
+  }
+]
