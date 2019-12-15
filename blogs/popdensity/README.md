@@ -10,24 +10,23 @@ Both datasets are global.
 ## Option 1: NASA
 
 1. Download a 3600x1800 resolution CSV file from https://neo.sci.gsfc.nasa.gov/view.php?datasetId=SEDAC_POP
-2. Save it as popdensity.csv
-3. Run:
+2. Assuming you saved it as popdensity.csv, run:
     ```
       ./convert_to_geo.py --format=nasa --input popdensity.csv
     ```
-4. Change the BUCKET variable in the following script and run it:
+3. Change the BUCKET variable in the following script and run it:
      ```
       ./load_geo_into_bq.sh
     ```
     
 ## Option 2: SEDAC
 1. Download 30-arcsec resolution ASCII file from https://sedac.ciesin.columbia.edu/data/set/gpw-v4-population-density-rev11/data-download
-2. Unzip the downloaded file and invoke this program specifying --format=sedac
-3. Run:
+2. Unzip the downloaded file. You will have 8 tiles with the extension .asc.
+3. To load in the global data, run:
     ```
        ./convert_to_geo.py --format=sedac --input gpw_*.asc
     ```
-    Of course, if you want data for just Australia, you could load up only the tile that contains Australia:
+    If you want data for just Australia, you could load up only the tile that contains Australia:
     ```
        ./convert_to_geo.py --format=sedac --input gpw_*_8.asc
     ```
