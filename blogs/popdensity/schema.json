@@ -1,15 +1,21 @@
 [
   {
-    "description": "row number",
+    "description": "row number within tile",
     "mode": "REQUIRED",
     "name": "rowno",
     "type": "INTEGER"
   },
   {
-    "description": "column number",
+    "description": "column number within tile",
     "mode": "REQUIRED",
     "name": "colno",
     "type": "INTEGER"
+  },
+  {
+    "description": "tile",
+    "mode": "REQUIRED",
+    "name": "tile",
+    "type": "STRING"
   },
   {
     "description": "centroid location",
