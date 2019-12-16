@@ -21,6 +21,6 @@ bq_safe_mk() {
 bq_safe_mk advdata
 bq load --replace \
    --source_format NEWLINE_DELIMITED_JSON \
-   --description "Population density" \
+   --range_partitioning=year,1900,2100,5 \
    --clustering_fields tile \
    advdata.popdensity $GCSFILE schema.json

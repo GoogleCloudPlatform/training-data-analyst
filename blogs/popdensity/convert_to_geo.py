@@ -80,6 +80,7 @@ def ascii_to_geojson(
            if value != BADVALUE:
              poly, center = create_geo(LATRES, LONRES, ORIGIN_LAT, ORIGIN_LON, rowno, colno)
              pixel = {
+                'year': 2020,
                 'rowno': rowno,
                 'colno': colno,
                 'tile': infile,  # SEDAC split over several tiles
