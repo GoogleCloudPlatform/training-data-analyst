@@ -55,6 +55,7 @@ const config = require('../config');
 
 
 async function saveFeedback({ email, quiz, timestamp, rating, feedback, score }) {
+
     // TODO: Declare rev_email constant
     // TODO: Produce a 'reversed' email address
     // eg app.dev.student@example.org -> org_example_student_dev_app
@@ -72,7 +73,7 @@ async function saveFeedback({ email, quiz, timestamp, rating, feedback, score })
 
     // END TODO
 
-    // TODO: Insert the record into the table
+    // TODO: Insert the record into the table using await
     // use try {} catch {} and check for err.code==6 to trap
     // insert errors caused by duplicated PubSub messages
 

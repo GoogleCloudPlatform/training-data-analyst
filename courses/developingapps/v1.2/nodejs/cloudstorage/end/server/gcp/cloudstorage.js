@@ -58,33 +58,34 @@ const bucket = storage.bucket(GCLOUD_BUCKET);
 // [START sendUploadToGCS]
 function sendUploadToGCS(req, res, next) {
 
-// The existing code in the handler checks to see if there
-// is a file property on the HTTP request - if a file has
-// been uploaded, then Multer will have created this
-// property in the preceding middleware call.
+  // The existing code in the handler checks to see if there
+  // is a file property on the HTTP request - if a file has
+  // been uploaded, then Multer will have created this
+  // property in the preceding middleware call.
 
   if (!req.file) {
     return next();
   }
 
-// In addition, a unique object name, oname,  has been
-// created based on the file's original name. It has a
-// prefix generated using the current date and time.
-// This should ensure that a new file upload won't
-// overwrite an existing object in the bucket
+  // In addition, a unique object name, oname,  has been
+  // created based on the file's original name. It has a
+  // prefix generated using the current date and time.
+  // This should ensure that a new file upload won't
+  // overwrite an existing object in the bucket
   const oname = Date.now() + req.file.originalname;
+  
   // TODO: Get a reference to the new object
 
   const file = bucket.file(oname);
 
-    // END TODO
+  // END TODO
 
   // TODO: Create a stream to write the file into
   // Cloud Storage
-// The uploaded file's MIME type can be retrieved using
-// req.file.mimetype.
-// Cloud Storage metadata can be used for many purposes,
-// including establishing the type of an object.
+  // The uploaded file's MIME type can be retrieved using
+  // req.file.mimetype.
+  // Cloud Storage metadata can be used for many purposes,
+  // including establishing the type of an object.
 
   const stream = file.createWriteStream({
     metadata: {
@@ -92,7 +93,7 @@ function sendUploadToGCS(req, res, next) {
     }
   });
 
-    // END TODO
+  // END TODO
 
   // TODO: Attach two event handlers (1) error
   // Event handler if there's an error when uploading
@@ -102,7 +103,7 @@ function sendUploadToGCS(req, res, next) {
 
     next(err);
 
-      // END TODO 
+    // END TODO 
   });
 
   // END TODO
@@ -125,7 +126,7 @@ function sendUploadToGCS(req, res, next) {
       req.file.cloudStoragePublicUrl =
 `https://storage.googleapis.com/${GCLOUD_BUCKET}/${oname}`;
 
-// END TODO
+      // END TODO
 
       // TODO: Invoke the next middleware handler
 
@@ -133,6 +134,7 @@ function sendUploadToGCS(req, res, next) {
 
       // END TODO
     });
+    //END TODO
   });
 
   // END TODO

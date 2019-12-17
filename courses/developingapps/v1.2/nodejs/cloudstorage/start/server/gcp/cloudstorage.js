@@ -94,11 +94,11 @@ function sendUploadToGCS(req, res, next) {
   // TODO: Attach two event handlers (1) error
   // Event handler if there's an error when uploading
 
-  // TODO: If there's an error move to the next handler
+    // TODO: If there's an error move to the next handler
 
 
 
-  // END TODO
+    // END TODO
 
 
   // END TODO
@@ -108,11 +108,12 @@ function sendUploadToGCS(req, res, next) {
   // The upload completed successfully
 
 
-  // TODO: Make the object publicly accessible
+    // TODO: Make the object publicly accessible
 
 
-  // TODO: Set a new property on the file for the
-  // public URL for the object
+      // TODO: Set a new property on the file for the
+      // public URL for the object
+
   // Cloud Storage public URLs are in the form:
   // https://storage.googleapis.com/[BUCKET]/[OBJECT]
   // Use an ECMAScript template literal (`https://...`)to 
@@ -120,27 +121,24 @@ function sendUploadToGCS(req, res, next) {
   // ${GCLOUD_BUCKET} and object name ${oname}
 
 
+      // END TODO
 
+      // TODO: Invoke the next middleware handler
+
+
+
+      // END TODO
+
+    // END TODO
+
+    
   // END TODO
-
-  // TODO: Invoke the next middleware handler
-
-
-
-  // END TODO
-
-
-  // END TODO
-
 
   // TODO: End the stream to upload the file's data
 
 
 
-
   // END TODO
-
-
 }
 // [END sendUploadToGCS]
 

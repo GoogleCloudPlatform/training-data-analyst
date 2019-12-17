@@ -30,7 +30,7 @@ exports.subscribe = function subscribe(event) {
   // extracting the feedbackObject data
   // The message received from Pub/Sub is base64 encoded, and 
   // the data submitted by students is in a data property
-  const pubsubMessage = event.data;
+  const pubsubMessage = Buffer.from(event.data, 'base64').toString();
 
 
   // END TODO
@@ -42,33 +42,37 @@ exports.subscribe = function subscribe(event) {
 
 
 
-  // TODO: Log the sentiment score
+    // TODO: Log the sentiment score
 
 
 
-  // END TODO
+    // END TODO
 
-  // TODO: Add new score property to feedbackObject
-
-
-
-  // END TODO
-
-  // TODO: Pass feedback object to the next handler
+    // TODO: Add new score property to feedbackObject
 
 
 
-  // END TODO
+    // END TODO
+
+    // TODO: Pass feedback object to the next handler
+
+
+
+    // END TODO
+
   // TODO: insert record
 
-  // TODO: Log and return success
+    // TODO: Log and return success
 
 
+
+    // END TODO
 
   // END TODO
 
-  // TODO: Log error
+  // TODO: Catch and Log error
 
+  // END TODO
 };
 
 

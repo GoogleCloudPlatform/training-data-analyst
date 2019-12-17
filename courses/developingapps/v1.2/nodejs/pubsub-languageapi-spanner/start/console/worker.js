@@ -43,21 +43,22 @@ function handler(message) {
     // TODO: Log the message to the console
 
 
-
-
     // END TODO
 
     // TODO: Invoke the languageapi module method
     // with the feedback from the student
 
-    // TODO: Log sentiment score
+
+      // TODO: Log sentiment score
 
 
-    // END TODO
+      // END TODO
 
-    // TODO: Add a score property to feedback object
+      // TODO: Add a score property to feedback object
+      // and return updated feedback object
 
 
+      //END TODO
 
 
     // END TODO
