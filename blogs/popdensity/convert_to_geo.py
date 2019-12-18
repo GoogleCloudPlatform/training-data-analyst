@@ -59,6 +59,7 @@ def ascii_to_geojson(
          ORIGIN_LAT = 90
          ORIGIN_LON = 180
          BADVALUE = 99999.0
+         YEAR = 2000
        else:
          ncols = get_next_value(ifp)
          nrows = get_next_value(ifp)
@@ -67,6 +68,7 @@ def ascii_to_geojson(
          LATRES = LONRES = get_next_value(ifp)
          BADVALUE = get_next_value(ifp)
          ORIGIN_LAT = yllcorner + nrows * LATRES
+         YEAR = 2020  # FIXME: parse filename
 
        # data
        print('{} from {:.4f},{:.4f} at {}'.format(infile, ORIGIN_LAT, ORIGIN_LON, LATRES), end=' ', flush=True)
@@ -80,7 +82,7 @@ def ascii_to_geojson(
            if value != BADVALUE:
              poly, center = create_geo(LATRES, LONRES, ORIGIN_LAT, ORIGIN_LON, rowno, colno)
              pixel = {
-                'year': 2020,
+                'year': YEAR,
                 'rowno': rowno,
                 'colno': colno,
                 'tile': infile,  # SEDAC split over several tiles

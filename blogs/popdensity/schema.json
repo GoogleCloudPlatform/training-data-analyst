@@ -1,5 +1,11 @@
 [
   {
+    "description": "year that grid represents",
+    "mode": "REQUIRED",
+    "name": "year",
+    "type": "INTEGER"
+  },
+  {
     "description": "row number within tile",
     "mode": "REQUIRED",
     "name": "rowno",
