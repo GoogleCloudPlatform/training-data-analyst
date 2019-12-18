@@ -52,8 +52,8 @@ def preprocess_tasks(model, parent_dag_name, child_dag_name, default_args, PROJE
 
   bql = bql.format(SOURCE_BQ_PROJECT, model)
 
-  bql_train = "SELECT * EXCEPT (key) FROM({0}) WHERE MOD(ABS(FARM_FINGERPRINT(key)), 5) < 4".format(bql)
-  bql_eval = "SELECT * EXCEPT (key) FROM({0}) WHERE MOD(ABS(FARM_FINGERPRINT(key)), 5) = 4".format(bql)
+  bql_train = "SELECT * EXCEPT (key) FROM({0}) WHERE ABS(MOD(FARM_FINGERPRINT(key), 5)) < 4".format(bql)
+  bql_eval = "SELECT * EXCEPT (key) FROM({0}) WHERE ABS(MOD(FARM_FINGERPRINT(key), 5)) = 4".format(bql)
 
   # Complete the BigQueryOperator task to truncate the table if it already exists before writing
   # Reference: https://airflow.apache.org/integration.html#bigqueryoperator

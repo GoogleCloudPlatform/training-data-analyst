@@ -21,7 +21,7 @@ SELECT
     passenger_count*1.0 AS passengers,
     'unused' AS key
 FROM `nyc-tlc.yellow.trips`
-WHERE MOD(ABS(FARM_FINGERPRINT(CAST(pickup_datetime AS STRING))), 1000) = 1
+WHERE ABS(MOD(FARM_FINGERPRINT(CAST(pickup_datetime AS STRING)), 1000)) = 1
 AND
     trip_distance > 0
     AND fare_amount >= 2.5
@@ -49,7 +49,7 @@ SELECT
     passenger_count*1.0 AS passengers,
     'unused' AS key
 FROM `nyc-tlc.yellow.trips`
-WHERE MOD(ABS(FARM_FINGERPRINT(CAST(pickup_datetime AS STRING))), 10000) = 2
+WHERE ABS(MOD(FARM_FINGERPRINT(CAST(pickup_datetime AS STRING)), 10000)) = 2
 AND
     trip_distance > 0
     AND fare_amount >= 2.5
