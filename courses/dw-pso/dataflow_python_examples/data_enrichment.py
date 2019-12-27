@@ -78,7 +78,10 @@ class DataIngestion(object):
         # Use a CSV Reader which can handle quoted strings etc.
         reader = csv.reader(string_input.split('\n'))
         for csv_row in reader:
-            values = [x.decode('utf8') for x in csv_row]
+            if (sys.version_info.major < 3.0):
+                values = [x.decode('utf8') for x in csv_row]
+            else:
+                values = csv_row
             # Our source data only contains year, so default January 1st as the
             # month and day.
             month = u'01'
