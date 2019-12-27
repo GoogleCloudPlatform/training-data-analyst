@@ -1,0 +1,57 @@
+[
+  {
+    "name": "p_part_key",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "p_name",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "p_mfgr",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "p_category",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "p_brand",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "p_color",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "p_type",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "p_size_cm3",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "p_size",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "p_container",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "p_description",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  }
+]
