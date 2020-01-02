@@ -1,0 +1,49 @@
+- column: event_timestamp
+  description: Pub/Sub event timestamp
+  mode: REQUIRED
+  type: TIMESTAMP
+- column: attributes
+  description: Pub/Sub message attributes
+  mode: NULLABLE
+  type: MAP<STRING,STRING>
+- column: payload
+  description: Pub/Sub message payload
+  mode: NULLABLE
+  type: STRUCT
+  subcolumns:
+    - column: user_id
+      description: A string representing a user's ID
+      mode: REQUIRED
+      type: STRING
+    - column: ip
+      description: A string representing a dotted quad
+      mode: REQUIRED
+      type: STRING
+    - column: timestamp
+      description: A string representing a timestamp
+      mode: REQUIRED
+      type: STRING
+    - column: http_request
+      description: A string representing the request for a URI
+      mode: REQUIRED
+      type: STRING
+    - column: lat
+      description: A float representing latitude
+      mode: REQUIRED
+      type: FLOAT
+    - column: lng
+      description: A float representing longitude
+      mode: REQUIRED
+      type: FLOAT
+    - column: http_response
+      description: An integer representing an HTTP response code
+      mode: REQUIRED
+      type: INT32
+    - column: user_agent
+      description: A string representing a user agent string
+      mode: REQUIRED
+      type: STRING
+    - column: num_bytes
+      description: An integer representing the number of bytes returned by the http_request
+      mode: REQUIRED
+      type: INT32

@@ -24,34 +24,47 @@ import tensorflow as tf
 from ltgpred.goesutil import goesio
 from ltgpred.trainer import boxdef as bd
 
-
-def generate_hours(starthour, endhour, startday, endday, startyear, endyear,
-                   is_train):
-  """generates hours within the specified ranges for training or eval.
-
-  Call this method twice, once with is_train=True and next with is_train=False
-  Args:
-    starthour (int): Start hour, in the range 0-23
-    endhour (int): End hour (inclusive), in the range 0-23
-    startday (int): Start Julian day, in the range 0-366
-    endday (int): End Julian day (inclusive), in the range 0-366
-    startyear (int): Start year, eg. 2018
-    endyear (int): End year (inclusive). eg. 2018
-    is_train (bool): Generate training data or testing data?
-  Yields:
-    dict of {'hour': h, 'day': d, 'year': y}, one for each hour in the range
-  """
-  for h in xrange(starthour, endhour + 1):
-    for d in xrange(startday, endday + 1):
-      for y in xrange(startyear, endyear + 1):
-        data = {'hour': h, 'day': d, 'year': y}
-        if hash('{} {} {}'.format(h, d, y)) % 10 < 7:
+def _generate_hours(starthour, endhour, startday, endday, year, is_train):
+  for h in range(starthour, endhour+1):
+    for d in range(startday, endday+1):
+        data = {
+          'hour': h,
+          'day': d,
+          'year': year
+        }
+        if hash(str(data)) % 10 < 7:
           if is_train:
             yield data
         else:
           if not is_train:
             yield data
 
+def generate_hours(startdate: str, enddate: str, starthour: int, endhour: int, is_train: bool):
+    """generates hours within the specified ranges for training or eval.
+
+      Call this method twice, once with is_train=True and next with is_train=False
+      Args:
+        starthour (int): Start hour, in the range 0-23
+        endhour (int): End hour (inclusive), in the range 0-23
+        startdate (str): Year + Start Julian day, in the range 0-366 eg: 2018-109
+        enddate (str): Year + End Julian day (inclusive), in the range 0-366:  2018-109
+        is_train (bool): Generate training data or testing data?
+      Yields:
+        dict of {'hour': h, 'day': d, 'year': y}, one for each hour in the range
+    """
+    startyear = int(startdate[:4])
+    endyear = int(enddate[:4])
+    startday = int(startdate[5:])
+    endday = int(enddate[5:])
+    if endyear == startyear:
+        yield from _generate_hours(starthour, endhour, startday, endday, startyear, is_train)
+    else:
+        # for startyear, go from startday to day#365
+        # FIXME: leap years?
+        yield from _generate_hours(starthour, endhour, startday, 365, startyear, is_train)
+        for y in range(startyear+1, endyear):
+            yield from _generate_hours(starthour, endhour, 1, 365, endyear, is_train)
+        yield from _generate_hours(starthour, endhour, 1, endday, endyear, is_train)
 
 def _int64_feature(value):
   """Wrapper for inserting int64 features into Example proto."""
@@ -146,19 +159,21 @@ def create_record(ir_blob_path, griddef, boxdef, forecast_minutes,
   irdt = goesio.get_timestamp_from_filename(ir_blob_path)
   ltg_blob_paths = goesio.get_ltg_blob_paths(
       irdt, timespan_minutes=ltg_validity_minutes)
-  ltg = goesio.create_ltg_grid(ltg_blob_paths, griddef, influence_km)
+  if ltg_blob_paths:
+      ltg = goesio.create_ltg_grid(ltg_blob_paths, griddef, influence_km)
 
-  # create "forecast" lightning image
-  irdt = irdt + datetime.timedelta(minutes=forecast_minutes)
-  ltg_blob_paths = goesio.get_ltg_blob_paths(
-      irdt, timespan_minutes=ltg_validity_minutes)
-  ltgfcst = goesio.create_ltg_grid(ltg_blob_paths, griddef, influence_km)
+      # create "forecast" lightning image
+      irdt = irdt + datetime.timedelta(minutes=forecast_minutes)
+      ltg_blob_paths = goesio.get_ltg_blob_paths(
+          irdt, timespan_minutes=ltg_validity_minutes)
+      if ltg_blob_paths:
+          ltgfcst = goesio.create_ltg_grid(ltg_blob_paths, griddef, influence_km)
 
-  # create examples
-  for example in create_training_examples(ref, ltg, ltgfcst,
-                                          griddef, boxdef,
-                                          sampling_frac):
-    yield example
+          # create examples
+          for example in create_training_examples(ref, ltg, ltgfcst,
+                                                  griddef, boxdef,
+                                                  sampling_frac):
+            yield example
 
 class MeanStddev(beam.CombineFn):
   def create_accumulator(self):
@@ -213,9 +228,8 @@ def run_job(options):  # pylint: disable=redefined-outer-name
       examples = (
           p
           | '{}_hours'.format(step) >> beam.Create(
-              generate_hours(options['starthour'], options['endhour'],
-                             options['startday'], options['endday'],
-                             options['startyear'], options['endyear'],
+              generate_hours(options['startday'], options['endday'],
+                             options['starthour'], options['endhour'],
                              step == 'train'))
           | '{}_irblobs'.format(step) >>
           beam.FlatMap(lambda x: get_ir_blob_paths(x, options['max_per_hour']))
@@ -289,18 +303,16 @@ if __name__ == '__main__':
       type=float,
       default=0.02,
       help='grid resolution in degrees lat/lon')
-  parser.add_argument('--startyear', type=int, default=2018, help='start year')
-  parser.add_argument('--endyear', type=int, default=2018, help='end year')
   parser.add_argument(
       '--startday',
-      type=int,
+      type=str,
       required=True,
-      help='start Julian day in year (Jan 1 = 1)')
+      help='YEAR + start Julian day in year (Jan 1 = 1) e.g.  2018-108')
   parser.add_argument(
       '--endday',
-      type=int,
+      type=str,
       required=True,
-      help='end Julian day in year (Jan 1 = 1)')
+      help='YEAR + end Julian day in year (Jan 1 = 1) e.g.  2019-108')
   parser.add_argument(
       '--starthour', type=int, default=0, help='start hour of day (0-23)')
   parser.add_argument(
@@ -346,16 +358,18 @@ if __name__ == '__main__':
       'setup_file':
           os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../setup.py'),
       'save_main_session':
-          True
+          True,
+      'sdk_location': # FIXME: remove this once 2.12 is released
+          './local/beam/sdks/python/dist/apache-beam-2.12.0.tar.gz'
   })
 
   if not options['project']:
-    print 'Launching local job ... hang on'
+    print('Launching local job ... hang on')
     shutil.rmtree(outdir, ignore_errors=True)
     os.makedirs(outdir)
     options['runner'] = 'DirectRunner'
   else:
-    print 'Launching Dataflow job {} ... hang on'.format(options['job_name'])
+    print('Launching Dataflow job {} ... hang on'.format(options['job_name']))
     try:
       subprocess.check_call('gsutil -m rm -r {}'.format(outdir).split())
     except:  # pylint: disable=bare-except

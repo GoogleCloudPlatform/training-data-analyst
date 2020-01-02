@@ -1,0 +1,32 @@
+[
+  {
+    "name": "state",
+    "type": "STRING",
+    "description": "Short abbreviation for state where the child was born.  For example 'NY' for New York."
+  },
+  {
+    "name": "gender",
+    "type": "STRING",
+    "description": "'F' for female and 'M' for Male."
+  },
+  {
+    "name": "year",
+    "type": "INTEGER",
+    "description": "Year the child was born in YYYY format."
+  },
+  {
+    "name": "name",
+    "type": "STRING",
+    "description": "The child's first name."
+  },
+  {
+    "name": "number",
+    "type": "INTEGER",
+    "description": "The number of new born children sharing this name for the year in the given state."
+  },
+  {
+    "name": "created_date",
+    "type": "STRING",
+    "description": "Date this data was created."
+  }
+]

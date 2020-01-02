@@ -1,0 +1,42 @@
+[
+  {
+    "name": "s_supp_key",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "s_email",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "s_name",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "s_phone",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "s_address",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "s_city",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "s_country",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "s_region",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  }
+]

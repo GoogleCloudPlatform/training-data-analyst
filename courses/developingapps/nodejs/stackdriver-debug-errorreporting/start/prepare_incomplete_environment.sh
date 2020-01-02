@@ -38,6 +38,6 @@ echo "Enabling Cloud Functions API"
 gcloud beta services enable cloudfunctions.googleapis.com
 
 echo "NOT Creating Cloud Function"
-# gcloud beta functions deploy process-feedback --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+# gcloud beta functions deploy process-feedback --runtime nodejs8 --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 
 echo "Project ID: $DEVSHELL_PROJECT_ID"

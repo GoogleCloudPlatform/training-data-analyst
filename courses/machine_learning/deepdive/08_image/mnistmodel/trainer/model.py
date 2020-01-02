@@ -33,21 +33,21 @@ def linear_model(img, mode, hparams):
 
 def dnn_model(img, mode, hparams):
     X = tf.reshape(tensor = img, shape = [-1, HEIGHT * WIDTH]) #flatten
-    h1 = tf.layers.dense(input = X, units = 300, activation = tf.nn.relu)
-    h2 = tf.layers.dense(input = h1, units = 100, activation = tf.nn.relu)
-    h3 = tf.layers.dense(input = h2, units = 30, activation = tf.nn.relu)
-    ylogits = tf.layers.dense(input = h3, units = NCLASSES, activation = None)
+    h1 = tf.layers.dense(inputs = X, units = 300, activation = tf.nn.relu)
+    h2 = tf.layers.dense(inputs = h1, units = 100, activation = tf.nn.relu)
+    h3 = tf.layers.dense(inputs = h2, units = 30, activation = tf.nn.relu)
+    ylogits = tf.layers.dense(inputs = h3, units = NCLASSES, activation = None)
     return ylogits, NCLASSES
 
 def dnn_dropout_model(img, mode, hparams):
     dprob = hparams.get("dprob", 0.1)
 
     X = tf.reshape(tensor = img, shape = [-1, HEIGHT * WIDTH]) #flatten
-    h1 = tf.layers.dense(input = X, units = 300, activation = tf.nn.relu)
-    h2 = tf.layers.dense(input = h1, units = 100, activation = tf.nn.relu)
-    h3 = tf.layers.dense(input = h2, units = 30, activation = tf.nn.relu)
+    h1 = tf.layers.dense(inputs = X, units = 300, activation = tf.nn.relu)
+    h2 = tf.layers.dense(inputs = h1, units = 100, activation = tf.nn.relu)
+    h3 = tf.layers.dense(inputs = h2, units = 30, activation = tf.nn.relu)
     h3d = tf.layers.dropout(inputs = h3, rate = dprob, training = (mode == tf.estimator.ModeKeys.TRAIN)) #only dropout when training
-    ylogits = tf.layers.dense(input = h3d, units = NCLASSES, activation = None)
+    ylogits = tf.layers.dense(inputs = h3d, units = NCLASSES, activation = None)
     return ylogits, NCLASSES
 
 def cnn_model(img, mode, hparams):
