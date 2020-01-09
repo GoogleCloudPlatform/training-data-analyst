@@ -1,0 +1,476 @@
+ [
+    {
+    "name" : "zip_code",
+    "type" : "INTEGER"
+  }, {
+    "name" : "state",
+    "type" : "STRING"
+  }, {
+    "name" : "acct_company_name",
+    "type" : "STRING"
+  }, {
+    "name" : "city",
+    "type" : "STRING"
+  }, {
+    "name" : "acct_name",
+    "type" : "STRING"
+  }, {
+    "name" : "acct_org_name",
+    "type" : "STRING"
+  }, {
+    "name" : "address",
+    "type" : "STRING"
+  },
+    {
+    "name" : "date",
+    "type" : "DATE"
+  }, {
+    "name" : "country",
+    "type" : "STRING"
+  },
+   {
+    "name" : "acct_group_name",
+    "type" : "STRING"
+  },
+  {
+    "name" : "acct_number",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_90",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_91",
+    "type" : "INTEGER"
+  }, {
+    "name" : "product_number",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_10",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_98",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_11",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_99",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_96",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_100",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_97",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_101",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_94",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_102",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_95",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_103",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_92",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_104",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_93",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_105",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_18",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_19",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_16",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_17",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_14",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_15",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_12",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_13",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_106",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_107",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_108",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_109",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_21",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_22",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_110",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number",
+    "type" : "STRING"
+  }, {
+    "name" : "col_number_111",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_20",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_112",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_113",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_114",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_115",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_116",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_29",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_27",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_28",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_25",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_26",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_23",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_24",
+    "type" : "INTEGER"
+  }, {
+    "name" : "num6",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_117",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_118",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_119",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_num1",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_3",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_76",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_120",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_4",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_77",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_121",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_5",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_74",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_122",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_6",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_75",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_123",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_72",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_124",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_73",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_125",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_1",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_70",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_126",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_2",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_71",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_127",
+    "type" : "INTEGER"
+  }, {
+    "name" : "num1",
+    "type" : "INTEGER"
+  }, {
+    "name" : "num5",
+    "type" : "INTEGER"
+  }, {
+    "name" : "num3",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_78",
+    "type" : "INTEGER"
+  }, {
+    "name" : "num2",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_79",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_128",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_80",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_129",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_7",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_8",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_9",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_87",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_131",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_88",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_132",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_85",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_133",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_86",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_134",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_83",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_135",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_84",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_136",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_81",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_82",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_89",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_130",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_54",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_55",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_52",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_53",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_50",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_51",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_58",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_59",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_56",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_57",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_65",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_66",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_63",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_64",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_61",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_62",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_60",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_69",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_67",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_68",
+    "type" : "INTEGER"
+  }, {
+    "name" : "foo",
+    "type" : "STRING"
+  }, {
+    "name" : "col_number_32",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_33",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_30",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_31",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_38",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_39",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_36",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_37",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_34",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_35",
+    "type" : "INTEGER"
+  }, {
+    "name" : "quantity",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_43",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_44",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_41",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_42",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_40",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_49",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_47",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_48",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_45",
+    "type" : "INTEGER"
+  }, {
+    "name" : "col_number_46",
+    "type" : "INTEGER"
+  } ]
