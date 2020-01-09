@@ -9,7 +9,7 @@ from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.layers import (
     Conv2D, Dense, Dropout, Flatten, MaxPooling2D, Softmax)
 
-import util
+from . import util
 
 
 # Image Variables

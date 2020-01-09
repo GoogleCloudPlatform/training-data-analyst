@@ -3,7 +3,7 @@ import json
 import os
 import sys
 
-import model
+from . import model
 
 
 def _parse_arguments(argv):
