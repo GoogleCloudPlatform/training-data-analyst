@@ -6,11 +6,14 @@ import tensorflow as tf
 
 
 def unicode_to_ascii(s):
+    """Transforms an ascii string into unicode."""
     normalized = unicodedata.normalize('NFD', s)
     return ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
 
 
 def preprocess_sentence(w):
+    """Lowers, strips, and adds <start> and <end> tags to a sentence.
+    """
     w = unicode_to_ascii(w.lower().strip())
 
     # creating a space between a word and the punctuation following it
