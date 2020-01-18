@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -ne 1 ]; then
-    echo "Usage: ./bq_export.sh  bucket-name"
+    echo "Usage: ./bq_extract.sh  bucket-name"
     exit
 fi
 
