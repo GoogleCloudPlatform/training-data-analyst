@@ -1,0 +1,47 @@
+[
+  {
+    "name": "c_cust_key",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "c_email",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "c_name",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "c_phone",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "c_mktsegment",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "c_address",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "c_city",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "c_nation",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "c_region",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  }
+]
