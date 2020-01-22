@@ -103,7 +103,7 @@ public class UpsetsByDay {
 		PCollection<Row> games = p.apply("ReadAvro", avroParser).setRowSchema(schema);
 
 		// apply the query; because we haven't done any TUMBLE, the group by is global
-		String query = "SELECT day, COUNTIF(win_seed > lose_seed)/COUNT(*) AS upset_ratio "
+		String query = "SELECT day, SUM(IF(win_seed > lose_seed, 1, 0))/COUNT(*) AS upset_ratio "
 				+ "FROM PCOLLECTION GROUP BY day ORDER BY upset_ratio DESC";
 		PCollection<Row> upsets_by_day = games.apply("sql", SqlTransform.query(query));
 
