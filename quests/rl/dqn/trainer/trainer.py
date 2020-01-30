@@ -24,6 +24,7 @@ import gym
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 import hypertune
 import tensorflow as tf
+from tensorflow.keras.callbacks import TensorBoard
 
 from . import model
 
@@ -108,6 +109,7 @@ def _run(game, network_params, memory_params, explore_decay, ops):
     trial_id = json.loads(
         os.environ.get('TF_CONFIG', '{}')).get('task', {}).get('trial', '')
     output_path = ops.job_dir if not trial_id else ops.job_dir + '/'
+    tensorboard = TensorBoard(log_dir=output_path)
     hpt = hypertune.HyperTune()
 
     graph = tf.Graph()
@@ -115,6 +117,7 @@ def _run(game, network_params, memory_params, explore_decay, ops):
         env = gym.make(game)
         agent = _create_agent(
             env, network_params, memory_params, explore_decay)
+        tensorboard.set_model(agent.network)
 
         def _train_or_evaluate(print_score, training=False):
             """Runs a gaming simulation and writes results for tensorboard.
@@ -122,6 +125,9 @@ def _run(game, network_params, memory_params, explore_decay, ops):
             Args:
                 print_score (bool): True to print a score to the console.
                 training (bool): True if the agent is training, False to eval.
+
+            Returns:
+                loss if training, else reward for evaluating.
             """
             reward = _play(agent, env, training)
             if print_score:
@@ -132,23 +138,27 @@ def _run(game, network_params, memory_params, explore_decay, ops):
                 )
 
             if training:
-                agent.learn()
-                return
+                return agent.learn()
 
             hpt.report_hyperparameter_tuning_metric(
                 hyperparameter_metric_tag='episode_reward',
                 metric_value=reward,
                 global_step=episode)
-            return
+            return reward
 
         for episode in range(1, ops.episodes+1):
             print_score = ops.print_rate and episode % ops.print_rate == 0
             get_summary = ops.eval_rate and episode % ops.eval_rate == 0
-            _train_or_evaluate(print_score, training=True)
+            loss = _train_or_evaluate(print_score, training=True)
 
             if get_summary:
-                _train_or_evaluate(print_score)
+                reward = _train_or_evaluate(print_score)
+                # No loss if there is not enough samples in memory to learn.
+                if loss:
+                    summary =  {'loss': loss, 'eval_reward': reward}
+                    tensorboard.on_epoch_end(episode, summary)
 
+        tensorboard.on_train_end(None)
         _record_video(env, agent, output_path)
         agent.network.save(output_path, save_format='tf')
 

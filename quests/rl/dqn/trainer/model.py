@@ -106,7 +106,6 @@ class Memory():
         return states_mb, actions_mb, rewards_mb, states_prime_mb, dones_mb
 
 
-# Create agent
 class Agent():
     """Sets up a reinforcement learning agent to play in a game environment."""
     def __init__(self, network, memory, epsilon_decay, action_size):
@@ -152,7 +151,7 @@ class Agent():
         """Trains the Deep Q Network based on stored experiences."""
         batch_size = self.memory.batch_size
         if len(self.memory.buffer) < batch_size:
-            return
+            return None
 
         # Obtain random mini-batch from memory.
         state_mb, action_mb, reward_mb, next_state_mb, done_mb = (
@@ -173,8 +172,6 @@ class Agent():
         action_hot = tf.one_hot(action_mb, self.action_size)
         target_mask = tf.multiply(tf.expand_dims(target_qs, -1), action_hot)
 
-        self.network.fit(
-            [state_mb, action_hot], target_mask, batch_size=batch_size,
-            epochs=1, steps_per_epoch=1, verbose=0
+        return self.network.train_on_batch(
+            [state_mb, action_hot], target_mask, reset_metrics=False
         )
-        return
