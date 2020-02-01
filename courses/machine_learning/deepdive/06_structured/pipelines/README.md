@@ -2,29 +2,45 @@
 
 To repeat the steps in the article, follow these steps.
 
-## Setup
-* Run `./1_create_cluster.sh`
-* Watch [GKE section of the GCP console](https://console.cloud.google.com/kubernetes) and make sure cluster is created.
-* Run `./2_deploy_kubeflow_pipelines.sh`
-* Install the local interpreter: `./3_install_sdk.sh`
+## Start Hosted Pipelines
+Create Hosted Kubeflow Pipelines Instance
 
-## Build the Docker containers
-* Examine the following code:
-  * the pipeline code in `mlp_babyweight.py`
-  * the files in `containers/bqtocsv`
-* Build the containers using `cd containers; ./build_all.sh`
-   
-## Run the pipeline
-* Start the UI: `./4_start_ui.sh`
-* Navigate to https://localhost:8085/
-* Open up a Terminal
-* git clone this repository
-* Open up 7_pipelines.ipynb (one directory up from this folder)
+* Navigate to https://console.cloud.google.com/marketplace/details/google-cloud-ai-platform/kubeflow-pipelines
+* Make sure your GCP project is selected in the dropdown at the top.
+* Click CONFIGURE
+* Change the App Instance Name to “kfpdemo”
+* Click on the Create Cluster button and wait 2-3 minutes for cluster to get created.
+* Click Deploy
+* Navigate to https://console.cloud.google.com/ai-platform/pipelines/clusters
+* Click on the HOSTED PIPELINES DASHBOARD LINK for kfpdemo on the cluster that you just started.
 
-## Run the pipeline
-* Edit mlp_babyweight.py to reflect the project that the containers belong to. In your favorite text editor, do a search-and-replace of `cloud-training-demos` to your project name (the container name has to be a static string).
-* Start running the notebook from step 4.
-* Upload the pipeline to Kubeflow pipelines UI
-* Create an experiment
-* Create a run of the pipeline, changing project and bucket as necessary
-* Monitor the logs
+## Give the cluster permissions to run BigQuery, Dataflow, etc.
+
+In CloudShell:
+Run:
+```
+git clone https://github.com/GoogleCloudPlatform/training-data-analyst
+cd training-data-analyst/courses/machine_learning/deepdive/06_structured/pipelines
+./setup_auth.sh
+```
+
+
+## Launch AI Platform notebook
+Create Notebooks instance
+* Navigate to https://console.cloud.google.com/ai-platform/notebooks/instances
+* Click on +New Instance and create a TensorFlow 2.x notebook
+* Name the instance kfpdemo
+* Click Customize 
+  * In Machine Configuration, change it to n1-standard-2
+  * In Permissions, set the notebook to be single-user and provide your GCP login email
+  * Click Create
+* Click on the URL for Open JupyterLab
+* Open a Terminal
+* Type:
+    ```gcloud auth application-default login``` and follow the OAuth2 workflow
+* Type:
+    ```git clone https://github.com/GoogleCloudPlatform/training-data-analyst```
+
+## Navigate to notebook
+* On the left-hand side menu, navigate to this notebook (training-data-analyst/courses/machine_learning/deepdive/06_structured/7_pipelines.ipynb)
+* Run the cells in that notebook
