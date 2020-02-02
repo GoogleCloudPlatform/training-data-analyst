@@ -21,8 +21,9 @@ Run:
 ```
 git clone https://github.com/GoogleCloudPlatform/training-data-analyst
 cd training-data-analyst/courses/machine_learning/deepdive/06_structured/pipelines
-./setup_auth.sh
+./setup_auth.sh kfpdemo us-central1-a cluster-1 default
 ```
+Change the zone and cluster name appropriately -- you can find the cluster details at https://console.cloud.google.com/ai-platform/pipelines/clusters
 
 
 ## Launch AI Platform notebook
@@ -32,12 +33,10 @@ Create Notebooks instance
 * Name the instance kfpdemo
 * Click Customize 
   * In Machine Configuration, change it to n1-standard-2
-  * In Permissions, set the notebook to be single-user and provide your GCP login email
+  * In Permissions, change access to "Other service account" and specify kfpdemo@PROJECT_ID.iam.gserviceaccount.com (specify your project id)
   * Click Create
 * Click on the URL for Open JupyterLab
 * Open a Terminal
-* Type:
-    ```gcloud auth application-default login``` and follow the OAuth2 workflow
 * Type:
     ```git clone https://github.com/GoogleCloudPlatform/training-data-analyst```
 
