@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+from kfp.gcp import use_gcp_secret
 import kfp.dsl as dsl
 
 class ObjectDict(dict):
@@ -49,7 +49,7 @@ def train_and_deploy(
         '--start_year', startYear
       ],
       file_outputs={'bucket': '/output.txt'}
-    )
+    ).apply(use_gcp_secret('user-gcp-sa'))
   else:
     preprocess = ObjectDict({
       'outputs': {
@@ -67,7 +67,7 @@ def train_and_deploy(
         preprocess.outputs['bucket']
       ],
       file_outputs={'jobname': '/output.txt'}
-    )
+    ).apply(use_gcp_secret('user-gcp-sa'))
   else:
     hparam_train = ObjectDict({
       'outputs': {
@@ -87,7 +87,7 @@ def train_and_deploy(
         bucket
       ],
       file_outputs={'train': '/output.txt'}
-    )
+    ).apply(use_gcp_secret('user-gcp-sa'))
     train_tuned.set_memory_request('2G')
     train_tuned.set_cpu_request('1')
   else:
@@ -113,7 +113,7 @@ def train_and_deploy(
         'model': '/model.txt',
         'version': '/version.txt'
       }
-    )
+    ).apply(use_gcp_secret('user-gcp-sa'))
   else:
     deploy_cmle = ObjectDict({
       'outputs': {
@@ -135,7 +135,7 @@ def train_and_deploy(
       file_outputs={
         'appurl': '/appurl.txt'
       }
-    )
+    ).apply(use_gcp_secret('user-gcp-sa'))
   else:
     deploy_cmle = ObjectDict({
       'outputs': {
@@ -151,5 +151,6 @@ if __name__ == '__main__':
     print("Usage: mlp_babyweight  pipeline-output-name")
     sys.exit(-1)
   
+  print("Setting secret on each step of pipeline")
   filename = sys.argv[1]
   compiler.Compiler().compile(train_and_deploy, filename)
