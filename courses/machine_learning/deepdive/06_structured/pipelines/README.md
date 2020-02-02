@@ -23,7 +23,9 @@ git clone https://github.com/GoogleCloudPlatform/training-data-analyst
 cd training-data-analyst/courses/machine_learning/deepdive/06_structured/pipelines
 ./setup_auth.sh kfpdemo us-central1-a cluster-1 default
 ```
-Change the zone and cluster name appropriately -- you can find the cluster details at https://console.cloud.google.com/ai-platform/pipelines/clusters
+* The first parameter is the service account you are using. I'm calling it kfpdemo
+* The next three parameters are the zone, cluster, and namespace of the Kubeflow cluster -- you can find the cluster details at https://console.cloud.google.com/ai-platform/pipelines/clusters
+* Check the service account IAM permissions at https://console.cloud.google.com/iam-admin/iam ; you can add other necessary permissions there.
 
 
 ## Launch AI Platform notebook

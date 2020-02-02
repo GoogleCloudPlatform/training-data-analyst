@@ -24,8 +24,10 @@ gcloud iam service-accounts create $SA_NAME \
        --display-name $SA_NAME --project "$PROJECT_ID"
 
 # Grant permissions to the service account by binding roles
-# These are rather broad; you might want to use narrower roles for your users
-for ROLE in roles/storage.admin roles/bigquery.admin roles/ml.admin roles/dataflow.admin; do
+# roles/editor is needed to launch a CAIP Notebook.
+# The others (storage, bigquery, ml, dataflow) are pretty common for GCP ML pipelines
+# That said, "admin" is a bit of an overkill; you might want to provide narrower roles for your users
+for ROLE in roles/editor roles/storage.admin roles/bigquery.admin roles/ml.admin roles/dataflow.admin; do
   gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member=serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com \
     --role=$ROLE
