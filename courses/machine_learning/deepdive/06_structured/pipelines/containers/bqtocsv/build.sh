@@ -1,5 +1,5 @@
 #!/bin/bash -e
-# Copyright 2018 Google LLC
+# Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,30 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-if [ -z "$1" ]; then
-  PROJECT_ID=$(gcloud config config-helper --format "value(configuration.properties.core.project)")
-else
-  PROJECT_ID=$1
-fi
-
-if [ -z "$2" ]; then
-  TAG_NAME="latest"
-else
-  TAG_NAME="$2"
-fi
-
-CONTAINER_NAME=babyweight-pipeline-bqtocsv
-
-# Create the container image
-cat <<EOM > cloudbuild.yaml
-steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'gcr.io/${PROJECT_ID}/${CONTAINER_NAME}:${TAG_NAME}', '.' ]
-images:
-- 'gcr.io/${PROJECT_ID}/${CONTAINER_NAME}:${TAG_NAME}'
-EOM
-
-cat cloudbuild.yaml
-gcloud builds submit --config cloudbuild.yaml
-
+bash ../build_container.sh

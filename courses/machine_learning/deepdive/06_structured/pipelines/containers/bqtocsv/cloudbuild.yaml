@@ -1,5 +1,6 @@
 steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'gcr.io/ai-analytics-solutions/babyweight-pipeline-bqtocsv:latest', '.' ]
+    - name: 'gcr.io/cloud-builders/docker'
+      dir:  'courses/machine_learning/deepdive/06_structured/pipelines/containers/bqtocsv'   # remove-for-local
+      args: [ 'build', '-t', 'gcr.io/ai-analytics-solutions/babyweight-pipeline-bqtocsv:latest', '.' ]
 images:
-- 'gcr.io/ai-analytics-solutions/babyweight-pipeline-bqtocsv:latest'
+    - 'gcr.io/ai-analytics-solutions/babyweight-pipeline-bqtocsv:latest'
