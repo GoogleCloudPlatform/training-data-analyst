@@ -45,3 +45,13 @@ Create Notebooks instance
 ## Navigate to notebook
 * On the left-hand side menu, navigate to this notebook (training-data-analyst/courses/machine_learning/deepdive/06_structured/7_pipelines.ipynb)
 * Run the cells in that notebook
+
+
+# [Optional] To set up Continous Integration (CI)
+* Fork this GitHub repo to your personal account
+* Visit https://console.cloud.google.com/cloud-build/triggers
+* Connect your GitHub repo
+* Skip the "Create a push trigger (optional)" for now
+* Now, when you run ./create_github_trigger.sh in the containers folder, a trigger will be set up
+* The trigger will rebuild Docker image any time file necessary for that container is committed
+

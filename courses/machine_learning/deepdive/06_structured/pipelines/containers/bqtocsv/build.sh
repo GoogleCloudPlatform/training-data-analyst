@@ -26,10 +26,17 @@ else
   TAG_NAME="$2"
 fi
 
-
 CONTAINER_NAME=babyweight-pipeline-bqtocsv
 
-docker build -t ${CONTAINER_NAME} .
-docker tag ${CONTAINER_NAME} gcr.io/${PROJECT_ID}/${CONTAINER_NAME}:${TAG_NAME}
-docker push gcr.io/${PROJECT_ID}/${CONTAINER_NAME}:${TAG_NAME}
+# Create the container image
+cat <<EOM > cloudbuild.yaml
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'gcr.io/${PROJECT_ID}/${CONTAINER_NAME}:${TAG_NAME}', '.' ]
+images:
+- 'gcr.io/${PROJECT_ID}/${CONTAINER_NAME}:${TAG_NAME}'
+EOM
+
+cat cloudbuild.yaml
+gcloud builds submit --config cloudbuild.yaml
 
