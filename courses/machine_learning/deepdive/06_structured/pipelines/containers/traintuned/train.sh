@@ -15,11 +15,12 @@ REGION=us-central1
 echo "Extracting information for job $HYPERJOB"
 
 # get information from the best hyperparameter job
-RMSE=$(gcloud ml-engine jobs describe $HYPERJOB --format 'value(trainingOutput.trials.finalMetric.objectiveValue.slice(0))')
-NNSIZE=$(gcloud ml-engine jobs describe $HYPERJOB --format 'value(trainingOutput.trials.hyperparameters.nnsize.slice(0))')
-BATCHSIZE=$(gcloud ml-engine jobs describe $HYPERJOB --format 'value(trainingOutput.trials.hyperparameters.batch_size.slice(0))')
-NEMBEDS=$(gcloud ml-engine jobs describe $HYPERJOB --format 'value(trainingOutput.trials.hyperparameters.nembeds.slice(0))')
-TRIALID=$(gcloud ml-engine jobs describe $HYPERJOB --format 'value(trainingOutput.trials.trialId.slice(0))')
+RMSE=$(gcloud ai-platform jobs describe $HYPERJOB --format 'value(trainingOutput.trials.finalMetric.objectiveValue.slice(0))')
+NNSIZE=$(gcloud ai-platform jobs describe $HYPERJOB --format 'value(trainingOutput.trials.hyperparameters.nnsize.slice(0))')
+BATCHSIZE=$(gcloud ai-platform jobs describe $HYPERJOB --format 'value(trainingOutput.trials.hyperparameters.batch_size.slice(0))')
+NEMBEDS=$(gcloud ai-platform jobs describe $HYPERJOB --format 'value(trainingOutput.trials.hyperparameters.nembeds.slice(0))')
+TRIALID=$(gcloud ai-platform jobs describe $HYPERJOB --format 
+'value(trainingOutput.trials.trialId.slice(0))')
 
 echo "Continuing to train model in $TRIALID with nnsize=$NNSIZE batch_size=$BATCHSIZE nembeds=$NEMBEDS"
 
@@ -41,7 +42,6 @@ python -m trainer.task \
   --train_examples=200000
 
 
-# note --stream-logs above so that we wait for job to finish
 # write output file for next step in pipeline
 echo $OUTDIR > /output.txt
 

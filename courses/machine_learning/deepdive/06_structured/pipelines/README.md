@@ -2,7 +2,11 @@
 
 To repeat the steps in the article, follow these steps.
 
-## Start Hosted Pipelines
+# 1. Set up Hosted Kubeflow Pipelines
+
+You will use a Kubernetes cluster to run the ML Pipelines.
+
+### 1a. Start Hosted Pipelines
 Create Hosted Kubeflow Pipelines Instance
 
 * Navigate to https://console.cloud.google.com/marketplace/details/google-cloud-ai-platform/kubeflow-pipelines
@@ -14,7 +18,7 @@ Create Hosted Kubeflow Pipelines Instance
 * Navigate to https://console.cloud.google.com/ai-platform/pipelines/clusters
 * Click on the HOSTED PIPELINES DASHBOARD LINK for kfpdemo on the cluster that you just started.
 
-## Give the cluster permissions to run BigQuery, Dataflow, etc.
+### 1b. Give the cluster permissions to run BigQuery, Dataflow, etc.
 
 In CloudShell:
 Run:
@@ -28,7 +32,11 @@ cd training-data-analyst/courses/machine_learning/deepdive/06_structured/pipelin
 * Check the service account IAM permissions at https://console.cloud.google.com/iam-admin/iam ; you can add other necessary permissions there.
 
 
-## Launch AI Platform notebook
+# 2. Development environment
+
+You will use AI Platform Notebooks to develop and deploy the code to Kubeflow Pipelines.
+
+### 2a. Launch AI Platform notebook
 Create Notebooks instance
 * Navigate to https://console.cloud.google.com/ai-platform/notebooks/instances
 * Click on +New Instance and create a TensorFlow 2.x notebook
@@ -42,16 +50,31 @@ Create Notebooks instance
 * Type:
     ```git clone https://github.com/GoogleCloudPlatform/training-data-analyst```
 
-## Navigate to notebook
+### 2b. Navigate to notebook for development workflow
 * On the left-hand side menu, navigate to this notebook (training-data-analyst/courses/machine_learning/deepdive/06_structured/7_pipelines.ipynb)
-* Run the cells in that notebook
+* Run the cells in that notebook to deploy the pipeline manually.
 
+# 3. CI/CD Production Environment
 
-# [Optional] To set up Continous Integration (CI)
+### 3a Set up Continous Integration (CI) GitHub triggers
 * Fork this GitHub repo to your personal account
 * Visit https://console.cloud.google.com/cloud-build/triggers
 * Connect your GitHub repo
 * Skip the "Create a push trigger (optional)" for now
-* Now, when you run ./create_github_trigger.sh in the containers folder, a trigger will be set up
+* Now, when you run ./setup_github_trigger.sh from the containers folder in CloudShell or Jupyter terminal, a trigger will be set up
 * The trigger will rebuild Docker image any time file necessary for that container is committed
+
+### 3b Verify CI
+* In AI Platform Notebooks or CloudShell, clone your personal GitHub repo
+* cd to this directory
+* Create Docker containers:  ./build_all.sh
+* Change containers/bqtocsv/transform.py in some way (maybe add a print statement)
+* Do a git commit
+* Visit https://console.cloud.google.com/cloud-build/triggers and verify that the corresponding trigger is activated
+* Verify that a new Docker image has been built and pushed to gcr.io
+
+### 3c Verify CD
+* Change ../mlp_babyweight.py to reference your project instead of cloud-training-demos
+* Verify that submitting the pipeline still works from AI Platform Notebooks
+
 
