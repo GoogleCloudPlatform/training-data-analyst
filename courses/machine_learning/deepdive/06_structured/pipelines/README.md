@@ -52,6 +52,7 @@ Create Notebooks instance
 
 ### 2b. Navigate to notebook for development workflow
 * On the left-hand side menu, navigate to this notebook (training-data-analyst/courses/machine_learning/deepdive/06_structured/7_pipelines.ipynb)
+* Change the pipelines host in the notebook to reflect the URL of your KFP installation
 * Run the cells in that notebook to deploy the pipeline manually.
 
 # 3. CI/CD Production Environment
@@ -62,10 +63,10 @@ Create Notebooks instance
 * Connect your GitHub repo
 * Skip the "Create a push trigger (optional)" for now
 * Now, when you run ./setup_github_trigger.sh from the containers folder in CloudShell or Jupyter terminal, a trigger will be set up
-* The trigger will rebuild Docker image any time file necessary for that container is committed
+* The trigger will rebuild Docker image any time a file in that container folder is committed
 
 ### 3b Verify CI
-* In AI Platform Notebooks or CloudShell, clone your personal GitHub repo
+* In AI Platform Notebooks, clone your personal GitHub repo
 * cd to this directory
 * Create Docker containers:  ./build_all.sh
 * Change containers/bqtocsv/transform.py in some way (maybe add a print statement)
@@ -74,7 +75,12 @@ Create Notebooks instance
 * Verify that a new Docker image has been built and pushed to gcr.io
 
 ### 3c Verify CD
-* Change ../mlp_babyweight.py to reference your project instead of cloud-training-demos
+* Change containers/pipeline/mlp_babyweight.py to reference your project instead of cloud-training-demos
 * Verify that submitting the pipeline still works from AI Platform Notebooks
+* cd containers/pipeline
+* Run ./1_deploy_cloudrun.sh  your_pipelines_host
+* Wait for it to finish and note the URL.  You can also find the Cloud Run URL from https://console.cloud.google.com/run by clicking on kfpdemo
+* Run ./2_connect_cloudrun.sh cloud_run_url
+
 
 

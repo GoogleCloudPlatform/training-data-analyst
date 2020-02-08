@@ -31,10 +31,10 @@ class ObjectDict(dict):
 def train_and_deploy(
     project='ai-analytics-solutions',
     bucket='ai-analytics-solutions-kfpdemo',
-    startYear='2000'
+    start_year='2000',
+    start_step=1
 ):
   """Pipeline to train babyweight model"""
-  start_step = 1
 
   # Step 1: create training dataset using Apache Beam on Cloud Dataflow
   if start_step <= 1:
@@ -46,7 +46,7 @@ def train_and_deploy(
         '--project', project,
         '--mode', 'cloud',
         '--bucket', bucket,
-        '--start_year', startYear
+        '--start_year', start_year
       ],
       file_outputs={'bucket': '/output.txt'}
     ).apply(use_gcp_secret('user-gcp-sa'))
@@ -143,13 +143,25 @@ def train_and_deploy(
     })
 
 
-if __name__ == '__main__':
-  import kfp.compiler as compiler
-  import sys
-  if len(sys.argv) != 2:
-    print("Usage: mlp_babyweight  pipeline-output-name")
-    sys.exit(-1)
-  
-  print("Setting secret on each step of pipeline")
-  filename = sys.argv[1]
-  compiler.Compiler().compile(train_and_deploy, filename)
+def finetune_and_deploy(filename):
+    import kfp
+    import os
+    
+    if 'babyweight/preproc/train' in filename:
+        PIPELINES_HOST = os.getenv('PIPELINES_HOST')
+        PROJECT = os.getenv('PROJECT')
+        BUCKET = os.getenv('BUCKET')
+        print("New file {}: Launching ML pipeline on {} to finetune model in {}",
+              filename,
+              PIPELINES_HOST,
+              BUCKET
+             )    
+        client = kfp.Client(host=PIPELINES_HOST)
+        args = {
+            'project' : PROJECT, 
+            'bucket' : BUCKET,
+            'start_step' : 3
+        }
+        pipeline = client.create_run_from_pipeline_func(train_and_deploy, args)
+        return 'Fine tuning job Launched!'
+
