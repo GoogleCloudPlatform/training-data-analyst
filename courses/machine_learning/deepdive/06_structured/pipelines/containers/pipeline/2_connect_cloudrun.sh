@@ -31,9 +31,11 @@ gsutil notification create -t ${TOPIC} -f json -e OBJECT_FINALIZE gs://${BUCKET}
      
 # create service account to represent pub/sub and give it permission
 gcloud iam service-accounts create cloud-run-pubsub-invoker \
-     --display-name "Cloud Run Pub/Sub Invoker"
+     --display-name "Cloud Run Pub/Sub Invoker" || true
 
-gcloud run services add-iam-policy-binding pubsub-tutorial \
+gcloud run  \
+   services add-iam-policy-binding kfpdemo \
+   --platform=managed --region=us-central1 \
    --member=serviceAccount:cloud-run-pubsub-invoker@${PROJECT_ID}.iam.gserviceaccount.com \
    --role=roles/run.invoker
 

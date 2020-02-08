@@ -80,7 +80,7 @@ Create Notebooks instance
 * cd containers/pipeline
 * Run ./1_deploy_cloudrun.sh  your_pipelines_host
 * Wait for it to finish and note the URL.  You can also find the Cloud Run URL from https://console.cloud.google.com/run by clicking on kfpdemo
-* Run ./2_connect_cloudrun.sh cloud_run_url
+* In CloudShell (not from AI Platform notebooks), run ./2_connect_cloudrun.sh cloud_run_url
 
 
 

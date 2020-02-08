@@ -25,6 +25,7 @@ BUCKET="${PROJECT}-kfpdemo"
 
 # setup Pub/Sub topic for changes to bucket
 TOPIC="projects/${PROJECT}/topics/bucket-${BUCKET}"
+gcloud pubsub topics create ${TOPIC} || true
 gsutil notification create -t ${TOPIC} -f json -e OBJECT_FINALIZE gs://${BUCKET} || true
 
 # deploy Cloud Run

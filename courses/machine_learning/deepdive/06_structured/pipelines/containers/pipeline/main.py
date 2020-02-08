@@ -59,14 +59,18 @@ def index():
             return f'Bad Request: {msg}', 400
 
         try:
+            print(f'invoking for {data})
             mlp_babyweight.finetune_and_deploy(data["name"])
             # Flush the stdout to avoid log buffering.
             sys.stdout.flush()
             return ('', 204)
 
         except Exception as e:
-            print(f'error: {e}')
+            msg = 'invalid Pub/Sub message format: no msg'
+            print(f'error: {msg}')
             return ('', 500)
+    else:
+        print(f'No data in msg')
 
     return ('', 500)
 # [END run_pubsub_handler]
