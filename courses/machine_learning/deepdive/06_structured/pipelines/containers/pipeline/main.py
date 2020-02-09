@@ -12,73 +12,50 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# [START run_pubsub_server_setup]
-import base64
-from flask import Flask, request
+import requests
 import json
 import os
-import sys
-import mlp_babyweight
 
-app = Flask(__name__)
-# [END run_pubsub_server_setup]
+def handle_newfile(data, context):
+    """Background Cloud Function to be triggered by Cloud Storage.
+       This generic function calls the Cloud Run URL endpoint.
 
+    Args:
+        data (dict): The Cloud Functions event payload.
+        context (google.cloud.functions.Context): Metadata of triggering event.
+    Returns:
+        None; the output is written to Stackdriver Logging
+    """
+    payload = {
+        'bucket' : data['bucket'],
+        'filename': data['name'] 
+    }
+    
+    # Notes:    
+    # (1) Ideally, we can simply invoke mlp_babyweight.finetune from here
+    # However, kfp.Client() has dependencies on binaries that are not available in Cloud Functions
+    # Hence, this workaround of putting mlp_babyweight.py in a Docker container and invoking it
+    # via Cloud Run
+    # (2) We could reduce the traffic to Cloud Run by checking filename pattern here
+    # but for reusability and maintainability reasons, I'm keeping this
+    # Cloud Function as a simple pass-through
 
-# [START run_pubsub_handler]
-@app.route('/', methods=['POST'])
-def index():
-    envelope = request.get_json()
-    if not envelope:
-        msg = 'no Pub/Sub message received'
-        print(f'error: {msg}')
-        return f'Bad Request: {msg}', 400
+    # receiving service url
+    url = os.environ.get('DESTINATION_URL', "No DESTINATION_URL")
+    print("Invoking Cloud Run at {} with {}".format(url, payload))     
+      
+    # See https://cloud.google.com/run/docs/authenticating/service-to-service
+    metadata_server_token_url = 'http://metadata/computeMetadata/v1/instance/service-accounts/default/identity?audience='
+    token_request_url = metadata_server_token_url + url
+    token_request_headers = {'Metadata-Flavor': 'Google'}
+    token_response = requests.get(token_request_url, headers=token_request_headers)
+    jwt = token_response.content.decode("utf-8")
 
-    if not isinstance(envelope, dict) or 'message' not in envelope:
-        msg = 'invalid Pub/Sub message format'
-        print(f'error: {msg}')
-        return f'Bad Request: {msg}', 400
-
-    pubsub_message = envelope['message']
-
-    if isinstance(pubsub_message, dict) and 'data' in pubsub_message:
-        try:
-            data = json.loads(
-                base64.b64decode(pubsub_message['data']).decode())
-
-        except Exception as e:
-            msg = ('Invalid Pub/Sub message: '
-                   'data property is not valid base64 encoded JSON')
-            print(f'error: {e}')
-            return f'Bad Request: {msg}', 400
-
-        # Validate the message is a Cloud Storage event.
-        if not data["name"] or not data["bucket"]:
-            msg = ('Invalid Cloud Storage notification: '
-                   'expected name and bucket properties')
-            print(f'error: {msg}')
-            return f'Bad Request: {msg}', 400
-
-        try:
-            print(f'invoking for {data})
-            mlp_babyweight.finetune_and_deploy(data["name"])
-            # Flush the stdout to avoid log buffering.
-            sys.stdout.flush()
-            return ('', 204)
-
-        except Exception as e:
-            msg = 'invalid Pub/Sub message format: no msg'
-            print(f'error: {msg}')
-            return ('', 500)
-    else:
-        print(f'No data in msg')
-
-    return ('', 500)
-# [END run_pubsub_handler]
-
-
-if __name__ == '__main__':
-    PORT = int(os.getenv('PORT')) if os.getenv('PORT') else 8080
-
-    # This is used when running locally. Gunicorn is used to run the
-    # application on Cloud Run. See entrypoint in Dockerfile.
-    app.run(host='127.0.0.1', port=PORT, debug=True)
+    # Provide the token in the request to the receiving service
+    headers = {
+        'Authorization': f'bearer {jwt}',
+        'Content-Type':'application/json'
+    }
+    print("Headers = {}".format(headers))
+    resp = requests.post(url, data=json.dumps(payload), headers=headers)
+    return (resp.status_code == requests.codes.ok)

@@ -13,25 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ "$#" -ne 2 ]; then
-    echo "Usage: ./1_deploy_cloudrun.sh pipelines_host hparam_job_name"
-    echo "  eg:  ./1_deploy_cloudrun.sh 447cdd24f70c9541-dot-us-central1.notebooks.googleusercontent.com  babyweight_200207_231639"
+if [ "$#" -ne 1 ]; then
+    echo "Usage: ./2_deploy_cloudfunction.sh   cloudrun_url"
+    echo "  eg:  ./2_deploy_cloudfunction.sh  https://kfpdemo-cbacefeq2a-uc.a.run.app"
     exit
 fi
 
 
 PROJECT=$(gcloud config get-value project)
 BUCKET="${PROJECT}-kfpdemo"
-REGION=us-central1
-PIPELINES_HOST=$1
-HPARAM_JOB=$2
+CLOUDRUN_URL=$1
 
-# build the container for Cloud Run
-../build_container.sh
-
-# deploy Cloud Run
-gcloud run deploy kfpdemo \
-   --platform=managed --region=${REGION} \
-   --image gcr.io/${PROJECT}/babyweight-pipeline-pipeline \
-   --set-env-vars PROJECT=${PROJECT},BUCKET=${BUCKET},PIPELINES_HOST=${PIPELINES_HOST},HPARAM_JOB=${HPARAM_JOB}
-
+# Deploy Cloud Functions to monitor the bucket and invoke Cloud Run
+gcloud functions deploy handle_newfile --runtime python37 \
+    --set-env-vars DESTINATION_URL=${CLOUDRUN_URL} \
+    --trigger-resource=${BUCKET} --trigger-event=google.storage.object.finalize

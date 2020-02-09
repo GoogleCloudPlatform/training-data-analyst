@@ -15,6 +15,7 @@
 
 from kfp.gcp import use_gcp_secret
 import kfp.dsl as dsl
+import os
 
 class ObjectDict(dict):
   def __getattr__(self, name):
@@ -24,81 +25,116 @@ class ObjectDict(dict):
       raise AttributeError("No such attribute: " + name)
 
 
+
+    
+    
+    
+    
 @dsl.pipeline(
   name='babyweight',
-  description='Train Babyweight model'
+  description='Train Babyweight model from scratch'
+)
+def preprocess_train_and_deploy(
+    project='ai-analytics-solutions',
+    bucket='ai-analytics-solutions-kfpdemo',
+    start_year='2000'
+):
+    """End-to-end Pipeline to train and deploy babyweight model"""
+    # Step 1: create training dataset using Apache Beam on Cloud Dataflow
+    preprocess = dsl.ContainerOp(
+          name='preprocess',
+          # image needs to be a compile-time string
+          image='gcr.io/ai-analytics-solutions/babyweight-pipeline-bqtocsv:latest',
+          arguments=[
+            '--project', project,
+            '--mode', 'cloud',
+            '--bucket', bucket,
+            '--start_year', start_year
+          ],
+          file_outputs={'bucket': '/output.txt'}
+      ).apply(use_gcp_secret('user-gcp-sa'))
+    
+
+    # Step 2: Do hyperparameter tuning of the model on Cloud ML Engine
+    hparam_train = dsl.ContainerOp(
+        name='hypertrain',
+        # image needs to be a compile-time string
+        image='gcr.io/ai-analytics-solutions/babyweight-pipeline-hypertrain:latest',
+        arguments=[
+            preprocess.outputs['bucket']
+        ],
+        file_outputs={'jobname': '/output.txt'}
+      ).apply(use_gcp_secret('user-gcp-sa'))
+    
+    # core ML part of pipeline
+    deploy_cmle = train_and_deploy_helper(preprocess, hparam_train, True)
+    
+    # Step 5: Deploy web app
+    deploy_app = dsl.ContainerOp(
+          name='deployapp',
+          # image needs to be a compile-time string
+          image='gcr.io/ai-analytics-solutions/babyweight-pipeline-deployapp:latest',
+          arguments=[
+            deploy_cmle.outputs['model'],
+            deploy_cmle.outputs['version']
+          ],
+          file_outputs={
+            'appurl': '/appurl.txt'
+          }
+        ).apply(use_gcp_secret('user-gcp-sa'))
+
+    # application URL will be https://ai-analytics-solutions.appspot.com/
+
+
+@dsl.pipeline(
+  name='babyweight',
+  description='Train Babyweight model on current data in GCS'
 )
 def train_and_deploy(
     project='ai-analytics-solutions',
     bucket='ai-analytics-solutions-kfpdemo',
-    start_year='2000',
-    start_step=1
+    start_year='2000'
 ):
-  """Pipeline to train babyweight model"""
-
-  # Step 1: create training dataset using Apache Beam on Cloud Dataflow
-  if start_step <= 1:
-    preprocess = dsl.ContainerOp(
-      name='preprocess',
-      # image needs to be a compile-time string
-      image='gcr.io/ai-analytics-solutions/babyweight-pipeline-bqtocsv:latest',
-      arguments=[
-        '--project', project,
-        '--mode', 'cloud',
-        '--bucket', bucket,
-        '--start_year', start_year
-      ],
-      file_outputs={'bucket': '/output.txt'}
-    ).apply(use_gcp_secret('user-gcp-sa'))
-  else:
+    """Pipeline to retrain and deploy babyweight ML model only"""
+    # Create dictionaries that correspond to output of previous steps
     preprocess = ObjectDict({
-      'outputs': {
-        'bucket': bucket
-      }
+        'outputs': {
+            'bucket': bucket
+        }
     })
-
-  # Step 2: Do hyperparameter tuning of the model on Cloud ML Engine
-  if start_step <= 2:
-    hparam_train = dsl.ContainerOp(
-      name='hypertrain',
-      # image needs to be a compile-time string
-      image='gcr.io/ai-analytics-solutions/babyweight-pipeline-hypertrain:latest',
-      arguments=[
-        preprocess.outputs['bucket']
-      ],
-      file_outputs={'jobname': '/output.txt'}
-    ).apply(use_gcp_secret('user-gcp-sa'))
-  else:
+    
+    # Step 2: hyperparam train
     hparam_train = ObjectDict({
       'outputs': {
-        'jobname': 'babyweight_181008_210829'
+        'jobname': os.environ.get('HPARAM_JOB', 'babyweight_200207_231639')
       }
     })
-
-  # Step 3: Train the model some more, but on the pipelines cluster itself
-  if start_step <= 3:
+    
+    # actual pipeline we want to run
+    deploy_cmle = train_and_deploy_helper(preprocess, hparam_train)
+    
+    # no need to redeploy web app at https://ai-analytics-solutions.appspot.com/
+    
+    
+    
+def train_and_deploy_helper(preprocess, hparam_train):
+    """Helper function called from the two pipeline functions"""
+    
+    # Step 3: Train the model some more, but on the pipelines cluster itself
     train_tuned = dsl.ContainerOp(
       name='traintuned',
       # image needs to be a compile-time string
       image='gcr.io/ai-analytics-solutions/babyweight-pipeline-traintuned:latest',
       arguments=[
         hparam_train.outputs['jobname'],
-        bucket
+        preprocess.outputs['bucket']
       ],
       file_outputs={'train': '/output.txt'}
     ).apply(use_gcp_secret('user-gcp-sa'))
     train_tuned.set_memory_request('2G')
     train_tuned.set_cpu_request('1')
-  else:
-    train_tuned = ObjectDict({
-        'outputs': {
-          'train': 'gs://ai-analytics-solutions-kfpdemo/babyweight/hyperparam/17'
-        }
-    })
 
-
-  # Step 4: Deploy the trained model to Cloud ML Engine
-  if start_step <= 4:
+    # Step 4: Deploy the trained model to Cloud ML Engine
     deploy_cmle = dsl.ContainerOp(
       name='deploycmle',
       # image needs to be a compile-time string
@@ -113,54 +149,26 @@ def train_and_deploy(
         'version': '/version.txt'
       }
     ).apply(use_gcp_secret('user-gcp-sa'))
-  else:
-    deploy_cmle = ObjectDict({
-      'outputs': {
-        'model': 'babyweight',
-        'version': 'mlp'
-      }
-    })
 
-  # Step 5: Deploy the trained model to AppEngine
-  if start_step <= 5:
-    deploy_cmle = dsl.ContainerOp(
-      name='deployapp',
-      # image needs to be a compile-time string
-      image='gcr.io/ai-analytics-solutions/babyweight-pipeline-deployapp:latest',
-      arguments=[
-        deploy_cmle.outputs['model'],
-        deploy_cmle.outputs['version']
-      ],
-      file_outputs={
-        'appurl': '/appurl.txt'
-      }
-    ).apply(use_gcp_secret('user-gcp-sa'))
-  else:
-    deploy_cmle = ObjectDict({
-      'outputs': {
-        'appurl': 'https://ai-analytics-solutions.appspot.com/'
-      }
-    })
+    return deploy_cmle
 
 
 def finetune_and_deploy(filename):
+    """invoked from a Cloud Function or a Cloud Run, it launches a Pipeline on kfp"""
     import kfp
-    import os
+    import sys
     
     if 'babyweight/preproc/train' in filename:
-        PIPELINES_HOST = os.getenv('PIPELINES_HOST')
-        PROJECT = os.getenv('PROJECT')
-        BUCKET = os.getenv('BUCKET')
-        print("New file {}: Launching ML pipeline on {} to finetune model in {}",
-              filename,
-              PIPELINES_HOST,
-              BUCKET
-             )    
+        PIPELINES_HOST = os.environ.get('PIPELINES_HOST', "Environment variable PIPELINES_HOST not set")
+        PROJECT = os.environ.get('PROJECT', "Environment variable PROJECT not set")
+        BUCKET = os.environ.get('BUCKET', "Environment variable BUCKET not set")
+        print("New file {}: Launching ML pipeline on {} to finetune model in {}".format(
+            filename, PIPELINES_HOST, BUCKET))
+        sys.stdout.flush()
         client = kfp.Client(host=PIPELINES_HOST)
         args = {
             'project' : PROJECT, 
             'bucket' : BUCKET,
-            'start_step' : 3
         }
         pipeline = client.create_run_from_pipeline_func(train_and_deploy, args)
         return 'Fine tuning job Launched!'

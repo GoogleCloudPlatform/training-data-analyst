@@ -19,8 +19,7 @@ RMSE=$(gcloud ai-platform jobs describe $HYPERJOB --format 'value(trainingOutput
 NNSIZE=$(gcloud ai-platform jobs describe $HYPERJOB --format 'value(trainingOutput.trials.hyperparameters.nnsize.slice(0))')
 BATCHSIZE=$(gcloud ai-platform jobs describe $HYPERJOB --format 'value(trainingOutput.trials.hyperparameters.batch_size.slice(0))')
 NEMBEDS=$(gcloud ai-platform jobs describe $HYPERJOB --format 'value(trainingOutput.trials.hyperparameters.nembeds.slice(0))')
-TRIALID=$(gcloud ai-platform jobs describe $HYPERJOB --format 
-'value(trainingOutput.trials.trialId.slice(0))')
+TRIALID=$(gcloud ai-platform jobs describe $HYPERJOB --format 'value(trainingOutput.trials.trialId.slice(0))')
 
 echo "Continuing to train model in $TRIALID with nnsize=$NNSIZE batch_size=$BATCHSIZE nembeds=$NEMBEDS"
 
@@ -28,9 +27,12 @@ echo "Continuing to train model in $TRIALID with nnsize=$NNSIZE batch_size=$BATC
 # see Dockerfile
 CODEDIR=/babyweight/src/training-data-analyst/courses/machine_learning/deepdive/06_structured
 
-OUTDIR=gs://${BUCKET}/babyweight/hyperparam/$TRIALID
+FROMDIR=gs://${BUCKET}/babyweight/hyperparam/$TRIALID
+OUTDIR=gs://${BUCKET}/babyweight/traintuned
 export PYTHONPATH=${CODEDIR}/babyweight:${PYTHONPATH}
 
+gsutil -m rm -rf ${OUTDIR} || true
+gsutil -m cp -r ${FROMDIR} ${OUTDIR}
 python -m trainer.task \
   --job-dir=$OUTDIR \
   --bucket=${BUCKET} \

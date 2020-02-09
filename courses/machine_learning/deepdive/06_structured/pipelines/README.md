@@ -77,10 +77,16 @@ Create Notebooks instance
 ### 3c Verify CD
 * Change containers/pipeline/mlp_babyweight.py to reference your project instead of cloud-training-demos
 * Verify that submitting the pipeline still works from AI Platform Notebooks
-* cd containers/pipeline
-* Run ./1_deploy_cloudrun.sh  your_pipelines_host
-* Wait for it to finish and note the URL.  You can also find the Cloud Run URL from https://console.cloud.google.com/run by clicking on kfpdemo
-* In CloudShell (not from AI Platform notebooks), run ./2_connect_cloudrun.sh cloud_run_url
+* From a Terminal in AI Platform Notebooks
+  * cd containers/pipeline
+  * Run ./1_deploy_cloudrun.sh  your_pipelines_host. This will finish and tell you the URL end point.
+  * Alternately, visit https://console.cloud.google.com/run to find the URL end point
+  * Run ./2_deploy_cloudfunctions.sh cloud_run_url
+  * Copy a new file into the preprocessed folder, or try running ./try_cloudfunction.sh
+  * Looking at the Cloud Function and Cloud Run logs
+  * Visit the kfp UI to see the new Experiment Run that has been launched.
+  
+
 
 
 
