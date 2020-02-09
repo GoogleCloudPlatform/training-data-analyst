@@ -1,15 +1,17 @@
 # How to create and deploy a Kubeflow Machine Learning Pipeline (Part 1)
+See:
+https://towardsdatascience.com/how-to-create-and-deploy-a-kubeflow-machine-learning-pipeline-part-1-efea7a4b650f
 
 To repeat the steps in the article, follow these steps.
 
-# 1. Set up Hosted Kubeflow Pipelines
+## 1. Set up Hosted Kubeflow Pipelines
 
 You will use a Kubernetes cluster to run the ML Pipelines.
 
 ### 1a. Start Hosted Pipelines
 Create Hosted Kubeflow Pipelines Instance
 
-* Navigate to https://console.cloud.google.com/marketplace/details/google-cloud-ai-platform/kubeflow-pipelines
+* From the GCP Console, navigate to AI Platform | Pipelines and select +New Instance or browse directly to https://console.cloud.google.com/marketplace/details/google-cloud-ai-platform/kubeflow-pipelines
 * Make sure your GCP project is selected in the dropdown at the top.
 * Click CONFIGURE
 * Change the App Instance Name to “kfpdemo”
@@ -32,7 +34,7 @@ cd training-data-analyst/courses/machine_learning/deepdive/06_structured/pipelin
 * Check the service account IAM permissions at https://console.cloud.google.com/iam-admin/iam ; you can add other necessary permissions there.
 
 
-# 2. Development environment
+## 2. Development environment
 
 You will use AI Platform Notebooks to develop and deploy the code to Kubeflow Pipelines.
 
@@ -55,7 +57,12 @@ Create Notebooks instance
 * Change the pipelines host in the notebook to reflect the URL of your KFP installation
 * Run the cells in that notebook to deploy the pipeline manually.
 
-# 3. CI/CD Production Environment
+
+# How to carry out CI/CD in Machine Learning ("MLOps") using Kubeflow ML Pipelines (Part 3)
+See:
+https://medium.com/@lakshmanok/how-to-carry-out-ci-cd-in-machine-learning-mlops-using-kubeflow-ml-pipelines-part-3-bdaf68082112
+
+## 3. CI/CD Production Environment
 
 ### 3a Set up Continous Integration (CI) GitHub triggers
 * Fork this GitHub repo to your personal account
@@ -65,7 +72,7 @@ Create Notebooks instance
 * Now, when you run ./setup_github_trigger.sh from the containers folder in CloudShell or Jupyter terminal, a trigger will be set up
 * The trigger will rebuild Docker image any time a file in that container folder is committed
 
-### 3b Verify CI
+To Verify CI
 * In AI Platform Notebooks, clone your personal GitHub repo
 * cd to this directory
 * Create Docker containers:  ./build_all.sh
@@ -74,7 +81,7 @@ Create Notebooks instance
 * Visit https://console.cloud.google.com/cloud-build/triggers and verify that the corresponding trigger is activated
 * Verify that a new Docker image has been built and pushed to gcr.io
 
-### 3c Verify CD
+### 3b Verify CD
 * Change containers/pipeline/mlp_babyweight.py to reference your project instead of cloud-training-demos
 * Verify that submitting the pipeline still works from AI Platform Notebooks
 * From a Terminal in AI Platform Notebooks
