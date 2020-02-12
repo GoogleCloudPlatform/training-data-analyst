@@ -3,16 +3,16 @@
 [BQ nested and repeated columns](https://cloud.google.com/bigquery/docs/nested-repeated) 
 allow you to achieve the performance benefits of denormalization while retaining the structure of the data.
 
-To illustrate, consider [this query](https://console.cloud.google.com/bigquery?sq=663413318684:7240566ccfa946268400e57a3de6d2c1) against a Bitcoin dataset. The query joins the blocks and transactions tables to find the max transaction ID for each block.
+To illustrate, consider [this query](https://console.cloud.google.com/bigquery?sq=316488749670:7c97c53951da457c9aaa07388f4213be) against the Bitcoin public dataset. The query joins the blocks and transactions tables to find the max transaction ID for each block.
 
 ```sql
 SELECT 
   block_id, 
   MAX(i.input_sequence_number) AS max_seq_number,
   COUNT(t.transaction_id) as num_transactions_in_block
-FROM `cloud-training-demos.bitcoin_blockchain.blocks` AS b
+FROM `bigquery-public-data.bitcoin_blockchain.blocks` AS b
   -- Join on the separate table which stores transaction info
-  JOIN `cloud-training-demos.bitcoin_blockchain.transactions` AS t USING(block_id)
+  JOIN `bigquery-public-data.bitcoin_blockchain.transactions` AS t USING(block_id)
   , t.inputs as i 
 GROUP BY block_id;
 ```
@@ -26,7 +26,7 @@ SELECT
   block_id, 
   MAX(i.input_sequence_number) AS max_seq_number,
   COUNT(t.transaction_id) as num_transactions_in_block
-FROM `cloud-training-demos.bitcoin_blockchain.blocks` AS b
+FROM `bigquery-public-data.bitcoin_blockchain.blocks` AS b
   -- Use the nested STRUCT within BLOCKS table for transactions instead of a separate JOIN
   , b.transactions AS t
   , t.inputs as i
@@ -56,7 +56,7 @@ SELECT DISTINCT
   t.transaction_id,
   t.outputs.output_satoshis AS satoshi_value,
   t.outputs.output_satoshis * 0.00000001 AS btc_value
-FROM `cloud-training-demos.bitcoin_blockchain.blocks` AS b
+FROM `bigquery-public-data.bitcoin_blockchain.blocks` AS b
   , b.transactions AS t 
   , t.inputs as i
 ORDER BY btc_value DESC
@@ -81,7 +81,7 @@ SELECT DISTINCT
   t.transaction_id,
   t_outputs.output_satoshis AS satoshi_value,
   t_outputs.output_satoshis * 0.00000001 AS btc_value
-FROM `cloud-training-demos.bitcoin_blockchain.blocks` AS b
+FROM `bigquery-public-data.bitcoin_blockchain.blocks` AS b
   , b.transactions AS t 
   , t.inputs as i
   , UNNEST(t.outputs) AS t_outputs
@@ -97,8 +97,8 @@ Recall that a single block in the chain can have many confirmed transactions. Le
 
 ```sql
 SELECT * 
-FROM `cloud-training-demos.bitcoin_blockchain.blocks` 
-WHERE block_id = '00000000000000fb62bbadc0a9dcda556925b2d0c1ad8634253ac2e83ab8382f';
+FROM `bigquery-public-data.bitcoin_blockchain.blocks` 
+WHERE block_id = '00000000000000fb62bbadc0a9dcda556925b2d0c1ad8634253ac2e83ab8382f'
 ```
 
 Scroll through the block and see all the repeated transaction values that are a part of the block. Confirm the previous 50,000 BTC transaction is there.
