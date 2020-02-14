@@ -1,6 +1,6 @@
 # Actor-Critic Deploy to Docker
 
-This notebook is a set of instructions on how to incoporate the actor-critic templates in this folder into the docker environment set up in the rl/dqn folder.
+This readme is a set of instructions on how to incoporate the actor-critic templates in this folder into the docker environment set up in the rl/dqn folder.
 
 To start, run the following code in a terminal to copy over the needed files and replace the dqn files with their respective actor-critic templates.
 
