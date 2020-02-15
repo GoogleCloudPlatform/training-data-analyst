@@ -67,7 +67,7 @@ def preprocess_train_and_deploy(
       ).apply(use_gcp_secret('user-gcp-sa'))
     
     # core ML part of pipeline
-    deploy_cmle = train_and_deploy_helper(preprocess, hparam_train, True)
+    deploy_cmle = train_and_deploy_helper(preprocess, hparam_train)
     
     # Step 5: Deploy web app
     deploy_app = dsl.ContainerOp(

@@ -69,6 +69,7 @@ https://medium.com/@lakshmanok/how-to-carry-out-ci-cd-in-machine-learning-mlops-
 * Visit https://console.cloud.google.com/cloud-build/triggers
 * Connect your GitHub repo
 * Skip the "Create a push trigger (optional)" for now
+* Edit ./setup_github_trigger.sh with your repo name
 * Now, when you run ./setup_github_trigger.sh from the containers folder in CloudShell or Jupyter terminal, a trigger will be set up
 * The trigger will rebuild Docker image any time a file in that container folder is committed
 
