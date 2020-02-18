@@ -65,7 +65,7 @@ def run(argv=None):
                 'time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
     pipeline = (p
-                | 'read_from_pubusub' >> beam.io.ReadFromPubSub(topic=TOPIC).with_output_types(bytes)
+                | 'read_from_pubsub' >> beam.io.ReadFromPubSub(topic=TOPIC).with_output_types(bytes)
                 | 'window' >> beam.WindowInto(window.SlidingWindows(
                     size=300,
                     period=15))
