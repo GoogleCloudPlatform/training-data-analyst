@@ -4,7 +4,7 @@ This one day workshop provides a hands-on introduction to designing and building
 
 ## Pre-lab setup
 
-__Step 1:__ Create an account at https://www.qwiklabs.com/.
+__Step 1:__ Create an account at https://events.qwiklabs.com/.
 
 __Step 2:__ Fill out the Labs Signup Form using the link your instructor gives you. Enter the email address of your Qwiklabs account.
 
