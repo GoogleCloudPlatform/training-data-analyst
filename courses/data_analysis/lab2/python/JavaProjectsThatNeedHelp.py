@@ -152,6 +152,7 @@ def run():
     '--staging_location=gs://{0}/staging/'.format(bucket),
     '--temp_location=gs://{0}/staging/'.format(bucket),
     '--runner={0}'.format(runner),
+    '--region=us-central1',
     '--max_num_workers=5'
     ]
 

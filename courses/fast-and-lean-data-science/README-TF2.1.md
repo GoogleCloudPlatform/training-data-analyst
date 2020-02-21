@@ -1,4 +1,4 @@
-# Keras / TPU integration in Tensorflow 2.1 (unreleased)
+# Keras / TPU integration in Tensorflow 2.1
 
  * support for TPUs
  * support for TPU pods
@@ -10,7 +10,7 @@
  ![TPU v3](https://cloud.google.com/images/products/tpu/cloud-tpu-v3-img_2x.png)
  <br/>Cloud TPU v3 with 8 TPU cores
  
-# You can test now in tf-nightly
+# You can test now with Cloud TPUs
 
 Here are two test Notebook with a Keras model:
 
@@ -42,7 +42,7 @@ Please follow these steps:
  demo, you can use an 8-core TPU or a 32-core TPU pod. Both TPU v2 and v3 will work.
  Select a zone that has v3-8, v2-32, v2-8 or v3-32 availability depending on what you want to test.
  * run the TPU and VM creation script:<br/>
- `./create-tpu-deep-learning-vm.sh choose-a-name --tpu-type v3-8 --nightly`
+ `./create-tpu-deep-learning-vm.sh choose-a-name --tpu-type v3-8`
  * If you get an error about an unavailable IP range, just run the script again, it will pick another one.
  * When the machines are up, go to [Google cloud console](https://console.cloud.google.com/) AI Platform > Notebooks
  and click OPEN JUPYTERLAB in front of the VM you just created.
@@ -55,10 +55,9 @@ Please follow these steps:
  `training-data-analyst/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb`
 
 You can also use the [Google cloud console](https://console.cloud.google.com/). Go to
-Compute Engine > TPUs > CREATE TPU NODE. The version selector has a "nightly-2.x"
-option that will give you a TPU with the latest nightly build.
+Compute Engine > TPUs > CREATE TPU NODE. Select the latest Tensorflow version in the version selector (2.1).
 
 The script does the same thing but on the command line using the two
 gcloud commands for creating a VM and a TPU. It ads a couple of perks:
-the VM supports Jupyter notebooks out of the box, is also upgraded to
-tf-nightly and has the TPU_NAME environment variable set pointing to your TPU.
+the VM supports Jupyter notebooks out of the box, it has the TPU_NAME environment variable set pointing to your TPU,
+and it can be upgraded to tf-nightly if you need cutting edge tech.

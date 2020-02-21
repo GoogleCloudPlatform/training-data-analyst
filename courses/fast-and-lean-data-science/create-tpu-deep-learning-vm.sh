@@ -3,8 +3,8 @@
 # please configure your login, project region and zone first by running gcloud init
 # region us-central1 zone us-central1-b usually have TPUs available
 
-DEFAULT_TF_VERSION="1.15"
-DEFAULT_IMAGE_FAMILY="tf-1-15-cpu"
+DEFAULT_TF_VERSION="2.1"
+DEFAULT_IMAGE_FAMILY="tf2-2-1-cpu"
 
 usage()
 {
