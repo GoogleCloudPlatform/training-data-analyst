@@ -7,4 +7,4 @@
 3. Create a version of the model using this JSON file and specifying the `explanation-method`.
 4. Call `gcloud beta ai-platform explain` to get the explanations.
 
-The detailed steps are found in this [notebook](TODO).
+The detailed steps are found in this [notebook](./AI_Explanations_on_CAIP.ipynb).
