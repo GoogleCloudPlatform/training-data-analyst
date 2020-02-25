@@ -1,0 +1,18 @@
+name: vcf-to-bigquery-pipeline
+inputParameters:
+- name: PROJECT_ID
+- name: INPUT_VCF
+- name: BIGQUERY_DATASET
+- name: BIGQUERY_TABLE
+- name: STAGING_BUCKET
+docker:
+  imageName: gcr.io/gcp-variant-transforms/gcp-variant-transforms
+  cmd: |
+    ./opt/gcp_variant_transforms/bin/vcf_to_bq \
+      --project $PROJECT_ID \
+      --input_pattern "$INPUT_VCF" \
+      --output_table "$PROJECT_ID":"$BIGQUERY_DATASET"."$BIGQUERY_TABLE" \
+      --staging_location "$STAGING_BUCKET"/staging \
+      --temp_location "$STAGING_BUCKET"/temp \
+      --job_name vcf-to-bigquery \
+      --runner DataflowRunner

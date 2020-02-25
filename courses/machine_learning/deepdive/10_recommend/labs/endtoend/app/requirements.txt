@@ -1,0 +1,5 @@
+flask
+gunicorn
+pandas
+numpy
+google-cloud-storage==1.6.0

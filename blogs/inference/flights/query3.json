@@ -1,0 +1,17 @@
+{
+  "name": "flights_data",
+  "queries": [{
+    "query": {
+      "type": "TYPE_TERM",
+      "term": {
+      "name": "ARR_DELAY",
+      "value": "Late"
+      }
+    },
+    "distribution_configs": {
+      "bgprob_exp": 0.7,
+      "data_name": "ORIGIN",
+      "max_result_entries": 5,
+    }
+  }]
+}

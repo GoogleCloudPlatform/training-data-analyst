@@ -51,7 +51,7 @@ def packageUse(line, keyword):
 def by_value(kv1, kv2):
    key1, value1 = kv1
    key2, value2 = kv2
-   return value1 < value2 
+   return value1 < value2
 
 if __name__ == '__main__':
    parser = argparse.ArgumentParser(description='Find the most used Java packages')
@@ -75,5 +75,5 @@ if __name__ == '__main__':
       | 'write' >> beam.io.WriteToText(output_prefix)
    )
 
-   p.run()
+   p.run().wait_until_finish()
 

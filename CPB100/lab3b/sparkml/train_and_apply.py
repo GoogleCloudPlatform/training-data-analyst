@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from __future__ import print_function
+
 
 import os
 import sys
@@ -42,8 +42,8 @@ jdbcUrl    = 'jdbc:mysql://%s:3306/%s?user=%s&password=%s' % (CLOUDSQL_INSTANCE_
 sc.setCheckpointDir('checkpoint/')
 
 # Read the ratings and accommodations data from Cloud SQL
-dfRates = sqlContext.read.format('jdbc').options(driver=jdbcDriver, url=jdbcUrl, dbtable='Rating').load()
-dfAccos = sqlContext.read.format('jdbc').options(driver=jdbcDriver, url=jdbcUrl, dbtable='Accommodation').load()
+dfRates = sqlContext.read.format('jdbc').options(driver=jdbcDriver, url=jdbcUrl, dbtable='Rating', useSSL='false').load()
+dfAccos = sqlContext.read.format('jdbc').options(driver=jdbcDriver, url=jdbcUrl, dbtable='Accommodation', useSSL='false').load()
 print("read ...")
 
 # train the model
@@ -52,7 +52,7 @@ print("trained ...")
 
 # use this model to predict what the user would rate accommodations that she has not rated
 allPredictions = None
-for USER_ID in xrange(0, 100):
+for USER_ID in range(0, 100):
   dfUserRatings = dfRates.filter(dfRates.userId == USER_ID).rdd.map(lambda r: r.accoId).collect()
   rddPotential  = dfAccos.rdd.filter(lambda x: x[0] not in dfUserRatings)
   pairsPotential = rddPotential.map(lambda x: (USER_ID, x[0]))

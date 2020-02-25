@@ -3,7 +3,8 @@ trainingInput:
   hyperparameters:
     goal: MINIMIZE
     maxTrials: 30
-    maxParallelTrials: 1
+    maxParallelTrials: 3
+    hyperparameterMetricTag: rmse
     params:
     - parameterName: train_batch_size
       type: INTEGER
@@ -17,4 +18,4 @@ trainingInput:
       scaleType: UNIT_LINEAR_SCALE
     - parameterName: hidden_units
       type: CATEGORICAL
-      categoricalValues: ["128 64 32", "256 128 16", "512 128 64"]       
+      categoricalValues: ["128 32", "256 128 16", "64 64 64 8"]       

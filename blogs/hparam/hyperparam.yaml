@@ -1,0 +1,19 @@
+trainingInput:
+  scaleTier: CUSTOM
+  masterType: standard   # See: https://cloud.google.com/ml-engine/docs/tensorflow/machine-types
+  hyperparameters:
+    goal: MINIMIZE
+    maxTrials: 10
+    maxParallelTrials: 2
+    hyperparameterMetricTag: delay
+    params:
+    - parameterName: x12
+      type: DOUBLE
+      minValue: 0
+      maxValue: 10
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: x32
+      type: DOUBLE
+      minValue: 0
+      maxValue: 10
+      scaleType: UNIT_LINEAR_SCALE

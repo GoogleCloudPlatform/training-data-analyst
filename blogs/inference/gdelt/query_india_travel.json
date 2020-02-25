@@ -1,0 +1,17 @@
+{
+  "name": "gdelt_2018_04_data",
+  "queries": [{
+    "query": {
+      "type": "TYPE_AND",
+      "children": [
+        {"type": "TYPE_TERM", "term": {"name": "ImageWebEntity", "value":"Travel"}},
+        {"type": "TYPE_TERM", "term": {"name": "ImageWebEntity", "value":"India"}}
+      ]
+    },
+    "distribution_configs": {
+      "bgprob_exp": 0.7,
+      "data_name": "ImageLabel",
+      "max_result_entries": 5,
+    }
+  }]
+}

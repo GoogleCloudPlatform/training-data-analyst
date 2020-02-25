@@ -47,7 +47,7 @@
 
 
         function logout() {
-            authFactory.logout(lc.email, lc.password).then(function () {
+            authFactory.logout().then(function () {
                 $location.path('/');
             });
         }

@@ -1,0 +1,6 @@
+{
+  "trainingInput": {
+    "scaleTier": "CUSTOM",
+    "masterType": "complex_model_m_gpu",
+  },
+}

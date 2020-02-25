@@ -37,6 +37,7 @@ import com.google.bigtable.admin.v2.Table;
 import com.google.bigtable.v2.Mutation;
 import com.google.cloud.bigtable.config.BigtableOptions;
 import com.google.cloud.bigtable.config.BigtableOptions.Builder;
+import com.google.cloud.bigtable.config.BulkOptions;
 import com.google.cloud.bigtable.config.CredentialOptions;
 import com.google.cloud.bigtable.grpc.BigtableSession;
 import com.google.cloud.bigtable.grpc.BigtableTableAdminClient;
@@ -60,6 +61,12 @@ public class BigtableHelper {
         new BigtableOptions.Builder()//
             .setProjectId(options.getProject()) //
             .setInstanceId(INSTANCE_ID).setUserAgent("cpb210");
+    
+    // batch up requests to Bigtable every 100ms, although this can be changed
+    // by specifying a lower/higher value for BIGTABLE_BULK_THROTTLE_TARGET_MS_DEFAULT
+    BulkOptions bulkOptions = new BulkOptions.Builder().enableBulkMutationThrottling().build();
+    optionsBuilder = optionsBuilder.setBulkOptions(bulkOptions);
+    
     createEmptyTable(options, optionsBuilder);
     PCollection<KV<ByteString, Iterable<Mutation>>> mutations = toMutations(laneInfo);
     mutations.apply("write:cbt", //

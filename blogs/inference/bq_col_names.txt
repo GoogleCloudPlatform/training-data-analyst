@@ -1,0 +1,17 @@
+WITH EmptyReference AS (
+  SELECT *
+  FROM `cloud-training-demos.flights.tzcorr`
+  LIMIT 0
+)
+SELECT
+  CONCAT(
+    '"data_names": [',
+    ARRAY_TO_STRING(REGEXP_EXTRACT_ALL(
+        TO_JSON_STRING((SELECT AS STRUCT t.*)),
+        r'{?([^:]+):null,?'), ', '),
+    ']')
+FROM (
+  SELECT AS VALUE t
+  FROM EmptyReference AS t
+  UNION ALL SELECT AS VALUE NULL
+) AS t
