@@ -1,0 +1,12 @@
+# These owners will be the default owners for everything in the repo.
+@mylenebiddle
+@lakshmanok
+@brahmsan
+
+# Order is important. The last matching pattern has the most precedence.
+/quests/*               @mylenebiddle
+/CPB100/*               @alexhanna
+/blogs/*                @lakshmanok
+/quests/dataflow/*              @yankovai-google
+/self-paced-labs/*      @brahmsan
+/labs/DATATOINSIGHTS-*  @jonesevan

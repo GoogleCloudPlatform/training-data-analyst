@@ -81,7 +81,7 @@ def main():
     for q_info in questions:
         key = client.key('Question')
         q_entity = datastore.Entity(key=key)
-        for q_prop, q_val in q_info.iteritems():
+        for q_prop, q_val in q_info.items():
             q_entity[q_prop] = q_val
         client.put(q_entity)
 

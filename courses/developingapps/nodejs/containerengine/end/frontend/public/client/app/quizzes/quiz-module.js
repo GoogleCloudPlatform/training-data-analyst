@@ -10,9 +10,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-(function () {
+((() => {
 
-    var module = angular.module('qiqQuiz', ['ngRoute']);
+    const module = angular.module('qiqQuiz', ['ngRoute']);
 
     module.config(['$routeProvider', config]);
 
@@ -21,9 +21,9 @@
         $routeProvider.when('/quiz/:name', {
             controller: 'QuizController',
             controllerAs: 'qc',
-            templateUrl: 'app/quizzes/quiz-template.html'
+            templateUrl: 'app/quizzes/quiz-template.html',
         });
     }
 
 
-})();
+}))();

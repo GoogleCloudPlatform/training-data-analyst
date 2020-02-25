@@ -13,27 +13,27 @@ TFVERSION=1.8
 REGION=us-central1
 
 # create the model if it doesn't already exist
-modelname=$(gcloud ml-engine models list | grep -w "$MODEL_NAME")
+modelname=$(gcloud ai-platform models list | grep -w "$MODEL_NAME")
 echo $modelname
 if [ -z "$modelname" ]; then
    echo "Creating model $MODEL_NAME"
-   gcloud ml-engine models create ${MODEL_NAME} --regions $REGION
+   gcloud ai-platform models create ${MODEL_NAME} --regions $REGION
 else
    echo "Model $MODEL_NAME already exists"
 fi
 
 # delete the model version if it already exists
-modelver=$(gcloud ml-engine versions list --model "$MODEL_NAME" | grep -w "$MODEL_VERSION")
+modelver=$(gcloud ai-platform versions list --model "$MODEL_NAME" | grep -w "$MODEL_VERSION")
 echo $modelver
 if [ "$modelver" ]; then
    echo "Deleting version $MODEL_VERSION"
-   yes | gcloud ml-engine versions delete ${MODEL_VERSION} --model ${MODEL_NAME}
+   yes | gcloud ai-platform versions delete ${MODEL_VERSION} --model ${MODEL_NAME}
    sleep 10
 fi
 
 
 echo "Creating version $MODEL_VERSION from $MODEL_LOCATION"
-gcloud ml-engine versions create ${MODEL_VERSION} \
+gcloud ai-platform versions create ${MODEL_VERSION} \
        --model ${MODEL_NAME} --origin ${MODEL_LOCATION} \
        --runtime-version $TFVERSION
 

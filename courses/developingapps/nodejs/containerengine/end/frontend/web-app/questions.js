@@ -41,7 +41,7 @@ router.get('/', (req, res, next) => {
       console.log([results, { moreResults, endCursor }]);
       res.render('questions/list.pug', {
         questions: results,
-        nextPageToken: moreResults ? endCursor : false
+        nextPageToken: moreResults ? endCursor : false,
       });
     }, err => { next(err) });
 });
@@ -55,7 +55,7 @@ router.get('/', (req, res, next) => {
 router.get('/add', (req, res) => {
   res.render('questions/add.pug', {
     question: {},
-    action: 'Add'
+    action: 'Add',
   });
 });
 // [END add_get]
@@ -70,17 +70,17 @@ router.post('/add',
   imageUpload.multer.single('image'),
   imageUpload.sendUploadToGCS,
   (req, res, next) => {
-    let data = req.body;
+
 
     // Was an image uploaded? If so, we'll use its public URL
     // in cloud storage.
     if (req.file && req.file.cloudStoragePublicUrl) {
-      data.imageUrl = req.file.cloudStoragePublicUrl;
+      req.body.imageUrl = req.file.cloudStoragePublicUrl;
     }
 
     // Save the data to the database.
     // res.redirect('/');
-    model.create(data)
+    model.create(req.body)
       .then(entity => { res.redirect('/') })
       .catch(err => {
         next(err);
@@ -88,7 +88,6 @@ router.post('/add',
       });
   });
 // [END add_post]
-
 
 
 /**
@@ -103,7 +102,7 @@ router.get('/:question', (req, res, next) => {
       return;
     }
     res.render('questions/view.pug', {
-      question: entity
+      question: entity,
     });
   });
 });

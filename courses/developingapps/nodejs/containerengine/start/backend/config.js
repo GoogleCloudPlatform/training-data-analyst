@@ -26,7 +26,7 @@ nconf
     'GCLOUD_PROJECT',
     'GCLOUD_BUCKET',
     'NODE_ENV',
-    'PORT'
+    'PORT',
   ])
   // 3. Config file
   .file({ file: path.join(__dirname, 'config.json') })
@@ -37,7 +37,7 @@ nconf
     GCLOUD_PROJECT: '',
     GCLOUD_BUCKET: '',
 
-    PORT: 8080
+    PORT: 8080,
   });
 
 // Check for required settings

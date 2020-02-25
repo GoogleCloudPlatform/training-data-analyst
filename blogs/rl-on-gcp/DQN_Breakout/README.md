@@ -53,7 +53,7 @@ gcloud ml-engine jobs submit training $JOBNAME \
         --module-name=trainer.trainer \
         --region=$REGION \
         --staging-bucket=gs://$BUCKET \
-        --scale-tier=BASIC\
+        --scale-tier=BASIC_GPU\
         --runtime-version=1.10 \
         --\
         --steps=5000000\
