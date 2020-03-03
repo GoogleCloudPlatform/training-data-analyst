@@ -1,0 +1,1 @@
+To build the docker images use the Makefile at the root of the code_search tree.

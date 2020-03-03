@@ -1,0 +1,20 @@
+apiVersion: 0.2.0
+environments:
+  gh-public:
+    destination:
+      namespace: gh-public
+      server: https://104.196.134.59
+    k8sVersion: v1.10.7
+    path: gh-public
+kind: ksonnet.io/app
+libraries:
+  seldon:
+    name: seldon
+    registry: kubeflow
+    version: 9e6414c12b1e95ad8acb7e9ad843c2e5f74baee2
+name: ks-app
+registries:
+  kubeflow:
+    protocol: github
+    uri: github.com/kubeflow/kubeflow/tree/v0.3-branch/kubeflow
+version: 0.0.1

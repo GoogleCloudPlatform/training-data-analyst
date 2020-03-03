@@ -1,0 +1,32 @@
+{
+  "pipeline": {
+    "name": "export"
+  },
+  "transform": {
+    "image": "docker:18.04",
+    "cmd": [ "/bin/ash" ],
+    "stdin": [
+        "export DOCKER_API_VERSION=1.23",
+	"export DOCKER_USER=$(cat /tmp/dockersecret/user)",
+	"export DOCKER_PASS=$(cat /tmp/dockersecret/password)",
+	"docker login --username=nickharvey --password=$DOCKER_PASS",
+	"cd /pfs/build/build",
+        "chmod +x build_image.sh",
+	"chmod +x push_image.sh",
+        "./build_image.sh",
+        "./push_image.sh"
+    ],
+    "secrets": [
+      {
+        "name": "dockersecret",
+        "mountPath": "/tmp/dockersecret"
+      }
+    ]
+  },
+  "input": {
+    "pfs": {
+      "repo": "build",
+      "glob": "/"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+apiVersion: 0.1.0
+kind: ksonnet.io/app
+libraries:
+  tf-serving:
+    gitVersion:
+      commitSha: 430d4f7ae16af389ac570182af519f6571f160cf
+      refSpec: master
+    name: tf-serving
+    registry: kubeflow
+name: object-detection-app
+registries:
+  incubator:
+    gitVersion:
+      commitSha: 40285d8a14f1ac5787e405e1023cf0c07f6aa28c
+      refSpec: master
+    protocol: github
+    uri: github.com/ksonnet/parts/tree/master/incubator
+  kubeflow:
+    gitVersion:
+      commitSha: 430d4f7ae16af389ac570182af519f6571f160cf
+      refSpec: master
+    protocol: github
+    uri: github.com/kubeflow/kubeflow/tree/master/kubeflow
+version: 0.0.1

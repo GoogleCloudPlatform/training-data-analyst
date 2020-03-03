@@ -1,0 +1,183 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: github-issue-summarization-
+spec:
+  entrypoint: default
+
+  # Create a volume for containers to store their output data.
+  volumeClaimTemplates:
+  - metadata:
+      name: workdir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 20Gi
+
+  # Arguments of the workflows
+  arguments:
+    parameters:
+
+    # The name of the GCS bucket where the data is stored.
+    - name: bucket
+
+    # The path to the input data in the GCS bucket, in csv.gz format.
+    - name: bucket-key
+
+    # The number of data points to use in the workflows.
+    # The default ensures that the workflow executes quickly but does
+    # not lead to good results.
+    - name: sample-size
+      value: 200
+
+    # The number of issues on which to provide recommendations.
+    - name: input-topic-number
+      value: 10
+
+    # The number of issues to summarize.
+    - name: input-prediction-count
+      value: 50
+
+    # The learning rate for training.
+    - name: learning-rate
+      value: "0.001"
+
+    # The container image to use in the workflow.
+    - name: container-image
+
+  templates:
+
+  ##################################
+  # Define the steps of the workflow
+  ##################################
+  - name: default
+    steps:
+    - - name: import-data
+        template: import-data
+    - - name: process-data
+        template: process-data
+    - - name: preprocess-deep-learning
+        template: preprocess-deep-learning
+    - - name: training
+        template: training
+    - - name: prediction
+        template: prediction
+    - - name: feature-extraction
+        template: feature-extraction
+
+  #################################################
+  # Import / Unzip
+  # Imports the data on the volume and unzips it.
+  #################################################
+  - name: import-data
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["cp /mnt/workspace/data/issues.csv.gz /mnt/workspace/data/issues-copy.csv.gz; gzip -d /mnt/workspace/data/issues-copy.csv.gz; cp /mnt/workspace/data/issues-copy.csv /mnt/workspace/data/github_issues_medium.csv;"]
+      volumeMounts:
+      - name: workdir
+        mountPath: /mnt/workspace/data/
+    inputs:
+      artifacts:
+      - name: input
+        path: /mnt/workspace/data/issues.csv.gz
+        s3:
+          endpoint: storage.googleapis.com
+          bucket: "{{workflow.parameters.bucket}}"
+          key: "{{workflow.parameters.bucket-key}}"
+          accessKeySecret:
+            name: gcs-accesskey
+            key: accesskey
+          secretKeySecret:
+            name: gcs-accesskey
+            key: secretkey
+    outputs:
+      artifacts:
+      - name: output
+        path: "/mnt/workspace/data/issues-copy.csv"
+
+  #########################################################################
+  # Process Data
+  # Generates the training and test set. Only processes "sample-size" rows.
+  #########################################################################
+  - name: process-data
+    container:
+      image: "{{workflow.parameters.container-image}}"
+      command: [sh, -c]
+      args: ["cd ./workspace/src; python process_data.py --input_csv=/mnt/workspace/data/github_issues_medium.csv --sample_size={{workflow.parameters.sample-size}} --output_traindf_csv=/mnt/workspace/data/github_issues_medium_train.csv --output_testdf_csv=/mnt/workspace/data/github_issues_medium_test.csv"]
+      volumeMounts:
+      - name: workdir
+        mountPath: /mnt/workspace/data/
+    outputs:
+      artifacts:
+      - name: output-traindf-csv
+        path: /mnt/workspace/data/github_issues_medium_train.csv
+      - name: output-testdf-csv
+        path: /mnt/workspace/data/github_issues_medium_test.csv
+
+  #######################################
+  # Preprocess for deep learning
+  #######################################
+  - name: preprocess-deep-learning
+    container:
+      image: "{{workflow.parameters.container-image}}"
+      command: [sh, -c]
+      args: ["cd ./workspace/src; python ./preprocess_data_for_deep_learning.py --input_traindf_csv=/mnt/workspace/data/github_issues_medium_train.csv --output_body_preprocessor_dpkl=/mnt/workspace/data/body_preprocessor.dpkl --output_title_preprocessor_dpkl=/mnt/workspace/data/title_preprocessor.dpkl --output_train_title_vecs_npy=/mnt/workspace/data/train_title_vecs.npy --output_train_body_vecs_npy=/mnt/workspace/data/train_body_vecs.npy"]
+      volumeMounts:
+      - name: workdir
+        mountPath: /mnt/workspace/data/
+    outputs:
+      artifacts:
+      - name: output-body-preprocessor-dpkl
+        path: /mnt/workspace/data/body_preprocessor.dpkl
+      - name: output-title-preprocessor-dpkl
+        path: /mnt/workspace/data/title_preprocessor.dpkl
+      - name: output-train-title-vecs-npy
+        path: /mnt/workspace/data/train_title_vecs.npy
+      - name: output-train-body-vecs-npy
+        path: /mnt/workspace/data/train_body_vecs.npy
+
+  #######################################
+  # Training
+  #######################################
+  - name: training
+    container:
+      image: "{{workflow.parameters.container-image}}"
+      command: [sh, -c]
+      args: ["cd ./workspace/src; python train.py --input_body_preprocessor_dpkl=/mnt/workspace/data/body_preprocessor.dpkl --input_title_preprocessor_dpkl=/mnt/workspace/data/title_preprocessor.dpkl --input_train_title_vecs_npy=/mnt/workspace/data/train_title_vecs.npy --input_train_body_vecs_npy=/mnt/workspace/data/train_body_vecs.npy --output_model_h5=/mnt/workspace/data/output_model.h5 --learning_rate={{workflow.parameters.learning-rate}}"]
+      volumeMounts:
+      - name: workdir
+        mountPath: /mnt/workspace/data/
+    outputs:
+      artifacts:
+      - name: output-model-h5
+        path: /mnt/workspace/data/output_model.h5
+
+  ###########################################################################
+  # Prediction
+  # For now, this step simply summarizes "input-prediction-count" issues and
+  # prints the results in the logs.
+  ###########################################################################
+  - name: prediction
+    container:
+      image: "{{workflow.parameters.container-image}}"
+      command: [sh, -c]
+      args: ["cd ./workspace/src; python prediction.py --input_body_preprocessor_dpkl=/mnt/workspace/data/body_preprocessor.dpkl --input_title_preprocessor_dpkl=/mnt/workspace/data/title_preprocessor.dpkl --input_model_h5=/mnt/workspace/data/output_model.h5 --input_testdf_csv=/mnt/workspace/data/github_issues_medium_test.csv --input_prediction_count={{workflow.parameters.input-prediction-count}}"]
+      volumeMounts:
+      - name: workdir
+        mountPath: /mnt/workspace/data/
+
+  ###########################################################################
+  # Feature Extraction
+  # For now, this step simply provides recommendations about
+  # "input-topic-number" issues and prints the results in the logs.
+  ###########################################################################
+  - name: feature-extraction
+    container:
+      image: "{{workflow.parameters.container-image}}"
+      command: [sh, -c]
+      args: ["cd ./workspace/src; python recommend.py --input_csv=/mnt/workspace/data/github_issues_medium.csv --input_body_preprocessor_dpkl=/mnt/workspace/data/body_preprocessor.dpkl --input_title_preprocessor_dpkl=/mnt/workspace/data/title_preprocessor.dpkl --input_model_h5=/mnt/workspace/data/output_model.h5 --input_testdf_csv=/mnt/workspace/data/github_issues_medium_test.csv --input_topic_number={{workflow.parameters.input-topic-number}}"]
+      volumeMounts:
+      - name: workdir
+        mountPath: /mnt/workspace/data/

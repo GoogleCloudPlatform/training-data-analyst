@@ -1,0 +1,57 @@
+apiVersion: 0.2.0
+environments:
+  default:
+    destination:
+      namespace: kubeflow
+      server: https://104.196.134.59
+    k8sVersion: v1.10.7
+    path: default
+  gh-public:
+    destination:
+      namespace: gh-public
+      server: https://104.196.134.59
+    k8sVersion: v1.10.7
+    path: gh-public
+kind: ksonnet.io/app
+libraries:
+  argo:
+    name: argo
+    registry: kubeflow
+    version: ""
+  core:
+    name: core
+    registry: kubeflow
+    version: ""
+  examples:
+    name: examples
+    registry: kubeflow
+    version: ""
+  katib:
+    name: katib
+    registry: kubeflow
+    version: ""
+  mpi-job:
+    name: mpi-job
+    registry: kubeflow
+    version: ""
+  pytorch-job:
+    name: pytorch-job
+    registry: kubeflow
+    version: ""
+  seldon:
+    name: seldon
+    registry: kubeflow
+    version: ""
+  tf-serving:
+    name: tf-serving
+    registry: kubeflow
+    version: ""
+name: ks_app
+registries:
+  incubator:
+    protocol: github
+    uri: github.com/ksonnet/parts/tree/master/incubator
+  kubeflow:
+    protocol: fs
+    uri: /home/jlewi/Downloads/kubeflow-v0.3.0-rc.3/kubeflow
+version: 0.0.1

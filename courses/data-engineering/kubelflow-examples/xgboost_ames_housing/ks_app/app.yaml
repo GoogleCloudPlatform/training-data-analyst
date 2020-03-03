@@ -1,0 +1,20 @@
+apiVersion: 0.2.0
+environments:
+  default:
+    destination:
+      namespace: kubeflow
+      server: https://35.237.212.62
+    k8sVersion: v1.11.5
+    path: default
+kind: ksonnet.io/app
+libraries:
+  seldon:
+    name: seldon
+    registry: kubeflow
+    version: ""
+name: ks_app
+registries:
+  kubeflow:
+    protocol: fs
+    uri: /home/jlewi/git_kubeflow/kubeflow
+version: 0.0.1

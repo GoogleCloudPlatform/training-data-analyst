@@ -1,0 +1,29 @@
+apiVersion: 0.2.0
+environments:
+  cs_demo:
+    destination:
+      namespace: cs-web-app
+      server: https://35.185.115.154
+    k8sVersion: v1.10.9
+    path: cs_demo
+  pipeline:
+    destination:
+      namespace: cs-web-app
+      server: https://kubernetes.default
+    k8sVersion: v1.10.9
+    path: pipeline
+kind: ksonnet.io/app
+libraries:
+  tf-serving:
+    name: tf-serving
+    registry: kubeflow
+    version: dddba26893846041b7cee25ee6121e02a04bd503
+name: ks-web-app
+registries:
+  incubator:
+    protocol: github
+    uri: github.com/ksonnet/parts/tree/master/incubator
+  kubeflow:
+    protocol: github
+    uri: github.com/kubeflow/kubeflow/tree/v0.3-branch/kubeflow
+version: 0.0.1

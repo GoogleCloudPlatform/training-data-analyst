@@ -1,0 +1,2 @@
+# Requirements to run nmslib.
+nmslib~=1.7.0

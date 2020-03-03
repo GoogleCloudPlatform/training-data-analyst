@@ -1,0 +1,49 @@
+apiVersion: 0.2.0
+kind: ksonnet.io/registry
+libraries:
+  argo:
+    path: argo
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  automation:
+    path: automation
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  chainer-job:
+    path: chainer-job
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  core:
+    path: core
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  katib:
+    path: katib
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  kubebench:
+    path: kubebench
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  mpi-job:
+    path: mpi-job
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  mxnet-job:
+    path: mxnet-job
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  new-package-stub:
+    path: new-package-stub
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  nvidia-inference-server:
+    path: nvidia-inference-server
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  openmpi:
+    path: openmpi
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  pachyderm:
+    path: pachyderm
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  pytorch-job:
+    path: pytorch-job
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  seldon:
+    path: seldon
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+  tf-serving:
+    path: tf-serving
+    version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a
+version: 8e54955b66f86bc7e5734de59a0ef4087f91bc2a

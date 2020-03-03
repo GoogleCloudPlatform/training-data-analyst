@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: model
+  name: tfserving-service
+  namespace: kubeflow
+spec:
+  ports:
+  - name: grpc-tf-serving
+    port: 9000
+    targetPort: 9000
+  - name: http-tf-serving
+    port: 8500
+    targetPort: 8500
+  selector:
+    app: model
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: model
+  name: tfserving
+  namespace: kubeflow
+spec:
+  selector:
+    matchLabels:
+      app: model
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+      labels:
+        app: model
+        version: v1
+    spec:
+      containers:
+      - args:
+        - --port=9000
+        - --rest_api_port=8500
+        - --model_name=finance-model
+        - --model_base_path=gs://<BUCKET_NAME>/tfserving/
+        command:
+        - /usr/bin/tensorflow_model_server
+        image: tensorflow/serving:1.11.1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          tcpSocket:
+            port: 9000
+        name: model
+        ports:
+        - containerPort: 9000
+        - containerPort: 8500
+        resources:
+          limits:
+            cpu: "4"
+            memory: 4Gi
+          requests:
+            cpu: "1"
+            memory: 1Gi
+        env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: "/etc/secrets/user-gcp-sa.json"
+        volumeMounts:
+          - name: sa
+            mountPath: "/etc/secrets"
+            readOnly: true
+      volumes:
+        - name: sa
+          secret:
+            secretName: user-gcp-sa
+

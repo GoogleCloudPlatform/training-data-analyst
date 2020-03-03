@@ -1,0 +1,19 @@
+# Modify this instance to create a GCFS file store.
+# 1. Change the zone to the desired zone
+# 2. Change the instanceId to the desired id
+# 3. Change network if needed 
+# 4. Change the capacity if desired.
+resources:
+- name: filestore
+  type: gcp-types/file-v1beta1:projects.locations.instances
+  properties:
+    parent: projects/kubecon-gh-demo-1/locations/us-east1-d
+    # Any name of the instance would do
+    instanceId: gh-demo-1003
+    tier: STANDARD
+    description: Filestore for Kubeflow
+    networks:
+    - network: default
+    fileShares:
+    - name: kubeflow
+      capacityGb: 1024

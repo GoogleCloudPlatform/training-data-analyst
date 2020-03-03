@@ -1,0 +1,49 @@
+---
+apiVersion: kubeflow.org/v1alpha1
+kind: MPIJob
+metadata:
+  labels:
+    ksonnet.io/component: tf-resnet50-horovod-job
+  name: tf-resnet50-horovod-job
+  namespace: kubeflow
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - command:
+        - mpirun
+        - --allow-run-as-root
+        - -mca
+        - btl_tcp_if_exclude
+        - lo
+        - -mca
+        - pml
+        - ob1
+        - -mca
+        - btl
+        - ^openib
+        - --bind-to
+        - none
+        - -map-by
+        - slot
+        - -x
+        - LD_LIBRARY_PATH
+        - -x
+        - PATH
+        - -x
+        - NCCL_DEBUG=INFO
+        - python
+        - scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py
+        - --data_format=NCHW
+        - --batch_size=128
+        - --model=resnet50
+        - --optimizer=sgd
+        - --variable_update=horovod
+        - --data_name=imagenet
+        - --use_fp16
+        image: mpioperator/tensorflow-benchmarks:latest
+        name: tf-resnet50-horovod-job
+        resources:
+          limits:
+            nvidia.com/gpu: 4

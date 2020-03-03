@@ -1,0 +1,160 @@
+# Copyright 2017 Google Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+info:
+  title: Project
+  author: Google, Inc.
+  description: >
+    Deploys a single project. The project is created, has a billing account
+    attached, permissions altered, APIs activated, and service accounts created.
+
+imports:
+- path: apis.py
+- path: service-accounts.py
+
+required:
+- billing-account-name
+
+additionalProperties: false
+properties:
+  project-name:
+    description: >
+      If provided, configures the project to have a human-readable name that
+      is different from the project ID.
+    type: string
+  organization-id:
+    description: >
+      The ID of the organization that the projects will be under. Typically a
+      base-10 string representation of integer.
+    type: string
+    pattern: ^[0-9]{8,25}$
+  parent-folder-id:
+    description: >
+      The ID of the parent folder that the projects will be under. Typically a
+      base-10 string representation of integer.
+    type: string
+    pattern: ^[0-9]{8,25}$
+  billing-account-name:
+    description: >
+      The ID of the billing account to attach to the projects.
+    type: string
+    pattern: ^billingAccounts/[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
+  iam-policy-patch:
+    description: >
+      The IAM policy patch to apply to the project. This is optional. The
+      template will automatically add/merge in the service account making the
+      project as an owner.
+    type: object
+    additionalProperties: false
+    properties:
+      add:
+        description: >
+          Bindings to add to the existing project IAM policy.
+        type: array
+        items:
+          description: >
+            A set of members bound to a particular role.
+          type: object
+          additionalProperties: false
+          required:
+          - role
+          - members
+          properties:
+            role:
+              description: >
+                The role that all the members will receive.
+              type: string
+              pattern: ^roles/
+            members:
+              decription: >
+                The members that will be given the permissions in role.
+              type: array
+              items:
+                type: string
+                pattern: "^(user|group|domain|serviceAccount):"
+      remove:
+        description: >
+          Bindings to remove from the existing project IAM policy.
+        type: array
+        items:
+          description: >
+            A set of members unbound from a particular role.
+          type: object
+          additionalProperties: false
+          required:
+          - role
+          - members
+          properties:
+            role:
+              description: >
+                The role that all the members will be removed from.
+              type: string
+              pattern: ^roles/
+            members:
+              decription: >
+                The members that whose permission will be removed.
+              type: array
+              items:
+                type: string
+                pattern: "^(user|group|domain|serviceAccount):"
+  set-dm-service-account-as-owner:
+    description: >
+      If set to true, the service account that Deployment Manager will use in
+      the newly created project will be made Owner. This would allow
+      Deployment Manager to set IAM policies within this project.
+    type: boolean
+  apis:
+    description: >
+      The list of APIs to enable for each project.
+    type: array
+    items:
+      type: string
+  bucket-export-settings:
+    description: The specification where to export Compute Logs
+    type: object
+    properties:
+      create-bucket:
+        type: boolean
+        default: true
+      bucket:
+        type: string
+  service-accounts:
+    description: >
+      The list of service accounts to create for each project.
+    type: array
+    items:
+      type: string
+      pattern: ^[a-z]([-a-z0-9]{0,61}[a-z0-9])?$
+    default: []
+  concurrent_api_activation:
+    description: >
+      Boolean flag if set to True activates all the requested APIs
+      concurrently. When set to False, the apis are activated serially.
+      Concurrent activation makes for faster deployment but could potentially
+      fail the deployment exceeding the quota limits, make sure to request for
+      adequate quota before using this option. Serial activation tends to be a
+      lot slower.
+    type: boolean
+    default: False
+  shared_vpc_host:
+    description: >
+      Whether you want this project to be host to a Shared VPC or not.
+    type: boolean
+    default: False
+  shared_vpc_service_of:
+    description: >
+      Must be a project ID configured to be host of a Shared VPC.
+      If used, this will enable this project as a service project for
+      the configured Shared VPC.
+    type: string

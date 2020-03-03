@@ -1,0 +1,8 @@
+steps:
+- name: 'gcr.io/kubeflow-examples/xgboost_ames_housing_s2i:latest'
+  args: ['s2i', 'build', '.', 'seldonio/seldon-core-s2i-python2:0.4', '${_IMG}:$TAG_NAME', '--loglevel=3']
+timeout: 600s
+images:
+    - '${_IMG}:$TAG_NAME'
+tags:
+    - 'GIT-VERSION-${_GIT_VERSION}'

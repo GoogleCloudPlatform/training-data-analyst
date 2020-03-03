@@ -1,0 +1,29 @@
+name: train
+description: Trains the NER Bi-LSTM.
+inputs:
+- {name: Input x URI, type: GCSPath}
+- {name: Input y URI, type: GCSPath}
+- {name: Input job dir URI, type: GCSPath}
+- {name: Input tags, type: Integer}
+- {name: Input words, type: Integer}
+- {name: Input dropout }
+- {name: Output model URI template, type: GCSPath}
+outputs:
+  - name: Output model URI
+    type: GCSPath
+implementation:
+  container:
+    image: gcr.io/<PROJECT-ID>/kubeflow/ner/train:latest
+    command: [
+      python3, /pipelines/component/src/train.py,
+      --input-x-path,             {inputValue: Input x URI},
+      --input-job-dir,            {inputValue: Input job dir URI},
+      --input-y-path,             {inputValue: Input y URI},
+      --input-tags,               {inputValue: Input tags},
+      --input-words,              {inputValue: Input words},
+      --input-dropout,            {inputValue: Input dropout},
+      --output-model-path,        {inputValue: Output model URI template},
+
+      --output-model-path-file,   {outputPath: Output model URI},
+
+    ]

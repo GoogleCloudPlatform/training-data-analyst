@@ -1,0 +1,22 @@
+{
+  "pipeline": {
+    "name": "train"
+  },
+  "transform": {
+    "image": "pachyderm/gh-sum:v8",
+    "cmd": [ "/bin/bash" ],
+    "stdin": [
+      "cd ./workspace/src", 
+      "python train.py --input_body_preprocessor_dpkl=/pfs/pre_process/body_preprocessor.dpkl --input_title_preprocessor_dpkl=/pfs/pre_process/title_preprocessor.dpkl --input_train_title_vecs_npy=/pfs/pre_process/train_title_vecs.npy --input_train_body_vecs_npy=/pfs/pre_process/train_body_vecs.npy --output_model_h5=/pfs/out/output_model.h5 --learning_rate=0.001",
+      "cp /workspace/src/requirements.txt /pfs/out/requirements.txt",
+      "cp /workspace/src/IssueSummarization.py /pfs/out/IssueSummarization.py",
+      "cp /workspace/src/seq2seq_utils.py /pfs/out/seq2seq_utils.py"
+    ]
+  },
+  "input": {
+    "pfs": {
+      "repo": "pre_process",
+      "glob": "/"
+    }
+  }
+}

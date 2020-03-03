@@ -1,0 +1,8 @@
+# Deployment Manager config for creating GCP resources 
+# needed to setup the public facing instance of the GitHub IssueSummarization
+# example.
+resources:
+- name: gh-demo-kubeflow-org
+  type: compute.v1.globalAddress
+  properties:
+    description: "Static IP for serving the GitHub Issue Summarization example."

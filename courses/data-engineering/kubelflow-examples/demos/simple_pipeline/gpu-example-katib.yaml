@@ -1,0 +1,39 @@
+apiVersion: "kubeflow.org/v1alpha1"
+kind: StudyJob
+metadata:
+  namespace: kubeflow
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: gpu-example
+spec:
+  studyName: gpu-example
+  owner: crd
+  optimizationtype: maximize
+  objectivevaluename: Validation-accuracy
+  optimizationgoal: 0.99
+  metricsnames:
+    - accuracy
+  parameterconfigs:
+    - name: --lr
+      parametertype: double
+      feasible:
+        min: "0.01"
+        max: "0.03"
+    - name: --num-layers
+      parametertype: int
+      feasible:
+        min: "2"
+        max: "3"
+    - name: --optimizer
+      parametertype: categorical
+      feasible:
+        list:
+        - sgd
+        - adam
+        - ftrl
+  workerSpec:
+    goTemplate:
+        templatePath: "/worker-template/gpuWorkerTemplate.yaml"
+  suggestionSpec:
+    suggestionAlgorithm: "random"
+    requestNumber: 3

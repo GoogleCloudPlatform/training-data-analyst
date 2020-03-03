@@ -1,0 +1,44 @@
+name: deploy
+description: Deploy the model with custom prediction route
+inputs:
+  - name: Model path
+    type: GCSPath
+    description: 'Path of GCS directory containing exported Tensorflow model.'
+  - name: Model name
+    type: String
+    description: 'The name specified for the model when it was or get created'
+  - name: Model region
+    type: String
+    description: 'The region where the model is going to be deployed'
+  - name: Model version
+    type: String
+    description: 'The version of the model'
+  - name: Model runtime version
+    type: String
+    description: 'The runtime version of the model'
+  - name: Model prediction class
+    type: String
+    description: 'The runtime version of the model'
+  - name: Model python version
+    type: String
+    description: 'The python version of the model'
+  - name: Model package uris
+    type: String
+    description: 'The packge uri of the model'
+outputs:
+implementation:
+  container:
+    image: gcr.io/<PROJECT-ID>/kubeflow/ner/deploy:latest
+    command: [
+      sh, /pipelines/component/src/deploy.sh
+    ]
+    args: [
+      --model-path,             {inputValue: Model path},
+      --model-name,             {inputValue: Model name},
+      --model-region,           {inputValue: Model region},
+      --model-version,          {inputValue: Model version},
+      --model-runtime-version,  {inputValue: Model runtime version},
+      --model-prediction-class, {inputValue: Model prediction class},
+      --model-python-version,   {inputValue: Model python version},
+      --model-package-uris,     {inputValue: Model package uris},
+    ]

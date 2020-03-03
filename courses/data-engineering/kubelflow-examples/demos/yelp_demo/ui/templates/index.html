@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style>
+    #clear {
+        clear: both;
+    }
+
+    .review_textarea_class {
+        margin-left: 20px;
+        margin-right: 20px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .review_textarea_label_class {
+        margin-left: 20px;
+        margin-right: 20px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .container {
+        width: 100%;
+        margin: auto;
+        display: inline-block;
+    }
+
+    .generated_title {
+        font-size: 50px;
+    }
+    </style>
+    <title>{{ title }}</title>
+</head>
+
+<body class="text-center">
+    <form class="form-signin" action="summary" method="post">
+        <!--h1 style="margin-top: 40px;">{{ title }}</h1-->
+        <h1 style="margin-top: 40px;"></h1>
+        <div class="container">
+            <div class="review_textarea_class">
+                <textarea id="review_textarea1" class="scrollabletextbox" rows=8
+cols=35 style="color: white; background: #4285F4; border:solid 1px #ccc;
+border-radius:5px; padding:20px">The ramen was awful. It was bland and mushy. After a few bites, I couldn't handle eating anymore.
+                </textarea>
+                <p><button id="submit" type="button" style="background: #ccc; border:solid 1px; border-radius:5px;">Predict Sentiment</button></p>
+            </div>
+            <div class="review_textarea_label_class">
+                <p>We think this review is:</p>
+                <label for="review_textarea1" class="generated_title" id="generated_title1">❓</label>
+            </div>
+        </div>
+        <div id="clear"></div>
+    </form>
+    <p style="font-style: italic; margin-right: 20%; margin-left: 20%; margin-top: 40px;">This demo is run using <a target="_blank" href="https://github.com/kubeflow/kubeflow/">Kubeflow</a> - a machine learning toolkit for Kubernetes. Kubeflow is dedicated to making deployment of machine learning on Kubernetes simple, portable and scalable.</p>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+    function mlcallback(i) {
+      return function(result) {
+                var emoji;
+                if (result.sentiment === 1) {
+                    emoji = "😍";
+                } else {
+                    emoji = "🤬";
+                }
+                $("#generated_title" + i).html(emoji);
+            }
+    };
+    var kubeflow = function() {
+        for (var i = 1; i <= 3; i++) {
+            $("#generated_title" + i).html("❓");
+        }
+        for (var i = 1; i <= 3; i++) {
+            var review_text = $("#review_textarea" + i).val();
+            $.post(window.location.pathname + "/predict", { review_text: review_text }, mlcallback(i));
+        }
+    };
+
+    function naivecallback(i, emoji) {
+      return function() {
+        console.log("here" + i);
+        $("#generated_title" + i).html(emoji);
+      }
+    }
+
+    var naive = function() {
+        for (var i = 1; i <= 3; i++) {
+            $("#generated_title" + i).html("❓");
+        }
+        for (var i = 1; i <= 3; i++) {
+            var review_text = $("#review_textarea" + i).val();
+            var count = 0;
+            // count += (review_text.match(/good/g) || []).length;
+            // count += (review_text.match(/great/g) || []).length;
+            count -= (review_text.match(/annoying/g) || []).length;
+            count -= (review_text.match(/terrible/g) || []).length;
+            count -= (review_text.match(/bad/g) || []).length;
+            var emoji;
+            if (count >= 0) {
+                emoji = "😍";
+            } else {
+                emoji = "🤬";
+            }
+            // Simulate network delay
+            setTimeout(naivecallback(i, emoji), 300 + 450*i);
+        }
+    };
+    $("#submit").click({{ mltype }});
+    </script>
+</body>
+
+</html>

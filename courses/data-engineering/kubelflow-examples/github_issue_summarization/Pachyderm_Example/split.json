@@ -1,0 +1,23 @@
+{
+  "pipeline": {
+    "name": "split"
+  },
+  "transform": {
+    "image": "pachyderm/gh-sum:v1",
+    "cmd": [ 
+      "python", 
+      "./workspace/src/process_data.py", 
+      "--input_csv=/pfs/raw_data/github_issues_medium.csv", 
+      "--sample_size=2000", 
+      "--output_traindf_csv=/pfs/out/github_issues_medium_train.csv", 
+      "--output_testdf_csv=/pfs/out/github_issues_medium_test.csv" 
+    ]
+  },
+  "enable_stats": true,
+  "input": {
+    "pfs": {
+      "repo": "raw_data",
+      "glob": "/"
+    }
+  }
+}

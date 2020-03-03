@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: xgboost
+  labels:
+    team: platform
+
+spec:
+  template:
+    spec:
+      containers:
+      - name: xgboost
+        image: gcr.io/kubeflow-examples/ames-housing:latest
+        volumeMounts:
+        - mountPath: "/mnt/xgboost"
+          name: datadir
+        args:
+          - --train-input
+          - /ames_dataset/train.csv
+          - --model-file
+          - /mnt/xgboost/housing.dat
+          - --learning-rate
+          - "0.1"
+          - --n-estimators
+          - "30000"
+          - --early-stopping-rounds
+          - "50"
+      volumes:
+      - name: datadir
+        persistentVolumeClaim:
+          claimName: claim
+      restartPolicy: Never

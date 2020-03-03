@@ -1,0 +1,82 @@
+imports:
+# TODO(jlewi): We should switch to using YAML to generate templates and not use Python.
+- path: project.py
+
+resources:
+  # The "name" property below will be the ID of the new project
+  # If you want your project to have a different name, use the "project-name"
+  # property.
+  - name: kubeflow-demo-base
+    type: project.py
+    properties:
+        # Change this to your organization ID.
+        # This should be the base 10 numeric id
+        # organization-id: "714441643818"
+
+        # Base 10 numeric id of the folder.
+        # Comment it out if you don't want it to be in a folder and specify organization id instead.
+        parent-folder-id: "244061209845"
+
+        # Change the following to your organization's billing account
+        # TODO(jlewi): Could we set the billing account on the folder?
+        # Checking the billing account id into public source isn't ideal
+        # but it should be protected by IAM.
+        billing-account-name: billingAccounts/01AF53-DC4A1B-4B1AA1
+
+        # The apis to enable in the new project.
+        # To see the possible APIs, use: gcloud services list --available
+        apis:
+          - cloudresourcemanager.googleapis.com
+          - compute.googleapis.com
+          - container.googleapis.com
+          - containerregistry.googleapis.com
+          - deploymentmanager.googleapis.com
+          - iam.googleapis.com
+          - logging.googleapis.com
+          - monitoring.googleapis.com
+          - servicemanagement.googleapis.com
+          - storage-component.googleapis.com
+          - tpu.googleapis.com
+
+        # The service accounts you want to create in the project
+        # service-accounts:
+        #  - my-service-account-1
+        #  - my-service-account-2
+
+        bucket-export-settings:
+            create-bucket: true
+            # If using an already existing bucket, specify this
+            # bucket: <my bucket name>
+
+        # Makes the service account that Deployment Manager would use in the
+        # generated project when making deployments in this new project a
+        # project owner.
+        set-dm-service-account-as-owner: true
+
+        # The patches to apply to the project's IAM policy. Note that these are
+        # always applied as a patch to the project's current IAM policy, not as a
+        # diff with the existing properties stored in DM. This means that removing
+        # a binding from the 'add' section will not remove the binding on the
+        # project during the next update. Instead it must be added to the 'remove'
+        # section.
+        iam-policy-patch:
+            # These are the bindings to add.
+            add:
+              - role: roles/owner
+                members:
+                 # NOTE: The DM service account that is creating this project will
+                 # automatically be added as an owner.
+                 #
+                 # Members outside the org must be invited by the org. (TODO(jlewi) is there a way to change that at the folder level)
+                 # A work around is to create a group within the org and add external members to that
+                   - user:jlewi@kubeflow.org
+                   - group:google-kubecon-europe@kubeflow.org
+              - role: roles/iap.httpsResourceAccessor
+                members:
+                 # NOTE: The DM service account that is creating this project will
+                 # automatically be added as an owner.
+                 #
+                 # Members outside the org must be invited by the org. (TODO(jlewi) is there a way to change that at the folder level)
+                 # A work around is to create a group within the org and add external members to that
+                   - user:jlewi@kubeflow.org
+                   - group:google-kubecon-europe@kubeflow.org

@@ -1,0 +1,862 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: stackdriver-heapster
+    version: v1.5.3
+  name: heapster
+  namespace: stackdriver-agents
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: stackdriver-heapster
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        k8s-app: stackdriver-heapster
+        version: v1.5.3
+    spec:
+      containers:
+      - env:
+        - name: CLUSTER_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-config
+              key: cluster_name
+        - name: CLUSTER_LOCATION
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-config
+              key: cluster_location
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          valueFrom:
+            configMapKeyRef:
+              name: google-cloud-config
+              key: credentials_path
+        command:
+        - /heapster
+        - --source=kubernetes.summary_api:''
+        - --sink=stackdriver:?cluster_name=$(CLUSTER_NAME)&cluster_location=$(CLUSTER_LOCATION)&zone=$(CLUSTER_LOCATION)&use_old_resources=false&use_new_resources=true&min_interval_sec=100&batch_export_timeout_sec=110
+        image: gcr.io/stackdriver-agents/stackdriver-heapster-amd64:v1.5.0-beta.3
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 8082
+            scheme: HTTP
+          initialDelaySeconds: 180
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: heapster
+        resources:
+          limits:
+            cpu: 88m
+            memory: 204Mi
+          requests:
+            cpu: 88m
+            memory: 204Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/google-cloud/
+          name: google-cloud-config
+      - command:
+        - /pod_nanny
+        - --cpu=80m
+        - --extra-cpu=0.5m
+        - --memory=140Mi
+        - --extra-memory=4Mi
+        - --threshold=5
+        - --deployment=heapster
+        - --container=heapster
+        - --poll-period=300000
+        - --estimator=exponential
+        env:
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        image: gcr.io/google_containers/addon-resizer:1.7
+        imagePullPolicy: IfNotPresent
+        name: heapster-nanny
+        resources:
+          limits:
+            cpu: 50m
+            memory: 112360Ki
+          requests:
+            cpu: 50m
+            memory: 112360Ki
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: heapster
+      serviceAccountName: heapster
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: google-cloud-config
+        name: google-cloud-config
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    app: stackdriver-logging-agent
+  name: stackdriver-logging-agent
+  namespace: stackdriver-agents
+spec:
+  selector:
+    matchLabels:
+      app: stackdriver-logging-agent
+  template:
+    metadata:
+      labels:
+        app: stackdriver-logging-agent
+    spec:
+      containers:
+      - env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          valueFrom:
+            configMapKeyRef:
+              name: google-cloud-config
+              key: credentials_path
+        - name: CLUSTER_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-config
+              key: cluster_name
+        - name: CLUSTER_LOCATION
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-config
+              key: cluster_location
+        image: gcr.io/stackdriver-agents/stackdriver-logging-agent:0.3-1.5.34-1-k8s-1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              LIVENESS_THRESHOLD_SECONDS=${LIVENESS_THRESHOLD_SECONDS:-300}; STUCK_THRESHOLD_SECONDS=${LIVENESS_THRESHOLD_SECONDS:-900}; if [ ! -e /var/log/k8s-fluentd-buffers ]; then
+                exit 1;
+              fi; touch -d "${STUCK_THRESHOLD_SECONDS} seconds ago" /tmp/marker-stuck; if [[ -z "$(find /var/log/k8s-fluentd-buffers -type f -newer /tmp/marker-stuck -print -quit)" ]]; then
+                rm -rf /var/log/fluentd-buffers;
+                exit 1;
+              fi; touch -d "${LIVENESS_THRESHOLD_SECONDS} seconds ago" /tmp/marker-liveness; if [[ -z "$(find /var/log/k8s-fluentd-buffers -type f -newer /tmp/marker-liveness -print -quit)" ]]; then
+                exit 1;
+              fi;
+          failureThreshold: 3
+          initialDelaySeconds: 600
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: logging-agent
+        resources:
+          limits:
+            cpu: "1"
+            memory: 500Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/log
+          name: varlog
+        - mountPath: /var/lib/docker/containers
+          name: varlibdockercontainers
+          readOnly: true
+        - mountPath: /etc/google-fluentd/config.d
+          name: config-volume
+        - mountPath: /etc/google-cloud/
+          name: google-cloud-config
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      volumes:
+      - hostPath:
+          path: /var/log
+          type: ""
+        name: varlog
+      - hostPath:
+          path: /var/lib/docker/containers
+          type: ""
+        name: varlibdockercontainers
+      - configMap:
+          defaultMode: 420
+          name: logging-agent-config
+        name: config-volume
+      - configMap:
+          defaultMode: 420
+          name: google-cloud-config
+        name: google-cloud-config
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+---
+apiVersion: v1
+data:
+  containers.input.conf: |-
+    # This configuration file for Fluentd is used
+    # to watch changes to Docker log files that live in the
+    # directory /var/lib/docker/containers/ and are symbolically
+    # linked to from the /var/log/containers directory using names that capture the
+    # pod name and container name. These logs are then submitted to
+    # Google Cloud Logging which assumes the installation of the cloud-logging plug-in.
+    #
+    # Example
+    # =======
+    # A line in the Docker log file might look like this JSON:
+    #
+    # {"log":"2014/09/25 21:15:03 Got request with path wombat\\n",
+    #  "stream":"stderr",
+    #   "time":"2014-09-25T21:15:03.499185026Z"}
+    #
+    # The record reformer is used to write the tag to focus on the pod name
+    # and the Kubernetes container name. For example a Docker container's logs
+    # might be in the directory:
+    #  /var/lib/docker/containers/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b
+    # and in the file:
+    #  997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b-json.log
+    # where 997599971ee6... is the Docker ID of the running container.
+    # The Kubernetes kubelet makes a symbolic link to this file on the host machine
+    # in the /var/log/containers directory which includes the pod name and the Kubernetes
+    # container name:
+    #    synthetic-logger-0.25lps-pod_default-synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log
+    #    ->
+    #    /var/lib/docker/containers/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b-json.log
+    # The /var/log directory on the host is mapped to the /var/log directory in the container
+    # running this instance of Fluentd and we end up collecting the file:
+    #   /var/log/containers/synthetic-logger-0.25lps-pod_default-synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log
+    # This results in the tag:
+    #  var.log.containers.synthetic-logger-0.25lps-pod_default-synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log
+    # The record reformer is used is discard the var.log.containers prefix and
+    # the Docker container ID suffix and "kubernetes." is pre-pended giving the tag:
+    #   kubernetes.synthetic-logger-0.25lps-pod_default-synth-lgr
+    # Tag is then parsed by google_cloud plugin and translated to the metadata,
+    # visible in the log viewer
+
+    # Example:
+    # {"log":"[info:2016-02-16T16:04:05.930-08:00] Some log text here\n","stream":"stdout","time":"2016-02-17T00:04:05.931087621Z"}
+    <source>
+      @type tail
+      path /var/log/containers/*.log
+      pos_file /var/log/k8s-gcp-containers.log.pos
+      tag reform.*
+      read_from_head true
+      format multi_format
+      <pattern>
+        format json
+        time_key time
+        time_format %Y-%m-%dT%H:%M:%S.%NZ
+      </pattern>
+      <pattern>
+        format /^(?<time>.+) (?<stream>stdout|stderr) [^ ]* (?<log>.*)$/
+        time_format %Y-%m-%dT%H:%M:%S.%N%:z
+      </pattern>
+    </source>
+
+    <filter reform.**>
+      @type parser
+      format /^(?<severity>\w)(?<time>\d{4} [^\s]*)\s+(?<pid>\d+)\s+(?<source>[^ \]]+)\] (?<log>.*)/
+      reserve_data true
+      suppress_parse_error_log true
+      emit_invalid_record_to_error false
+      key_name log
+    </filter>
+
+    <match reform.**>
+      @type record_reformer
+      enable_ruby true
+      <record>
+        # Extract local_resource_id from tag for 'k8s_container' monitored
+        # resource. The format is:
+        # 'k8s_container.<namespace_name>.<pod_name>.<container_name>'.
+        "logging.googleapis.com/local_resource_id" ${"k8s_container.#{tag_suffix[4].rpartition('.')[0].split('_')[1]}.#{tag_suffix[4].rpartition('.')[0].split('_')[0]}.#{tag_suffix[4].rpartition('.')[0].split('_')[2].rpartition('-')[0]}"}
+        # Rename the field 'log' to a more generic field 'message'. This way the
+        # fluent-plugin-google-cloud knows to flatten the field as textPayload
+        # instead of jsonPayload after extracting 'time', 'severity' and
+        # 'stream' from the record.
+        message ${record['log']}
+        # If 'severity' is not set, assume stderr is ERROR and stdout is INFO.
+        severity ${record['severity'] || if record['stream'] == 'stderr' then 'ERROR' else 'INFO' end}
+      </record>
+      tag ${if record['stream'] == 'stderr' then 'raw.stderr' else 'raw.stdout' end}
+      remove_keys stream,log
+    </match>
+
+    # Detect exceptions in the log output and forward them as one log entry.
+    <match {raw.stderr,raw.stdout}>
+      @type detect_exceptions
+
+      remove_tag_prefix raw
+      message message
+      stream "logging.googleapis.com/local_resource_id"
+      multiline_flush_interval 5
+      max_bytes 500000
+      max_lines 1000
+    </match>
+  system.input.conf: |-
+    # Example:
+    # Dec 21 23:17:22 gke-foo-1-1-4b5cbd14-node-4eoj startupscript: Finished running startup script /var/run/google.startup.script
+    <source>
+      @type tail
+      format syslog
+      path /var/log/startupscript.log
+      pos_file /var/log/k8s-gcp-startupscript.log.pos
+      tag startupscript
+    </source>
+
+    # Examples:
+    # time="2016-02-04T06:51:03.053580605Z" level=info msg="GET /containers/json"
+    # time="2016-02-04T07:53:57.505612354Z" level=error msg="HTTP Error" err="No such image: -f" statusCode=404
+    # TODO(random-liu): Remove this after cri container runtime rolls out.
+    <source>
+      @type tail
+      format /^time="(?<time>[^)]*)" level=(?<severity>[^ ]*) msg="(?<message>[^"]*)"( err="(?<error>[^"]*)")?( statusCode=($<status_code>\d+))?/
+      path /var/log/docker.log
+      pos_file /var/log/k8s-gcp-docker.log.pos
+      tag docker
+    </source>
+
+    # Example:
+    # 2016/02/04 06:52:38 filePurge: successfully removed file /var/etcd/data/member/wal/00000000000006d0-00000000010a23d1.wal
+    <source>
+      @type tail
+      # Not parsing this, because it doesn't have anything particularly useful to
+      # parse out of it (like severities).
+      format none
+      path /var/log/etcd.log
+      pos_file /var/log/k8s-gcp-etcd.log.pos
+      tag etcd
+    </source>
+
+    # Multi-line parsing is required for all the kube logs because very large log
+    # statements, such as those that include entire object bodies, get split into
+    # multiple lines by glog.
+
+    # Example:
+    # I0204 07:32:30.020537    3368 server.go:1048] POST /stats/container/: (13.972191ms) 200 [[Go-http-client/1.1] 10.244.1.3:40537]
+    <source>
+      @type tail
+      format multiline
+      multiline_flush_interval 5s
+      format_firstline /^\w\d{4}/
+      format1 /^(?<severity>\w)(?<time>\d{4} [^\s]*)\s+(?<pid>\d+)\s+(?<source>[^ \]]+)\] (?<message>.*)/
+      time_format %m%d %H:%M:%S.%N
+      path /var/log/kubelet.log
+      pos_file /var/log/k8s-gcp-kubelet.log.pos
+      tag kubelet
+    </source>
+
+    # Example:
+    # I1118 21:26:53.975789       6 proxier.go:1096] Port "nodePort for kube-system/default-http-backend:http" (:31429/tcp) was open before and is still needed
+    <source>
+      @type tail
+      format multiline
+      multiline_flush_interval 5s
+      format_firstline /^\w\d{4}/
+      format1 /^(?<severity>\w)(?<time>\d{4} [^\s]*)\s+(?<pid>\d+)\s+(?<source>[^ \]]+)\] (?<message>.*)/
+      time_format %m%d %H:%M:%S.%N
+      path /var/log/kube-proxy.log
+      pos_file /var/log/k8s-gcp-kube-proxy.log.pos
+      tag kube-proxy
+    </source>
+
+    # Example:
+    # I0204 07:00:19.604280       5 handlers.go:131] GET /api/v1/nodes: (1.624207ms) 200 [[kube-controller-manager/v1.1.3 (linux/amd64) kubernetes/6a81b50] 127.0.0.1:38266]
+    <source>
+      @type tail
+      format multiline
+      multiline_flush_interval 5s
+      format_firstline /^\w\d{4}/
+      format1 /^(?<severity>\w)(?<time>\d{4} [^\s]*)\s+(?<pid>\d+)\s+(?<source>[^ \]]+)\] (?<message>.*)/
+      time_format %m%d %H:%M:%S.%N
+      path /var/log/kube-apiserver.log
+      pos_file /var/log/k8s-gcp-kube-apiserver.log.pos
+      tag kube-apiserver
+    </source>
+
+    # Example:
+    # I0204 06:55:31.872680       5 servicecontroller.go:277] LB already exists and doesn't need update for service kube-system/kube-ui
+    <source>
+      @type tail
+      format multiline
+      multiline_flush_interval 5s
+      format_firstline /^\w\d{4}/
+      format1 /^(?<severity>\w)(?<time>\d{4} [^\s]*)\s+(?<pid>\d+)\s+(?<source>[^ \]]+)\] (?<message>.*)/
+      time_format %m%d %H:%M:%S.%N
+      path /var/log/kube-controller-manager.log
+      pos_file /var/log/k8s-gcp-kube-controller-manager.log.pos
+      tag kube-controller-manager
+    </source>
+
+    # Example:
+    # W0204 06:49:18.239674       7 reflector.go:245] pkg/scheduler/factory/factory.go:193: watch of *api.Service ended with: 401: The event in requested index is outdated and cleared (the requested history has been cleared [2578313/2577886]) [2579312]
+    <source>
+      @type tail
+      format multiline
+      multiline_flush_interval 5s
+      format_firstline /^\w\d{4}/
+      format1 /^(?<severity>\w)(?<time>\d{4} [^\s]*)\s+(?<pid>\d+)\s+(?<source>[^ \]]+)\] (?<message>.*)/
+      time_format %m%d %H:%M:%S.%N
+      path /var/log/kube-scheduler.log
+      pos_file /var/log/k8s-gcp-kube-scheduler.log.pos
+      tag kube-scheduler
+    </source>
+
+    # Example:
+    # I1104 10:36:20.242766       5 rescheduler.go:73] Running Rescheduler
+    <source>
+      @type tail
+      format multiline
+      multiline_flush_interval 5s
+      format_firstline /^\w\d{4}/
+      format1 /^(?<severity>\w)(?<time>\d{4} [^\s]*)\s+(?<pid>\d+)\s+(?<source>[^ \]]+)\] (?<message>.*)/
+      time_format %m%d %H:%M:%S.%N
+      path /var/log/rescheduler.log
+      pos_file /var/log/k8s-gcp-rescheduler.log.pos
+      tag rescheduler
+    </source>
+
+    # Example:
+    # I0603 15:31:05.793605       6 cluster_manager.go:230] Reading config from path /etc/gce.conf
+    <source>
+      @type tail
+      format multiline
+      multiline_flush_interval 5s
+      format_firstline /^\w\d{4}/
+      format1 /^(?<severity>\w)(?<time>\d{4} [^\s]*)\s+(?<pid>\d+)\s+(?<source>[^ \]]+)\] (?<message>.*)/
+      time_format %m%d %H:%M:%S.%N
+      path /var/log/glbc.log
+      pos_file /var/log/k8s-gcp-glbc.log.pos
+      tag glbc
+    </source>
+
+    # Example:
+    # I0603 15:31:05.793605       6 cluster_manager.go:230] Reading config from path /etc/gce.conf
+    <source>
+      @type tail
+      format multiline
+      multiline_flush_interval 5s
+      format_firstline /^\w\d{4}/
+      format1 /^(?<severity>\w)(?<time>\d{4} [^\s]*)\s+(?<pid>\d+)\s+(?<source>[^ \]]+)\] (?<message>.*)/
+      time_format %m%d %H:%M:%S.%N
+      path /var/log/cluster-autoscaler.log
+      pos_file /var/log/k8s-gcp-cluster-autoscaler.log.pos
+      tag cluster-autoscaler
+    </source>
+
+    # Logs from systemd-journal for interesting services.
+    # TODO(random-liu): Keep this for compatibility, remove this after
+    # cri container runtime rolls out.
+    <source>
+      @type systemd
+      filters [{ "_SYSTEMD_UNIT": "docker.service" }]
+      pos_file /var/log/k8s-gcp-journald-docker.pos
+      read_from_head true
+      tag docker
+    </source>
+
+    <source>
+      @type systemd
+      filters [{ "_SYSTEMD_UNIT": "{{ container_runtime }}.service" }]
+      pos_file /var/log/k8s-gcp-journald-container-runtime.pos
+      read_from_head true
+      tag container-runtime
+    </source>
+
+    <source>
+      @type systemd
+      filters [{ "_SYSTEMD_UNIT": "kubelet.service" }]
+      pos_file /var/log/k8s-gcp-journald-kubelet.pos
+      read_from_head true
+      tag kubelet
+    </source>
+
+    <source>
+      @type systemd
+      filters [{ "_SYSTEMD_UNIT": "node-problem-detector.service" }]
+      pos_file /var/log/k8s-gcp-journald-node-problem-detector.pos
+      read_from_head true
+      tag node-problem-detector
+    </source>
+
+    # BEGIN_NODE_JOURNAL
+    # Whether to include node-journal or not is determined when starting the
+    # cluster. It is not changed when the cluster is already running.
+    <source>
+      @type systemd
+      pos_file /var/log/k8s-gcp-journald.pos
+      read_from_head true
+      tag node-journal
+    </source>
+
+    <filter node-journal>
+      @type grep
+      <exclude>
+        key _SYSTEMD_UNIT
+        pattern ^(docker|{{ container_runtime }}|kubelet|node-problem-detector)\.service$
+      </exclude>
+    </filter>
+    # END_NODE_JOURNAL
+  monitoring.conf: |-
+    # This source is used to acquire approximate process start timestamp,
+    # which purpose is explained before the corresponding output plugin.
+    <source>
+      @type exec
+      command /bin/sh -c 'date +%s'
+      tag process_start
+      time_format %Y-%m-%d %H:%M:%S
+      keys process_start_timestamp
+    </source>
+
+    # This filter is used to convert process start timestamp to integer
+    # value for correct ingestion in the prometheus output plugin.
+    <filter process_start>
+      @type record_transformer
+      enable_ruby true
+      auto_typecast true
+      <record>
+        process_start_timestamp ${record["process_start_timestamp"].to_i}
+      </record>
+    </filter>
+  output.conf: |-
+    # This match is placed before the all-matching output to provide metric
+    # exporter with a process start timestamp for correct exporting of
+    # cumulative metrics to Stackdriver.
+    <match process_start>
+      @type prometheus
+
+      <metric>
+        type gauge
+        name process_start_time_seconds
+        desc Timestamp of the process start in seconds
+        key process_start_timestamp
+      </metric>
+    </match>
+
+    # This filter allows to count the number of log entries read by fluentd
+    # before they are processed by the output plugin. This in turn allows to
+    # monitor the number of log entries that were read but never sent, e.g.
+    # because of liveness probe removing buffer.
+    <filter **>
+      @type prometheus
+      <metric>
+        type counter
+        name logging_entry_count
+        desc Total number of log entries generated by either application containers or system components
+      </metric>
+    </filter>
+
+    # This section is exclusive for k8s_container logs. Those come with
+    # 'stderr'/'stdout' tags.
+    # TODO(instrumentation): Reconsider this workaround later.
+    # Trim the entries which exceed slightly less than 100KB, to avoid
+    # dropping them. It is a necessity, because Stackdriver only supports
+    # entries that are up to 100KB in size.
+    <filter {stderr,stdout}>
+      @type record_transformer
+      enable_ruby true
+      <record>
+        message ${record['message'].length > 100000 ? "[Trimmed]#{record['message'][0..100000]}..." : record['message']}
+      </record>
+    </filter>
+
+    # Do not collect fluentd's own logs to avoid infinite loops.
+    <match fluent.**>
+      @type null
+    </match>
+
+    # This section is exclusive for k8s_container logs. These logs come with
+    # 'stderr'/'stdout' tags.
+    # We use a separate output stanza for 'k8s_node' logs with a smaller buffer
+    # because node logs are less important than user's container logs.
+    <match {stderr,stdout}>
+      @type google_cloud
+
+      # Try to detect JSON formatted log entries.
+      detect_json true
+      # Collect metrics in Prometheus registry about plugin activity.
+      enable_monitoring true
+      monitoring_type prometheus
+      # Allow log entries from multiple containers to be sent in the same request.
+      split_logs_by_tag false
+      # Set the buffer type to file to improve the reliability and reduce the memory consumption
+      buffer_type file
+      buffer_path /var/log/k8s-fluentd-buffers/kubernetes.containers.buffer
+      # Set queue_full action to block because we want to pause gracefully
+      # in case of the off-the-limits load instead of throwing an exception
+      buffer_queue_full_action block
+      # Set the chunk limit conservatively to avoid exceeding the recommended
+      # chunk size of 5MB per write request.
+      buffer_chunk_limit 512k
+      # Cap the combined memory usage of this buffer and the one below to
+      # 1MiB/chunk * (6 + 2) chunks = 8 MiB
+      buffer_queue_limit 6
+      # Never wait more than 5 seconds before flushing logs in the non-error case.
+      flush_interval 5s
+      # Never wait longer than 30 seconds between retries.
+      max_retry_wait 30
+      # Disable the limit on the number of retries (retry forever).
+      disable_retry_limit
+      # Use multiple threads for processing.
+      num_threads 2
+      use_grpc true
+      k8s_cluster_name "#{ENV["CLUSTER_NAME"]}"
+      k8s_cluster_location "#{ENV["CLUSTER_LOCATION"]}"
+      adjust_invalid_timestamps false
+    </match>
+
+    # Attach local_resource_id for 'k8s_node' monitored resource.
+    <filter **>
+      @type record_transformer
+      enable_ruby true
+      <record>
+        "logging.googleapis.com/local_resource_id" ${"k8s_node.#{ENV['NODE_NAME']}"}
+      </record>
+    </filter>
+
+    # This section is exclusive for 'k8s_node' logs. These logs come with tags
+    # that are neither 'stderr' or 'stdout'.
+    # We use a separate output stanza for 'k8s_container' logs with a larger
+    <match **>
+      @type google_cloud
+
+      detect_json true
+      enable_monitoring true
+      monitoring_type prometheus
+      # Allow entries from multiple system logs to be sent in the same request.
+      split_logs_by_tag false
+      detect_subservice false
+      buffer_type file
+      buffer_path /var/log/k8s-fluentd-buffers/kubernetes.system.buffer
+      buffer_queue_full_action block
+      buffer_chunk_limit 512k
+      buffer_queue_limit 2
+      flush_interval 5s
+      max_retry_wait 30
+      disable_retry_limit
+      num_threads 2
+      use_grpc true
+      k8s_cluster_name "#{ENV["CLUSTER_NAME"]}"
+      k8s_cluster_location "#{ENV["CLUSTER_LOCATION"]}"
+      adjust_invalid_timestamps false
+    </match>
+kind: ConfigMap
+metadata:
+  name: logging-agent-config
+  namespace: stackdriver-agents
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    app: stackdriver-metadata-agent
+    cluster-level: "false"
+  name: stackdriver-metadata-agent
+  namespace: stackdriver-agents
+spec:
+  selector:
+    matchLabels:
+      app: stackdriver-metadata-agent
+      cluster-level: "false"
+  template:
+    metadata:
+      labels:
+        app: stackdriver-metadata-agent
+        cluster-level: "false"
+    spec:
+      containers:
+      - env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: CLUSTER_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-config
+              key: cluster_name
+        - name: CLUSTER_LOCATION
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-config
+              key: cluster_location
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          valueFrom:
+            configMapKeyRef:
+              name: google-cloud-config
+              key: credentials_path
+        args:
+        - -v
+        - -o KubernetesUseWatch=true
+        - -o KubernetesClusterLevelMetadata=false
+        - -o KubernetesClusterName="$(CLUSTER_NAME)"
+        - -o KubernetesClusterLocation="$(CLUSTER_LOCATION)"
+        - -o InstanceId="$(NODE_NAME)"
+        - -o InstanceZone="$(CLUSTER_LOCATION)"
+        - -o MetadataReporterPurgeDeleted=true
+        image: gcr.io/stackdriver-agents/stackdriver-metadata-agent:0.2-0.0.21-1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          timeoutSeconds: 5
+          failureThreshold: 1
+          successThreshold: 1
+        name: metadata-agent
+        ports:
+        - containerPort: 8000
+          hostPort: 8000
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 40m
+            memory: 50Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/google-cloud/
+          name: google-cloud-config
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: metadata-agent
+      serviceAccountName: metadata-agent
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: google-cloud-config
+        name: google-cloud-config
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: stackdriver-metadata-agent
+    cluster-level: "true"
+  name: stackdriver-metadata-agent-cluster-level
+  namespace: stackdriver-agents
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stackdriver-metadata-agent
+      cluster-level: "true"
+  template:
+    metadata:
+      labels:
+        app: stackdriver-metadata-agent
+        cluster-level: "true"
+    spec:
+      containers:
+      - env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: CLUSTER_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-config
+              key: cluster_name
+        - name: CLUSTER_LOCATION
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-config
+              key: cluster_location
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          valueFrom:
+            configMapKeyRef:
+              name: google-cloud-config
+              key: credentials_path
+        args:
+        - -v
+        - -o KubernetesUseWatch=true
+        - -o KubernetesClusterLevelMetadata=true
+        - -o KubernetesClusterName="$(CLUSTER_NAME)"
+        - -o KubernetesClusterLocation="$(CLUSTER_LOCATION)"
+        - -o InstanceId="$(NODE_NAME)"
+        - -o InstanceZone="$(CLUSTER_LOCATION)"
+        - -o MetadataReporterPurgeDeleted=true
+        image: gcr.io/stackdriver-agents/stackdriver-metadata-agent:0.2-0.0.21-1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          timeoutSeconds: 5
+          failureThreshold: 1
+          successThreshold: 1
+        name: metadata-agent
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 40m
+            memory: 50Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/google-cloud/
+          name: google-cloud-config
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: metadata-agent
+      serviceAccountName: metadata-agent
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: google-cloud-config
+        name: google-cloud-config
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+---
+

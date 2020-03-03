@@ -1,0 +1,4 @@
+{
+    "computeType": "aks",
+    "ComputeTarget": "aks-cluster"
+}

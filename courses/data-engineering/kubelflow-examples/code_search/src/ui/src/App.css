@@ -1,0 +1,78 @@
+.App {
+  box-sizing: border-box;
+}
+
+.App-logo {
+  position: absolute;
+  top: 0;
+  left: 5em;
+  padding: 1em;
+  height: 6em;
+  background: white;
+  border: solid #4279f4 1px;
+}
+
+.App-header {
+  background-color: #4279f4;
+  padding: 1em;
+  margin-bottom: 4em;
+  color: white;
+}
+
+.App-title {
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: normal;
+}
+
+.App-intro {
+  font-size: large;
+}
+
+
+.Search-Wrapper {
+  position: relative;
+  padding: 0.5em;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+#Search-Bar {
+  position: relative;
+  width: 30em;
+  padding: 1em;
+  border: solid #eee 1px;
+}
+
+#Search-Button {
+  border-radius: 0.1em;
+  font-weight: normal;
+  padding: 0.5em 1em;
+  background: #4279f4;
+}
+
+.Search-Results {
+  position: relative;
+  padding: 1em;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.Search-Results-Title {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.Code-Url {
+  display: flex;
+  color: rgba(0, 0, 0, 0.7);
+  align-items: center;
+}
+
+.Code-Url .Code-Icon {
+  margin-right: 0.2em;
+}
+
+.Code-Url p {
+  margin: 0;
+}

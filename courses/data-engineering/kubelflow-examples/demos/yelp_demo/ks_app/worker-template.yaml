@@ -1,0 +1,75 @@
+apiVersion: v1
+data:
+  cpuWorkerTemplate.yaml: |
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: {{.WorkerID}}
+      namespace: kubeflow
+    spec:
+      template:
+        spec:
+          containers:
+          - name: {{.WorkerID}}
+            image: katib/mxnet-mnist-example
+            command:
+            - "python"
+            - "/mxnet/example/image-classification/train_mnist.py"
+            - "--batch-size=64"
+            {{- with .HyperParameters}}
+            {{- range .}}
+            - "{{.Name}}={{.Value}}"
+            {{- end}}
+            {{- end}}
+          restartPolicy: Never
+  defaultWorkerTemplate.yaml: |
+    apiVersion: batch/v1
+    namespace: kubeflow
+    kind: Job
+    metadata:
+      name: {{.WorkerID}}
+    spec:
+      template:
+        spec:
+          containers:
+          - name: {{.WorkerID}}
+            image: alpine
+          restartPolicy: Never
+  gpuWorkerTemplate.yaml: |
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: {{.WorkerID}}
+      namespace: kubeflow
+    spec:
+      template:
+        spec:
+          containers:
+          - name: {{.WorkerID}}
+            image: katib/mxnet-mnist-example:gpu
+            command:
+            - "python"
+            - "/mxnet/example/image-classification/train_mnist.py"
+            - "--batch-size=64"
+            {{- with .HyperParameters}}
+            {{- range .}}
+            - "{{.Name}}={{.Value}}"
+            {{- end}}
+            {{- end}}
+            resources:
+              limits:
+                nvidia.com/gpu: 1
+          restartPolicy: Never
+kind: ConfigMap
+metadata:
+  annotations:
+    ksonnet.io/managed: '{"pristine":"H4sIAAAAAAAA/+yUQYvbMBCF7/0VYs5rm0DpQbCn9tAWuuyhbC+GMlEmzhBpJCQ52dT4vxc5ya4Tuix76KnVyX4avYc0nzQABn6gmNgLaNgt4AZWmBH0ACb0P3zcUvxOLljMVB/QWdCzJVotMZtNs1u0smVZafXVL1txlLG46FaUEnSk1TDUR7Mvn8bxLKeAhrTa9ktaW79vJQUy06J8ipx+lHrSyzBeMrJQTE9S9VLKcbDDruRg5mXjHoVy5YRTrugRXbD0XGm8cygr/axUqoVwyBsvLVyqR6fm5NFMIZWxmBKv2WBmL02OyPJzCqvD4dqhqqbjqxL/otsP7+fTw1CpPeeNqj8fAsV7jOgoU0zzfZWiiNKRqudysR6G+g4djePtMNQPaHsax2t/ktW124UUKWWM+d5bNget7mhHsZVCCK2xt/ktdPyx3W9C5u+ygTaw0Ks77/6ZO6G70P+/Fy9IkZLvo6E0OxClLDvOl5JSsuMVY228a7rQa7V4hbHxBgo1oOGjlzV33zDADZzpKe+yxSXZVL62yYtQrtk3xrvghSSDhqmnxagAABr2U/urMz9wnJhAK9Un0mAc3/0GAAD//wEAAP//PmdlJQ8GAAA="}'
+  creationTimestamp: 2018-11-29T12:30:09Z
+  labels:
+    app.kubernetes.io/deploy-manager: ksonnet
+    ksonnet.io/component: katib
+  name: worker-template
+  namespace: kubeflow
+  resourceVersion: "630604"
+  selfLink: /api/v1/namespaces/kubeflow/configmaps/worker-template
+  uid: 82c4132f-f3d2-11e8-98bd-42010a800fef

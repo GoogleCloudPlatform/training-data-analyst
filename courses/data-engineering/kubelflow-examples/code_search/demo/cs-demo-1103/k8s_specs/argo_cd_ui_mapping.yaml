@@ -1,0 +1,29 @@
+# Ambassador is only monitoring namespace kubeflow
+# so we define another service inside the kubeflow namespace
+# to do the mapping.
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    getambassador.io/config: |-
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name: argo-cd-mapping
+      prefix: /argocd/
+      rewrite: /argocd/
+      service: argocd-server.argocd
+  name: argocd-mapping
+  namespace: kubeflow
+spec:
+  type: ExternalName
+  externalName: argocd-server.argocd.svc.cluster.local
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8080

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dockersecret
+type: Opaque
+data:
+  user: bmlja2hhcnZleQ==
+  password: U0h6ejI0JmRk

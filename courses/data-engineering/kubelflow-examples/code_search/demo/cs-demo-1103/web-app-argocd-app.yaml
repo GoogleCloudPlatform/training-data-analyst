@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  clusterName: ""
+  generation: 1
+  name: code-search
+  namespace: argocd  
+spec:
+  destination:
+    namespace: cs-web-app
+    server: https://35.185.115.154
+  project: default
+  source:    
+    path: code_search/ks-web-app
+    environment: cs_demo
+    # TODO(jlewi): Change to  github.com/kubeflow once the PR
+    # with the web app components is checked in.
+    # repoURL: https://github.com/kubeflow/examples.git
+    # targetRevision: HEAD
+    repoURL: https://github.com/kubeflow/examples.git
+    targetRevision: master
+  syncPolicy:
+    automated:
+      prune: True

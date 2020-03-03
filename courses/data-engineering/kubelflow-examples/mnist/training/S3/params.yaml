@@ -1,0 +1,17 @@
+varReference:
+- path: metadata/name
+  kind: TFJob
+- path: metadata/name
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Chief/template/spec/containers/env/valueFrom/secretKeyRef/name
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Chief/template/spec/containers/env/valueFrom/secretKeyRef/key
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Ps/template/spec/containers/env/valueFrom/secretKeyRef/name
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Ps/template/spec/containers/env/valueFrom/secretKeyRef/key
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Worker/template/spec/containers/env/valueFrom/secretKeyRef/name
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Worker/template/spec/containers/env/valueFrom/secretKeyRef/key
+  kind: TFJob

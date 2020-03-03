@@ -1,0 +1,5 @@
+Flask==0.12.2
+pandas
+requests
+tensorflow
+tensor2tensor
