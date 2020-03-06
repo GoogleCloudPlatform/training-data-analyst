@@ -1,0 +1,456 @@
+apiVersion: kfdef.apps.kubeflow.org/v1
+kind: KfDef
+metadata:
+  clusterName: gke_qwiklabs-gcp-00-0902cbec76db_us-central1-a_kubeflow
+  creationTimestamp: null
+  name: kubeflow
+  namespace: kubeflow
+spec:
+  applications:
+  - kustomizeConfig:
+      parameters:
+      - name: namespace
+        value: istio-system
+      repoRef:
+        name: manifests
+        path: istio/istio-crds
+    name: istio-crds
+  - kustomizeConfig:
+      parameters:
+      - name: namespace
+        value: istio-system
+      repoRef:
+        name: manifests
+        path: istio/istio-install
+    name: istio-install
+  - kustomizeConfig:
+      parameters:
+      - name: namespace
+        value: istio-system
+      repoRef:
+        name: manifests
+        path: istio/cluster-local-gateway
+    name: cluster-local-gateway
+  - kustomizeConfig:
+      parameters:
+      - name: clusterRbacConfig
+        value: "OFF"
+      repoRef:
+        name: manifests
+        path: istio/istio
+    name: istio
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: application/application-crds
+    name: application-crds
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: application/application
+    name: application
+  - kustomizeConfig:
+      parameters:
+      - name: namespace
+        value: cert-manager
+      repoRef:
+        name: manifests
+        path: cert-manager/cert-manager-crds
+    name: cert-manager-crds
+  - kustomizeConfig:
+      parameters:
+      - name: namespace
+        value: kube-system
+      repoRef:
+        name: manifests
+        path: cert-manager/cert-manager-kube-system-resources
+    name: cert-manager-kube-system-resources
+  - kustomizeConfig:
+      overlays:
+      - self-signed
+      - application
+      parameters:
+      - name: namespace
+        value: cert-manager
+      repoRef:
+        name: manifests
+        path: cert-manager/cert-manager
+    name: cert-manager
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: metacontroller
+    name: metacontroller
+  - kustomizeConfig:
+      overlays:
+      - istio
+      - application
+      repoRef:
+        name: manifests
+        path: argo
+    name: argo
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: kubeflow-roles
+    name: kubeflow-roles
+  - kustomizeConfig:
+      overlays:
+      - istio
+      - application
+      repoRef:
+        name: manifests
+        path: common/centraldashboard
+    name: centraldashboard
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: admission-webhook/webhook
+    name: webhook
+  - kustomizeConfig:
+      overlays:
+      - application
+      parameters:
+      - name: webhookNamePrefix
+        value: admission-webhook-
+      repoRef:
+        name: manifests
+        path: admission-webhook/bootstrap
+    name: bootstrap
+  - kustomizeConfig:
+      overlays:
+      - istio
+      - application
+      repoRef:
+        name: manifests
+        path: jupyter/jupyter-web-app
+    name: jupyter-web-app
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: spark/spark-operator
+    name: spark-operator
+  - kustomizeConfig:
+      overlays:
+      - istio
+      - application
+      - db
+      repoRef:
+        name: manifests
+        path: metadata
+    name: metadata
+  - kustomizeConfig:
+      overlays:
+      - istio
+      - application
+      parameters:
+      - name: injectGcpCredentials
+        value: "true"
+      repoRef:
+        name: manifests
+        path: jupyter/notebook-controller
+    name: notebook-controller
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: pytorch-job/pytorch-job-crds
+    name: pytorch-job-crds
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: pytorch-job/pytorch-operator
+    name: pytorch-operator
+  - kustomizeConfig:
+      overlays:
+      - application
+      parameters:
+      - name: namespace
+        value: knative-serving
+      repoRef:
+        name: manifests
+        path: knative/knative-serving-crds
+    name: knative-crds
+  - kustomizeConfig:
+      overlays:
+      - application
+      parameters:
+      - name: namespace
+        value: knative-serving
+      repoRef:
+        name: manifests
+        path: knative/knative-serving-install
+    name: knative-install
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: kfserving/kfserving-crds
+    name: kfserving-crds
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: kfserving/kfserving-install
+    name: kfserving-install
+  - kustomizeConfig:
+      overlays:
+      - application
+      parameters:
+      - name: usageId
+        value: "6064423499550958084"
+      - name: reportUsage
+        value: "true"
+      repoRef:
+        name: manifests
+        path: common/spartakus
+    name: spartakus
+  - kustomizeConfig:
+      overlays:
+      - istio
+      repoRef:
+        name: manifests
+        path: tensorboard
+    name: tensorboard
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: tf-training/tf-job-crds
+    name: tf-job-crds
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: tf-training/tf-job-operator
+    name: tf-job-operator
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: katib/katib-crds
+    name: katib-crds
+  - kustomizeConfig:
+      overlays:
+      - application
+      - istio
+      repoRef:
+        name: manifests
+        path: katib/katib-controller
+    name: katib-controller
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: pipeline/api-service
+    name: api-service
+  - kustomizeConfig:
+      overlays:
+      - minioPd
+      - application
+      parameters:
+      - name: minioPd
+        value: kubeflow-storage-artifact-store
+      - name: minioPvName
+        value: minio-pv
+      - name: minioPvcName
+        value: minio-pv-claim
+      repoRef:
+        name: manifests
+        path: pipeline/minio
+    name: minio
+  - kustomizeConfig:
+      overlays:
+      - mysqlPd
+      - application
+      parameters:
+      - name: mysqlPd
+        value: kubeflow-storage-metadata-store
+      - name: mysqlPvName
+        value: mysql-pv
+      - name: mysqlPvcName
+        value: mysql-pv-claim
+      repoRef:
+        name: manifests
+        path: pipeline/mysql
+    name: mysql
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: pipeline/persistent-agent
+    name: persistent-agent
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: pipeline/pipelines-runner
+    name: pipelines-runner
+  - kustomizeConfig:
+      overlays:
+      - gcp
+      - istio
+      - application
+      repoRef:
+        name: manifests
+        path: pipeline/pipelines-ui
+    name: pipelines-ui
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: pipeline/pipelines-viewer
+    name: pipelines-viewer
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: pipeline/scheduledworkflow
+    name: scheduledworkflow
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: pipeline/pipeline-visualization-service
+    name: pipeline-visualization-service
+  - kustomizeConfig:
+      overlays:
+      - application
+      parameters:
+      - name: ipName
+        value: ipName
+      - name: hostname
+      repoRef:
+        name: manifests
+        path: gcp/cloud-endpoints
+    name: cloud-endpoints
+  - kustomizeConfig:
+      overlays:
+      - application
+      - istio
+      parameters:
+      - name: admin
+        value: student-00-3fde9b64e0dc@qwiklabs.net
+      - name: gcp-sa
+        value: kubeflow-user@qwiklabs-gcp-00-0902cbec76db.iam.gserviceaccount.com
+      repoRef:
+        name: manifests
+        path: profiles
+    name: profiles
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: gcp/gpu-driver
+    name: gpu-driver
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: seldon/seldon-core-operator
+    name: seldon-core-operator
+  - kustomizeConfig:
+      parameters:
+      - name: ambassadorServiceType
+        value: NodePort
+      - name: namespace
+        value: istio-system
+      repoRef:
+        name: manifests
+        path: common/ambassador
+    name: ambassador
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: common/basic-auth
+    name: basic-auth
+  - kustomizeConfig:
+      overlays:
+      - managed-cert
+      - application
+      parameters:
+      - name: namespace
+        value: istio-system
+      - name: ipName
+        value: kubeflow-ip
+      - name: hostname
+        value: kubeflow.endpoints.qwiklabs-gcp-00-0902cbec76db.cloud.goog
+      - name: project
+        value: qwiklabs-gcp-00-0902cbec76db
+      - name: ingressName
+        value: envoy-ingress
+      - name: issuer
+        value: letsencrypt-prod
+      repoRef:
+        name: manifests
+        path: gcp/basic-auth-ingress
+    name: basic-auth-ingress
+  - kustomizeConfig:
+      parameters:
+      - name: user
+        value: student-00-3fde9b64e0dc@qwiklabs.net
+      - name: profile-name
+        value: kubeflow-student-00-3fde9b64e0
+      repoRef:
+        name: manifests
+        path: default-install
+    name: default-install
+  plugins:
+  - kind: KfGcpPlugin
+    metadata:
+      creationTimestamp: null
+      name: gcp
+    spec:
+      auth:
+        basicAuth:
+          password:
+            name: password
+          username: student-00-3fde9b64e0dc@qwiklabs.net
+      createPipelinePersistentStorage: true
+      deploymentManagerConfig:
+        repoRef:
+          name: manifests
+          path: gcp/deployment_manager_configs
+      email: student-00-3fde9b64e0dc@qwiklabs.net
+      enableWorkloadIdentity: true
+      hostname: kubeflow.endpoints.qwiklabs-gcp-00-0902cbec76db.cloud.goog
+      ipName: kubeflow-ip
+      project: qwiklabs-gcp-00-0902cbec76db
+      skipInitProject: true
+      useBasicAuth: true
+      zone: us-central1-a
+  repos:
+  - name: manifests
+    uri: https://github.com/kubeflow/manifests/archive/v1.0.0.tar.gz
+  secrets:
+  - name: password
+    secretSource:
+      envSource:
+        name: KUBEFLOW_PASSWORD
+  version: v1.0.0
+status:
+  reposCache:
+  - localPath: '"/home/student_00_3fde9b64e0dc/training-data-analyst/courses/data-engineering/kubeflow-examples/mnist/kubeflow/.cache/manifests/manifests-1.0.0"'
+    name: manifests
