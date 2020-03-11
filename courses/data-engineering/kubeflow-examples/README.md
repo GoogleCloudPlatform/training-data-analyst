@@ -6,8 +6,6 @@ acting as a starting point for new users and a reference guide for experienced u
 
 This repository is home to the following types of examples and demos:
 * [End-to-end](#end-to-end)
-* [Component-focused](#component-focused)
-* [Demos](#demos)
 
 ## End-to-end
 
