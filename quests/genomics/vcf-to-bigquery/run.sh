@@ -37,7 +37,7 @@ echo "Temporary files will be put into in $STAGING_BUCKET"
 gcloud alpha genomics pipelines run \
     --project $PROJECT_ID \
     --pipeline-file $YAML \
-    --logging gs://$STAGING_BUCKET/temp/runner_logs \
+    --logging $STAGING_BUCKET/temp/runner_logs \
     --zones $ZONE \
     --service-account-scopes https://www.googleapis.com/auth/bigquery \
     --inputs `echo \

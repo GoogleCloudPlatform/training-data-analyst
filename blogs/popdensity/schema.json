@@ -30,7 +30,7 @@
     "type": "GEOGRAPHY"
   },
   {
-    "description": "polygon representing boundary of pixel",
+    "description": "polygon representing boundary of rectangle",
     "mode": "REQUIRED",
     "name": "bounds",
     "type": "GEOGRAPHY"
