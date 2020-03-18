@@ -15,11 +15,11 @@ def _parse_arguments(argv):
     parser.add_argument(
         '--epochs',
         help='The number of epochs to train',
-        type=int, default=5)
+        type=int, default=10)
     parser.add_argument(
         '--steps_per_epoch',
         help='The number of steps per epoch to train',
-        type=int, default=5)
+        type=int, default=500)
     parser.add_argument(
         '--train_path',
         help='The path to the training data',
@@ -42,22 +42,22 @@ def _parse_arguments(argv):
 def main():
     """Parses command line arguments and kicks off model training."""
     args = _parse_arguments(sys.argv[1:])[0]
-    train_data = util.load_dataset(args.train_path)
-    eval_data = util.load_dataset(args.eval_path, training=False)
     
-    cluster_resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
+    resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
         tpu=args.tpu_address)
-    if args.tpu_address not in ('', 'local'):
-        tf.config.experimental_connect_to_cluster(cluster_resolver)
-    tf.tpu.experimental.initialize_tpu_system(cluster_resolver)
-    strategy_scope = tf.distribute.experimental.TPUStrategy(cluster_resolver)
+    tf.config.experimental_connect_to_cluster(resolver)
+    tf.tpu.experimental.initialize_tpu_system(resolver)
+    strategy = tf.distribute.experimental.TPUStrategy(resolver)
     
-    with strategy_scope:
+    with strategy.scope():
+        train_data = util.load_dataset(args.train_path)
+        eval_data = util.load_dataset(args.eval_path, training=False)
         image_model = model.build_model(args.job_dir)
 
     model_history = model.train_and_evaluate(
         image_model, args.epochs, args.steps_per_epoch,
         train_data, eval_data, args.job_dir)
+    print("done!")
 
 
 if __name__ == '__main__':
