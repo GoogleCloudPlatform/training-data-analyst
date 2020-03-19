@@ -14,14 +14,10 @@ LEARNING_RATE = 0.0001
 DROPOUT = .2
 
 
-def build_model(output_dir):
+def build_model(output_dir, hub_handle):
     """Compiles keras model for image classification."""
-    module_selection = "mobilenet_v2_100_224"
-    module_handle = "https://tfhub.dev/google/imagenet/{}/feature_vector/4" \
-        .format(module_selection)
-
     model = tf.keras.Sequential([
-        hub.KerasLayer(module_handle, trainable=False),
+        hub.KerasLayer(hub_handle, trainable=False),
         tf.keras.layers.Dropout(rate=DROPOUT),
         tf.keras.layers.Dense(
             NCLASSES,

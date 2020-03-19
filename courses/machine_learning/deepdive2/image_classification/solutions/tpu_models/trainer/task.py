@@ -15,7 +15,7 @@ def _parse_arguments(argv):
     parser.add_argument(
         '--epochs',
         help='The number of epochs to train',
-        type=int, default=10)
+        type=int, default=5)
     parser.add_argument(
         '--steps_per_epoch',
         help='The number of steps per epoch to train',
@@ -33,9 +33,13 @@ def _parse_arguments(argv):
         help='The path to the evaluation data',
         type=str, required=True)
     parser.add_argument(
+        '--hub_path',
+        help='The path to TF Hub module to use in GCS',
+        type=str, required=True)
+    parser.add_argument(
         '--job-dir',
         help='Directory where to save the given model',
-        type=str, default='tpu_models/')
+        type=str, required=True)
     return parser.parse_known_args(argv)
 
 
@@ -43,6 +47,7 @@ def main():
     """Parses command line arguments and kicks off model training."""
     args = _parse_arguments(sys.argv[1:])[0]
     
+    # TODO: define a TPU strategy
     resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
         tpu=args.tpu_address)
     tf.config.experimental_connect_to_cluster(resolver)
@@ -52,12 +57,11 @@ def main():
     with strategy.scope():
         train_data = util.load_dataset(args.train_path)
         eval_data = util.load_dataset(args.eval_path, training=False)
-        image_model = model.build_model(args.job_dir)
+        image_model = model.build_model(args.job_dir, args.hub_path)
 
     model_history = model.train_and_evaluate(
         image_model, args.epochs, args.steps_per_epoch,
         train_data, eval_data, args.job_dir)
-    print("done!")
 
 
 if __name__ == '__main__':
