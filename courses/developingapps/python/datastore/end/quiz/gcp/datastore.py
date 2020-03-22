@@ -35,6 +35,6 @@ Create and persist and entity for each question
 def save_question(question):
     key = datastore_client.key('Question')
     q_entity = datastore.Entity(key=key)
-    for q_prop, q_val in question.iteritems():
+    for q_prop, q_val in question.items():
         q_entity[q_prop] = q_val
     datastore_client.put(q_entity)

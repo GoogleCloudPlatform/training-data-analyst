@@ -22,7 +22,7 @@ export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID
 
 echo "Creating virtual environment"
 mkdir ~/venvs
-virtualenv ~/venvs/developingapps
+virtualenv -p python3 ~/venvs/developingapps
 source ~/venvs/developingapps/bin/activate
 
 echo "Installing Python libraries"
