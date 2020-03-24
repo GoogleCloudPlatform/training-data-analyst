@@ -2,9 +2,10 @@ import os
 import shutil
 
 import tensorflow as tf
-from tensorflow.keras import Sequential
-from tensorflow.keras.callbacks import TensorBoard
-from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras import callbacks
+from tensorflow.keras import layers
+from tensorflow.keras import models
+
 import tensorflow_hub as hub
 
 from . import util
@@ -16,10 +17,10 @@ DROPOUT = .2
 
 def build_model(output_dir, hub_handle):
     """Compiles keras model for image classification."""
-    model = tf.keras.Sequential([
+    model = models.Sequential([
         hub.KerasLayer(hub_handle, trainable=False),
-        tf.keras.layers.Dropout(rate=DROPOUT),
-        tf.keras.layers.Dense(
+        layers.Dropout(rate=DROPOUT),
+        layers.Dense(
             NCLASSES,
             activation='softmax',
             kernel_regularizer=tf.keras.regularizers.l2(LEARNING_RATE))
@@ -35,10 +36,10 @@ def build_model(output_dir, hub_handle):
 def train_and_evaluate(
     model, num_epochs, steps_per_epoch, train_data, eval_data, output_dir):
     """Compiles keras model and loads data into it for training."""
-    callbacks = []
+    model_callbacks = []
     if output_dir:
-        tensorboard_callback = TensorBoard(log_dir=output_dir)
-        callbacks = [tensorboard_callback]
+        tensorboard_callback = callbacks.TensorBoard(log_dir=output_dir)
+        model_callbacks = [tensorboard_callback]
 
     history = model.fit(
         train_data,
@@ -46,7 +47,7 @@ def train_and_evaluate(
         validation_steps=util.VALIDATION_STEPS,
         epochs=num_epochs,
         steps_per_epoch=steps_per_epoch,
-        callbacks=callbacks)
+        callbacks=model_callbacks)
 
     if output_dir:
         export_path = os.path.join(output_dir, 'keras_export')
