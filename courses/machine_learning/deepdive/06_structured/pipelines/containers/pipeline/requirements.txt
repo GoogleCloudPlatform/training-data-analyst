@@ -1,0 +1,5 @@
+Flask==1.1.1
+python_version > "3.0"
+gunicorn==20.0.4
+kfp
+requests

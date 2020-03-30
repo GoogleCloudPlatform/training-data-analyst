@@ -1,0 +1,39 @@
+apiVersion: kubeflow.org/v1
+kind: TFJob
+metadata:
+  name: $(trainingName)
+  namespace: kubeflow
+spec:
+  tfReplicaSpecs:
+    Ps:
+      replicas: %numPs%
+      template:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          serviceAccount: default-editor
+          containers:
+          - name: tensorflow
+            command:
+            - /usr/bin/python
+            - /opt/model.py
+            - --tf-model-dir=$(modelDir)
+            - --tf-export-dir=$(exportDir)
+            - --tf-train-steps=$(trainSteps)
+            - --tf-batch-size=$(batchSize)
+            - --tf-learning-rate=$(learningRate)
+            env:
+            - name: modelDir
+              value: $(modelDir)
+            - name: exportDir
+              value: $(exportDir)
+            - name: trainSteps
+              value: $(trainSteps)
+            - name: batchSize
+              value: $(batchSize)
+            - name: learningRate
+              value: $(learningRate)
+            image: training-image
+            workingDir: /opt
+          restartPolicy: OnFailure
