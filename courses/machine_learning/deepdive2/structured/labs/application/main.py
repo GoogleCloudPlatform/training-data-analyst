@@ -14,14 +14,15 @@ app = Flask(__name__)
 
 
 def get_prediction(features):
-    project = os.getenv("PROJECT", "asl-ml-immersion") # TODO:Input your project name
-    model_name = os.getenv("MODEL_NAME", "babyweight") # TODO: Input your model name
-    version_name = os.getenv("VERSION_NAME", "ml_on_gcp") # TODO: Input your model version name
+    project = "" # TODO:Input your project name
+    model_name = "" # TODO: Input your model name
+    version_name = "" # TODO: Input your model version name
 
     input_data = {"instances": [features]}
-    # TODO: Write the code to make a prediction against a CAIP deployed model
-    parent = "projects/{0}/models/{1}/versions/{2}".format(
-        project, model_name, version_name)
+    # TODO: Write a formatted string to make a prediction against a CAIP deployed model.
+    # HINT: Review documentation on API for model string format at:
+    # https://cloud.google.com/ai-platform/prediction/docs/online-predict#requesting_predictions
+    parent = "".format()
     prediction = api.projects().predict(body=input_data, name=parent).execute()
 
     return prediction["predictions"][0]["weight"][0]
@@ -35,11 +36,13 @@ def index():
 @app.route("/predict", methods=["POST"])
 def predict():
     def gender2str(val):
-        genders = {"unknown": "Unknown", "male": "True", "female": "False"}
+        # TODO: complete genders mapping dictionary.
+        genders = {"female": "False", }
         return genders[val]
 
     def plurality2str(val):
-        pluralities = {"1": "Single(1)", "2": "Twins(2)", "3": "Triplets(3)"}
+        # TODO: complete pluralities mapping dictionary.
+        pluralities = {"1": "Single(1)", }
         if features["is_male"] == "Unknown" and int(val) > 1:
             return "Multiple(2+)"
         return pluralities[val]
