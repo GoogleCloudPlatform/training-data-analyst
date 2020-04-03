@@ -21,6 +21,7 @@ def my_grep(line, term):
       yield line
 
 if __name__ == '__main__':
+   print('Luis Barrera first step')
    p = beam.Pipeline(argv=sys.argv)
    input = '../javahelp/src/main/java/com/google/cloud/training/dataanalyst/javahelp/*.java'
    output_prefix = '/tmp/output'
