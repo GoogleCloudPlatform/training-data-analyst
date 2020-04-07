@@ -19,7 +19,7 @@ create_vm() # params: machine_name, machine_type, tfnightly
     extra_install=""
     if [ "$3" != 0 ];
     then
-        extra_install="pip install tf-nightly; pip install behave;";
+        extra_install="pip install tf-nightly; pip install behave";
         version_msg="tf-nightly (2.x)";
     else
         version=$DEFAULT_TF_VERSION;
