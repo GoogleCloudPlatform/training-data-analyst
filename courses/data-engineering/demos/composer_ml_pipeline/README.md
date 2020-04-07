@@ -197,7 +197,7 @@ check_sql = """
               FROM
                   `bigquery-public-data.chicago_taxi_trips.taxi_trips`
               WHERE
-                  trip_start_timestamp >= TIMESTAMP('{{ macros.ds_add(ds, -30) }}')
+                  trip_start_timestamp >= TIMESTAMP('{{ macros.ds_add(ds, -60) }}')
               """
 
   bq_check_data_op = BigQueryCheckOperator(
@@ -207,7 +207,7 @@ check_sql = """
   )
 ```
 
-In the SQL query we have the syntax `{{ macros.ds_add(ds, -30) }}`. This is an example of an Airflow macro for setting date. Here `ds_add` is adding -30 to the timestamp `ds`, which represents the current date. This sets the date to 30 days before the current date for the filter. We then run this query as part of a `BigQueryCheckOperator`, which if the result returned is nonzero returns a success, otherwise returns a failure.
+In the SQL query we have the syntax `{{ macros.ds_add(ds, -60) }}`. This is an example of an Airflow macro for setting date. Here `ds_add` is adding -60 to the timestamp `ds`, which represents the current date. This sets the date to 60 days before the current date for the filter. We then run this query as part of a `BigQueryCheckOperator`, which if the result returned is nonzero returns a success, otherwise returns a failure.
 
 ```python
 ERROR_MESSAGE = b64e(b'Error. Did not retrain on stale data.').decode()
@@ -227,8 +227,9 @@ First notice the trigger rule in the `PubSubPublishOperator` arguments. Here we 
 bq_train_data_op = BigQueryOperator(
     task_id="bq_train_data_task",
     bql=bql_train,
-    destination_dataset_table="{}.{}_train_data".format(DESTINATION_DATASET, model.replace(".","_")),
-    write_disposition="WRITE_TRUNCATE", # specify to truncate on writes
+    destination_dataset_table="{}.{}_train_data"
+            .format(DESTINATION_DATASET, model.replace(".", "_")),
+    write_disposition="WRITE_TRUNCATE",  # specify to truncate on writes
     use_legacy_sql=False,
     dag=dag
 )
@@ -239,7 +240,9 @@ The `BigQueryOperator`s are straightforward, note here that the `use_legacy_sql`
 ```python
 bash_remove_old_data_op = BashOperator(
     task_id="bash_remove_old_data_task",
-    bash_command="if gsutil ls {0}/chicago_taxi/data/{1} 2> /dev/null; then gsutil -m rm -rf {0}/chicago_taxi/data/{1}/*; else true; fi".format(BUCKET, model.replace(".","_")),
+    bash_command=("if gsutil ls {0}/chicago_taxi/data/{1} 2> /dev/null;"
+                  "then gsutil -m rm -rf {0}/chicago_taxi/data/{1}/*;"
+                  "else true; fi").format(BUCKET, model.replace(".", "_")),
     dag=dag
 )
 ```
@@ -249,8 +252,11 @@ The `BashOperator`s are all very similar, so we will just go through one example
 ```python
 bq_export_train_csv_op = BigQueryToCloudStorageOperator(
     task_id="bq_export_gcs_train_csv_task",
-    source_project_dataset_table="{}.{}_train_data".format(DESTINATION_DATASET, model.replace(".","_")),
-    destination_cloud_storage_uris=[train_files + "{}/train-*.csv".format(model.replace(".","_"))],
+    source_project_dataset_table="{}.{}_train_data"
+            .format(DESTINATION_DATASET, model.replace(".", "_")),
+    destination_cloud_storage_uris=[train_files +
+                                    "{}/train-*.csv"
+                                    .format(model.replace(".", "_"))],
     export_format="CSV",
     print_header=False,
     dag=dag
@@ -260,55 +266,71 @@ Here we see the operator used to export data from BigQuery to Google Cloud Stora
 
 ```python
 # ML Engine training job
-job_id = "chicago_{}_{}".format(model.replace(".","_"), datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
-output_dir = BUCKET + "/chicago/trained_model/{}".format(model.replace(".","_"))
-job_dir = JOB_DIR + "/" + job_id
-training_args = [
-    "--hidden_units", "256,128,64",
-    "--job-dir", job_dir,
-    "--output_dir", output_dir,
-    "--train_data_path", train_files + "chicago_taxi_trips/*.csv",
-    "--eval_data_path", valid_files + "chicago_taxi_trips/*.csv"
-]
+# ML Engine training job
+  job_id = "chicago_{}_{}".format(model.replace(".", "_"),
+                                  datetime.datetime.now()
+                                  .strftime("%Y%m%d%H%M%S"))
+  output_dir = (BUCKET + "/chicago/trained_model/{}"
+                .format(model.replace(".", "_")))
+  log_dir = (BUCKET + "/chicago/training_logs/{}"
+                .format(model.replace(".", "_")))
+  job_dir = JOB_DIR + "/" + job_id
+  training_args = [
+      "--job-dir", job_dir,
+      "--output_dir", output_dir,
+      "--log_dir", log_dir,
+      "--train_data_path", train_files + "chicago_taxi_trips/*.csv",
+      "--eval_data_path", valid_files + "chicago_taxi_trips/*.csv"
+  ]
 
-ml_engine_training_op = MLEngineTrainingOperator(
-    task_id="ml_engine_training_{}_task".format(model.replace(".","_")),
-    project_id=PROJECT_ID,
-    job_id=job_id,
-    package_uris=[PACKAGE_URI],
-    training_python_module="trainer.task",
-    training_args=training_args,
-    region=REGION,
-    scale_tier="STANDARD_1",
-    runtime_version="1.13",
-    python_version="3.5",
-    dag=dag
- )
+  ml_engine_training_op = MLEngineTrainingOperator(
+      task_id="ml_engine_training_{}_task".format(model.replace(".", "_")),
+      project_id=PROJECT_ID,
+      job_id=job_id,
+      package_uris=[PACKAGE_URI],
+      training_python_module="trainer.task",
+      training_args=training_args,
+      region=REGION,
+      scale_tier="BASIC",
+      runtime_version="2.1",
+      python_version="3.7",
+      dag=dag
+   )
 ```
 
 In the `MLEngineTrainingOperator` we see the information we need to give to Cloud AI Platform to submit an ML training job. Note that we need to also pass training arguments which are used by the `trainer` package to execute the training job.
 
 ```python
 bash_ml_engine_models_list_op = BashOperator(
-    task_id="bash_ml_engine_models_list_{}_task".format(model.replace(".","_")),
+    task_id="bash_ml_engine_models_list_{}_task"
+            .format(model.replace(".", "_")),
     xcom_push=True,
-    bash_command="gcloud ml-engine models list --filter='name:{0}'".format(MODEL_NAME),
+    bash_command="gcloud ml-engine models list --filter='name:{0}'"
+                 .format(MODEL_NAME),
     dag=dag
 )
 
-def check_if_model_already_exists(templates_dict, **kwargs):
+ef check_if_model_already_exists(templates_dict, **kwargs):
       cur_model = MODEL_NAME
-      ml_engine_models_list = kwargs["ti"].xcom_pull(task_ids="bash_ml_engine_models_list_{}_task".format(cur_model))
-      logging.info("check_if_model_already_exists: {}: ml_engine_models_list = \n{}".format(cur_model, ml_engine_models_list))
-      create_model_task = "ml_engine_create_model_{}_task".format(cur_model)
-      dont_create_model_task = "dont_create_model_dummy_{}_task".format(cur_model)
-      if len(ml_engine_models_list) == 0 or ml_engine_models_list == "Listed 0 items.":
+      ml_engine_models_list = kwargs["ti"].xcom_pull(
+          task_ids="bash_ml_engine_models_list_{}_task".format(cur_model))
+      logging.info(("check_if_model_already_exists:"
+                    "{}: ml_engine_models_list = \n{}"
+                   .format(cur_model, ml_engine_models_list)))
+      create_model_task = ("ml_engine_create_model_{}_task"
+                           .format(cur_model))
+      dont_create_model_task = ("dont_create_model_dummy_{}_task"
+                                .format(cur_model))
+      if (len(ml_engine_models_list) == 0 or
+              ml_engine_models_list == "Listed 0 items."):
           return create_model_task
-      return dont_create_model_task
+      else:
+          return dont_create_model_task
 
   check_if_model_exists_op = BranchPythonOperator(
-      task_id="check_if_model_already_exists_{}_task".format(model.replace(".","_")),
-      templates_dict={"model": model.replace(".","_")},
+      task_id="check_if_model_already_exists_{}_task"
+              .format(model.replace(".", "_")),
+      templates_dict={"model": model.replace(".", "_")},
       python_callable=check_if_model_already_exists,
       provide_context=True,
       dag=dag
@@ -319,7 +341,8 @@ Here is our first example of a `BranchPythonOperator`. Note that as mentioned be
 
 ```python
 ml_engine_create_model_op = MLEngineModelOperator(
-    task_id="ml_engine_create_model_{}_task".format(model.replace(".","_")),
+    task_id="ml_engine_create_model_{}_task"
+            .format(model.replace(".", "_")),
     project_id=PROJECT_ID,
     model={"name": MODEL_NAME},
     operation="create",
@@ -327,7 +350,8 @@ ml_engine_create_model_op = MLEngineModelOperator(
     )
 
 dont_create_model_dummy_op = DummyOperator(
-    task_id="dont_create_model_dummy_{}_task".format(model.replace(".","_")),
+    task_id="dont_create_model_dummy_{}_task"
+            .format(model.replace(".", "_")),
     dag=dag
 )
 ```
