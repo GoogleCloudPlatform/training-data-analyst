@@ -43,19 +43,19 @@ In this demo we will talk through setting up a Cloud Composer environment and a 
 
 Before we start talking through out example, let's walk through how to set up our Cloud Composer environment. We first go to **Big Data > Composer** in the side menu and then click on **Create.**
 
-![Create Environment](/img/create_environ.png)
+![Create Environment](./img/create_environ.png)
 
 Once we hit create we will see the options for creating our environment. For this demo we will name our environment `chicago-demo-environment` and set our location to be `us-central1`. Finally we will set the Python version to be `3` and create an enviornment variable. We create the environment variable by clicking on the **ADD ENVIRONMENT VARIABLE** button. We then create a variable with name `VERSION_NAME` and value `v_default`.
 
 After this, then we are ready to hit Create.
 
-![Environment Setup](/img/environ_setup.png)
+![Environment Setup](./img/environ_setup.png)
 
 It will take 15-20 minutes to set up the environment, so instead of waiting I have another environment already set up and ready to go.
 
 Note that we have three links here beside of the environment name. First we have a link to the Airflow server, we have a link to the logs in Stackdriver associated with the Composer environment, and finally we have a link to the DAGs folder. Let's click there first.
 
-![Environment List](/img/environ_list.png)
+![Environment List](./img/environ_list.png)
 
 The DAGs folder is where we put the python scripts/packages used to define out Airflow pipelines. Notice that here I have two python scripts. First, there is the `airflow_monitoring.py` file. We also have the main focus of this demo, the `chicago_taxi_dag.py` file.
 
@@ -65,11 +65,11 @@ This brings us to the main screen for the Airflow webserver. Note that we can se
 
 We also see information about recent tasks. In this example we see that for `chicago_taxi_dag` we have 17 successful tasks and 2 skipped tasks, to the right of that we see when the last run was and the status of previous runs (here 1 successful run).
 
-![Airflow Main](/img/airflow_main.png)
+![Airflow Main](./img/airflow_main.png)
 
 There are links on the right corresponding to things like "Trigger DAG", "Graph View", and others. Let us go and take a look at the Graph View now. Here we see the entire DAG. To get it to fit on a single screen let us go to Layout and switch it to "Top -> Bottom"
 
-![Airflow Graph View](/img/airflow_graph.png)
+![Airflow Graph View](./img/airflow_graph.png)
 
 We will finish the demo by looking through the code for the DAG, but let's talk through the high level overview of the DAG first. Let's go through one task at a time.
 
