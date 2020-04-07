@@ -19,7 +19,7 @@ create_vm() # params: machine_name, machine_type, tfnightly
     extra_install=""
     if [ "$3" != 0 ];
     then
-        extra_install="pip install tf-nightly; pip install behave";
+        extra_install="pip install tf-nightly; pip install behave;";
         version_msg="tf-nightly (2.x)";
     else
         version=$DEFAULT_TF_VERSION;
@@ -42,7 +42,7 @@ create_tpu() # params: machine_name, tpu_type, tfnightly
 {
     if [ "$3" != 0 ];
     then
-        version="nightly-2.x";
+        version="nightly";
     else
         version=$DEFAULT_TF_VERSION
     fi
@@ -74,8 +74,7 @@ while [ "$1" != "" ]; do
         -h | --help )           usage
                                 exit
                                 ;;
-        --nightly )             shift
-                                tfnightly=1
+        --nightly )             tfnightly=1
                                 ;;
         * )                     usage
                                 exit 1
