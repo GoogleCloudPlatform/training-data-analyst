@@ -41,7 +41,7 @@
 
     <!-- Dependency properties -->
     <checkstyle.version>8.11</checkstyle.version>
-    <beam.version>2.7.0</beam.version>
+    <beam.version>2.17.0</beam.version>
     <hamcrest.version>1.3</hamcrest.version>
     <java.version>1.8</java.version>
     <j2v8.version>4.8.0</j2v8.version>
@@ -114,6 +114,45 @@
       <artifactId>gson</artifactId>
       <version>2.8.5</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
+      <version>1.31.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.cloud.bigtable</groupId>
+          <artifactId>bigtable-client-core</artifactId>
+        </exclusion>
+        
+          <exclusion>
+            <groupId>com.google.j2objc</groupId>
+            <artifactId>j2objc-annotations</artifactId>
+          </exclusion>
+               
+          <exclusion>
+            <groupId>io.opencensus</groupId>
+            <artifactId>opencensus-api</artifactId>
+          </exclusion>
+               
+          <exclusion>
+            <groupId>io.opencensus</groupId>
+            <artifactId>opencensus-contrib-grpc-util</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.opencensus</groupId>
+            <artifactId>opencensus-contrib-http-util</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.opencensus</groupId>
+            <artifactId>opencensus-contrib-grpc-metrics</artifactId>
+          </exclusion>
+
+
+        
+
+      </exclusions>
+  </dependency>
 
     <!-- Logging -->
     <dependency>
