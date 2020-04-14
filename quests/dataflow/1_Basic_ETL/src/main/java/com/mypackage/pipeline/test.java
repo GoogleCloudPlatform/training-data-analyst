@@ -116,6 +116,7 @@ public class test {
   /**
    * A class used for parsing JSON web server events
    */
+  @DefaultSchema(JavaFieldSchema.class)
   public static class CommonLog {
     String user_id;
     String ip;
@@ -125,7 +126,7 @@ public class test {
     String http_request;
     String user_agent;
     int http_response;
-    int num_bytes;
+    @javax.annotation.Nullable int num_bytes;
 
     CommonLog(String user_id, String ip, float lat, float lng, String timestamp,
               String http_request, String user_agent, int http_response, int num_bytes) {
@@ -156,6 +157,8 @@ public class test {
     Pipeline pipeline = Pipeline.create(options);
     options.setJobName("sample-pipeline-" + System.currentTimeMillis());
 
+    
+    
     // Define the schema for CommonLog
     Schema commonLogSchema = Schema.builder()
     .addStringField("user_id")
@@ -182,29 +185,29 @@ public class test {
 
     pipeline
       .apply("ReadFromGCS", TextIO.read().from(input))
-      .apply("FormatToRow", ParDo.of(new DoFn<String, Row>() {
+      .apply("FormatToRow", ParDo.of(new DoFn<String, CommonLog>() {
         @ProcessElement
-        public void processElement(@Element String json, OutputReceiver<Row> r) {
+        public void processElement(@Element String json, OutputReceiver<CommonLog> r) {
           Gson gson = new Gson();
           CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-          Row row = Row
-                      .withSchema(commonLogSchema)
-                      .addValues(
-                        commonLog.user_id,
-                        commonLog.ip,
-                        commonLog.lat,
-                        commonLog.lng,
-                        commonLog.timestamp,
-                        commonLog.http_request,
-                        commonLog.user_agent,
-                        commonLog.http_response,
-                        commonLog.num_bytes
-                      )
-                      .build();
-          r.output(row);
+          // Row row = Row
+          //             .withSchema(commonLogSchema)
+          //             .addValues(
+          //               commonLog.user_id,
+          //               commonLog.ip,
+          //               commonLog.lat,
+          //               commonLog.lng,
+          //               commonLog.timestamp,
+          //               commonLog.http_request,
+          //               commonLog.user_agent,
+          //               commonLog.http_response,
+          //               commonLog.num_bytes
+          //             )
+          //             .build();
+          r.output(commonLog);
         }
-      })).setCoder(RowCoder.of(commonLogSchema))
-      .apply("WriteToBQ", BigQueryIO.<Row>write()
+      }))
+      .apply("WriteToBQ", BigQueryIO.<CommonLog>write()
                               .to(output)
                               .useBeamSchema()
                               .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
