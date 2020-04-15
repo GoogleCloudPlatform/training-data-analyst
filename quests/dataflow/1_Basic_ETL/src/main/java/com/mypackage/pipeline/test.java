@@ -126,20 +126,7 @@ public class test {
     String http_request;
     String user_agent;
     int http_response;
-    @javax.annotation.Nullable int num_bytes;
-
-    CommonLog(String user_id, String ip, float lat, float lng, String timestamp,
-              String http_request, String user_agent, int http_response, int num_bytes) {
-        this.user_id = user_id;
-        this.ip = ip;
-        this.lat = lat;
-        this.lng = lng;
-        this.timestamp = timestamp;
-        this.http_request = http_request;
-        this.user_agent = user_agent;
-        this.http_response = http_response;
-        this.num_bytes = num_bytes;
-    }
+    @javax.annotation.Nullable String num_bytes;
   }
 
   /**
@@ -156,22 +143,6 @@ public class test {
     // Create the pipeline
     Pipeline pipeline = Pipeline.create(options);
     options.setJobName("sample-pipeline-" + System.currentTimeMillis());
-
-    
-    
-    // Define the schema for CommonLog
-    Schema commonLogSchema = Schema.builder()
-    .addStringField("user_id")
-    .addStringField("ip")
-    .addFloatField("lat")
-    .addFloatField("lng")
-    .addDateTimeField("timestamp")
-    .addStringField("http_request")
-    .addStringField("user_agent")
-    .addInt32Field("http_response")
-    .addInt32Field("num_bytes")
-    .build();
-
 
      String input = "gs://dhodun1/events.json";
      String output = "dhodun1:logs.logs";
@@ -190,20 +161,6 @@ public class test {
         public void processElement(@Element String json, OutputReceiver<CommonLog> r) {
           Gson gson = new Gson();
           CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-          // Row row = Row
-          //             .withSchema(commonLogSchema)
-          //             .addValues(
-          //               commonLog.user_id,
-          //               commonLog.ip,
-          //               commonLog.lat,
-          //               commonLog.lng,
-          //               commonLog.timestamp,
-          //               commonLog.http_request,
-          //               commonLog.user_agent,
-          //               commonLog.http_response,
-          //               commonLog.num_bytes
-          //             )
-          //             .build();
           r.output(commonLog);
         }
       }))
