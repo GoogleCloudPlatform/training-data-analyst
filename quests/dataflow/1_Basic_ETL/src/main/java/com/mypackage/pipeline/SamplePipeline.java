@@ -16,36 +16,26 @@
 
 package com.mypackage.pipeline;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.api.services.bigquery.model.TableFieldSchema;
+import com.google.api.services.bigquery.model.TableSchema;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
+
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.runners.dataflow.DataflowRunner;
-import org.apache.beam.sdk.schemas.Schema;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.schemas.JavaFieldSchema;
+import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.DoFn.OutputReceiver;
-import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
-import org.apache.beam.sdk.values.Row;
-
-import java.time.Instant;
-import java.util.List;
-
-// import javax.xml.validation.Schema;
-
-import java.util.ArrayList;
-
-import com.google.api.services.bigquery.model.TableFieldSchema;
-import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link SamplePipeline} is a sample pipeline which can be used as a base for creating a real
@@ -112,6 +102,7 @@ public class SamplePipeline {
   /**
    * A class used for parsing JSON web server events
    */
+  @DefaultSchema(JavaFieldSchema.class)
   public static class CommonLog {
     String user_id;
     String ip;
@@ -121,48 +112,21 @@ public class SamplePipeline {
     String http_request;
     String user_agent;
     int http_response;
-    int num_bytes;
-
-    CommonLog(String user_id, String ip, float lat, float lng, String timestamp,
-              String http_request, String user_agent, int http_response, int num_bytes) {
-        this.user_id = user_id;
-        this.ip = ip;
-        this.lat = lat;
-        this.lng = lng;
-        this.timestamp = timestamp;
-        this.http_request = http_request;
-        this.user_agent = user_agent;
-        this.http_response = http_response;
-        this.num_bytes = num_bytes;
-    }
+    @javax.annotation.Nullable int num_bytes;
   }
-
-  
-
 
   @VisibleForTesting
   /**
-   * A DoFn which accepts a JSON string outputs a instance of TableRow
+   * A DoFn acccepting Json and outputing CommonLog with Beam Schema
    */
-  static class JsonToTableRowFn extends DoFn<String, TableRow> {
+  static class JsonToCommonLog extends DoFn<String, CommonLog> {
 
-      @ProcessElement
-      public void processElement(@Element String json, OutputReceiver<TableRow> r) throws Exception {
-          Gson gson = new Gson();
-          CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-          TableRow row = new TableRow();
-
-          row.set("user_id", commonLog.user_id);
-          row.set("ip", commonLog.ip);
-          row.set("lat", commonLog.lat);
-          row.set("lng", commonLog.lng);
-          row.set("timestamp", Instant.parse(commonLog.timestamp).toString());
-          row.set("http_request", commonLog.http_request);
-          row.set("http_response", commonLog.http_response);
-          row.set("num_bytes", commonLog.num_bytes);
-          row.set("user_agent", commonLog.user_agent);
-          r.output(row);
-      }
+    @ProcessElement
+    public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
+      Gson gson = new Gson();
+      CommonLog commonLog = gson.fromJson(json, CommonLog.class);
+      r.output(commonLog);
+    }
   }
 
   /**
@@ -179,13 +143,14 @@ public class SamplePipeline {
     // Create the pipeline
     Pipeline pipeline = Pipeline.create(options);
     options.setJobName("sample-pipeline-" + System.currentTimeMillis());
+  
 
-     // Build the table schema for the output table.
+    // Build the table schema for the output table.
     List<TableFieldSchema> fields = new ArrayList<>();
     fields.add(new TableFieldSchema().setName("ip").setType("STRING"));
     fields.add(new TableFieldSchema().setName("user_id").setType("STRING"));
     fields.add(new TableFieldSchema().setName("lat").setType("FLOAT"));
-    fields.add(new TableFieldSchema().setName("lng").setType("FLOAT"));
+    fields.add(new TableFieldSchema().setName("long").setType("FLOAT"));
     fields.add(new TableFieldSchema().setName("timestamp").setType("TIMESTAMP"));
     fields.add(new TableFieldSchema().setName("http_request").setType("STRING"));
     fields.add(new TableFieldSchema().setName("http_response").setType("INTEGER"));
@@ -193,21 +158,8 @@ public class SamplePipeline {
     fields.add(new TableFieldSchema().setName("user_agent").setType("STRING"));
     TableSchema schema = new TableSchema().setFields(fields);
 
-    // Define the schema for CommonLog
-    Schema commonLogSchema = Schema.builder()
-    .addStringField("user_id")
-    .addStringField("ip")
-    .addFloatField("lat")
-    .addFloatField("lng")
-    .addDateTimeField("timestamp")
-    .addStringField("http_request")
-    .addStringField("user_agent")
-    .addInt32Field("http_response")
-    .addInt32Field("num_bytes")
-    .build();
-
-     String input = "gs://dhodun1/events.json";
-     String output = "dhodun1:logs.logs";
+    String input = "../events.json";
+    String output = "dhodun1:logs.logs";
 
     /*
      * Steps:
@@ -217,43 +169,16 @@ public class SamplePipeline {
      */
 
     pipeline
-      .apply("ReadFromGCS", TextIO.read().from(input))
-      .apply("FormatToRow", ParDo.of(new DoFn<String, Row>() {
-        @ProcessElement
-        public void processElement(@Element String json, OutputReceiver<Row> r) {
-          Gson gson = new Gson();
-          CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-          Row row = Row
-                      .withSchema(commonLogSchema)
-                      .addValues(
-                        commonLog.user_id,
-                        commonLog.ip,
-                        commonLog.lat,
-                        commonLog.lng,
-                        commonLog.timestamp,
-                        commonLog.http_request,
-                        commonLog.user_agent,
-                        commonLog.http_response,
-                        commonLog.num_bytes
-                      )
-                      .build();
-          r.output(row);
-        }
-      }))
-      .apply("WriteToBQ", BigQueryIO.<Row>write()
-                              .to(output)
-                              .useBeamSchema()
-                              .withSchema(schema)
-                              .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
-                              .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED))
+        .apply("ReadFromGCS", TextIO.read().from(input))
+        .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
+        .apply("WriteToBQ", BigQueryIO.<CommonLog>write()
+                        .to(output)
+                        // .useBeamSchema()
+                        .withSchema(schema)
+                        .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
+                        .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+      )
       ;
-        // .apply("ReadFromGCS", TextIO.read().from(input))
-        // .apply("ToBQRow", ParDo.of(new JsonToTableRowFn()))
-        // .apply("WriteToBQ", BigQueryIO.writeTableRows()
-        //         .to(output)
-        //         .withSchema(schema)
-        //         .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
-        //         .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
     LOG.info("Building pipeline...");
 
     return pipeline.run();
