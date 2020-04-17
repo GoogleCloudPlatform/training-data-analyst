@@ -62,37 +62,6 @@ public class SamplePipeline {
     run(options);
   }
 
-  @VisibleForTesting
-  /**
-   * A class used for parsing JSON web server events
-   */
-  @DefaultSchema(JavaFieldSchema.class)
-  public static class CommonLog {
-    String user_id;
-    String ip;
-    float lat;
-    float lng;
-    String timestamp;
-    String http_request;
-    @javax.annotation.Nullable String user_agent;
-    int http_response;
-    int num_bytes;
-  }
-
-  @VisibleForTesting
-  /**
-   * A DoFn acccepting Json and outputing CommonLog with Beam Schema
-   */
-  static class JsonToCommonLog extends DoFn<String, CommonLog> {
-
-    @ProcessElement
-    public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
-      Gson gson = new Gson();
-      CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-      r.output(commonLog);
-    }
-  }
-
   /**
    * Runs the pipeline to completion with the specified options. This method does
    * not wait until the pipeline is finished before returning. Invoke
@@ -108,19 +77,10 @@ public class SamplePipeline {
     Pipeline pipeline = Pipeline.create(options);
     options.setJobName("sample-pipeline-" + System.currentTimeMillis());
 
-    String input = "gs://YOUR_PROJECT/events.json";
-    String output = "YOUR_PROJECT:logs.logs";
-
     /*
      * Steps: 1) Read something 2) Transform something 3) Write something
      */
 
-    pipeline.apply("ReadFromGCS", TextIO.read().from(input))
-        .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
-        .apply("WriteToBQ",
-            BigQueryIO.<CommonLog>write().to(output).useBeamSchema()
-                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
-                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
     LOG.info("Building pipeline...");
 
     return pipeline.run();
