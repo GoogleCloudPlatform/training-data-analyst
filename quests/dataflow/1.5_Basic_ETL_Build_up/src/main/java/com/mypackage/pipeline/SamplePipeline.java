@@ -32,41 +32,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * The {@link SamplePipeline} is a sample pipeline which can be used as a base
- * for creating a real Dataflow pipeline.
- *
- * <p>
- * <b>Pipeline Requirements</b>
- *
- * <ul>
- * <li>Requirement #1
- * <li>Requirement #2
- * </ul>
- *
- * <p>
- * <b>Example Usage</b>
- *
- * <pre>
- * # Set the pipeline vars
- * PROJECT_ID=PROJECT_ID
- * PIPELINE_FOLDER=gs://${PROJECT_ID}/dataflow/pipelines/sample-pipeline
- *
- * # Set the runner
- * RUNNER=DataflowRunner
- *
- * # Build the template
- * mvn compile exec:java \
- * -Dexec.mainClass=com.mypackage.pipeline.SamplePipeline \
- * -Dexec.cleanupDaemonThreads=false \
- * -Dexec.args=" \
- * --project=${PROJECT_ID} \
- * --stagingLocation=${PIPELINE_FOLDER}/staging \
- * --tempLocation=${PIPELINE_FOLDER}/temp \
- * --runner=${RUNNER} \
- * ADDITIONAL PARAMETERS HERE"
- * </pre>
- */
+
 public class SamplePipeline {
 
   /*
@@ -142,7 +108,7 @@ public class SamplePipeline {
     Pipeline pipeline = Pipeline.create(options);
     options.setJobName("sample-pipeline-" + System.currentTimeMillis());
 
-    String input = "../events.json";
+    String input = "gs://dhodun1/events.json";
     String output = "dhodun1:logs.logs";
 
     /*

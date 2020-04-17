@@ -18,38 +18,21 @@ package com.mypackage.pipeline;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.coders.RowCoder;
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.runners.dataflow.DataflowRunner;
+import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.schemas.JavaFieldSchema;
-import org.apache.beam.sdk.schemas.Schema;
 import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.DoFn.OutputReceiver;
-import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
-import org.apache.beam.sdk.values.PBegin;
-import org.apache.beam.sdk.values.Row;
-import org.apache.beam.sdk.transforms.Create;
-
-import java.time.Instant;
-import java.util.List;
-
-// import javax.xml.validation.Schema;
-
-import java.util.ArrayList;
-
-import com.google.api.services.bigquery.model.TableFieldSchema;
-import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link SamplePipeline} is a sample pipeline which can be used as a base for creating a real
@@ -122,11 +105,11 @@ public class test {
     String ip;
     float lat;
     float lng;
-    String timestamp;
+    DateTime timestamp;
     String http_request;
     String user_agent;
     int http_response;
-    @javax.annotation.Nullable String num_bytes;
+    @javax.annotation.Nullable int num_bytes;
   }
 
   /**
@@ -144,8 +127,8 @@ public class test {
     Pipeline pipeline = Pipeline.create(options);
     options.setJobName("sample-pipeline-" + System.currentTimeMillis());
 
-     String input = "gs://dhodun1/events.json";
-     String output = "dhodun1:logs.logs";
+    String input = "../events.json";
+    String output = "dhodun1:logs.logs";
 
     /*
      * Steps:
@@ -155,20 +138,20 @@ public class test {
      */
 
     pipeline
-      .apply("ReadFromGCS", TextIO.read().from(input))
-      .apply("FormatToRow", ParDo.of(new DoFn<String, CommonLog>() {
-        @ProcessElement
-        public void processElement(@Element String json, OutputReceiver<CommonLog> r) {
-          Gson gson = new Gson();
-          CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-          r.output(commonLog);
-        }
-      }))
-      .apply("WriteToBQ", BigQueryIO.<CommonLog>write()
-                              .to(output)
-                              .useBeamSchema()
-                              .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
-                              .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED))
+        .apply("ReadFromGCS", TextIO.read().from(input))
+        .apply("FormatToRow", ParDo.of(new DoFn<String, CommonLog>() {
+          @ProcessElement
+          public void processElement(@Element String json, OutputReceiver<CommonLog> r) {
+            Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'").create();
+            CommonLog commonLog = gson.fromJson(json, CommonLog.class);
+            r.output(commonLog);
+          }
+        }))
+        .apply("WriteToBQ", BigQueryIO.<CommonLog>write()
+                        .to(output)
+                        .useBeamSchema()
+                        .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
+                        .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED))
       ;
     LOG.info("Building pipeline...");
 
