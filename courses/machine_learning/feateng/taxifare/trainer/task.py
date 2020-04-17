@@ -20,7 +20,7 @@ import argparse
 import json
 import os
 
-import model
+from . import model
 
 import tensorflow as tf
 
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         json.loads(
             os.environ.get('TF_CONFIG', '{}')
         ).get('task', {}).get('trial', '')
-    ) 
+    )
 
     # Run the training job:
     try:

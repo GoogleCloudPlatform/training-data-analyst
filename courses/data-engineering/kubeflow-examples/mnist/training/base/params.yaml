@@ -1,0 +1,9 @@
+varReference:
+- path: metadata/name
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Chief/template/spec/containers/env/value
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Worker/template/spec/containers/env/value
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Ps/template/spec/containers/env/value
+  kind: TFJob

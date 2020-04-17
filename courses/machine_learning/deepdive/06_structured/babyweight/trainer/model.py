@@ -110,6 +110,7 @@ def my_rmse(labels, predictions):
 
 # Create estimator to train and evaluate
 def train_and_evaluate(output_dir):
+    tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
     wide, deep = get_wide_deep()
     EVAL_INTERVAL = 300 # seconds
 

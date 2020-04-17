@@ -85,6 +85,7 @@ def serving_input_fn():
 
 # Create an estimator that we are going to train and evaluate
 def train_and_evaluate(args):
+    tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
     estimator = tf.estimator.DNNRegressor(
         model_dir = args['output_dir'],
         feature_columns = feature_cols,

@@ -1,0 +1,30 @@
+trainingInput:
+  scaleTier: BASIC
+  hyperparameters:
+    maxTrials: 40
+    maxParallelTrials: 5
+    enableTrialEarlyStopping: False
+    goal: MAXIMIZE    
+    hyperparameterMetricTag: reward
+    params:
+    - parameterName: n_games_per_update
+      type: INTEGER
+      minValue: 2
+      maxValue: 20
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: discount_rate
+      type: DOUBLE
+      minValue: 0.8
+      maxValue: 0.99
+      scaleType: UNIT_LOG_SCALE
+    - parameterName: learning_rate
+      type: DOUBLE
+      minValue: 0.001
+      maxValue: 0.1
+      scaleType: UNIT_LOG_SCALE
+    - parameterName: n_hidden
+      type: DISCRETE
+      discreteValues:
+      - 4
+      - 16
+      - 32

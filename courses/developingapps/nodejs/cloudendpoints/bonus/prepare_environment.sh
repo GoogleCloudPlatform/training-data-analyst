@@ -44,7 +44,7 @@ gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CR
 echo "Enabling Cloud Functions API"
 gcloud beta services enable cloudfunctions.googleapis.com
 echo "Creating Cloud Function"
-gcloud beta functions deploy process-feedback --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+gcloud beta functions deploy process-feedback --runtime nodejs8 --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 
 echo "Creating Cloud Endpoint"
 sed -i "s/GCLOUD_PROJECT/$GCLOUD_PROJECT/g" ./endpoint/quiz-api.json

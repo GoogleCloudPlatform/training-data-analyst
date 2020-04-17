@@ -209,15 +209,18 @@ def build_model(args):
         # Compute evaluation metrics of total accuracy and the accuracy of the top k classes
         accuracy = tf.metrics.accuracy(labels = labels, predictions = predicted_classes, name = 'acc_op')
         top_k_accuracy = tf.metrics.mean(values = tf.nn.in_top_k(predictions = logits, targets = labels, k = params['top_k']))
+        map_at_k = tf.metrics.average_precision_at_k(labels = labels, predictions = predicted_classes, k = params['top_k'])
 
         # Put eval metrics into a dictionary
         eval_metrics = {
             'accuracy': accuracy,
-            'top_k_accuracy' : top_k_accuracy}
+            'top_k_accuracy': top_k_accuracy,
+            'map_at_k': map_at_k}
 
         # Create scalar summaries to see in TensorBoard
         tf.summary.scalar(name = 'accuracy', tensor = accuracy[1])
         tf.summary.scalar(name = 'top_k_accuracy', tensor = top_k_accuracy[1])
+        tf.summary.scalar(name = 'map_at_k', tensor = map_at_k[1])
 
         # If the mode is evaluation
         if mode == tf.estimator.ModeKeys.EVAL:

@@ -21,7 +21,7 @@ import math
 '''
 
 This is a dataflow pipeline that demonstrates Python use of side inputs. The pipeline finds Java packages
-on Github that are (a) popular and (b) need help. Popularity is use of the package in a lot of other 
+on Github that are (a) popular and (b) need help. Popularity is use of the package in a lot of other
 projects, and is determined by counting the number of times the package appears in import statements.
 Needing help is determined by counting the number of times the package contains the words FIXME or TODO
 in its source.
@@ -61,26 +61,22 @@ def getPackages(line, keyword):
       packageName = line[start:end].strip()
       return splitPackageName(packageName)
    return []
-   
+
 def packageUse(record, keyword):
-   if record is not None: 
+   if record is not None:
      lines=record.split('\n')
-     for line in lines: 
+     for line in lines:
        if line.startswith(keyword):
          packages = getPackages(line, keyword)
          for p in packages:
            yield (p, 1)
 
-def by_value(kv1, kv2):
-   key1, value1 = kv1
-   key2, value2 = kv2
-   return value1 < value2
-
 def is_popular(pcoll):
  return (pcoll
     | 'PackageUse' >> beam.FlatMap(lambda rowdict: packageUse(rowdict['content'], 'import'))
     | 'TotalUse' >> beam.CombinePerKey(sum)
-    | 'Top_NNN' >> beam.transforms.combiners.Top.Of(TOPN, by_value) )
+    | 'Top_NNN' >> beam.transforms.combiners.Top.Of(TOPN, key=lambda kv: kv[1]) )
+
 
 
 def packageHelp(record, keyword):
@@ -93,7 +89,7 @@ def packageHelp(record, keyword):
          package_name=line
        if 'FIXME' in line or 'TODO' in line:
          count+=1
-     packages = (getPackages(package_name, keyword) ) 
+     packages = (getPackages(package_name, keyword) )
      for p in packages:
          yield (p,count)
 
@@ -120,7 +116,7 @@ def compositeScore(popular, help):
            yield (element[0], composite)
 
 
-# ### main 
+# ### main
 
 # Define pipeline runner (lazy execution)
 def run():
@@ -132,7 +128,7 @@ def run():
   group = parser.add_mutually_exclusive_group(required=True)
   group.add_argument('--DirectRunner',action='store_true')
   group.add_argument('--DataFlowRunner',action='store_true')
-      
+
   opts = parser.parse_args()
 
   if opts.DirectRunner:
@@ -146,7 +142,7 @@ def run():
   #    Limit records if running local, or full data if running on the cloud
   limit_records=''
   if runner == 'DirectRunner':
-     limit_records='LIMIT 3000' 
+     limit_records='LIMIT 3000'
   get_java_query='SELECT content FROM [fh-bigquery:github_extracts.contents_java_2016] {0}'.format(limit_records)
 
   argv = [
@@ -155,26 +151,28 @@ def run():
     '--save_main_session',
     '--staging_location=gs://{0}/staging/'.format(bucket),
     '--temp_location=gs://{0}/staging/'.format(bucket),
-    '--runner={0}'.format(runner)
+    '--runner={0}'.format(runner),
+    '--region=us-central1',
+    '--max_num_workers=5'
     ]
 
   p = beam.Pipeline(argv=argv)
-   
+
 
   # Read the table rows into a PCollection (a Python Dictionary)
   bigqcollection = p | 'ReadFromBQ' >> beam.io.Read(beam.io.BigQuerySource(project=project,query=get_java_query))
- 
+
   popular_packages = is_popular(bigqcollection) # main input
-  
+
   help_packages = needs_help(bigqcollection) # side input
-   
+
   # Use side inputs to view the help_packages as a dictionary
   results = popular_packages | 'Scores' >> beam.FlatMap(lambda element, the_dict: compositeScore(element,the_dict), beam.pvalue.AsDict(help_packages))
 
   # Write out the composite scores and packages to an unsharded csv file
   output_results = 'gs://{0}/javahelp/Results'.format(bucket)
   results | 'WriteToStorage' >> beam.io.WriteToText(output_results,file_name_suffix='.csv',shard_name_template='')
-    
+
   # Run the pipeline (all operations are deferred until run() is called).
 
 
@@ -187,4 +185,3 @@ def run():
 
 if __name__ == '__main__':
   run()
-

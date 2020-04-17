@@ -1,0 +1,87 @@
+[
+  {
+    "name": "lo_order_key",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "lo_linenumber",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_part_key",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "lo_cust_key",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "lo_orderdate",
+    "type": "DATE",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_revenue",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_supp_key",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "lo_quantity",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_extendedprice",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_discount",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_supplycost",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_ordpriority",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_ordtotalprice",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_shippriority",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_tax",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_shipmode",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "lo_recieptfile",
+    "type":"STRING",
+    "mode": "NULLABLE"
+  }
+]

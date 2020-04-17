@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/bash -e
 
-for build_file in $(ls */build.sh); do
-  echo $build_file
-  cd $(dirname $build_file)
-  bash ./build.sh
+for container in $(ls -d */ | sed 's%/%%g'); do
+  cd $container
+  echo "Building Docker container in $container"
+  bash ../build_container.sh
   cd ..
 done

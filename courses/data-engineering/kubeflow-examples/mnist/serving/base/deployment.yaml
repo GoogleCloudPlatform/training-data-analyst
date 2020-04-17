@@ -1,0 +1,54 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: mnist
+  name: $(svcName)
+  namespace: kubeflow
+spec:
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        app: mnist
+        version: v1
+    spec:
+      serviceAccount: default-editor
+      containers:
+      - args:
+        - --port=9000
+        - --rest_api_port=8500
+        - --model_name=mnist
+        - --model_base_path=$(modelBasePath)
+        - --monitoring_config_file=/var/config/monitoring_config.txt
+        command:
+        - /usr/bin/tensorflow_model_server
+        env:
+        - name: modelBasePath
+          value: $(modelBasePath)        
+        image: tensorflow/serving:1.11.1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          tcpSocket:
+            port: 9000
+        name: mnist
+        ports:
+        - containerPort: 9000
+        - containerPort: 8500
+        resources:
+          limits:
+            cpu: "4"
+            memory: 4Gi
+          requests:
+            cpu: "1"
+            memory: 1Gi
+        volumeMounts:
+        - mountPath: /var/config/
+          name: config-volume
+      volumes:
+      - configMap:
+          name: mnist-deploy-config
+        name: config-volume

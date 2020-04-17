@@ -1,0 +1,16 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: restricted-psp
+spec:
+  privileged: false  # Don't allow privileged pods!
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  runAsUser:
+    rule: MustRunAsNonRoot
+  fsGroup:
+    rule: RunAsAny
+  volumes:
+  - '*' 

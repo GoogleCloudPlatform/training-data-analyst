@@ -251,6 +251,7 @@ def sequence_regressor(features, labels, mode, params):
 
 
 def train_and_evaluate(output_dir, hparams):
+    tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
     get_train = read_dataset(hparams['train_data_path'],
                              tf.estimator.ModeKeys.TRAIN,
                              hparams['train_batch_size'])

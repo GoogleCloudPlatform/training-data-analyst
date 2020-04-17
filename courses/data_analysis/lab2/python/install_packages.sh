@@ -1,6 +1,6 @@
 #!/bin/bash
 
-apt-get install python-pip
-pip install google-cloud-dataflow oauth2client==3.0.0 
-pip install --force six==1.10  # downgrade as 1.11 breaks apitools
-pip install -U pip
+apt-get install python3-pip
+pip3 install apache-beam[gcp]
+pip3 install oauth2client==3.0.0
+pip3 install -U pip

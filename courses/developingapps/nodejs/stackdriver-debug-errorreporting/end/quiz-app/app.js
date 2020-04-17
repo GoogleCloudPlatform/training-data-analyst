@@ -20,7 +20,7 @@ const path = require('path');
 const express = require('express');
 const config = require('./config');
 
-const errorReporting = ErrorReporting();
+const errorReporting = new ErrorReporting();
 const app = express();
 
 // Static files
