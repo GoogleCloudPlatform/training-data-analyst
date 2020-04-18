@@ -7,7 +7,7 @@
 # Then, change the repo-owner to be your GitHub id
 
 REPO_NAME=training-data-analyst
-REPO_OWNER=GoogleCloudPlatform
+REPO_OWNER=gbohra
 
 #for trigger_name in trigger-000 trigger-001 trigger-002 trigger-003; do
 #  gcloud beta builds triggers delete --quiet $trigger_name
