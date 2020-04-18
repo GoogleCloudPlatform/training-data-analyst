@@ -42,7 +42,7 @@ def preprocess(in_test_mode, PROJECT, BUCKET, start_year):
   job_name = 'preprocess-babyweight-features' + '-' + datetime.datetime.now().strftime('%y%m%d-%H%M%S')
 
   if in_test_mode:
-    print('Launching local job ... hang on')
+    print('Launching local job ... hang on - GB wait for few sec')
     OUTPUT_DIR = './preproc'
     shutil.rmtree(OUTPUT_DIR, ignore_errors=True)
     os.makedirs(OUTPUT_DIR)
@@ -109,7 +109,7 @@ def preprocess(in_test_mode, PROJECT, BUCKET, start_year):
   # the next step of pipeline will look for this file
   with open("/output.txt", "w") as output_file:
     output_file.write(BUCKET)
-    print("Done!")
+    print("Done by gb!")
 
 
 if __name__ == '__main__':
