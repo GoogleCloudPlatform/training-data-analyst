@@ -16,6 +16,8 @@
 
 package com.mypackage.pipeline;
 
+import javax.annotation.Nullable;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 
@@ -23,15 +25,19 @@ import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.schemas.JavaFieldSchema;
 import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
+import org.apache.beam.sdk.schemas.transforms.Filter;
+import org.apache.beam.sdk.schemas.transforms.RenameFields;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SerializableFunction;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class SamplePipeline {
 
@@ -45,6 +51,20 @@ public class SamplePipeline {
    * executor at the command-line.
    */
   public interface Options extends DataflowPipelineOptions {
+    @Description("Path to events.json")
+    String getInputPath();
+
+    void setInputPath(String inputPath);
+
+    @Description("Path to coldline storage bucket")
+    String getOutputPath();
+
+    void setOutputPath(String outputPath);
+
+    @Description("BigQuery table name")
+    String getTableName();
+
+    void setTableName(String tableName);
   }
 
   /**
@@ -57,8 +77,8 @@ public class SamplePipeline {
    * @param args The command-line args passed by the executor.
    */
   public static void main(String[] args) {
-    Options options = PipelineOptionsFactory.fromArgs(args).as(Options.class);
-
+    PipelineOptionsFactory.register(Options.class);
+    Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
     run(options);
   }
 
@@ -67,16 +87,16 @@ public class SamplePipeline {
    * A class used for parsing JSON web server events
    */
   @DefaultSchema(JavaFieldSchema.class)
-  public static class CommonLog {
+  public class CommonLog {
     String user_id;
     String ip;
     float lat;
     float lng;
     String timestamp;
     String http_request;
-    String user_agent;
+    @Nullable String user_agent;
     int http_response;
-    int num_bytes;
+    public int num_bytes;
   }
 
   @VisibleForTesting
@@ -108,19 +128,32 @@ public class SamplePipeline {
     Pipeline pipeline = Pipeline.create(options);
     options.setJobName("sample-pipeline-" + System.currentTimeMillis());
 
-    String input = "gs://YOUR_PROJECT/events.json";
-    String output = "YOUR_PROJECT:logs.logs";
+    String input = "gs://dhodun1/events.json";
+    String output = "dhodun1:logs.logs";
 
     /*
-     * Steps: 1) Read something 2) Transform something 3) Write something
+     * Steps: 1) Read something2) Transform something 3) Write something
      */
+    
+    PCollection<String> lines = pipeline
+        .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()));
 
-    pipeline.apply("ReadFromGCS", TextIO.read().from(input))
-        .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
-        .apply("WriteToBQ",
-            BigQueryIO.<CommonLog>write().to(output).useBeamSchema()
-                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
-                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+    // Write to Google Cloud Storage
+    lines
+      .apply("WriteRawToGCS", TextIO.write().to(options.getOutputPath()));
+
+    // Convert elemnts, filter individual elements, and write to BigQuery
+    lines
+      .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
+      // TODO: make sure to import the right filter
+      .apply(Filter.whereFieldName("num_bytes", num_bytes -> num_bytes > 40));
+
+
+        // .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
+        // .apply("WriteToBQ",
+        //     BigQueryIO.<CommonLog>write().to(output).useBeamSchema()
+        //         .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
+        //         .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
     LOG.info("Building pipeline...");
 
     return pipeline.run();
