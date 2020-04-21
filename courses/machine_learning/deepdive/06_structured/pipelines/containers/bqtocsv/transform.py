@@ -89,6 +89,7 @@ def preprocess(in_test_mode, PROJECT, BUCKET, start_year):
       AND plurality > 0
       AND gestation_weeks > 0
       AND month > 0
+      LIMIT 1000
     """.format(start_year)
 
     if in_test_mode:
