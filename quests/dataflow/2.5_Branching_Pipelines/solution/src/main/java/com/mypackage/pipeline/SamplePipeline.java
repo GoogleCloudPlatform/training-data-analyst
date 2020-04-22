@@ -87,7 +87,7 @@ public class SamplePipeline {
    * A class used for parsing JSON web server events
    */
   @DefaultSchema(JavaFieldSchema.class)
-  public class CommonLog {
+  public static class CommonLog {
     String user_id;
     String ip;
     float lat;
@@ -96,7 +96,7 @@ public class SamplePipeline {
     String http_request;
     @Nullable String user_agent;
     int http_response;
-    public int num_bytes;
+    int num_bytes;
   }
 
   @VisibleForTesting
@@ -146,7 +146,7 @@ public class SamplePipeline {
     lines
       .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
       // TODO: make sure to import the right filter
-      .apply(Filter.whereFieldName("num_bytes", num_bytes -> num_bytes > 40));
+      .apply("FilterFn", Filter.create().whereFieldName("num_bytes", num_bytes -> num_bytes.equals(40)));
 
 
         // .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
