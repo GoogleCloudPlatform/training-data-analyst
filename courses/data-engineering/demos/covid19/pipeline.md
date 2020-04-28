@@ -49,7 +49,7 @@ bq query <~/demo/covid19/materialize.sql
 ```
 In a nutshell, we create a new directory for each day's imported data, then download it and import it into BigQuery. This is a super lazy script, as it automatically detects the schema and replaces the table each day, but NYT is updating the file in place each day, so that's all we need.
 
-To run the script once a day, we can just use good old Unix ```cron```. Every GCP project gets one free f1-micro class instance. To get your pipeline running in your own project, first create a BigQuery dataset named "covid19" in your GCP project, then start a new f1-micro instance and SSH into it. From there, run the following commands:
+To run the script once a day, we can just use good old Unix ```cron```. Every GCP project gets one free f1-micro class instance. To get your pipeline running in your own project, start a new f1-micro instance and SSH into it. From there, run the following commands:
 
 ```shell script
 sudo apt-get update
@@ -61,6 +61,8 @@ gcloud init
 ```
 Now you're ready to install the pipeline code and run the first import.
 ```shell script
+# Make BigQuery dataset
+bq --location=US mk covid19
 # Download the repo
 git clone https://github.com/GoogleCloudPlatform/training-data-analyst
 # Create a link to the COVID-19 demo code
@@ -69,6 +71,7 @@ cd demo
 ln -s ~/training-data-analyst/courses/data-engineering/demos/covid19 covid19
 # Try it out
 cd covid19
+### EDIT THIS FILE to put in your GCS bucket name (required)
 bash import.sh
 ```
 You should see output showing successful download of two files and several BigQuery jobs completed. At the prompt, type
