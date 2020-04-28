@@ -62,11 +62,11 @@ gcloud init
 Now you're ready to install the pipeline code and run the first import.
 ```shell script
 # Download the repo
-git clone https://github.com/GoogleCloudPlatform/training-data-analyst```
+git clone https://github.com/GoogleCloudPlatform/training-data-analyst
 # Create a link to the COVID-19 demo code
 mkdir demo
 cd demo
-ln -s training-data-analyst/courses/data-engineering/demos/covid19 covid19
+ln -s ~/training-data-analyst/courses/data-engineering/demos/covid19 covid19
 # Try it out
 cd covid19
 bash import.sh

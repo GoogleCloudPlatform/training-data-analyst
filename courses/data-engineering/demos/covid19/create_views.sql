@@ -4,7 +4,7 @@ SELECT state, county, date,
 first_value(cases) OVER recent as tot_cases,
 cases - lead(cases) OVER recent as new_cases, cases,
 deaths - lead(deaths) OVER recent as new_deaths, deaths
-FROM `cpb100-151023.covid19.us_counties`
+FROM covid19.us_counties
 WINDOW recent AS (PARTITION BY state, county ORDER BY date DESC)
 ORDER BY state, county, date DESC
 ;
@@ -16,7 +16,7 @@ cases - lead(cases) OVER latest as new_cases,
 deaths - lead(deaths) OVER latest as new_deaths,
 cases as tot_cases,
 deaths as tot_deaths
-FROM `cpb100-151023.covid19.us_counties`
+FROM covid19.us_counties
 WINDOW latest AS (PARTITION BY state, county ORDER BY date DESC )
 )
 SELECT state, county, date, new_cases, tot_cases, new_deaths, tot_deaths
