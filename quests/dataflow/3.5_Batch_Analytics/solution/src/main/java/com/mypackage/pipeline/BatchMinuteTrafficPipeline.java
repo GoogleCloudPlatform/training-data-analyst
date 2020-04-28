@@ -29,6 +29,7 @@ import org.apache.beam.sdk.schemas.Schema;
 import org.apache.beam.sdk.schemas.transforms.Convert;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
@@ -155,17 +156,23 @@ public class BatchMinuteTrafficPipeline {
                 .apply("CountTraffic", Combine.globally(Count.<Row>combineFn()).withoutDefaults())
                 .apply("ConvertToRow", ParDo.of(new DoFn<Long, Row>() {
                     @ProcessElement
-                    public void processElement(@Element Long views, OutputReceiver<Row> r) {
-                        Schema schema = Schema
+                    public void processElement(@Element Long views, OutputReceiver<Row> r, IntervalWindow window) {
+                        Instant i = Instant.ofEpochMilli(window.end().getMillis());
+                        final Schema schema = Schema
                                 .builder()
                                 .addInt64Field("pageviews")
+                                .addDateTimeField("second")
                                 .build();
                         Row row = Row.withSchema(schema)
-                                .addValues(views)
+                                .addValues(views, i)
                                 .build();
                         r.output(row);
                     }
                 }));
+        // if add this transform, it also complains about lack of schema
+        // .apply(Convert.toRows());
+
+
         // Demonstrate that schema is available to the next PTransform
         // These output does success
         rows.apply("RowToString", ParDo.of(new DoFn<Row, String>() {
