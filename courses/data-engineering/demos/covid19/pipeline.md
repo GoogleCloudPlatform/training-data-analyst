@@ -156,9 +156,9 @@ Many BigQuery public datasets include GIS info so we can now easily join that da
 ```sql
 WITH covid as 
 (
-SELECT state, MAX(cases) max_cases 
-FROM covid19.us_counties v
-GROUP BY state
+    SELECT state, MAX(cases) max_cases 
+    FROM covid19.us_counties v
+    GROUP BY state
 )
 SELECT s.state_name, covid.max_cases, s.state_geom 
 FROM `bigquery-public-data.utility_us.us_states_area` s
@@ -172,10 +172,10 @@ Furthermore, we can map individual counties. Let's look at the data for Illinois
 ```sql
 WITH covid as 
 (
-SELECT MAX(cases) max_cases, LPAD(cast(fips as string), 5, "0") as fips 
-FROM covid19.us_counties v
-WHERE state = 'Illinois'
-GROUP BY fips
+    SELECT MAX(cases) max_cases, LPAD(cast(fips as string), 5, "0") as fips 
+    FROM covid19.us_counties v
+    WHERE state = 'Illinois'
+    GROUP BY fips
 )
 SELECT county_name, s.state_name, covid.max_cases, county_geom
 FROM `bigquery-public-data.utility_us.us_county_area` c
@@ -184,6 +184,7 @@ JOIN bigquery-public-data.utility_us.us_states_area s ON (c.state_fips_code = s.
 ORDER BY max_cases DESC
 ``` 
 It turns out that the `utility_us.us_county_area` table doesn't have the full FIPS code, which consists of a state ID concatenated with the county ID, so we use the CONCAT SQL operator to create the composite ID. We also have to do a little string manipulation to get the FIPS code from our COVID data into the same format. Otherwise, it's a straightforward join. If we plot the data for Illinois in BigQuery GeoViz, it looks like this:
+
 ![Map of Illinois showing cases by county](img/illinois_cases.png)
 
 ## Optimizing DataStudio
@@ -204,7 +205,7 @@ select * from covid19.most_recent_totals
         order by state, county
 ```
 
-We simply select all data from the view and order it according to the most common use case. We are effectively duplicating data; however, in this case, that is a small price to pay for the much improved performance of BI Engine. The current dataset is really small (<10 MB at this writing) so we could duplicate it 50x before getting charged even a penny per month for storage. You can confirm that BI Engine is in use when you see the lightning symbol above a chart or table. Also you'll notice the performance improvement: the COVID dashboard I've shared responds in miliseconds with BI Engine vs. seconds without. BI Engine has a decent free tier (1GB RAM at time of writing) so using it in this dashboard is a no-brainer. If our dataset were larger, we would use [partitioning](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/data-engineering/demos/partition.md) and [clustering](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/data-engineering/demos/clustering.md) along with BI Engine to realize performance improvements; however, this one is too small to benefit.
+We simply select all data from the view and order it according to the most common use case. We are effectively duplicating data; however, in this case, that is a small price to pay for the much improved performance of BI Engine. The current dataset is really small (<10 MB at this writing) so we could duplicate it 50x before getting charged even a penny per month for storage. You can confirm that BI Engine is in use when you see the lightning symbol above a chart or table. Also you'll notice the performance improvement: the COVID dashboard shared above responds in miliseconds with BI Engine vs. seconds without. BI Engine has a decent free tier (1GB RAM at time of writing) so using it in this dashboard is a no-brainer. If our dataset were larger, we would use [partitioning](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/data-engineering/demos/partition.md) and [clustering](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/data-engineering/demos/clustering.md) along with BI Engine to realize performance improvements; however, this one is too small to benefit.
 
 BigQuery [materialized views](https://cloud.google.com/bigquery/docs/materialized-views-intro) are now in beta. Hopefully in the future, BI Engine will work with them and the workaround described here will longer be necessary.
  
