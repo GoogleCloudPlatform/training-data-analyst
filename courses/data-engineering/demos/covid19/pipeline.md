@@ -156,9 +156,9 @@ Many BigQuery public datasets include GIS info so we can now easily join that da
 ```sql
 WITH covid as 
 (
-SELECT state, MAX(cases) max_cases 
-FROM covid19.us_counties v
-GROUP BY state
+    SELECT state, MAX(cases) max_cases 
+    FROM covid19.us_counties v
+    GROUP BY state
 )
 SELECT s.state_name, covid.max_cases, s.state_geom 
 FROM `bigquery-public-data.utility_us.us_states_area` s
@@ -172,10 +172,10 @@ Furthermore, we can map individual counties. Let's look at the data for Illinois
 ```sql
 WITH covid as 
 (
-SELECT MAX(cases) max_cases, LPAD(cast(fips as string), 5, "0") as fips 
-FROM covid19.us_counties v
-WHERE state = 'Illinois'
-GROUP BY fips
+    SELECT MAX(cases) max_cases, LPAD(cast(fips as string), 5, "0") as fips 
+    FROM covid19.us_counties v
+    WHERE state = 'Illinois'
+    GROUP BY fips
 )
 SELECT county_name, s.state_name, covid.max_cases, county_geom
 FROM `bigquery-public-data.utility_us.us_county_area` c
