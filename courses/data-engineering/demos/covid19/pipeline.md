@@ -130,7 +130,7 @@ The output looks like this:
 | Colorado | Douglas | 2020-04-21 |         3 |   384 |          0 |     17 |
 
 ```
-Note that the first value of new_deaths is negative. This happens when a county revises the cumulative total downward for some reason. Now we have a view that computes the daily new cases for us, which is going to be very useful for our dashboard.
+Note that the first value of `new_deaths is negative`. How is that possible? Presumably in some cases a county may revise the cumulative total downward at a later date, which would cause this anomaly in the data. Now we have a view that computes the daily new cases for us, which is going to be very useful for our dashboard.
 
 ### Store only the most recent totals
 In addition to showing the daily new cases, we'll want to show the total number of cases on a dashboard. In order to support this, let's extract just the latest data for each county. We could filter by today's or yesterday's date, but that won't always work because some counties report later than others. Therefore, we just want the latest data for each county. Once again, a BigQuery navigation function comes to the rescue. We'll define the same window again but now select only the first row in the window, which represents the most recent data regardless of the specific date. The resulting view looks like this:
@@ -168,7 +168,9 @@ ORDER BY max_cases DESC
 Note that the column `state_geom` contains the lat/long boundaries for each state. Rather than print the results here, we can map them using [BigQuery GeoViz](https://bigquerygeoviz.appspot.com). Using the same technique as described in the [BigQuery GeoViz demo](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/data-engineering/demos/bigquery_geoviz.md), we can shade each state according to the number of cases. Here is the resulting map as of Apr 26, 2020.
 ![Map of US states shaded by number of cases](img/cases_by_state.png)
 
-Furthermore, we can map individual counties. Let's look at the data for Illinois, which has the next highest number of cases to New York. Here's the query which joins the to `utility_us` dataset to obtain the bundaries for each county:
+Note the data skew in this illustration. New York has so many more cases than other states that even states with tens of thousands of cases, like Colorado, appear to have none. This map simply uses a linear interpolation of the number of cases to set opacity on a scale of 0 to 1, but the human eye isn't very good at distinguising among very light shades of color. For purposes of understanding the relative number of cases in each state, a bar graph would be a better visualization. See the dashboard below for an example.
+   
+Next, we can map individual counties. Let's look at the data for Illinois, which has the next highest number of cases to New York. Here's the query which joins the to `utility_us` dataset to obtain the bundaries for each county:
 ```sql
 WITH covid as 
 (
@@ -184,10 +186,13 @@ JOIN bigquery-public-data.utility_us.us_states_area s ON (c.state_fips_code = s.
 ORDER BY max_cases DESC
 ``` 
 It turns out that the `utility_us.us_county_area` table doesn't have the full FIPS code, which consists of a state ID concatenated with the county ID, so we use the CONCAT SQL operator to create the composite ID. We also have to do a little string manipulation to get the FIPS code from our COVID data into the same format. Otherwise, it's a straightforward join. If we plot the data for Illinois in BigQuery GeoViz, it looks like this:
+
 ![Map of Illinois showing cases by county](img/illinois_cases.png)
 
+Once again, the number of cases is heavily skewed towards the Chicago area so a bar graph may be more suitable for comparing the number of cases in each county, although a map is obviously desirable for showing geographic relationships. Unfortunately, BigQuery GeoViz does not offer logarithmic interpolation, but one alternative to help overcome the perception issue with shading would be to take the natural logarithm of the number of cases using the SQL LN() function.   
+
 ## Optimizing DataStudio
-Here is a [COVID-19 US dashboard](https://datastudio.google.com/reporting/1ae55c55-9993-4a17-83a1-17cd1bbdf180) built with DataStudio. It's mostly self-explanatory how to build reports using DataStudio. It's easy to add a date range control, which can be used to filter the data from all other graphs by specifying which field in the data source represents the "Date range dimension." Likewise, you can easily make table controls clickable simply by checking the "Apply filter" box in its data properties. That's how the clickable county table on the right side of the dashboard works.
+DataStudio is a graphical, Web-based report-building tool that works seamlessly with BigQuery as well as many other data sources. Here is a [COVID-19 US dashboard](https://datastudio.google.com/reporting/1ae55c55-9993-4a17-83a1-17cd1bbdf180) built with DataStudio. It's mostly self-explanatory how to build reports using DataStudio. It's easy to add a date range control, which can be used to filter the data from all other graphs by specifying which field in the data source represents the "Date range dimension." Likewise, you can easily make table controls clickable simply by checking the "Apply filter" box in its data properties. That's how the clickable county table on the right side of the dashboard works.
 
 ![COVID-19 US dashboard](img/covid19_dashboard.png)
 
@@ -208,6 +213,18 @@ We simply select all data from the view and order it according to the most commo
 
 BigQuery [materialized views](https://cloud.google.com/bigquery/docs/materialized-views-intro) are now in beta. Hopefully in the future, BI Engine will work with them and the workaround described here will longer be necessary.
  
+## Cost
+It's worth noting that for small datasets like this one (~10 MB), all the tools used in this post easily fall within the [GCP Free Tier](https://cloud.google.com/free).
+* f1-micro class ComputeEngine instance: FREE
+* [BigQuery Sandbox](https://cloud.google.com/bigquery/docs/sandbox) storage (<10 GB): FREE
+* BigQuery query processing (<1 TB/mo): FREE
+* Google Cloud Storage bucket (<5 GB): FREE
+* BigQuery GeoViz: FREE
+* DataStudio: FREE
+* BI Engine (<1 GB): FREE
+
+Even if the dataset were 1 GB in size, the storage and query costs would be trivial, only pennies per month. You have nothing to lose by getting your own data pipeline and DataStudio dashboard up and running.
+
 ## Summary
 BigQuery's supporting free tools like GeoViz and DataStudio make it very productive for data exploration. BigQuery is productive even for small datasets and grows exponentially more powerful with larger datasets up to hundreds of petabytes. In a future post, we'll look at another powerful exploration tool now in beta, BigQuery Connected Sheets.
 
