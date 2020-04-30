@@ -3,7 +3,8 @@
 by [_David Chandler_](https://turbomanage.wordpress.com)<br>
 Technical Instructor, Google Cloud Platform
 
-The New York Times is publishing COVID-19 data on a county-by-county basis daily. In this post, we create a pipeline to import the data into BigQuery daily and then create a map and DataStudio dashboard to visualize the data.
+The New York Times is publishing COVID-19 data on a county-by-county basis daily. In this post, we create a pipeline to import the data into BigQuery daily and then create a map and DataStudio dashboard to visualize the data. Near the time of this writing, the NYT data became available as a BigQuery public dataset [bigquery-public-data.covid19_nyt.us_counties](https://console.cloud.google.com/bigquery?p=bigquery-public-data&d=covid19_nyt&t=us_counties&page=table). However, that dataset does not include the supplementary views and tables discussed in these instructions.
+
 ## Explore the Data
 First let's look at the sample data from the [NYT repo on Github](https://raw.githubusercontent.com/nytimes/covid-19-data/master/):
 
