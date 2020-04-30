@@ -1,0 +1,16 @@
+WITH games AS (
+ SELECT
+   day
+   , SUM(IF(win_seed > lose_seed, 1, 0)) AS num_upsets
+   , COUNT(*) AS num_games
+ FROM `bigquery-public-data`.ncaa_basketball.mbb_historical_tournament_games
+ GROUP BY day
+)
+
+SELECT
+  day
+  , num_games
+  , num_upsets / num_games AS upset_ratio
+FROM games
+ORDER BY upset_ratio DESC
+

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import apache_beam as beam
 import argparse
@@ -80,7 +80,7 @@ def preprocess(in_test_mode, PROJECT, BUCKET, start_year):
         mother_age,
         plurality,
         gestation_weeks,
-        ABS(FARM_FINGERPRINT(CONCAT(CAST(YEAR AS STRING), CAST(month AS STRING)))) AS hashmonth
+        FARM_FINGERPRINT(CONCAT(CAST(YEAR AS STRING), CAST(month AS STRING))) AS hashmonth
       FROM
         publicdata.samples.natality
       WHERE year >= {}
@@ -96,9 +96,9 @@ def preprocess(in_test_mode, PROJECT, BUCKET, start_year):
 
     for step in ['train', 'eval']:
       if step == 'train':
-        selquery = 'SELECT * FROM ({}) WHERE MOD(ABS(hashmonth),4) < 3'.format(query)
+        selquery = 'SELECT * FROM ({}) WHERE ABS(MOD(hashmonth, 4)) < 3'.format(query)
       else:
-        selquery = 'SELECT * FROM ({}) WHERE MOD(ABS(hashmonth),4) = 3'.format(query)
+        selquery = 'SELECT * FROM ({}) WHERE ABS(MOD(hashmonth, 4)) = 3'.format(query)
 
       (p
        | '{}_read'.format(step) >> beam.io.Read(beam.io.BigQuerySource(query=selquery, use_standard_sql=True))

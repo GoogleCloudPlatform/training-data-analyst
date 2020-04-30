@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: readiness-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: readiness-test
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

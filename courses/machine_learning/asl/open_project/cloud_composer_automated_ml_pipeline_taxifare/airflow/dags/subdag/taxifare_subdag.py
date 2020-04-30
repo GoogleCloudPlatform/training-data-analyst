@@ -60,14 +60,14 @@ MODEL_VERSION = "v1"
 MODEL_LOCATION = BUCKET + "/taxifare/saved_model/"
 
 default_args = {
-    "owner": "airflow",
-    "depends_on_past": False,
-    "start_date": airflow.utils.dates.days_ago(2),
-    "email": ["airflow@example.com"],
-    "email_on_failure": True,
-    "email_on_retry": False,
-    "retries": 5,
-    "retry_delay": datetime.timedelta(minutes=5)
+  "owner": "airflow",
+  "depends_on_past": False,
+  "start_date": airflow.utils.dates.days_ago(2),
+  "email": ["airflow@example.com"],
+  "email_on_failure": True,
+  "email_on_retry": False,
+  "retries": 5,
+  "retry_delay": datetime.timedelta(minutes=5)
 }
 
 # Default schedule interval using cronjob syntax - can be customized here
@@ -81,9 +81,9 @@ schedule_interval = "00 21 * * *"
 DAG_NAME = "taxifare_subdag"
 
 dag = DAG(
-    DAG_NAME, 
-    default_args=default_args,
-    schedule_interval=None
+  DAG_NAME, 
+  default_args=default_args,
+  schedule_interval=None
 )
 
 dag.doc_md = __doc__
@@ -97,46 +97,46 @@ dag.doc_md = __doc__
 
 for model in SOURCE_DATASET_TABLE_NAMES:
   subdag_preprocess_op = SubDagOperator(
-      task_id="subdag_preprocess_{}_task".format(model.replace(".","_")),
-      subdag=preprocess.preprocess_tasks(
-          model,
-          DAG_NAME,
-          "subdag_preprocess_{}_task".format(model.replace(".","_")),
-          default_args,
-          PROJECT_ID,
-          BUCKET,
-          DATA_DIR),
-      dag=dag
+    task_id="subdag_preprocess_{}_task".format(model.replace(".","_")),
+    subdag=preprocess.preprocess_tasks(
+        model,
+        DAG_NAME,
+        "subdag_preprocess_{}_task".format(model.replace(".","_")),
+        default_args,
+        PROJECT_ID,
+        BUCKET,
+        DATA_DIR),
+    dag=dag
   )
   
   subdag_training_op = SubDagOperator(
-      task_id="subdag_training_{}_task".format(model.replace(".","_")),
-      subdag=training.training_tasks(
-          model,
-          DAG_NAME,
-          "subdag_training_{}_task".format(model.replace(".","_")),
-          default_args,
-          PROJECT_ID,
-          BUCKET,
-          DATA_DIR,
-          MODEL_NAME,
-          MODEL_VERSION,
-          MODEL_LOCATION),
-      dag=dag
+    task_id="subdag_training_{}_task".format(model.replace(".","_")),
+    subdag=training.training_tasks(
+        model,
+        DAG_NAME,
+        "subdag_training_{}_task".format(model.replace(".","_")),
+        default_args,
+        PROJECT_ID,
+        BUCKET,
+        DATA_DIR,
+        MODEL_NAME,
+        MODEL_VERSION,
+        MODEL_LOCATION),
+    dag=dag
   )
   
   subdag_deploy_op = SubDagOperator(
-      task_id="subdag_deploy_{}_task".format(model.replace(".","_")),
-      subdag=deploy.deploy_tasks(
-          model,
-          DAG_NAME,
-          "subdag_deploy_{}_task".format(model.replace(".","_")),
-          default_args,
-          PROJECT_ID,
-          MODEL_NAME,
-          MODEL_VERSION,
-          MODEL_LOCATION),
-      dag=dag
+    task_id="subdag_deploy_{}_task".format(model.replace(".","_")),
+    subdag=deploy.deploy_tasks(
+        model,
+        DAG_NAME,
+        "subdag_deploy_{}_task".format(model.replace(".","_")),
+        default_args,
+        PROJECT_ID,
+        MODEL_NAME,
+        MODEL_VERSION,
+        MODEL_LOCATION),
+    dag=dag
   )
 
   # Build dependency graph, set_upstream dependencies for all tasks
