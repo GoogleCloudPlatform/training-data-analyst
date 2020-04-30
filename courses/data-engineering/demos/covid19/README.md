@@ -5,7 +5,7 @@ Technical Instructor, Google Cloud Platform
 
 The New York Times is publishing COVID-19 data on a county-by-county basis daily. In this post, we create a pipeline to import the data into BigQuery daily and then create a map and DataStudio dashboard to visualize the data.
 ## Explore the Data
-First let's look at the sample data from the [NYT repo on Github](https://raw.githubusercontent.com/nytimes/covid-19-data/master/):
+First let's look at the sample data from the [NYT repo on Github](https://github.com/nytimes/covid-19-data):
 
 ```csv
 us-counties.csv:
@@ -21,7 +21,7 @@ date,county,state,fips,cases,deaths
 2020-01-25,Snohomish,Washington,53061,1,0
 ...
 ```
-The counties CSV contains a row for each county and each day containing the CUMULATIVE number of cases and deaths in the county. The `fips` column contains the [FIPS county code](https://en.wikipedia.org/wiki/FIPS_county_code) (Federal Information Processing Standard), which allows us to join the COVID data easily with other BigQuery public datasets containing population, land area, and geographic boundaries for each county in the US.
+The [counties CSV](https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv) contains a row for each county and each day containing the CUMULATIVE number of cases and deaths in the county. The `fips` column contains the [FIPS county code](https://en.wikipedia.org/wiki/FIPS_county_code) (Federal Information Processing Standard), which allows us to join the COVID data easily with other BigQuery public datasets containing population, land area, and geographic boundaries for each county in the US.
 
  # Create a Pipeline
  In order to process this data most effectively in a variety of tools, let's import it into BigQuery. We'll do this using a simple shell script to download the data using `wget` and import it using `bq load`. Here's the script:
