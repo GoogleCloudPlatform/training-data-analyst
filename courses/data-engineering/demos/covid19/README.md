@@ -190,7 +190,7 @@ ORDER BY max_cases DESC
 ``` 
 It turns out that the `utility_us.us_county_area` table doesn't have the full FIPS code, which consists of a state ID concatenated with the county ID, so we use the CONCAT SQL operator to create the composite ID. We also have to do a little string manipulation to get the FIPS code from our COVID data into the same format. Otherwise, it's a straightforward join. If we plot the data for Illinois in BigQuery GeoViz, it looks like this:
 
-![Map of Illinois showing cases by county](img/illinois_cases_ln.png)
+![Map of Illinois showing cases by county](img/illinois_cases.png)
 
 One subtle difference is in the above map from the previous map of the whole US is that we've taken the natural logarithm function LN() of the number of cases. BigQuery GeoViz does not offer opacity shading with logarithmic interpolation, but we can put the logarithm in the query and then use linear interpolation in GeoViz to achieve the same effect. It's also possible to manually set up a logarithmic perception color map in GeoViz by adding buckets to the Domain fields as shown in [this blog post](https://medium.com/google-cloud/analyzing-covid-19-with-bigquery-13701a3a785).  
 
