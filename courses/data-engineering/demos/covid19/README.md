@@ -1,4 +1,4 @@
-# Creating a Pipeline and Dashboard for COVID-19 Data
+# Create a Pipeline, Map, and Dashboard for COVID-19 US Data
 
 by [_David Chandler_](https://turbomanage.wordpress.com)<br>
 Technical Instructor, Google Cloud Platform
