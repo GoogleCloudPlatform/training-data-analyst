@@ -50,7 +50,9 @@ bq query <~/demo/covid19/materialize.sql
 ```
 In a nutshell, we create a new directory for each day's imported data, then download it and import it into BigQuery. This is a super lazy script, as it automatically detects the schema and replaces the table each day, but NYT is updating the file in place each day, so that's all we need.
 
-To run the script once a day, we can just use good old Unix ```cron```. Every GCP project gets one free f1-micro class instance. To get your pipeline running in your own project, start a new f1-micro instance and SSH into it. From there, run the following commands:
+To run the script once a day, we can just use good old Unix ```cron```. Every GCP project gets one free f1-micro class instance. _Note: Cloud Scheduler + Cloud Functions is a superior alternative to cron as some have suggested that an f1-micro class instance may be eventually deleted without login activity. See [this post](https://towardsdatascience.com/scheduling-data-ingest-using-cloud-functions-and-cloud-scheduler-b24c8b0ec0a5) for an example._ For our present purposes, a single import script is easiest. 
+
+To get your pipeline running in your own project, start a new f1-micro instance and SSH into it. From there, run the following commands:
 
 ```shell script
 sudo apt-get update
@@ -180,7 +182,7 @@ WITH covid as
     WHERE state = 'Illinois'
     GROUP BY fips
 )
-SELECT county_name, s.state_name, covid.max_cases, county_geom
+SELECT county_name, s.state_name, LN(covid.max_cases) as max_cases, county_geom
 FROM `bigquery-public-data.utility_us.us_county_area` c
 JOIN covid ON (CAST(covid.fips as string) = concat(state_fips_code, county_fips_code) )
 JOIN bigquery-public-data.utility_us.us_states_area s ON (c.state_fips_code = s.state_fips_code)
@@ -188,9 +190,9 @@ ORDER BY max_cases DESC
 ``` 
 It turns out that the `utility_us.us_county_area` table doesn't have the full FIPS code, which consists of a state ID concatenated with the county ID, so we use the CONCAT SQL operator to create the composite ID. We also have to do a little string manipulation to get the FIPS code from our COVID data into the same format. Otherwise, it's a straightforward join. If we plot the data for Illinois in BigQuery GeoViz, it looks like this:
 
-![Map of Illinois showing cases by county](img/illinois_cases.png)
+![Map of Illinois showing cases by county](img/illinois_cases_ln.png)
 
-Once again, the number of cases is heavily skewed towards the Chicago area so a bar graph may be more suitable for comparing the number of cases in each county, although a map is obviously desirable for showing geographic relationships. Unfortunately, BigQuery GeoViz does not offer logarithmic interpolation, but one alternative to help overcome the perception issue with shading would be to take the natural logarithm of the number of cases using the SQL LN() function.   
+One subtle difference is in the above map from the previous map of the whole US is that we've taken the natural logarithm function LN() of the number of cases. BigQuery GeoViz does not offer opacity shading with logarithmic interpolation, but we can put the logarithm in the query and then use linear interpolation in GeoViz to achieve the same effect. It's also possible to manually set up a logarithmic perception color map in GeoViz by adding buckets to the Domain fields as shown in [this blog post](https://medium.com/google-cloud/analyzing-covid-19-with-bigquery-13701a3a785).  
 
 ## Optimizing DataStudio
 DataStudio is a graphical, Web-based report-building tool that works seamlessly with BigQuery as well as many other data sources. Here is a [COVID-19 US dashboard](https://datastudio.google.com/reporting/1ae55c55-9993-4a17-83a1-17cd1bbdf180) built with DataStudio. It's mostly self-explanatory how to build reports using DataStudio. It's easy to add a date range control, which can be used to filter the data from all other graphs by specifying which field in the data source represents the "Date range dimension." Likewise, you can easily make table controls clickable simply by checking the "Apply filter" box in its data properties. That's how the clickable county table on the right side of the dashboard works.
@@ -228,4 +230,6 @@ Even if the dataset were 1 GB in size, the storage and query costs would be triv
 
 ## Summary
 BigQuery's supporting free tools like GeoViz and DataStudio make it very productive for data exploration. BigQuery is productive even for small datasets and grows exponentially more powerful with larger datasets up to hundreds of petabytes. In a future post, we'll look at another powerful exploration tool now in beta, BigQuery Connected Sheets.
+
+_Special thanks to Michael Abel and Lak Lakshmanan for their review and suggestions!_
 
