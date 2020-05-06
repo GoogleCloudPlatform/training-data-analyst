@@ -1,5 +1,5 @@
+#TODO 1
 import datetime
-import hypertune
 import logging
 import os
 import shutil
@@ -160,6 +160,7 @@ def rmse(y_true, y_pred):
 
 
 def build_dnn_model(nbuckets, nnsize, lr):
+    # TODO 
     # input layer is all float except for pickup_datetime which is a string
     STRING_COLS = ['pickup_datetime']
     NUMERIC_COLS = (
@@ -183,7 +184,7 @@ def build_dnn_model(nbuckets, nnsize, lr):
     for layer, nodes in enumerate(nnsize):
         x = layers.Dense(nodes, activation='relu', name='h{}'.format(layer))(x)
     output = layers.Dense(1, name='fare')(x)
-    
+
     model = models.Model(inputs, output)
     lr_optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
     model.compile(optimizer=lr_optimizer, loss='mse', metrics=[rmse, 'mse'])
@@ -192,41 +193,41 @@ def build_dnn_model(nbuckets, nnsize, lr):
 
 
 def train_and_evaluate(hparams):
-    batch_size = hparams['batch_size']
-    eval_data_path = hparams['eval_data_path']
+    batch_size = hparams['batch_size'] # TODO
+    nbuckets = hparams['nbuckets']  # TODO
+    lr = hparams['lr']  # TODO
     nnsize = hparams['nnsize']
-    nbuckets = hparams['nbuckets']
-    lr = hparams['lr']
+    eval_data_path = hparams['eval_data_path']
     num_evals = hparams['num_evals']
     num_examples_to_train_on = hparams['num_examples_to_train_on']
     output_dir = hparams['output_dir']
     train_data_path = hparams['train_data_path']
 
-    if tf.io.gfile.exists(output_dir):
-        tf.io.gfile.rmtree(output_dir)
-
     timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    savedmodel_dir = os.path.join(output_dir, 'savedmodel')
+    savedmodel_dir = os.path.join(output_dir, 'export/savedmodel')
     model_export_path = os.path.join(savedmodel_dir, timestamp)
     checkpoint_path = os.path.join(output_dir, 'checkpoints')
     tensorboard_path = os.path.join(output_dir, 'tensorboard')
 
-    dnn_model = build_dnn_model(nbuckets, nnsize, lr)
-    logging.info(dnn_model.summary())
+    if tf.io.gfile.exists(output_dir):
+        tf.io.gfile.rmtree(output_dir)
+
+    model = build_dnn_model(nbuckets, nnsize, lr)
+    logging.info(model.summary())
 
     trainds = create_train_dataset(train_data_path, batch_size)
     evalds = create_eval_dataset(eval_data_path, batch_size)
 
     steps_per_epoch = num_examples_to_train_on // (batch_size * num_evals)
 
-    checkpoint_cb = callbacks.ModelCheckpoint(checkpoint_path,
-                                              save_weights_only=True,
-                                              verbose=1)
+    checkpoint_cb = callbacks.ModelCheckpoint(
+        checkpoint_path,
+        save_weights_only=True,
+        verbose=1
+    )
+    tensorboard_cb = callbacks.TensorBoard(tensorboard_path)
 
-    tensorboard_cb = callbacks.TensorBoard(tensorboard_path,
-                                           histogram_freq=1)
-
-    history = dnn_model.fit(
+    history = model.fit(
         trainds,
         validation_data=evalds,
         epochs=num_evals,
@@ -236,17 +237,5 @@ def train_and_evaluate(hparams):
     )
 
     # Exporting the model with default serving function.
-    tf.saved_model.save(dnn_model, model_export_path)
-
-    # TODO 1
-    hp_metric = history.history['val_rmse'][num_evals-1]
-
-    # TODO 1
-    hpt = hypertune.HyperTune()
-    hpt.report_hyperparameter_tuning_metric(
-        hyperparameter_metric_tag='rmse',
-        metric_value=hp_metric,
-        global_step=num_evals
-    )
-
+    tf.saved_model.save(model, model_export_path)
     return history
