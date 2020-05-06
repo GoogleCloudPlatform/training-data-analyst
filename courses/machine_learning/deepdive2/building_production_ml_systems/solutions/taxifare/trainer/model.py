@@ -1,4 +1,3 @@
-#TODO 1
 import datetime
 import logging
 import os
@@ -160,8 +159,6 @@ def rmse(y_true, y_pred):
 
 
 def build_dnn_model(nbuckets, nnsize, lr):
-    # TODO 
-    # input layer is all float except for pickup_datetime which is a string
     STRING_COLS = ['pickup_datetime']
     NUMERIC_COLS = (
             set(CSV_COLUMNS) - set([LABEL_COLUMN, 'key']) - set(STRING_COLS)
@@ -188,14 +185,14 @@ def build_dnn_model(nbuckets, nnsize, lr):
     model = models.Model(inputs, output)
     lr_optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
     model.compile(optimizer=lr_optimizer, loss='mse', metrics=[rmse, 'mse'])
-    
+
     return model
 
 
 def train_and_evaluate(hparams):
-    batch_size = hparams['batch_size'] # TODO
-    nbuckets = hparams['nbuckets']  # TODO
-    lr = hparams['lr']  # TODO
+    batch_size = hparams['batch_size']
+    nbuckets = hparams['nbuckets']
+    lr = hparams['lr']
     nnsize = hparams['nnsize']
     eval_data_path = hparams['eval_data_path']
     num_evals = hparams['num_evals']

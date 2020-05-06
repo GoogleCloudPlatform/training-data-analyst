@@ -1,4 +1,3 @@
-# TODO 1
 import argparse
 
 from trainer import model
