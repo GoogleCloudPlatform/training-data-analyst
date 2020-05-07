@@ -16,19 +16,8 @@
 
 package com.mypackage.pipeline;
 
-import com.google.gson.Gson;
-import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.schemas.JavaFieldSchema;
-import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// TODO: Add imports
+
 
 
 public class MyPipeline {
@@ -60,35 +49,9 @@ public class MyPipeline {
         run(options);
     }
 
-    /**
-     * A class used for parsing JSON web server events
-     * Annotated with @DefaultSchema to the allow the use of Beam Schema and <Row> object
-     */
-    @DefaultSchema(JavaFieldSchema.class)
-    public static class CommonLog {
-        String user_id;
-        String ip;
-        float lat;
-        float lng;
-        String timestamp;
-        String http_request;
-        String user_agent;
-        int http_response;
-        int num_bytes;
-    }
+    // TODO: Add CommonLog Class with @DefaultSchema
 
-    /**
-     * A DoFn acccepting Json and outputing CommonLog with Beam Schema
-     */
-    static class JsonToCommonLog extends DoFn<String, CommonLog> {
-
-        @ProcessElement
-        public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
-            Gson gson = new Gson();
-            CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-            r.output(commonLog);
-        }
-    }
+    // TODO: Add JsonToCommonLog DoFn Here or alternatively, inline in a .apply() method
 
     /**
      * Runs the pipeline to completion with the specified options. This method does
@@ -106,9 +69,7 @@ public class MyPipeline {
         options.setJobName("my-pipeline-" + System.currentTimeMillis());
 
 
-        // Static input and output
-        String input = "gs://<YOUR-PROJECT-ID>/events.json";
-        String output = "<YOUR-PROJECT-ID>:logs.logs";
+        // TODO: Add static input and ouput Strings
 
         /*
          * Steps:
@@ -117,12 +78,9 @@ public class MyPipeline {
          * 3) Write something
          */
 
-        pipeline.apply("ReadFromGCS", TextIO.read().from(input))
-                .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
-                .apply("WriteToBQ",
-                        BigQueryIO.<CommonLog>write().to(output).useBeamSchema()
-                                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
-                                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+        // TODO: Add pipeline.apply() and others steps
+
+
         LOG.info("Building pipeline...");
 
         return pipeline.run();
