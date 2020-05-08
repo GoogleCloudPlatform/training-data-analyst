@@ -5,20 +5,13 @@ import shutil
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.callbacks import (
-    ModelCheckpoint,
-    TensorBoard,
-)
-from tensorflow import feature_column as fc
-from tensorflow.keras.activations import relu
-from tensorflow.keras.layers import (
-    Dense,
-    DenseFeatures,
-    Input,
-    Lambda,
-)
-from tensorflow.keras.models import Model
 
+from tensorflow.keras import activations
+from tensorflow.keras import callbacks
+from tensorflow.keras import layers
+from tensorflow.keras import models
+
+from tensorflow import feature_column as fc
 
 logging.info(tf.version.VERSION)
 
@@ -94,7 +87,7 @@ def dayofweek(ts_in):
 
 @tf.function
 def fare_thresh(x):
-    return 60 * relu(x)
+    return 60 * activations.relu(x)
 
 
 def transform(inputs, NUMERIC_COLS, STRING_COLS, nbuckets):
@@ -109,20 +102,20 @@ def transform(inputs, NUMERIC_COLS, STRING_COLS, nbuckets):
 
     # Scaling longitude from range [-70, -78] to [0, 1]
     for lon_col in ['pickup_longitude', 'dropoff_longitude']:
-        transformed[lon_col] = Lambda(
+        transformed[lon_col] = layers.Lambda(
             lambda x: (x + 78)/8.0,
             name='scale_{}'.format(lon_col)
         )(inputs[lon_col])
 
     # Scaling latitude from range [37, 45] to [0, 1]
     for lat_col in ['pickup_latitude', 'dropoff_latitude']:
-        transformed[lat_col] = Lambda(
+        transformed[lat_col] = layers.Lambda(
             lambda x: (x - 37)/8.0,
             name='scale_{}'.format(lat_col)
         )(inputs[lat_col])
 
     # Adding Euclidean dist (no need to be accurate: NN will calibrate it)
-    transformed['euclidean'] = Lambda(euclidean, name='euclidean')([
+    transformed['euclidean'] = layers.Lambda(euclidean, name='euclidean')([
         inputs['pickup_longitude'],
         inputs['pickup_latitude'],
         inputs['dropoff_longitude'],
@@ -131,7 +124,7 @@ def transform(inputs, NUMERIC_COLS, STRING_COLS, nbuckets):
     feature_columns['euclidean'] = fc.numeric_column('euclidean')
 
     # hour of day from timestamp of form '2010-02-08 09:17:00+00:00'
-    transformed['hourofday'] = Lambda(
+    transformed['hourofday'] = layers.Lambda(
         lambda x: tf.strings.to_number(
             tf.strings.substr(x, 11, 2), out_type=tf.dtypes.int32),
         name='hourofday'
@@ -165,41 +158,43 @@ def rmse(y_true, y_pred):
     return tf.sqrt(tf.reduce_mean(tf.square(y_pred - y_true)))
 
 
-def build_dnn_model(nbuckets, nnsize):
-    # input layer is all float except for pickup_datetime which is a string
+def build_dnn_model(nbuckets, nnsize, lr):
     STRING_COLS = ['pickup_datetime']
     NUMERIC_COLS = (
             set(CSV_COLUMNS) - set([LABEL_COLUMN, 'key']) - set(STRING_COLS)
     )
     inputs = {
-        colname: Input(name=colname, shape=(), dtype='float32')
+        colname: layers.Input(name=colname, shape=(), dtype='float32')
         for colname in NUMERIC_COLS
     }
     inputs.update({
-        colname: Input(name=colname, shape=(), dtype='string')
+        colname: layers.Input(name=colname, shape=(), dtype='string')
         for colname in STRING_COLS
     })
 
     # transforms
     transformed, feature_columns = transform(
         inputs, NUMERIC_COLS, STRING_COLS, nbuckets=nbuckets)
-    dnn_inputs = DenseFeatures(feature_columns.values())(transformed)
+    dnn_inputs = layers.DenseFeatures(feature_columns.values())(transformed)
 
     x = dnn_inputs
-    for layer, neurons in enumerate(nnsize):
-        x = Dense(neurons, activation='relu', name='h{}'.format(layer))(x)
-    output = Dense(1, name='fare')(x)
+    for layer, nodes in enumerate(nnsize):
+        x = layers.Dense(nodes, activation='relu', name='h{}'.format(layer))(x)
+    output = layers.Dense(1, name='fare')(x)
 
-    model = Model(inputs, output)
-    model.compile(optimizer='adam', loss='mse', metrics=[rmse, 'mse'])
+    model = models.Model(inputs, output)
+    lr_optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
+    model.compile(optimizer=lr_optimizer, loss='mse', metrics=[rmse, 'mse'])
+
     return model
 
 
 def train_and_evaluate(hparams):
     batch_size = hparams['batch_size']
-    eval_data_path = hparams['eval_data_path']
-    nnsize = hparams['nnsize']
     nbuckets = hparams['nbuckets']
+    lr = hparams['lr']
+    nnsize = hparams['nnsize']
+    eval_data_path = hparams['eval_data_path']
     num_evals = hparams['num_evals']
     num_examples_to_train_on = hparams['num_examples_to_train_on']
     output_dir = hparams['output_dir']
@@ -214,7 +209,7 @@ def train_and_evaluate(hparams):
     if tf.io.gfile.exists(output_dir):
         tf.io.gfile.rmtree(output_dir)
 
-    model = build_dnn_model(nbuckets, nnsize)
+    model = build_dnn_model(nbuckets, nnsize, lr)
     logging.info(model.summary())
 
     trainds = create_train_dataset(train_data_path, batch_size)
@@ -222,12 +217,12 @@ def train_and_evaluate(hparams):
 
     steps_per_epoch = num_examples_to_train_on // (batch_size * num_evals)
 
-    checkpoint_cb = ModelCheckpoint(
+    checkpoint_cb = callbacks.ModelCheckpoint(
         checkpoint_path,
         save_weights_only=True,
         verbose=1
     )
-    tensorboard_cb = TensorBoard(tensorboard_path)
+    tensorboard_cb = callbacks.TensorBoard(tensorboard_path)
 
     history = model.fit(
         trainds,
@@ -241,4 +236,3 @@ def train_and_evaluate(hparams):
     # Exporting the model with default serving function.
     tf.saved_model.save(model, model_export_path)
     return history
-
