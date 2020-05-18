@@ -4,7 +4,7 @@ This is the first lab in the Advanced Dataflow Qwiklabs Quest. After completing 
 
 ## Pipeline
 
-[SamplePipeline](src/main/java/com/google/cloud/pso/pipeline/SamplePipeline.java) -
+[SamplePipeline](src/main/java/com/mypackage/pipeline/SamplePipeline.java) -
 A sample pipeline which can be used as a base for creating a real Dataflow pipeline.
 
 ## Getting Started
