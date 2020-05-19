@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo apt install wget
+sudo apt-get install wget
 
 # remove older copy of file, if it exists
 rm -f earthquakes.csv
