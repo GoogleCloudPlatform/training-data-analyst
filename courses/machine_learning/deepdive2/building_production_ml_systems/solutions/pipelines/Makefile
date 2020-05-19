@@ -1,6 +1,6 @@
 KUBEFLOW=https://storage.googleapis.com/ml-pipeline/release/0.1.20/kfp.tar.gz
 
-all: components venv pipeline 
+all: components pipeline 
 
 .PHONY: venv
 venv:
