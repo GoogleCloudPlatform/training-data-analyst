@@ -30,13 +30,13 @@ def features_and_labels(row_data):
     return row_data, label  # features, label
 
 
-def load_dataset(pattern, batch_size=1, mode=tf.estimator.ModeKeys.EVAL):
+def load_dataset(pattern, batch_size=1, mode='eval'):
     """Loads dataset using the tf.data API from CSV files.
 
     Args:
         pattern: str, file pattern to glob into list of files.
         batch_size: int, the number of examples per batch.
-        mode: tf.estimator.ModeKeys to determine if training or evaluating.
+        mode: 'eval' | 'train' to determine if training or evaluating.
     Returns:
         `Dataset` object.
     """
@@ -52,7 +52,7 @@ def load_dataset(pattern, batch_size=1, mode=tf.estimator.ModeKeys.EVAL):
     dataset = dataset.map(map_func=features_and_labels)  # features, label
 
     # Shuffle and repeat for training
-    if mode == tf.estimator.ModeKeys.TRAIN:
+    if mode == 'train':
         dataset = dataset.shuffle(buffer_size=1000).repeat()
 
     # Take advantage of multi-threading; 1=AUTOTUNE
