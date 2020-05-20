@@ -8,7 +8,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 BUCKET=$1
-TFVERSION=1.8
+TFVERSION=1.15
 REGION=us-central1
 
 # directory containing trainer package in Docker image
@@ -30,6 +30,7 @@ gcloud ai-platform jobs submit training $JOBNAME \
   --scale-tier=STANDARD_1 \
   --config=hyperparam.yaml \
   --runtime-version=$TFVERSION \
+  --python-version=3.7 \
   --stream-logs \
   -- \
   --bucket=${BUCKET} \
