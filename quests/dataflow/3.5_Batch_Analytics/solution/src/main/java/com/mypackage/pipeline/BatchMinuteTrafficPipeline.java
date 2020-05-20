@@ -22,11 +22,13 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.schemas.Schema;
 import org.apache.beam.sdk.schemas.transforms.Convert;
+import org.apache.beam.sdk.schemas.transforms.Group;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
@@ -106,6 +108,12 @@ public class BatchMinuteTrafficPipeline {
         }
     }
 
+    public static final Schema pageviewsSchema = Schema
+            .builder()
+            .addInt64Field("pageviews")
+            .addDateTimeField("second")
+            .build();
+
     /**
      * The main entry-point for pipeline execution. This method will start the pipeline but will not
      * wait for it's execution to finish. If blocking execution is required, use the {@link
@@ -147,42 +155,49 @@ public class BatchMinuteTrafficPipeline {
         LOG.info("Building pipeline...");
 
         PCollection<Row> rows = pipeline
-                .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
+              .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
+
                 .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
                 .apply(Convert.toRows())
                 .apply("AddEventTimestamps", WithTimestamps.of(
                         (Row row) -> Instant.parse(row.getString("timestamp"))))
                 .apply("WindowByMinute", Window.into(FixedWindows.of(Duration.standardSeconds(60))))
-                .apply("CountTraffic", Combine.globally(Count.<Row>combineFn()).withoutDefaults())
+                .apply("CountPerMinute", Combine.globally(Count.<Row>combineFn()).withoutDefaults())
                 .apply("ConvertToRow", ParDo.of(new DoFn<Long, Row>() {
                     @ProcessElement
                     public void processElement(@Element Long views, OutputReceiver<Row> r, IntervalWindow window) {
                         Instant i = Instant.ofEpochMilli(window.end().getMillis());
-                        final Schema schema = Schema
-                                .builder()
-                                .addInt64Field("pageviews")
-                                .addDateTimeField("second")
-                                .build();
-                        Row row = Row.withSchema(schema)
+                        Row row = Row.withSchema(pageviewsSchema)
                                 .addValues(views, i)
                                 .build();
                         r.output(row);
                     }
                 }));
-        // if add this transform, it also complains about lack of schema
-        // .apply(Convert.toRows());
+
+        // This is the missing line
+        // .setRowSchema(pageviewsSchema);
+
+
+//        rows.apply("Print Schema", ParDo.of(new DoFn<Row, Row>() {
+//            @ProcessElement
+//            public void processElement(@Element Row row, OutputReceiver<Row> r) {
+//                LOG.info(row.getSchema().toString());
+//                r.output(row);
+//            }
+//        }))
+//                rows.apply(Convert.toRows());
 
 
         // Demonstrate that schema is available to the next PTransform
         // These output does success
-        rows.apply("RowToString", ParDo.of(new DoFn<Row, String>() {
-            @ProcessElement
-            public void processElement(@Element Row row, OutputReceiver<String> r) {
-                r.output(row.getValue("pageviews").toString());
-            }
-        }))
-                .apply("WriteTestOutput", TextIO.write().to("./temp/out"));
-        // Fails teh BQ Precondition Check
+//        rows.apply("RowToString", ParDo.of(new DoFn<Row, String>() {
+//            @ProcessElement
+//            public void processElement(@Element Row row, OutputReceiver<String> r) {
+//                r.output(row.getValue("pageviews").toString());
+//            }
+//        }))
+//                .apply("WriteTestOutput", TextIO.write().to("./temp/out"));
+        // Fails the BQ Precondition Check
         // In particular, if (this.getUseBeamSchema()) {
         //                Preconditions.checkArgument(input.hasSchema());
         rows.apply("WriteToBQ",
