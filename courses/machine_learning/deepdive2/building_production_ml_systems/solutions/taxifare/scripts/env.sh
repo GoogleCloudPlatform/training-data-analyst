@@ -2,7 +2,7 @@
 BUCKET=ml-on-gcp-test
 REGION=us-west1
 
-IMAGE_NAME=taxifare-trainer
+IMAGE_NAME=taxifare_training_container
 GCS_PROJECT_PATH=gs://$BUCKET/taxifare
 DATA_PATH=$GCS_PROJECT_PATH/data
 OUTPUT_DIR=$GCS_PROJECT_PATH/model
