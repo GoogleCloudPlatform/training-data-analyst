@@ -99,13 +99,13 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<executions>
 								<execution>
-												<<id>list-gce</id>
-												<<goals>
-												<				<goal>java</goal>
-												<</goals>
-												<<configuration>
-												<				<<mainClass>com.google.training.appdev.console.ConsoleApp</mainClass>
-												<</configuration>
+												<id>list-gce</id>
+												<goals>
+																<goal>java</goal>
+												</goals>
+												<configuration>
+																<mainClass>com.google.training.appdev.console.ConsoleApp</mainClass>
+												</configuration>
 								</execution>
 				</executions>
 			</plugin>
