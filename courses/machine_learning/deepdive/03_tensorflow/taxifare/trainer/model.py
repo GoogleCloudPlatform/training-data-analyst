@@ -22,7 +22,7 @@ import tensorflow as tf
 import numpy as np
 import shutil
 
-tf.logging.set_verbosity(tf.logging.INFO)
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
 
 # List the CSV columns
 CSV_COLUMNS = ['fare_amount', 'pickuplon','pickuplat','dropofflon','dropofflat','passengers', 'key']
@@ -37,17 +37,17 @@ DEFAULTS = [[0.0], [-74.0], [40.0], [-74.0], [40.7], [1.0], ['nokey']]
 def read_dataset(filename, mode, batch_size = 512):
     def _input_fn():
         def decode_csv(value_column):
-            columns = tf.decode_csv(value_column, record_defaults = DEFAULTS)
+            columns = tf.compat.v1.decode_csv(value_column, record_defaults = DEFAULTS)
             features = dict(zip(CSV_COLUMNS, columns))
             label = features.pop(LABEL_COLUMN)
             return features, label
-    
+
         # Create list of files that match pattern
-        file_list = tf.gfile.Glob(filename)
+        file_list = tf.compat.v1.gfile.Glob(filename)
 
         # Create dataset from file list
-        dataset = tf.data.TextLineDataset(file_list).map(decode_csv)
-        
+        dataset = tf.compat.v1.data.TextLineDataset(file_list).map(decode_csv)
+
         if mode == tf.estimator.ModeKeys.TRAIN:
             num_epochs = None # indefinitely
             dataset = dataset.shuffle(buffer_size = 10 * batch_size)
@@ -77,7 +77,7 @@ feature_cols = add_more_features(INPUT_COLUMNS)
 # Create your serving input function so that your trained model will be able to serve predictions
 def serving_input_fn():
     feature_placeholders = {
-        column.name: tf.placeholder(tf.float32, [None]) for column in INPUT_COLUMNS
+        column.name: tf.compat.v1.placeholder(tf.float32, [None]) for column in INPUT_COLUMNS
     }
 
     features = feature_placeholders
@@ -85,7 +85,7 @@ def serving_input_fn():
 
 # Create an estimator that we are going to train and evaluate
 def train_and_evaluate(args):
-    tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
+    tf.compat.v1.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
     estimator = tf.estimator.DNNRegressor(
         model_dir = args['output_dir'],
         feature_columns = feature_cols,
