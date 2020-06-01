@@ -183,9 +183,6 @@
 				<groupId>com.google.cloud.tools</groupId>
 				<artifactId>appengine-maven-plugin</artifactId>
 				<version>2.2.0</version>
-				<configuration>
-					<deploy.version>1</deploy.version>
-				</configuration>
 			</plugin>
 
 
