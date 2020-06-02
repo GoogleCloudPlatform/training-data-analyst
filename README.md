@@ -10,7 +10,7 @@ Labs and demos for Google Cloud Platform courses (http://cloud.google.com/traini
 ## Organization of this repo
 
 ### Try out the code on Google Cloud Platform
-[![Open in Cloud Shell](http://gstatic.com/cloudssh/images/open-btn.png)](https://console.cloud.google.com/cloudshell/open/?git_repo=https://github.com/GoogleCloudPlatform/training-data-analyst.git)
+[![Open in Cloud Shell](http://gstatic.com/cloudssh/images/open-btn.png)](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/GoogleCloudPlatform/training-data-analyst.git)
 
 ## Courses
 Code for the following courses is included in this repo:
