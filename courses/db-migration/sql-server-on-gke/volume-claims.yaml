@@ -1,0 +1,38 @@
+---
+# mssql base volume claim
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mssql-base-volume
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# mssql data volume claim
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mssql-mdf-volume
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# mssql logs volume claim	  
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mssql-ldf-volume
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
