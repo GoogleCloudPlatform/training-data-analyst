@@ -19,7 +19,7 @@ source ./scripts/env.sh
 gcloud config set compute/zone ${C1_ZONE}
 gcloud beta container clusters create ${C1_NAME} \
     --machine-type=n1-standard-4 \
-    --num-nodes=4 \
+    --num-nodes=2 \
     --workload-pool=${WORKLOAD_POOL} \
     --enable-stackdriver-kubernetes \
     --subnetwork=default \
