@@ -14,7 +14,7 @@
 
 from __future__ import print_function
 import tensorflow as tf
-from tensorflow.python.lib.io import file_io as gfile
+#from tensorflow.python.lib.io import file_io as gfile
 import numpy as np
 import math
 import sys
@@ -63,14 +63,12 @@ def rnn_multistation_sampling_temperature_sequencer(filenames, resample_by=1, ba
                     #print("reshuffling {} rows".format(loaded_samples[filecount].shape[1]))
                     samples = loaded_samples[filecount][:,perm]
                     targets = loaded_targets[filecount][:,perm]
-                    #samples = loaded_samples[filecount]
-                    #targets = loaded_targets[filecount]
                 else:
                     print("Loading {} files".format(batchlen), end="")
                     samples = []
                     targets = []
                     for filename in filebatch:
-                        with tf.gfile.Open(filename, mode='rb') as f:
+                        with open(filename, mode='rb') as f:
                             # Load min max temperatures from CSV
                             print(".", end="")
                             temperatures = np.genfromtxt(f, delimiter=",", skip_header=True, usecols=[0,1,2,3],
