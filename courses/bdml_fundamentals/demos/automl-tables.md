@@ -4,7 +4,7 @@ Goal: Set up a demo for creating a custom regression model on structured data to
 **Note:** This is a demo you need to set up in advance if you want to present it. Loading the data into AutoML Tables takes 15-20 minutes and it will take a few hours to train the model. It is recommended having the dataset preloaded and model trained for a live demo. Also be careful with leaving the model deployed! Only have the model deployed when needed to minimize costs.
 
 ## Outline
-* Go to BigQuery and run Taxi fare query to understand our data.
+* Go to BigQuery and run taxi fare query to understand our data.
 * Quickly go through the query and then save the results as a view.
 * Open the AutoML Tables UI.
 * Import the data and talk through various options for data.
