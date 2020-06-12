@@ -42,9 +42,9 @@ public class QuestionService {
 // END TODO
 
 // TODO: Declare a static final String named kind
-//The Datastore key is the equivalent of a primary key in a // relational database.
+//The Datastore key is the equivalent of a primary key in a relational database.
 // There are two main ways of writing a key:
-// 1. Specify the kind, and let Datastore generate a unique //    numeric id
+// 1. Specify the kind, and let Datastore generate a unique numeric id
 // 2. Specify the kind and a unique string id
 
 

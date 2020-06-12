@@ -1,10 +1,12 @@
 #!/bin/bash
 
+sudo apt-get install wget
+
 # remove older copy of file, if it exists
 rm -f earthquakes.csv
 
 # download latest data from USGS
-curl http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.csv -O earthquakes.csv
+wget http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.csv -O earthquakes.csv
 
 # Copyright 2016 Google Inc.
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at

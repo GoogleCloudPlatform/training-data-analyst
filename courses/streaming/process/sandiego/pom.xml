@@ -26,7 +26,7 @@
 
 
   <properties>
-    <beam.version>2.13.0</beam.version>
+    <beam.version>2.20.0</beam.version>
 
     <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
     <maven-exec-plugin.version>1.6.0</maven-exec-plugin.version>

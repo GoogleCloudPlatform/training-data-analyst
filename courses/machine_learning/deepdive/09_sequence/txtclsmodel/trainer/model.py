@@ -20,7 +20,7 @@ from tensorflow.python.keras.layers import GlobalAveragePooling1D
 
 from google.cloud import storage
 
-tf.logging.set_verbosity(tf.logging.INFO)
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
 
 CLASSES = {'github': 0, 'nytimes': 1, 'techcrunch': 2}  # label-to-int mapping
 TOP_K = 20000  # Limit on the number vocabulary size used for tokenization
@@ -79,7 +79,7 @@ Create tf.estimator compatible input function
       tokenizer: tf.python.keras.preprocessing.text.Tokenizer
         used to convert sentences to integers
       batch_size: int, number of records to use for each train batch
-      mode: tf.estimator.ModeKeys.TRAIN or tf.estimator.ModeKeys.EVAL 
+      mode: tf.estimator.ModeKeys.TRAIN or tf.estimator.ModeKeys.EVAL
   # Returns:
       tf.estimator.inputs.numpy_input_fn, produces feature and label
         tensors one batch at a time
@@ -102,7 +102,7 @@ def input_fn(texts, labels, tokenizer, batch_size, mode):
         num_epochs = 1
         shuffle = False
 
-    return tf.estimator.inputs.numpy_input_fn(
+    return tf.compat.v1.estimator.inputs.numpy_input_fn(
         x,
         y=labels,
         batch_size=batch_size,
@@ -128,7 +128,7 @@ Builds a CNN model using keras and converts to tf.estimator.Estimator
         pre-trained embedding is provided
 
     # Returns
-        A tf.estimator.Estimator 
+        A tf.estimator.Estimator
 """
 def keras_estimator(model_dir,
                     config,
@@ -186,13 +186,13 @@ def keras_estimator(model_dir,
 
 
 """
-Defines the features to be passed to the model during inference 
+Defines the features to be passed to the model during inference
   Expects already tokenized and padded representation of sentences
   # Arguments: none
   # Returns: tf.estimator.export.ServingInputReceiver
 """
 def serving_input_fn():
-    feature_placeholder = tf.placeholder(tf.int16, [None, MAX_SEQUENCE_LENGTH])
+    feature_placeholder = tf.compat.v1.placeholder(tf.int16, [None, MAX_SEQUENCE_LENGTH])
     features = feature_placeholder  # pass as-is
     return tf.estimator.export.TensorServingInputReceiver(features, feature_placeholder)
 
@@ -201,7 +201,7 @@ def serving_input_fn():
 Takes embedding for generic voabulary and extracts the embeddings
   matching the current vocabulary
   The pre-trained embedding file is obtained from https://nlp.stanford.edu/projects/glove/
-  # Arguments: 
+  # Arguments:
       word_index: dict, {key =word in vocabulary: value= integer mapped to that word}
       embedding_path: string, location of the pre-trained embedding file on disk
       embedding_dim: int, dimension of the embedding space
@@ -240,14 +240,14 @@ def get_embedding_matrix(word_index, embedding_path, embedding_dim):
 
 """
 Main orchestrator. Responsible for calling all other functions in model.py
-  # Arguments: 
+  # Arguments:
       output_dir: string, file path where training files will be written
       hparams: dict, command line parameters passed from task.py
   # Returns: nothing, kicks off training and evaluation
 """
 def train_and_evaluate(output_dir, hparams):
-    tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
-    
+    tf.compat.v1.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
+
     # Load Data
     ((train_texts, train_labels), (test_texts, test_labels)) = load_hacker_news_data(
         hparams['train_data_path'], hparams['eval_data_path'])
