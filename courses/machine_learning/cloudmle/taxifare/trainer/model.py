@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import numpy as np
 import shutil
 
@@ -37,13 +37,13 @@ def read_dataset(filename, mode, batch_size = 512):
             features = dict(list(zip(CSV_COLUMNS, columns)))
             label = features.pop(LABEL_COLUMN)
             return features, label
-    
+
         # Create list of files that match pattern
         file_list = tf.gfile.Glob(filename)
 
         # Create dataset from file list
         dataset = tf.data.TextLineDataset(file_list).map(decode_csv)
-        
+
         if mode == tf.estimator.ModeKeys.TRAIN:
             num_epochs = None # indefinitely
             dataset = dataset.shuffle(buffer_size = 10 * batch_size)
