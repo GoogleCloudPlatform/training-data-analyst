@@ -154,7 +154,7 @@ public class BatchMinuteTrafficPipeline {
 
         LOG.info("Building pipeline...");
 
-        PCollection<Row> rows = pipeline
+         pipeline
               .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
 
                 .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
@@ -163,19 +163,23 @@ public class BatchMinuteTrafficPipeline {
                         (Row row) -> Instant.parse(row.getString("timestamp"))))
                 .apply("WindowByMinute", Window.into(FixedWindows.of(Duration.standardSeconds(60))))
                 .apply("CountPerMinute", Combine.globally(Count.<Row>combineFn()).withoutDefaults())
-                .apply("ConvertToRow", ParDo.of(new DoFn<Long, Row>() {
-                    @ProcessElement
-                    public void processElement(@Element Long views, OutputReceiver<Row> r, IntervalWindow window) {
-                        Instant i = Instant.ofEpochMilli(window.end().getMillis());
-                        Row row = Row.withSchema(pageviewsSchema)
-                                .addValues(views, i)
-                                .build();
-                        r.output(row);
-                    }
-                }));
+//                .apply("CountPerMinute", Group.<Row>globally().aggregate(Count.combineFn()))
+                .apply(Convert.toRows())
+                ;
+//                .apply("Count", Count.combineFn())
+//                .apply("ConvertToRow", ParDo.of(new DoFn<Long, Row>() {
+//                    @ProcessElement
+//                    public void processElement(@Element Long views, OutputReceiver<Row> r, IntervalWindow window) {
+//                        Instant i = Instant.ofEpochMilli(window.end().getMillis());
+//                        Row row = Row.withSchema(pageviewsSchema)
+//                                .addValues(views, i)
+//                                .build();
+//                        r.output(row);
+//                    }
+//                }))
 
         // This is the missing line
-        // .setRowSchema(pageviewsSchema);
+//         .setRowSchema(pageviewsSchema);
 
 
 //        rows.apply("Print Schema", ParDo.of(new DoFn<Row, Row>() {
@@ -200,10 +204,10 @@ public class BatchMinuteTrafficPipeline {
         // Fails the BQ Precondition Check
         // In particular, if (this.getUseBeamSchema()) {
         //                Preconditions.checkArgument(input.hasSchema());
-        rows.apply("WriteToBQ",
-                BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
-                        .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
-                        .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+//        rows.apply("WriteToBQ",
+//                BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
+//                        .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
+//                        .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
         return pipeline.run();
     }
