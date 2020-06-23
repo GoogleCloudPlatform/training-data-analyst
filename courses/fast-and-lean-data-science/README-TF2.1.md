@@ -41,7 +41,7 @@ Custom training loop, distributed:<br/>
 
 Please use the above-mentioned script [create-tpu-deep-learning-vm.sh](https://raw.githubusercontent.com/GoogleCloudPlatform/training-data-analyst/master/courses/fast-and-lean-data-science/create-tpu-deep-learning-vm.sh)
 to create an AI Platform Notebook VM along with a TPU in one go.
-Both your VM and the TPU must have a nightly build of Tensorflow. Detailed steps:
+The script ensures that both your VM and the TPU have the same version of Tensorflow. Detailed steps:
 
  * Go to [Google cloud console](https://console.cloud.google.com/), create a new project with billing enabled.
  * Open cloud shell (>_ icon top right) so that you can type shell commands.
@@ -58,15 +58,14 @@ Both your VM and the TPU must have a nightly build of Tensorflow. Detailed steps
  and click OPEN JUPYTERLAB in front of the VM you just created.
  * Once in Jupyter, open a terminal and clone this repository:<br/>
  `git clone https://github.com/GoogleCloudPlatform/training-data-analyst.git`
- * Open the demo notebook using the file browser in Jupyter:<br/>
- `training-data-analyst/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb`
+ * Open one of the demo notebooks using the file browser in Jupyter:<br/>
+ `training-data-analyst/courses/fast-and-lean-data-science/07_Keras_Flowers_TPU_xception_fine_tuned_best.ipynb`
  * Run through all the cells.
- * you can then try the custom training loop example notebook:<br/>
+ * you can also try the custom training loop example notebook:<br/>
  `training-data-analyst/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb`
 
-You can also create a TPU manually in the [cloud console](https://console.cloud.google.com/). Go to
-Compute Engine > TPUs > CREATE TPU NODE. Select the latest Tensorflow version in the version selector.
-
+TPU can also be provisioned manually in the [cloud console](https://console.cloud.google.com/). Go to
+Compute Engine > TPUs > CREATE TPU NODE. Use the version selector to select the same version of Tensorflow as the one in your VM.
 The script does the same thing but on the command line using the two
 gcloud commands for creating a VM and a TPU. It ads a couple of perks:
 the VM supports Jupyter notebooks out of the box, it has the TPU_NAME environment variable set pointing to your TPU,
