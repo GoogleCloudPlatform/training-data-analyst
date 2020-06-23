@@ -184,7 +184,7 @@ public class BatchMinuteTrafficSQLPipeline {
                 .apply("AddEventTimestamps", WithTimestamps.of(
                         (CommonLog commonLog) -> Instant.parse(commonLog.timestamp)))
                 .apply("ConvertToRows", Convert.toRows()).setRowSchema(commonLogSchema)
-                .apply("Add DateTime Column", AddFields.<Row>create().field("timestamp_joda", Schema.FieldType.DATETIME))
+                .apply("AddDateTimeField", AddFields.<Row>create().field("timestamp_joda", Schema.FieldType.DATETIME))
                 .apply("AddDateTimeColumn", MapElements.via(new SimpleFunction<Row, Row>() {
                     @Override
                     public Row apply(Row row) {
