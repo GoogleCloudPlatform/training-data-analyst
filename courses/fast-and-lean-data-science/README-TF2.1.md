@@ -12,13 +12,13 @@
  
  Detailed instructions at the bottom of this page.
  
- ![TPU v3](https://cloud.google.com/images/products/tpu/cloud-tpu-v3-img_2x.png)
-  <br/>*Cloud TPU v3 with 8 TPU cores*
+ ![TPU v3](https://cloud.google.com/images/products/tpu/cloud-tpu-v3-img.png)
+ ![TPU v3 pod](https://cloud.google.com/images/products/tpu/google-cloud-ai.png)
+  <br/>*A Cloud TPU v3-8 with 8 cores and a v3-2048 pod with 2048 cores*
   
- Cloud AI Platform notebooks work with TPU and TPU pods up top the largest TPUv3-2048 pod with 2048 cores. 
+ Cloud AI Platform notebooks work with TPU and TPU pods up to the largest TPUv3-2048 pod with 2048 cores. 
 
-![TPU v3 pod](https://cloud.google.com/images/products/tpu/google-cloud-ai_2x.png)
- <br/>*A Cloud TPU v3 pod with 2048 TPU cores*
+
 
 Individual TPUv2's are also available for free on Colaboratory (sample notebook) while Kaggle offers free TPUv3's (sample notebook).
  
