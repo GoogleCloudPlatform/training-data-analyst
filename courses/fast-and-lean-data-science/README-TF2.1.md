@@ -17,22 +17,25 @@
  | *Cloud TPU v3-8 with 8 cores* | *TPU v3-2048 pod with 2048 cores* |
  | --- | --- |
  | ![TPU v3](https://cloud.google.com/images/products/tpu/cloud-tpu-v3-img_2x.png)  | ![TPU v3 pod](https://cloud.google.com/images/products/tpu/google-cloud-ai.png) |
-
-Individual TPUv2's are also available for free on Colaboratory (sample notebook) while Kaggle offers free TPUv3's (sample notebook).
   
 The slide deck of the Oct 2019 Tensorflow World session is available here: 
  [bit.ly/keras-tpu-presentation](https://docs.google.com/presentation/d/e/2PACX-1vRqvlSpX5CVRC2oQ_e_nRNahOSPoDVL6I36kdjuPR_4y_tCPb-_k98Du1QXBwx4sBvVrzsCPulmuPn8/pub)
+ 
+ TPUs are also available for free on [Colaboratory](https://colab.sandbox.google.com/github/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/07_Keras_Flowers_TPU_xception_fine_tuned_best.ipynb) (TPU v2-8)
+ and [Kaggle](https://www.kaggle.com/mgornergoogle/five-flowers-with-keras-and-xception-on-tpu) (TPU v3-8).
 
 ## Sample Keras models
 
-These links open in Colaboratory for easy viewing. 
+Sample notebooks from this repository. They open in Colaboratory for easy viewing. 
 
 Regular Keras using model.fit():<br/>
-[keras_flowers_gputputpupod_tf2.1.ipynb](https://colab.research.google.com/github/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb)
+[07_Keras_Flowers_TPU_xception_fine_tuned_best.ipynb](https://colab.sandbox.google.com/github/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/07_Keras_Flowers_TPU_xception_fine_tuned_best.ipynb)
 
 Custom training loop, distributed:<br/>
 [keras_flowers_customtrainloop_tf2.1.ipynb](https://colab.research.google.com/github/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb)
 
+ End to end sample with TPU training, model export and deployment to AI Platform predictions:<br/>
+ [01_MNIST_TPU_Keras.ipynb](https://colab.research.google.com/github/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/01_MNIST_TPU_Keras.ipynb)  
 
 ## Detailed instructions for provisioning a notebook with a Cloud TPU accelerator
 
