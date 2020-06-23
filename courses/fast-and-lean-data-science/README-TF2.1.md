@@ -1,18 +1,32 @@
-# Keras / TPU integration in Tensorflow 2.1
+# Keras / TPU integration in Tensorflow 2.1 and above
 
+ Tensorflow and Keras now offer:
  * support for TPUs
  * support for TPU pods
  * support for custom training loops on TPUs and TPU pods
  
- The slide deck of the Oct 2019 Tensorflow World session is available here: 
- [bit.ly/keras-tpu-presentation](https://docs.google.com/presentation/d/e/2PACX-1vRqvlSpX5CVRC2oQ_e_nRNahOSPoDVL6I36kdjuPR_4y_tCPb-_k98Du1QXBwx4sBvVrzsCPulmuPn8/pub)
+ ## TPU-accelerated notebooks for professional data scientists
+ 
+ You can  provision a TPU-accelerated notebook on Google's Cloud AI Platform. This script sums up the necessary gcloud commands:
+ [create-tpu-deep-learning-vm.sh](https://raw.githubusercontent.com/GoogleCloudPlatform/training-data-analyst/master/courses/fast-and-lean-data-science/create-tpu-deep-learning-vm.sh)
+ 
+ Detailed instructions at the bottom of this page.
  
  ![TPU v3](https://cloud.google.com/images/products/tpu/cloud-tpu-v3-img_2x.png)
- <br/>Cloud TPU v3 with 8 TPU cores
- 
-# You can test now with Cloud TPUs
+  <br/>*Cloud TPU v3 with 8 TPU cores*
+  
+ Cloud AI Platform notebooks work with TPU and TPU pods up top the largest TPUv3-2048 pod with 2048 cores. 
 
-Here are two test Notebook with a Keras model:
+![TPU v3 pod](https://cloud.google.com/images/products/tpu/google-cloud-ai_2x.png)
+ <br/>*A Cloud TPU v3 pod with 2048 TPU cores*
+
+Individual TPUv2's are also available for free on Colaboratory (sample notebook) while Kaggle offers free TPUv3's (sample notebook).
+ 
+ 
+ The slide deck of the Oct 2019 Tensorflow World session is available here: 
+ [bit.ly/keras-tpu-presentation](https://docs.google.com/presentation/d/e/2PACX-1vRqvlSpX5CVRC2oQ_e_nRNahOSPoDVL6I36kdjuPR_4y_tCPb-_k98Du1QXBwx4sBvVrzsCPulmuPn8/pub)
+
+## Sample Keras models
 
 Regular Keras using model.fit():<br/>
 [keras_flowers_gputputpupod_tf2.1.ipynb](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb)
@@ -20,22 +34,17 @@ Regular Keras using model.fit():<br/>
 Custom training loop, distributed:<br/>
 [keras_flowers_customtrainloop_tf2.1.ipynb](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb)
 
-Please follow the instructions below
 
-![TPU v3 pod](https://cloud.google.com/images/products/tpu/google-cloud-ai_2x.png)
- <br/>A Cloud TPU v3 pod with 2048 TPU cores
+## Detailed instructions for provisioning a notebook with a Cloud TPU accelerator
 
-## How to get a tf-nightly TPU ?
-
-We suggest you use the following script to create an AI Platform Notebook VM
-along with a TPU in one go. Both your VM and the TPU myst have a nightly build of Tensorflow:
-
-[create-tpu-deep-learning-vm.sh](https://raw.githubusercontent.com/GoogleCloudPlatform/training-data-analyst/master/courses/fast-and-lean-data-science/create-tpu-deep-learning-vm.sh)
+Please use the above-mentioned script [create-tpu-deep-learning-vm.sh](https://raw.githubusercontent.com/GoogleCloudPlatform/training-data-analyst/master/courses/fast-and-lean-data-science/create-tpu-deep-learning-vm.sh)
+to create an AI Platform Notebook VM along with a TPU in one go.
+Both your VM and the TPU must have a nightly build of Tensorflow:
 
 Please follow these steps:
- * Go to [Google cloud console](https://console.cloud.google.com/), create a new project with billing
- * Open cloud shell (>_ icon top right) so that you can type shell commands
- * Get the script, save it to a file, chmod u+x so that you can run it
+ * Go to [Google cloud console](https://console.cloud.google.com/), create a new project with billing enabled.
+ * Open cloud shell (>_ icon top right) so that you can type shell commands.
+ * Get the script [create-tpu-deep-learning-vm.sh](https://raw.githubusercontent.com/GoogleCloudPlatform/training-data-analyst/master/courses/fast-and-lean-data-science/create-tpu-deep-learning-vm.sh), save it to a file, chmod u+x so that you can run it
  * Run `gcloud init` to set up your project. Select a default zone that
  has TPUs. You can check TPU availability in different zones in [Google cloud console](https://console.cloud.google.com/)
  Compute Engine > TPUs > CREATE TPU NODE by playing with the zone and tpu type fields. For this
@@ -54,10 +63,10 @@ Please follow these steps:
  * you can then try the custom training loop example notebook:<br/>
  `training-data-analyst/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb`
 
-You can also use the [Google cloud console](https://console.cloud.google.com/). Go to
-Compute Engine > TPUs > CREATE TPU NODE. Select the latest Tensorflow version in the version selector (2.1).
+You can also create a TPU manually in the [cloud console](https://console.cloud.google.com/). Go to
+Compute Engine > TPUs > CREATE TPU NODE. Select the latest Tensorflow version in the version selector.
 
 The script does the same thing but on the command line using the two
 gcloud commands for creating a VM and a TPU. It ads a couple of perks:
 the VM supports Jupyter notebooks out of the box, it has the TPU_NAME environment variable set pointing to your TPU,
-and it can be upgraded to tf-nightly if you need cutting edge tech.
+and it can be upgraded to tf-nightly if you need cutting edge tech: add the --nightly parameter when you run the script.
