@@ -12,12 +12,10 @@
  
  Detailed instructions at the bottom of this page.
  
- |---|---|
- | 1 | 2 |
- 
- ![TPU v3](https://cloud.google.com/images/products/tpu/cloud-tpu-v3-img_2x.png)
- ![TPU v3 pod](https://cloud.google.com/images/products/tpu/google-cloud-ai.png)
-  <br/>*A Cloud TPU v3-8 with 8 cores and a v3-2048 pod with 2048 cores*
+ |     |     |
+ | --- | --- |
+ | ![TPU v3](https://cloud.google.com/images/products/tpu/cloud-tpu-v3-img_2x.png)  | ![TPU v3 pod](https://cloud.google.com/images/products/tpu/google-cloud-ai.png)  |
+ | *Cloud TPU v3-8 with 8 cores* | *TPU v3-2048 pod with 2048 cores* |
   
  Cloud AI Platform notebooks work with TPU and TPU pods up to the largest TPUv3-2048 pod with 2048 cores. 
 
