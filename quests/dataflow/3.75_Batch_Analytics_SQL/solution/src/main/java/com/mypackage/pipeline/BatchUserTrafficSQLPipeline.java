@@ -16,7 +16,6 @@
 
 package com.mypackage.pipeline;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -26,19 +25,15 @@ import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.schemas.Schema;
-import org.apache.beam.sdk.schemas.transforms.AddFields;
-import org.apache.beam.sdk.schemas.transforms.Convert;
-import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
-import org.joda.time.DateTime;
-import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link BatchUserTrafficPipelineSQL} is a sample pipeline which can be used as a base for creating a real
+ * The {@link BatchUserTrafficSQLPipeline} is a sample pipeline which can be used as a base for creating a real
  * Dataflow pipeline.
  *
  * <p><b>Pipeline Requirements</b>
@@ -70,12 +65,12 @@ import org.slf4j.LoggerFactory;
  * ADDITIONAL PARAMETERS HERE"
  * </pre>
  */
-public class BatchUserTrafficPipelineSQL {
+public class BatchUserTrafficSQLPipeline {
 
     /*
      * The logger to output status messages to.
      */
-    private static final Logger LOG = LoggerFactory.getLogger(BatchUserTrafficPipelineSQL.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BatchUserTrafficSQLPipeline.class);
 
     /**
      * The {@link Options} class provides the custom execution options passed by the executor at the
@@ -84,21 +79,21 @@ public class BatchUserTrafficPipelineSQL {
     public interface Options extends PipelineOptions {
         @Description("Path to events.json")
         String getInputPath();
-
         void setInputPath(String inputPath);
 
-        @Description("BigQuery table name")
-        String getTableName();
+        @Description("BigQuery table name to write aggregations to")
+        String getAggregateTableName();
+        void setAggregateTableName(String aggregateTableName);
 
-        void setTableName(String tableName);
+        @Description("BigQuery table name to write raw data to")
+        String getRawTableName();
+        void setRawTableName(String rawTableName);
     }
 
-    @VisibleForTesting
     /**
      * A DoFn acccepting Json and outputing CommonLog with Beam Schema
      */
     static class JsonToCommonLog extends DoFn<String, CommonLog> {
-
         @ProcessElement
         public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
             Gson gson = new Gson();
@@ -107,10 +102,11 @@ public class BatchUserTrafficPipelineSQL {
         }
     }
 
+
     /**
      * The main entry-point for pipeline execution. This method will start the pipeline but will not
      * wait for it's execution to finish. If blocking execution is required, use the {@link
-     * BatchUserTrafficPipelineSQL#run(Options)} method to start the pipeline and invoke
+     * BatchUserTrafficSQLPipeline#run(Options)} method to start the pipeline and invoke
      * {@code result.waitUntilFinish()} on the {@link PipelineResult}.
      *
      * @param args The command-line args passed by the executor.
@@ -136,7 +132,7 @@ public class BatchUserTrafficPipelineSQL {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("batch-user-traffic-pipeline-" + System.currentTimeMillis());
+        options.setJobName("batch-user-traffic-sql-pipeline-" + System.currentTimeMillis());
 
         /*
          * Steps:
@@ -147,57 +143,20 @@ public class BatchUserTrafficPipelineSQL {
 
         LOG.info("Building pipeline...");
 
-        String sql1 = "select count(*) AS pageviews, user_id from PCOLLECTION group by user_id";
-        // TODO: how to get the actual timestamp
-        String sql2 = "select count(*) as pageviews, TUMBLE_START(timestamp_joda, INTERVAL '10' SECOND) AS second_end from PCOLLECTION GROUP BY TUMBLE(timestamp_joda, INTERVAL '10' SECOND)";
-        // TODO: Link here, tumble start, tumble end https://calcite.apache.org/docs/stream.html
+        PCollection<CommonLog> logs  = pipeline.apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
+                .apply("ParseJson", ParDo.of(new BatchMinuteTrafficSQLPipeline.JsonToCommonLog()));
 
-
-        //TODO: you can do windowing in SQL or outside the SQL https://beam.apache.org/documentation/dsls/sql/extensions/windowing-and-triggering/
-        PCollection<Row> rows = pipeline
-                .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
-                .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
-                .apply(Convert.toRows())
-                .apply("Add DateTime Column", AddFields.<Row>create().field("timestamp_joda", Schema.FieldType.DATETIME))
-                .apply("ChangeToDateTime", MapElements.via(new SimpleFunction<Row, Row>() {
-                    @Override
-                    public Row apply(Row row) {
-                        DateTime dateTime = new DateTime(row.getString("timestamp"));
-                        return Row.withSchema(row.getSchema())
-                                .addValues(
-                                        row.getString("user_id"),
-                                        row.getString("ip"),
-                                        row.getDouble("lat"),
-                                        row.getDouble("lng"),
-                                        row.getString("timestamp"),
-                                        row.getString("http_request"),
-                                        row.getString("user_agent"),
-                                        row.getInt32("http_response"),
-                                        row.getInt32("num_bytes"),
-                                        dateTime)
-                                .build();
-                    }
-
-                }));
-
-
-        rows.apply("HitsPerUser", SqlTransform.query(sql1))
-                .apply("WriteToBQ",
-                        BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
+        logs.apply("AggregateSQLQuery", SqlTransform.query("SELECT user_id," +
+                " COUNT(*) AS pageviews, SUM(num_bytes) as total_bytes, MAX(num_bytes) AS max_num_bytes, MIN" +
+                "(num_bytes) as min_num_bytes FROM PCOLLECTION GROUP BY user_id"))
+                .apply("WriteAggregateToBQ",
+                        BigQueryIO.<Row>write().to(options.getAggregateTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
-
-        rows.apply("AddEventTimestamps", WithTimestamps.of(
-                (Row row) -> Instant.parse(row.getString("timestamp"))))
-
-                .apply("HitsPerMinute", SqlTransform.query(sql2))
-                // TODO: add in other table name
-                // TODO: test if 'string is ok for window"
-                .apply("WriteToBQ",
-                        BigQueryIO.<Row>write().to("dhodun1:logs.traffic_minute").useBeamSchema()
-                                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
-                                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
-
+        logs.apply("WriteRawToBQ",
+                BigQueryIO.<CommonLog>write().to(options.getRawTableName()).useBeamSchema()
+                        .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
+                        .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
         return pipeline.run();
     }

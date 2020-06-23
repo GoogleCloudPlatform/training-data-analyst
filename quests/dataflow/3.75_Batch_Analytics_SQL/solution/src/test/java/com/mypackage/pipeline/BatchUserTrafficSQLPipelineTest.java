@@ -25,10 +25,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Test cases for the {@link BatchUserTrafficPipeline} class.
+ * Test cases for the {@link BatchUserTrafficSQLPipeline} class.
  */
 @RunWith(JUnit4.class)
-public class BatchUserTrafficPipelineTest {
+public class BatchUserTrafficSQLPipelineTest {
 
   /**
    * Tests the pipeline.
@@ -45,7 +45,7 @@ public class BatchUserTrafficPipelineTest {
     //
 
     // Here perform the action which is being tested.
-    BatchUserTrafficPipeline.main(args);
+    BatchUserTrafficSQLPipeline.main(args);
 
     // Assert
     //

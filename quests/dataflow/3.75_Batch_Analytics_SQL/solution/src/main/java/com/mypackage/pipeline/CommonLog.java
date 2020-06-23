@@ -31,6 +31,6 @@ public class CommonLog {
     public String timestamp;
     public String http_request;
     public String user_agent;
-    public int http_response;
-    public int num_bytes;
+    public Integer http_response;
+    public Integer num_bytes;
 }
