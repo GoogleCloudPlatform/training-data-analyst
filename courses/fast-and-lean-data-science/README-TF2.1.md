@@ -28,19 +28,18 @@ The slide deck of the Oct 2019 Tensorflow World session is available here:
 These links open in Colaboratory for easy viewing. 
 
 Regular Keras using model.fit():<br/>
-[keras_flowers_gputputpupod_tf2.1.ipynb](https://colab.research.goolgle.com/github/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb)
+[keras_flowers_gputputpupod_tf2.1.ipynb](https://colab.research.google.com/github/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb)
 
 Custom training loop, distributed:<br/>
-[keras_flowers_customtrainloop_tf2.1.ipynb](https://colab.research.goolgle.com/github/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb)
+[keras_flowers_customtrainloop_tf2.1.ipynb](https://colab.research.google.com/github/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb)
 
 
 ## Detailed instructions for provisioning a notebook with a Cloud TPU accelerator
 
 Please use the above-mentioned script [create-tpu-deep-learning-vm.sh](https://raw.githubusercontent.com/GoogleCloudPlatform/training-data-analyst/master/courses/fast-and-lean-data-science/create-tpu-deep-learning-vm.sh)
 to create an AI Platform Notebook VM along with a TPU in one go.
-Both your VM and the TPU must have a nightly build of Tensorflow:
+Both your VM and the TPU must have a nightly build of Tensorflow. Detailed steps:
 
-Please follow these steps:
  * Go to [Google cloud console](https://console.cloud.google.com/), create a new project with billing enabled.
  * Open cloud shell (>_ icon top right) so that you can type shell commands.
  * Get the script [create-tpu-deep-learning-vm.sh](https://raw.githubusercontent.com/GoogleCloudPlatform/training-data-analyst/master/courses/fast-and-lean-data-science/create-tpu-deep-learning-vm.sh), save it to a file, chmod u+x so that you can run it
