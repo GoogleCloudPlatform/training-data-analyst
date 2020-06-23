@@ -12,27 +12,26 @@
  
  Detailed instructions at the bottom of this page.
  
+ Cloud AI Platform notebooks work with TPU and TPU pods up to the largest TPUv3-2048 pod with 2048 cores.
+ 
  | *Cloud TPU v3-8 with 8 cores* | *TPU v3-2048 pod with 2048 cores* |
  | --- | --- |
  | ![TPU v3](https://cloud.google.com/images/products/tpu/cloud-tpu-v3-img_2x.png)  | ![TPU v3 pod](https://cloud.google.com/images/products/tpu/google-cloud-ai.png) |
-  
- Cloud AI Platform notebooks work with TPU and TPU pods up to the largest TPUv3-2048 pod with 2048 cores. 
-
-
 
 Individual TPUv2's are also available for free on Colaboratory (sample notebook) while Kaggle offers free TPUv3's (sample notebook).
- 
- 
- The slide deck of the Oct 2019 Tensorflow World session is available here: 
+  
+The slide deck of the Oct 2019 Tensorflow World session is available here: 
  [bit.ly/keras-tpu-presentation](https://docs.google.com/presentation/d/e/2PACX-1vRqvlSpX5CVRC2oQ_e_nRNahOSPoDVL6I36kdjuPR_4y_tCPb-_k98Du1QXBwx4sBvVrzsCPulmuPn8/pub)
 
 ## Sample Keras models
 
+These links open in Colaboratory for easy viewing. 
+
 Regular Keras using model.fit():<br/>
-[keras_flowers_gputputpupod_tf2.1.ipynb](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb)
+[keras_flowers_gputputpupod_tf2.1.ipynb](https://colab.research.goolgle.com/github/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_gputputpupod_tf2.1.ipynb)
 
 Custom training loop, distributed:<br/>
-[keras_flowers_customtrainloop_tf2.1.ipynb](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb)
+[keras_flowers_customtrainloop_tf2.1.ipynb](https://colab.research.goolgle.com/github/GoogleCloudPlatform/training-data-analyst/blob/master/courses/fast-and-lean-data-science/keras_flowers_customtrainloop_tf2.1.ipynb)
 
 
 ## Detailed instructions for provisioning a notebook with a Cloud TPU accelerator
@@ -45,7 +44,7 @@ Please follow these steps:
  * Go to [Google cloud console](https://console.cloud.google.com/), create a new project with billing enabled.
  * Open cloud shell (>_ icon top right) so that you can type shell commands.
  * Get the script [create-tpu-deep-learning-vm.sh](https://raw.githubusercontent.com/GoogleCloudPlatform/training-data-analyst/master/courses/fast-and-lean-data-science/create-tpu-deep-learning-vm.sh), save it to a file, chmod u+x so that you can run it
- * Run `gcloud init` to set up your project. Select a default zone that
+ * Run `gcloud init` to set up your project and select a default zone that
  has TPUs. You can check TPU availability in different zones in [Google cloud console](https://console.cloud.google.com/)
  Compute Engine > TPUs > CREATE TPU NODE by playing with the zone and tpu type fields. For this
  demo, you can use an 8-core TPU or a 32-core TPU pod. Both TPU v2 and v3 will work.
