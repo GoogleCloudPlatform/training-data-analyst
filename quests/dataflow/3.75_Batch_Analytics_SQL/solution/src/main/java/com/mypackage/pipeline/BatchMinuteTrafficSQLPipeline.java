@@ -106,6 +106,31 @@ public class BatchMinuteTrafficSQLPipeline {
         }
     }
 
+    public static final Schema commonLogSchema = Schema.builder()
+            .addStringField("user_id")
+            .addStringField("ip")
+            .addDoubleField("lat")
+            .addDoubleField("lon")
+            .addStringField("timestamp")
+            .addStringField("http_request")
+            .addStringField("user_agent")
+            .addInt32Field("http_response")
+            .addInt32Field("num_bytes")
+            .build();
+
+    public static final Schema jodaCommonLogSchema = Schema.builder()
+            .addStringField("user_id")
+            .addStringField("ip")
+            .addDoubleField("lat")
+            .addDoubleField("lon")
+            .addStringField("timestamp")
+            .addStringField("http_request")
+            .addStringField("user_agent")
+            .addInt32Field("http_response")
+            .addInt32Field("num_bytes")
+            .addDateTimeField("timestamp_joda")
+            .build();
+
     public static final Schema pageViewsSchema = Schema
             .builder()
             .addInt64Field("pageviews")
@@ -158,7 +183,7 @@ public class BatchMinuteTrafficSQLPipeline {
                 .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
                 .apply("AddEventTimestamps", WithTimestamps.of(
                         (CommonLog commonLog) -> Instant.parse(commonLog.timestamp)))
-                .apply("ConvertToRows", Convert.toRows())
+                .apply("ConvertToRows", Convert.toRows()).setRowSchema(commonLogSchema)
                 .apply("Add DateTime Column", AddFields.<Row>create().field("timestamp_joda", Schema.FieldType.DATETIME))
                 .apply("AddDateTimeColumn", MapElements.via(new SimpleFunction<Row, Row>() {
                     @Override
@@ -169,7 +194,7 @@ public class BatchMinuteTrafficSQLPipeline {
                                 .build();
                         return newRow;
                     }
-                }))
+                })).setRowSchema(jodaCommonLogSchema)
                 .apply("WindowedAggregateQuery", SqlTransform.query("select count(*) as pageviews, TUMBLE_START(timestamp_joda, INTERVAL '10' SECOND) AS second_end from PCOLLECTION GROUP BY TUMBLE(timestamp_joda, INTERVAL '10' SECOND)"))
 
                 .apply("WriteToBQ",
