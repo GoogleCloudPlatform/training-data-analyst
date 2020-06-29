@@ -71,8 +71,6 @@ kubectl wait --for=condition=available --timeout=600s deployment \
 --all -n istio-system
 
 kubectl label namespace default istio-injection=enabled --overwrite
-kubectl apply -n prod -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/kubernetes-manifests.yaml
-
-kubectl apply -f <(istioctl kube-inject -f samples/bookinfo/platform/kube/bookinfo.yaml)
+kubectl apply -f ./istio-1.4.7-asm.0/samples/bookinfo/platform/kube/bookinfo.yaml
 sleep 30s
-kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
+kubectl apply -f ./istio-1.4.7-asm.0/samples/bookinfo/networking/bookinfo-gateway.yaml
