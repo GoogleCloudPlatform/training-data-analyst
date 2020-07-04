@@ -19,12 +19,13 @@ source ./scripts/env.sh
 # create the gke cluster
 gcloud config set compute/zone ${C1_ZONE}
 gcloud beta container clusters create ${C1_NAME} \
-    --machine-type=n1-standard-4 \
-    --num-nodes=2 \
+    --machine-type=e2-standard-4 \
+    --num-nodes=4 \
     --workload-pool=${WORKLOAD_POOL} \
     --enable-stackdriver-kubernetes \
     --subnetwork=default \
-    --labels mesh_id=${MESH_ID}
+    --labels=mesh_id=${MESH_ID} \
+    --release-channel=regular
 
 # service account requires additional role bindings
 kubectl create clusterrolebinding [BINDING_NAME] \
@@ -54,23 +55,23 @@ curl --request POST \
   https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize
 
 # download anthos service mesh software
-curl -LO https://storage.googleapis.com/gke-release/asm/istio-1.4.7-asm.0-linux.tar.gz
-tar xzf istio-1.4.7-asm.0-linux.tar.gz
+curl -LO https://storage.googleapis.com/gke-release/asm/istio-1.6.4-asm.9-linux-amd64.tar.gz
+tar xzf istio-1.6.4-asm.9-linux-amd64.tar.gz
+cd istio-1.6.4-asm.9
+export PATH=$PWD/bin:$PATH
 
+kpt pkg get https://github.com/GoogleCloudPlatform/anthos-service-mesh-packages.git/asm@release-1.6-asm .
+kpt cfg set asm gcloud.container.cluster ${C1_NAME}
+kpt cfg set asm gcloud.compute.location ${C1_ZONE}
 
-./istio-1.4.7-asm.0/bin/istioctl manifest apply --set profile=asm \
- --set values.global.trustDomain=${WORKLOAD_POOL} \
- --set values.global.sds.token.aud=${WORKLOAD_POOL} \
- --set values.nodeagent.env.GKE_CLUSTER_URL=https://container.googleapis.com/v1/projects/${PROJECT_ID}/locations/${C1_ZONE}/clusters/${C1_NAME} \
- --set values.global.meshID=${MESH_ID} \
- --set values.global.proxy.env.GCP_METADATA="${PROJECT_ID}|${PROJECT_NUMBER}|${C1_NAME}|${C1_ZONE}" \
- --set values.tracing.enabled=true \
- --set values.global.proxy.tracer="stackdriver"
+istioctl install -f asm/cluster/istio-operator.yaml \
+  --set values.prometheus.enabled=true \
+  --set values.grafana.enabled=true \
+  --set values.tracing.enabled=true \
+  --set values.global.proxy.tracer="stackdriver" \
+  --set values.kiali.enabled=true
 
 kubectl wait --for=condition=available --timeout=600s deployment \
---all -n istio-system
+  --all -n istio-system
 
 kubectl label namespace default istio-injection=enabled --overwrite
-kubectl apply -f ./istio-1.4.7-asm.0/samples/bookinfo/platform/kube/bookinfo.yaml
-sleep 30s
-kubectl apply -f ./istio-1.4.7-asm.0/samples/bookinfo/networking/bookinfo-gateway.yaml
