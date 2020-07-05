@@ -65,13 +65,20 @@ kpt cfg set asm gcloud.container.cluster ${C1_NAME}
 kpt cfg set asm gcloud.compute.location ${C1_ZONE}
 
 istioctl install -f asm/cluster/istio-operator.yaml \
-  --set values.prometheus.enabled=true \
-  --set values.grafana.enabled=true \
   --set values.tracing.enabled=true \
-  --set values.global.proxy.tracer="stackdriver" \
-  --set values.kiali.enabled=true
+  --set values.global.proxy.tracer="stackdriver"
 
 kubectl wait --for=condition=available --timeout=600s deployment \
   --all -n istio-system
 
 kubectl label namespace default istio-injection=enabled --overwrite
+
+
+# Deploy BookInfo application
+kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml
+
+# Sleep while Bookinfo pods initialize
+sleep 30s
+
+# Expose Bookinfo external gateway/IP
+kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
