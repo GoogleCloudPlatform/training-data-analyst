@@ -1,0 +1,63 @@
+{{ define "home" }}
+
+    {{ template "header" . }}
+    <main role="main">
+        <section class="jumbotron text-center mb-0"
+		 {{ with $.banner_color }}
+		     style="background-color: {{.}};"
+		 {{ end }}
+		>
+            <div class="container">
+                <h1 class="jumbotron-heading">
+                    One-stop for Hipster Fashion &amp; Style Online
+                </h1>
+                <p class="lead text-muted">
+                    Tired of mainstream fashion ideas, popular trends and
+                    societal norms? This line of lifestyle products will help
+                    you catch up with the hipster trend and express your
+                    personal style. Start shopping hip and vintage items now!
+                </p>
+            </div>
+        </section>
+
+        <div class="py-5 bg-light">
+            <div class="container">
+            <div class="row">
+                {{ range $.products }}
+                <div class="col-md-4">
+                    <div class="card mb-4 box-shadow">
+                        <a href="/product/{{.Item.Id}}">
+                            <img class="card-img-top" alt =""
+                                style="width: 100%; height: auto;"
+                                src="{{.Item.Picture}}">
+                        </a>
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {{ .Item.Name }}
+                            </h5>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <a href="/product/{{.Item.Id}}">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary">Buy</button>
+                                    </a>
+                                </div>
+                                <small class="text-muted">
+                                    {{ renderMoney .Price }} 
+                                </strong>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{ end }}
+            </div>
+            <div class="row">
+                {{ with $.ad }}{{ template "text_ad" . }}{{ end}}
+            </div>
+            </div>
+        </div>
+    </main>
+
+    {{ template "footer" . }}
+
+{{ end }}
