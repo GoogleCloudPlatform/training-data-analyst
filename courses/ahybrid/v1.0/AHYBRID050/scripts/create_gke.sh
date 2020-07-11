@@ -19,7 +19,7 @@ source ./scripts/env.sh
 # create the gke cluster
 gcloud config set compute/zone ${C1_ZONE}
 gcloud beta container clusters create ${C1_NAME} \
-    --machine-type=e2-standard-4 \
+    --machine-type=n1-standard-4 \
     --num-nodes=4 \
     --workload-pool=${WORKLOAD_POOL} \
     --enable-stackdriver-kubernetes \
