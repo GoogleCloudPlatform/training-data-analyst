@@ -19,6 +19,7 @@ package com.mypackage.pipeline;
 import com.google.gson.Gson;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.extensions.sql.impl.BeamSqlPipelineOptions;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
@@ -83,7 +84,7 @@ public class BatchMinuteTrafficSQLPipeline {
      * The {@link Options} class provides the custom execution options passed by the executor at the
      * command-line.
      */
-    public interface Options extends PipelineOptions {
+    public interface Options extends PipelineOptions, BeamSqlPipelineOptions {
         @Description("Path to events.json")
         String getInputPath();
         void setInputPath(String inputPath);
@@ -150,6 +151,7 @@ public class BatchMinuteTrafficSQLPipeline {
         Options options = PipelineOptionsFactory.fromArgs(args)
                 .withValidation()
                 .as(Options.class);
+        options.setPlannerName("org.apache.beam.sdk.extensions.sql.zetasql.ZetaSQLQueryPlanner");
         run(options);
     }
 
@@ -203,9 +205,9 @@ public class BatchMinuteTrafficSQLPipeline {
                                         dateTime)
                                 .build();
                     }
-                }))
+                })).setRowSchema(jodaCommonLogSchema)
                 .apply("WindowedAggregateQuery", SqlTransform.query("SELECT COUNT(*) AS count, tr.window_start FROM " +
-                        "TUMBLE( PCOLLECTION, DESCRIPTOR(timestamp_joda)" +
+                        "TUMBLE( (SELECT * FROM PCOLLECTION) , DESCRIPTOR(timestamp_joda)" +
                         ", \"INTERVAL 1 MINUTE\") AS tr GROUP BY tr.window_start"))
 
                 .apply("WriteToBQ",
