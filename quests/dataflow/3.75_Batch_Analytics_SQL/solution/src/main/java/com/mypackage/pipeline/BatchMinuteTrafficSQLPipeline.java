@@ -204,7 +204,9 @@ public class BatchMinuteTrafficSQLPipeline {
                                 .build();
                     }
                 }))
-                .apply("WindowedAggregateQuery", SqlTransform.query("select count(*) as pageviews, TUMBLE_START(timestamp_joda, INTERVAL '10' SECOND) AS second_end from PCOLLECTION GROUP BY TUMBLE(timestamp_joda, INTERVAL '10' SECOND)"))
+                .apply("WindowedAggregateQuery", SqlTransform.query("SELECT COUNT(*) AS count, tr.window_start FROM " +
+                        "TUMBLE( PCOLLECTION, DESCRIPTOR(timestamp_joda)" +
+                        ", \"INTERVAL 1 MINUTE\") AS tr GROUP BY tr.window_start"))
 
                 .apply("WriteToBQ",
                         BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
