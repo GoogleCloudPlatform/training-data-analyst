@@ -115,8 +115,8 @@ public class BatchMinuteTrafficSQLPipeline {
             .addStringField("timestamp")
             .addStringField("http_request")
             .addStringField("user_agent")
-            .addInt32Field("http_response")
-            .addInt32Field("num_bytes")
+            .addInt64Field("http_response")
+            .addInt64Field("num_bytes")
             .build();
 
     public static final Schema jodaCommonLogSchema = Schema.builder()
@@ -127,8 +127,8 @@ public class BatchMinuteTrafficSQLPipeline {
             .addStringField("timestamp")
             .addStringField("http_request")
             .addStringField("user_agent")
-            .addInt32Field("http_response")
-            .addInt32Field("num_bytes")
+            .addInt64Field("http_response")
+            .addInt64Field("num_bytes")
             .addDateTimeField("timestamp_joda")
             .build();
 
@@ -200,16 +200,17 @@ public class BatchMinuteTrafficSQLPipeline {
                                         row.getString("timestamp"),
                                         row.getString("http_request"),
                                         row.getString("user_agent"),
-                                        row.getInt32("http_response"),
-                                        row.getInt32("num_bytes"),
+                                        row.getInt64("http_response"),
+                                        row.getInt64("num_bytes"),
                                         dateTime)
                                 .build();
                     }
                 })).setRowSchema(jodaCommonLogSchema)
-                .apply("WindowedAggregateQuery", SqlTransform.query("SELECT COUNT(*) AS count, tr.window_start FROM " +
-                        "TUMBLE( (SELECT * FROM PCOLLECTION) , DESCRIPTOR(timestamp_joda)" +
-                        ", \"INTERVAL 1 MINUTE\") AS tr GROUP BY tr.window_start"))
 
+                //TODO: add Longs to older labs
+                .apply("WindowedAggregateQuery", SqlTransform.query("SELECT COUNT(*) AS count, tr.window_start FROM " +
+                        "TUMBLE( TABLE PCOLLECTION , DESCRIPTOR(timestamp_joda)" +
+                        ", \"INTERVAL 1 MINUTE\") AS tr GROUP BY tr.window_start"))
                 .apply("WriteToBQ",
                         BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)

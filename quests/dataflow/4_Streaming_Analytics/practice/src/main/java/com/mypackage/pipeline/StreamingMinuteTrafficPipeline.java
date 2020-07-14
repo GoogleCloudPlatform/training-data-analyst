@@ -16,31 +16,29 @@
 
 package com.mypackage.pipeline;
 
-import com.google.api.services.bigquery.model.TableFieldSchema;
-import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
-import org.apache.beam.sdk.io.gcp.pubsub.PubsubMessage;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.options.StreamingOptions;
+import org.apache.beam.sdk.schemas.Schema;
+import org.apache.beam.sdk.schemas.transforms.AddFields;
+import org.apache.beam.sdk.schemas.transforms.Select;
 import org.apache.beam.sdk.transforms.*;
-import org.apache.beam.sdk.transforms.windowing.*;
+import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
+import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.Row;
+import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.beam.sdk.values.TupleTag;
-
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The {@link StreamingMinuteTrafficPipeline} is a sample pipeline which can be used as a base for creating a real
@@ -49,8 +47,8 @@ import java.util.List;
  * <p><b>Pipeline Requirements</b>
  *
  * <ul>
- * <li>Requirement #1
- * <li>Requirement #2
+ *   <li>Requirement #1
+ *   <li>Requirement #2
  * </ul>
  *
  * <p><b>Example Usage</b>
@@ -65,7 +63,7 @@ import java.util.List;
  *
  * # Build the template
  * mvn compile exec:java \
- * -Dexec.mainClass=com.mypackage.pipeline.StreamingMinuteTrafficPipeline \
+ * -Dexec.mainClass=com.mypackage.pipeline.BatchUserTrafficPipeline \
  * -Dexec.cleanupDaemonThreads=false \
  * -Dexec.args=" \
  * --project=${PROJECT_ID} \
@@ -77,11 +75,6 @@ import java.util.List;
  */
 public class StreamingMinuteTrafficPipeline {
 
-    static final TupleTag<CommonLog> parsedMessages = new TupleTag<CommonLog>() {
-    };
-    static final TupleTag<String> unparsedMessages = new TupleTag<String>() {
-    };
-
     /*
      * The logger to output status messages to.
      */
@@ -91,52 +84,50 @@ public class StreamingMinuteTrafficPipeline {
      * The {@link Options} class provides the custom execution options passed by the executor at the
      * command-line.
      */
-    public interface Options extends PipelineOptions, StreamingOptions {
-        @Description(
-                "The Cloud Pub/Sub topic to consume from.")
-        String getInputTopic();
-
-        void setInputTopic(String inputTopic);
-
-        @Description("Window duration length, in minutes")
+    public interface Options extends PipelineOptions {
+        @Description("Window duration length, in seconds")
         Integer getWindowDuration();
-
         void setWindowDuration(Integer windowDuration);
 
-        @Description(
-                "The Cloud BigQuery table name to write raw data to. "
-                        + "The name should be in the format of "
-                        + "<project-id>:<dataset>.<table-name>."
-        )
-        String getRawOutputTableName();
-        void setRawOutputTableName(String rawOutputTableName);
+        @Description("BigQuery aggregate table name")
+        String getAggregateTableName();
+        void setAggregateTableName(String aggregateTableName);
 
-        @Description(
-                "The Cloud BigQuery table name to write aggregated data to. "
-                        + "The name should be in the format of "
-                        + "<project-id>:<dataset>.<table-name>."
-        )
-        String getAggregateOutputTableName();
-        void setAggregateOutputTableName(String aggregateOutputTableName);
+        @Description("Input topic name")
+        String getInputTopic();
+        void setInputTopic(String inputTopic);
+
+        @Description("BigQuery raw table name")
+        String getRawTableName();
+        void setRawTableName(String rawTableName);
 
     }
 
     /**
-     * A DoFn which accepts a JSON string and emits a CommonLog
+     * A DoFn accepting Json and outputting CommonLog with Beam Schema
      */
-    public static class JsonToCommonLog
-            extends DoFn<String, CommonLog> {
+    static class JsonToCommonLog extends DoFn<String, CommonLog> {
 
         @ProcessElement
-        public void processElement(@Element String json,
-                                   OutputReceiver<CommonLog> receiver) {
-            // Use Expose() annotation, so that Gson does not expect processing_timestamp field
+        public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
             Gson gson = new Gson();
             CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-            receiver.output(commonLog);
+            r.output(commonLog);
         }
     }
 
+    public static final Schema pageviewsSchema = Schema
+            .builder()
+            .addInt64Field("pageviews")
+            //TODO: change window_end in other labs
+            .addDateTimeField("window_end")
+            .build();
+    public static final Schema rawSchema = Schema
+            .builder()
+            .addStringField("user_id")
+            .addDateTimeField("event_timestamp")
+            .addDateTimeField("processing_timestamp")
+            .build();
 
     /**
      * The main entry-point for pipeline execution. This method will start the pipeline but will not
@@ -148,8 +139,9 @@ public class StreamingMinuteTrafficPipeline {
      */
     public static void main(String[] args) {
         PipelineOptionsFactory.register(Options.class);
-        Options options = PipelineOptionsFactory.fromArgs(args).as(Options.class);
-        options.setStreaming(true);
+        Options options = PipelineOptionsFactory.fromArgs(args)
+                .withValidation()
+                .as(Options.class);
         run(options);
     }
 
@@ -168,19 +160,19 @@ public class StreamingMinuteTrafficPipeline {
         Pipeline pipeline = Pipeline.create(options);
         options.setJobName("streaming-minute-traffic-pipeline-" + System.currentTimeMillis());
 
-        List<TableFieldSchema> rawFields = new ArrayList<>();
-        rawFields.add(new TableFieldSchema().setName("user_id").setType("STRING"));
-        rawFields.add(new TableFieldSchema().setName("event_timestamp").setType("TIMESTAMP"));
-        rawFields.add(new TableFieldSchema().setName("processing_timestamp").setType("TIMESTAMP"));
-        TableSchema rawSchema = new TableSchema().setFields(rawFields);
-
-        List<TableFieldSchema> aggregateFields = new ArrayList<>();
-        aggregateFields.add(new TableFieldSchema().setName("window_end").setType("TIMESTAMP"));
-        aggregateFields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
-        TableSchema aggregateSchema = new TableSchema().setFields(aggregateFields);
+        /*
+         * Steps:
+         *  1) Read something
+         *  2) Transform something
+         *  3) Write something
+         */
 
         LOG.info("Building pipeline...");
+
+
+
 
         return pipeline.run();
     }
 }
+

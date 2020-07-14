@@ -162,7 +162,8 @@ public class BatchMinuteTrafficPipeline {
                     public void processElement(@Element Long pageviews, OutputReceiver<Row> r, IntervalWindow window) {
                         Instant i = Instant.ofEpochMilli(window.end().getMillis());
                         Row timestampedRow = Row.withSchema(pageViewsSchema)
-                                .addValues(pageviews, i).build();
+                                .addValues(pageviews, i)
+                                .build();
                         r.output(timestampedRow);
                     }
                 })).setRowSchema(pageViewsSchema)
