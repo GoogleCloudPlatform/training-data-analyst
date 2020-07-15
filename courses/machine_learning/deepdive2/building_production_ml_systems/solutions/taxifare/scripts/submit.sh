@@ -12,6 +12,8 @@ MACHINE_TYPE=n1-standard-4
 SCALE_TIER=CUSTOM
 
 
+
+# gcloud ai-platform jobs submit training $JOBID \
 gcloud beta ai-platform jobs submit training $JOBID \
    --staging-bucket=gs://$BUCKET \
    --region=$REGION \

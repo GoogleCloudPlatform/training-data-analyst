@@ -1,9 +1,0 @@
-**/.build
-**/.ipynb_checkpoints
-**/.pipeline_build
-**/__pycache__
-*.zip
-mlpipeline-metrics.json
-mlpipeline-ui-metadata.json
-build-train-deploy.py
-**/.dat

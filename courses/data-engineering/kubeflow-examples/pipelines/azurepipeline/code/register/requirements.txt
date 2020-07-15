@@ -1,3 +1,0 @@
-pathlib2
-requests
-azureml-sdk

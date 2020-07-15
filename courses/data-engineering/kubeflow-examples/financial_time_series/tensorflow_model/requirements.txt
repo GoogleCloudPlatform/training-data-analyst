@@ -1,5 +1,0 @@
-google-cloud-storage==1.17.0
-google-cloud-bigquery==1.6.0
-pandas==0.23.4
-numpy==1.16.0
-tensorflow==1.15.0

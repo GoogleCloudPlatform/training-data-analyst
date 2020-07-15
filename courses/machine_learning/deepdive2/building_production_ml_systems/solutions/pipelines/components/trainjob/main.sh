@@ -19,13 +19,13 @@ OUTPUT_DIR=$GCS_PROJECT_PATH/model
 TRAIN_DATA_PATH=$DATA_PATH/taxi-train*
 EVAL_DATA_PATH=$DATA_PATH/taxi-valid*
 
-IMAGE_NAME=taxifare-trainer
+IMAGE_NAME=taxifare_training_container
 PROJECT_ID=$(gcloud config list project --format "value(core.project)")
 IMAGE_URI=gcr.io/$PROJECT_ID/$IMAGE_NAME
 
 JOBID=taxifare_$(date +%Y%m%d_%H%M%S)
 
-gcloud beta ai-platform jobs submit training $JOBID \
+gcloud ai-platform jobs submit training $JOBID \
    --stream-logs \
    --staging-bucket=gs://$BUCKET \
    --region=$REGION \
