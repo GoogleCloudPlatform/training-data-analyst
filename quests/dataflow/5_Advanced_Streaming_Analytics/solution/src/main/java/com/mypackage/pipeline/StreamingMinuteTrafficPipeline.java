@@ -241,7 +241,8 @@ public class StreamingMinuteTrafficPipeline {
                                 .plusDelayOf(Duration.standardSeconds(10))))
                         .discardingFiredPanes())
                 .apply("WriteDeadletterStorage", TextIO.write()
-                        .to(options.getDeadletterBucket())
+                        //TODO: change this to actual full parameter
+                        .to(options.getDeadletterBucket() + "/deadletter/*")
                         .withWindowedWrites()
                         .withNumShards(10));
 
