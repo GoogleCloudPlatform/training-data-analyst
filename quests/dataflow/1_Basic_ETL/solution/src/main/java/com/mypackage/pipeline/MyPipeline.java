@@ -62,19 +62,19 @@ public class MyPipeline {
 
     /**
      * A class used for parsing JSON web server events
-     * Annotated with @DefaultSchema to the allow the use of Beam Schema and <Row> object
+     * Annotated with @DefaultSchema to the allow the use of Beam Schemas and <Row> object
      */
     @DefaultSchema(JavaFieldSchema.class)
     public static class CommonLog {
         String user_id;
         String ip;
-        float lat;
-        float lng;
+        Float lat;
+        Float lng;
         String timestamp;
         String http_request;
         String user_agent;
-        int http_response;
-        int num_bytes;
+        Long http_response;
+        Long num_bytes;
     }
 
     /**

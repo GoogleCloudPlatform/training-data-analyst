@@ -16,8 +16,7 @@
 
 package com.mypackage.pipeline;
 
-// TODO: Add imports
-
+//TODO: Add imports
 
 
 public class MyPipeline {
@@ -49,9 +48,10 @@ public class MyPipeline {
         run(options);
     }
 
-    // TODO: Add CommonLog Class with @DefaultSchema
+    //TODO: Add CommonLog Class
 
-    // TODO: Add JsonToCommonLog DoFn Here or alternatively, inline in a .apply() method
+    //TODO: Add JsonToCommonLog DoFn
+
 
     /**
      * Runs the pipeline to completion with the specified options. This method does
@@ -68,8 +68,8 @@ public class MyPipeline {
         Pipeline pipeline = Pipeline.create(options);
         options.setJobName("my-pipeline-" + System.currentTimeMillis());
 
+        //TODO: Add static input and output strings
 
-        // TODO: Add static input and ouput Strings
 
         /*
          * Steps:
@@ -78,8 +78,7 @@ public class MyPipeline {
          * 3) Write something
          */
 
-        // TODO: Add pipeline.apply() and others steps
-
+        //TODO: Add pipeline.apply() and other steps
 
         LOG.info("Building pipeline...");
 
