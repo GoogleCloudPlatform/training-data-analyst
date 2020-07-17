@@ -73,8 +73,8 @@ public class MyPipeline {
         String timestamp;
         String http_request;
         String user_agent;
-        Long http_response;
-        Long num_bytes;
+        Integer http_response;
+        Integer num_bytes;
     }
 
     /**
