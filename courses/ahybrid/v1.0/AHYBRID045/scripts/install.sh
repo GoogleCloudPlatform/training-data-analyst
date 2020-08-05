@@ -16,7 +16,6 @@
 
 source ./scripts/env.sh
 
-gcloud components update
 apt-get install kubectl
 sudo apt-get install google-cloud-sdk-kpt
 
