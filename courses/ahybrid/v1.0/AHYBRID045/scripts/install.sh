@@ -16,7 +16,9 @@
 
 source ./scripts/env.sh
 
+gcloud components update
 apt-get install kubectl
+sudo apt-get install google-cloud-sdk-kpt
 
 curl -sLO https://raw.githubusercontent.com/ahmetb/kubectx/v0.7.0/kubectx 
 chmod +x kubectx 
