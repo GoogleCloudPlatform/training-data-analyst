@@ -8,7 +8,7 @@ RUNNER = 'DirectRunner'
 OUTPUT = 'output.json'
 
 # to try it with Dataflow, copy the file to your bucket and use DataflowRunner
-if True:
+if False:
     INPUT = 'gs://{}/linearopt/input.json'.format(BUCKET)
     RUNNER = 'DataflowRunner'
     OUTPUT = 'gs://{}/linearopt/output.json'.format(BUCKET)
@@ -20,7 +20,22 @@ if True:
 from datetime import datetime
 import apache_beam as beam
 
-def linopt(materials):
+
+class Inventory:
+    # only dye & concentrate can be carried forward in time, not labor or water
+    def __init__(self, leftover=[]):
+        if len(leftover) == 4:
+            self.dye = leftover[0]
+            self.concentrate = leftover[3]
+        else:
+            self.dye = self.concentrate = 0
+
+    def update(self, leftover):
+        self.dye = leftover[0]
+        self.concentrate = leftover[3]
+
+
+def linopt(materials, inventory):
     import numpy as np
     from scipy.optimize import linprog
     from scipy.optimize import OptimizeResult
@@ -34,7 +49,12 @@ def linopt(materials):
         [300, 400, 800, 200],
         [30, 75, 50, 20]
     ]
-    b_ub = [materials['dye'], materials['labor'], materials['water'], materials['concentrate']]
+    b_ub = [
+        materials['dye'] + inventory.dye,
+        materials['labor'],
+        materials['water'],
+        materials['concentrate'] + inventory.concentrate
+    ]
     bounds = [
         (0, np.inf),
         (0, 25),
@@ -45,18 +65,22 @@ def linopt(materials):
     def log_info(status):
         print(status.nit, status.fun)
 
-    print(b_ub)
     res = linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=bounds, callback=log_info)
-    qty = np.round(res.x)
-    print("{} --> {}".format(b_ub, qty))
+    qty = np.floor(np.round(res.x, 1))
+    leftover = b_ub - np.matmul(A_ub, qty)
+    print("{} --> {} --> {} + {}".format(materials, b_ub, qty, list(np.round(leftover))))
+    inventory.update(leftover)
     return qty
+
+def get_latest_inventory(pvalue):
+    return Inventory(beam.pvalue.AsSingleton(lambda x: x[-1]))  # last value
+
 
 def run():
     import json
 
     options = beam.options.pipeline_options.PipelineOptions()
     setup_options = options.view_as(beam.options.pipeline_options.SetupOptions)
-    #setup_options.requirements_file = 'requirements.txt'
     setup_options.save_main_session = True
     google_cloud_options = options.view_as(beam.options.pipeline_options.GoogleCloudOptions)
     google_cloud_options.project = PROJECT
@@ -68,13 +92,22 @@ def run():
     std_options.runner = RUNNER
 
     p = beam.Pipeline(options=options)
+
+    inventory = Inventory()
+
     (p
-      | 'ingest'    >> beam.io.ReadFromText(INPUT)
-      | 'optimize'  >> beam.Map(lambda x : linopt(json.loads(x)))
-      | 'output'    >> beam.io.WriteToText(OUTPUT)
+                    | 'ingest' >> beam.io.ReadFromText(INPUT)
+                    | 'parse' >> beam.Map(lambda x: json.loads(x))
+                    | 'with_ts' >> beam.Map(lambda x: beam.window.TimestampedValue(x, x['timestamp']))
+                   # | 'windowed' >> beam.WindowInto(beam.window.FixedWindows(60))  # 1-minute windows
+                   # | 'materials' >> beam.CombinePerKey(sum)
+                    | 'optimize' >> beam.Map(lambda x: linopt(x, inventory))
+                    | 'output' >> beam.io.WriteToText(OUTPUT)
     )
+
     result = p.run()
     result.wait_until_finish()
+
 
 if __name__ == '__main__':
     run()
