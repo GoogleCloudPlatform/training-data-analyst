@@ -52,7 +52,7 @@ def GenerateConfig(context):
           'initializeParams': {
               'diskName': name_prefix + '-disk',
               'sourceImage': GlobalComputeUrl(
-                  'debian-cloud', 'images', 'family/debian-8'
+                  'debian-cloud', 'images', 'family/debian-9'
                   )
               },
           }],
