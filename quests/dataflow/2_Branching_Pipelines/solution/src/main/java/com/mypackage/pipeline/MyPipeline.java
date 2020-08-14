@@ -137,7 +137,7 @@ public class MyPipeline {
         // Convert elements to CommonLog, filter out individual elements, and write to BigQuery
         lines.apply("ParseJson", ParDo.of(new JsonToCommonLog()))
                 .apply("DropFields", DropFields.fields("user_agent"))
-                .apply("FilterFn", Filter.<Row>create().whereFieldName("num_bytes", (Integer num_bytes) -> num_bytes < 120))
+                .apply("FilterFn", Filter.<Row>create().whereFieldName("num_bytes", (Long num_bytes) -> num_bytes < 120))
                 .apply("WriteToBQ",
                         BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
