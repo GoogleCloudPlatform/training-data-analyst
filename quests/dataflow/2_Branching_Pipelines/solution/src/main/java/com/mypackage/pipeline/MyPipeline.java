@@ -84,8 +84,8 @@ public class MyPipeline {
     public static class CommonLog {
         String user_id;
         String ip;
-        Float lat;
-        Float lng;
+        @javax.annotation.Nullable Float lat;
+        @javax.annotation.Nullable Float lng;
         String timestamp;
         String http_request;
         String user_agent;
