@@ -16,9 +16,6 @@
 
 package com.mypackage.pipeline;
 
-import com.google.api.services.bigquery.model.TableFieldSchema;
-import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
 import com.google.gson.Gson;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -27,19 +24,19 @@ import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.schemas.Schema;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.transforms.windowing.Window;
+import org.apache.beam.sdk.values.Row;
 import org.joda.time.Duration;
+import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * The {@link BatchUserTrafficPipeline} is a sample pipeline which can be used as a base for creating a real
+ * The {@link BatchMinuteTrafficPipeline} is a sample pipeline which can be used as a base for creating a real
  * Dataflow pipeline.
  *
  * <p><b>Pipeline Requirements</b>
@@ -92,6 +89,13 @@ public class BatchMinuteTrafficPipeline {
         void setTableName(String tableName);
     }
 
+
+    public static final Schema pageViewsSchema = Schema
+            .builder()
+            .addInt64Field("pageviews")
+            .addDateTimeField("minute")
+            .build();
+
     /**
      * The main entry-point for pipeline execution. This method will start the pipeline but will not
      * wait for it's execution to finish. If blocking execution is required, use the {@link
@@ -121,12 +125,7 @@ public class BatchMinuteTrafficPipeline {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("batch-minute-traffic-pipeline-" + System.currentTimeMillis());
-
-        List<TableFieldSchema> fields = new ArrayList<>();
-        fields.add(new TableFieldSchema().setName("second").setType("TIMESTAMP"));
-        fields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
-        TableSchema schema = new TableSchema().setFields(fields);
+        options.setJobName("batch-user-traffic-pipeline-" + System.currentTimeMillis());
 
         /*
          * Steps:
@@ -134,6 +133,8 @@ public class BatchMinuteTrafficPipeline {
          *  2) Transform something
          *  3) Write something
          */
+
+        LOG.info("Building pipeline...");
 
 
         return pipeline.run();
