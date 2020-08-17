@@ -16,9 +16,6 @@
 
 package com.mypackage.pipeline;
 
-import com.google.api.services.bigquery.model.TableFieldSchema;
-import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
 import com.google.gson.Gson;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -27,19 +24,19 @@ import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.schemas.Schema;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.transforms.windowing.Window;
+import org.apache.beam.sdk.values.Row;
 import org.joda.time.Duration;
+import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * The {@link BatchUserTrafficPipeline} is a sample pipeline which can be used as a base for creating a real
+ * The {@link BatchMinuteTrafficPipeline} is a sample pipeline which can be used as a base for creating a real
  * Dataflow pipeline.
  *
  * <p><b>Pipeline Requirements</b>
@@ -93,6 +90,24 @@ public class BatchMinuteTrafficPipeline {
     }
 
     /**
+     * A DoFn acccepting Json and outputing CommonLog with Beam Schema
+     */
+    static class JsonToCommonLog extends DoFn<String, CommonLog> {
+        @ProcessElement
+        public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
+            Gson gson = new Gson();
+            CommonLog commonLog = gson.fromJson(json, CommonLog.class);
+            r.output(commonLog);
+        }
+    }
+
+    public static final Schema pageViewsSchema = Schema
+            .builder()
+            .addInt64Field("pageviews")
+            .addDateTimeField("minute")
+            .build();
+
+    /**
      * The main entry-point for pipeline execution. This method will start the pipeline but will not
      * wait for it's execution to finish. If blocking execution is required, use the {@link
      * BatchMinuteTrafficPipeline#run(Options)} method to start the pipeline and invoke
@@ -121,12 +136,7 @@ public class BatchMinuteTrafficPipeline {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("batch-minute-traffic-pipeline-" + System.currentTimeMillis());
-
-        List<TableFieldSchema> fields = new ArrayList<>();
-        fields.add(new TableFieldSchema().setName("second").setType("TIMESTAMP"));
-        fields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
-        TableSchema schema = new TableSchema().setFields(fields);
+        options.setJobName("batch-user-traffic-pipeline-" + System.currentTimeMillis());
 
         /*
          * Steps:
@@ -135,35 +145,32 @@ public class BatchMinuteTrafficPipeline {
          *  3) Write something
          */
 
+        LOG.info("Building pipeline...");
+
         pipeline
                 .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
-                .apply("ParseCommonLog", ParDo.of(new DoFn<String, CommonLog>() {
+
+                .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
+                .apply("AddEventTimestamps", WithTimestamps.of(
+                        (CommonLog commonLog) -> Instant.parse(commonLog.timestamp)))
+                .apply("WindowByMinute", Window.into(FixedWindows.of(Duration.standardSeconds(60))))
+                // update to Group.globally() after resolved: https://issues.apache.org/jira/browse/BEAM-10297
+                // Only if supports Row output
+                .apply("CountPerMinute", Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults())
+                .apply("AddTimestamp", ParDo.of(new DoFn<Long, Row>() {
                     @ProcessElement
-                    public void processElement(@Element String line, OutputReceiver<CommonLog> r) {
-                        Gson gson = new Gson();
-                        CommonLog commonLog = gson.fromJson(line, CommonLog.class);
-                        r.output(commonLog);
-                    }
-                }))
-                .apply("AddEventTimestamps", WithTimestamps.of((CommonLog commonLog) ->
-                        org.joda.time.Instant.parse(commonLog.timestamp)))
-                .apply("WindowByMinute", Window.<CommonLog>into(FixedWindows.of(Duration.standardSeconds(60))))
-                .apply("CountTraffic", Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults())
-                .apply("ConvertToTableRow", ParDo.of(new DoFn<Long, TableRow>() {
-                    @ProcessElement
-                    public void processElement(@Element Long l, OutputReceiver<TableRow> r, IntervalWindow window) {
+                    public void processElement(@Element Long pageviews, OutputReceiver<Row> r, IntervalWindow window) {
                         Instant i = Instant.ofEpochMilli(window.end().getMillis());
-                        TableRow tableRow = new TableRow();
-                        tableRow.set("second", i.toString());
-                        tableRow.set("pageviews", l.intValue());
-                        r.output(tableRow);
+                        Row timestampedRow = Row.withSchema(pageViewsSchema)
+                                .addValues(pageviews, i)
+                                .build();
+                        r.output(timestampedRow);
                     }
-                }))
-                .apply("WriteToBQ", BigQueryIO.writeTableRows()
-                        .to(options.getTableName())
-                        .withSchema(schema)
-                        .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
-                        .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+                })).setRowSchema(pageViewsSchema)
+                .apply("WriteToBQ",
+                        BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
+                                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
+                                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
         return pipeline.run();
     }
