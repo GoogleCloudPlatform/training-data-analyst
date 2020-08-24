@@ -1,0 +1,14 @@
+# config-management.yaml
+apiVersion: configmanagement.gke.io/v1
+kind: ConfigManagement
+metadata:
+  name: config-management
+  namespace: config-management-system
+spec:
+  clusterName: onprem.k8s.local
+  git:
+    syncRepo: ssh://[qwiklabs-user-email]@source.developers.google.com:2022/p/[qwiklabs-project]/r/anthos_config
+    syncBranch: master
+    secretType: ssh
+    policyDir: "."
+    syncWait: 2

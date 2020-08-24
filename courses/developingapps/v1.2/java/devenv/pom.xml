@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 
- * Copyright 2015 Google Inc.
+ * Copyright 2020 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.6.RELEASE</version>
+		<version>2.3.0.RELEASE</version>
 		<relativePath/>
 	</parent>
 
@@ -69,17 +69,17 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-        <dependency>
-            <groupId>com.google.api-client</groupId>
-            <artifactId>google-api-client</artifactId>
-            <version>1.22.0</version>
-         </dependency>
-        <dependency>
-            <groupId>com.google.apis</groupId>
-            <artifactId>google-api-services-compute</artifactId>
-            <version>beta-rev67-1.22.0</version>
-        </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>com.google.api-client</groupId>
+			<artifactId>google-api-client</artifactId>
+			<version>1.30.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.apis</groupId>
+			<artifactId>google-api-services-compute</artifactId>
+			<version>v1-rev235-1.25.0</version>
+		</dependency>
+  </dependencies>
 	<build>
 		<plugins>
 			<plugin>
@@ -97,17 +97,17 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>list-gce</id>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>com.google.training.appdev.console.ConsoleApp</mainClass>
-                        </configuration>
-                    </execution>
-                </executions>
+				<executions>
+								<execution>
+												<id>list-gce</id>
+												<goals>
+																<goal>java</goal>
+												</goals>
+												<configuration>
+																<mainClass>com.google.training.appdev.console.ConsoleApp</mainClass>
+												</configuration>
+								</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
