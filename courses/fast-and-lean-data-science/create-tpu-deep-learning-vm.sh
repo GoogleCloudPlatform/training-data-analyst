@@ -63,7 +63,7 @@ create_tpu() # params: machine_name, tpu_type, tfnightly, version
 
 # standard parameter processing bash code with defaults
 tfnightly=0
-version=DEFAULT_TF_VERSION
+version=$DEFAULT_TF_VERSION
 tpu_type="v2-8"
 machine_type="n1-standard-8"
 machine_name=$1 # machine name always in first position
