@@ -1,0 +1,23 @@
+{
+  "name": "Your pipeline name",
+  "description": "Your pipeline description",
+  "parameters": [
+    {
+      "name": "inputSubscription",
+      "label": "Pub/Sub input subscription.",
+      "helpText": "Pub/Sub subscription to read from.",
+      "regexes": [
+        "[-_.a-zA-Z0-9]+"
+      ]
+    },
+    {
+      "name": "outputTable",
+      "label": "BigQuery output table",
+      "helpText": "BigQuery table spec to write to, in the form 'project:dataset.table'.",
+      "is_optional": true,
+      "regexes": [
+        "[^:]+:[^.]+[.].+"
+      ]
+    }
+  ]
+}
