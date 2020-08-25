@@ -32,7 +32,7 @@ create_vm() # params: machine_name, machine_type, tfnightly, version
         extra_install="./opt/conda/bin/pip install behave";
         version_msg=$version;
     fi
-    image_family=${IMAGE_FAMILY_PATTERN/2-x/${version/./-}}
+    image_family=${IMAGE_FAMILY_PATTERN/2-x/${version//./-}}
     echo "Creating VM named $1 of type $2 with Tensorflow $version_msg and image family $image_family. Check for it with \"gcloud compute instances list\""
     gcloud compute instances create $1 \
         --machine-type n1-standard-8 \
