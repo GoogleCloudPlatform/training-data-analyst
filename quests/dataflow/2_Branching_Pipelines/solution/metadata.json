@@ -15,11 +15,11 @@
       "label": "Output file location",
       "helpText": "GCS Coldline Bucket location for raw data",
       "regexes": [
-        "gs:\\/\\/[a-zA-z0-9\\-\\_]+"
+        "gs:\\/\\/[a-zA-z0-9\\-\\_\\/]+"
       ]
     },
     {
-      "name": "outputTable",
+      "name": "tableName",
       "label": "BigQuery output table",
       "helpText": "BigQuery table spec to write to, in the form 'project:dataset.table'.",
       "regexes": [
