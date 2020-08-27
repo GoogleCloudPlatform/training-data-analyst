@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.mypackage</groupId>
-    <artifactId>advanced-dataflow-lab</artifactId>
+    <artifactId>advanced-dataflow-lab-3-lab</artifactId>
     <version>1.0</version>
 
     <properties>
