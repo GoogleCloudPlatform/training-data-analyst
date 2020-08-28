@@ -24,20 +24,25 @@ import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.schemas.transforms.Group;
-import org.apache.beam.sdk.schemas.transforms.Select;
+import org.apache.beam.sdk.schemas.Schema;
 import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
+import org.apache.beam.sdk.transforms.windowing.Window;
+import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
+import org.joda.time.Duration;
+import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class BatchUserTrafficPipeline {
+public class BatchMinuteTrafficPipeline {
 
     /**
      * The logger to output status messages to.
      */
-    private static final Logger LOG = LoggerFactory.getLogger(BatchUserTrafficPipeline.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BatchMinuteTrafficPipeline.class);
 
     /**
      * The {@link Options} class provides the custom execution options passed by the
@@ -56,7 +61,7 @@ public class BatchUserTrafficPipeline {
     /**
      * The main entry-point for pipeline execution. This method will start the
      * pipeline but will not wait for it's execution to finish. If blocking
-     * execution is required, use the {@link BatchUserTrafficPipeline#run(Options)} method to
+     * execution is required, use the {@link BatchMinuteTrafficPipeline#run(Options)} method to
      * start the pipeline and invoke {@code result.waitUntilFinish()} on the
      * {@link PipelineResult}.
      *
@@ -69,6 +74,27 @@ public class BatchUserTrafficPipeline {
     }
 
 
+    /**
+     * A DoFn acccepting Json and outputing CommonLog with Beam Schema
+     */
+    static class JsonToCommonLog extends DoFn<String, CommonLog> {
+
+        @ProcessElement
+        public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
+            Gson gson = new Gson();
+            CommonLog commonLog = gson.fromJson(json, CommonLog.class);
+            r.output(commonLog);
+        }
+    }
+
+    /**
+     * A Beam schema for counting pageviews per minute
+     */
+    public static final Schema pageViewsSchema = Schema
+            .builder()
+            .addInt64Field("pageviews")
+            .addDateTimeField("minute")
+            .build();
 
     /**
      * Runs the pipeline to completion with the specified options. This method does
@@ -92,30 +118,10 @@ public class BatchUserTrafficPipeline {
          * 3) Write something
          */
 
-        pipeline
-                // Read in lines from GCS and Parse to CommonLog
-                .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
-                .apply("ParseJson", ParDo.of(new DoFn<String, CommonLog>() {
-                                                 @ProcessElement
-                                                 public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
-                                                     Gson gson = new Gson();
-                                                     CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-                                                     r.output(commonLog);
-                                                 }
-                                             }
-                ))
-
-                // Have to mention field twice, in case of multiple agg fields and multiple agg functions
-                .apply("PerUserAggregations", Group.<CommonLog>byFieldNames("user_id")
-                        .aggregateField("user_id", Count.combineFn(), "pageviews")
-                        .aggregateField("num_bytes", Sum.ofLongs(), "total_bytes")
-                        .aggregateField("num_bytes", Max.ofLongs(), "max_num_bytes")
-                        .aggregateField("num_bytes", Min.ofLongs(), "min_num_bytes"))
-
-                // Need a select statement to unnest the <"Key", "Value"> Row returned by the previous transform
-                .apply("UnnestFields", Select.fieldNames("key.user_id", "value.pageviews", "value.total_bytes", "value.max_num_bytes", "value.min_num_bytes"))
+        pipeline.apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
+                .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
                 .apply("WriteToBQ",
-                        BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
+                        BigQueryIO.<CommonLog>write().to(options.getTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
