@@ -24,7 +24,7 @@ import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
  * Annotated with @DefaultSchema to the allow the use of Beam Schema and <Row> object
  */
 @DefaultSchema(JavaFieldSchema.class)
-public static class CommonLog {
+public class CommonLog {
     String user_id;
     String ip;
     @javax.annotation.Nullable Float lat;
