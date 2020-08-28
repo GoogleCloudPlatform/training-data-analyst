@@ -108,12 +108,12 @@ public class BatchUserTrafficPipeline {
                 // Have to mention field twice, in case of multiple agg fields and multiple agg functions
                 .apply("PerUserAggregations", Group.<CommonLog>byFieldNames("user_id")
                         .aggregateField("user_id", Count.combineFn(), "pageviews")
-                        .aggregateField("num_bytes", Sum.ofIntegers(), "total_bytes")
-                        .aggregateField("num_bytes", Max.ofIntegers(), "max_num_bytes")
-                        .aggregateField("num_bytes", Min.ofIntegers(), "min_num_bytes"))
+                        .aggregateField("num_bytes", Sum.ofLongs(), "total_bytes")
+                        .aggregateField("num_bytes", Max.ofLongs(), "max_num_bytes")
+                        .aggregateField("num_bytes", Min.ofLongs(), "min_num_bytes"))
 
                 // Need a select statement to unnest the <"Key", "Value"> Row returned by the previous transform
-                .apply("UnnestFields", Select.fieldNames("key.user_id", "value.pageviews", "value.total_bytes", "value.max_num_bytes", "min_num_bytes"))
+                .apply("UnnestFields", Select.fieldNames("key.user_id", "value.pageviews", "value.total_bytes", "value.max_num_bytes", "value.min_num_bytes"))
                 .apply("WriteToBQ",
                         BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
