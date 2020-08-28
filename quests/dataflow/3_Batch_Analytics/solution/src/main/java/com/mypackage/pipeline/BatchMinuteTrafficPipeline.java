@@ -24,14 +24,15 @@ import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.schemas.JavaFieldSchema;
-import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
-import org.apache.beam.sdk.schemas.transforms.DropFields;
-import org.apache.beam.sdk.schemas.transforms.Filter;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.schemas.Schema;
+import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
+import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
+import org.joda.time.Duration;
+import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,7 @@ public class BatchMinuteTrafficPipeline {
     /**
      * The logger to output status messages to.
      */
-    private static final Logger LOG = LoggerFactory.getLogger(MyPipeline.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BatchMinuteTrafficPipeline.class);
 
     /**
      * The {@link Options} class provides the custom execution options passed by the
@@ -60,7 +61,7 @@ public class BatchMinuteTrafficPipeline {
     /**
      * The main entry-point for pipeline execution. This method will start the
      * pipeline but will not wait for it's execution to finish. If blocking
-     * execution is required, use the {@link MyPipeline#run(Options)} method to
+     * execution is required, use the {@link BatchMinuteTrafficPipeline#run(Options)} method to
      * start the pipeline and invoke {@code result.waitUntilFinish()} on the
      * {@link PipelineResult}.
      *
