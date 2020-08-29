@@ -63,7 +63,7 @@ kpt cfg set asm gcloud.compute.location ${C1_ZONE}
 gcloud container clusters get-credentials $C1_NAME \
     --zone $C1_ZONE --project $PROJECT_ID
 
-istioctl install -f asm/istio/istio-operator.yaml -f ~/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/scripts/tracing.yaml
+istioctl install -f asm/istio/istio-operator.yaml -f $LAB_DIR/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/scripts/tracing.yaml
 
 kubectl wait --for=condition=available --timeout=600s deployment \
   --all -n istio-system
