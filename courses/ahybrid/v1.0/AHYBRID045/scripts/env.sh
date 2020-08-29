@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # general values
-
+export HOME=~
 export PATH=$PATH:$LAB_DIR/bin:
 export PROJECT_ID=$(gcloud config get-value project)
 
