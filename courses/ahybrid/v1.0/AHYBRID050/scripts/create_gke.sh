@@ -60,11 +60,8 @@ cd asm
 kpt cfg set asm gcloud.container.cluster ${C1_NAME}
 kpt cfg set asm gcloud.core.project ${PROJECT_ID}
 kpt cfg set asm gcloud.compute.location ${C1_ZONE}
-echo ${PROJECT_ID}
-echo ${C1_NAME}
-echo ${C1_ZONE}
 
-istioctl install -f asm/istio/istio-operator.yaml -f ~/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/tracing.yaml
+istioctl install -f asm/istio/istio-operator.yaml -f ~/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/scripts/tracing.yaml
 
 kubectl wait --for=condition=available --timeout=600s deployment \
   --all -n istio-system
@@ -72,10 +69,10 @@ kubectl wait --for=condition=available --timeout=600s deployment \
 kubectl label namespace default istio-injection=enabled --overwrite
 
 # Deploy BookInfo application
-kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml
+kubectl apply -f ../samples/bookinfo/platform/kube/bookinfo.yaml
 
 # Sleep while Bookinfo pods initialize
 sleep 30s
 
 # Expose Bookinfo external gateway/IP
-kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
+kubectl apply -f ../samples/bookinfo/networking/bookinfo-gateway.yaml
