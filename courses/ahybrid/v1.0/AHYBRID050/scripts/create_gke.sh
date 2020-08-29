@@ -31,7 +31,6 @@ kubectl create clusterrolebinding [BINDING_NAME] \
 
 gcloud iam service-accounts create connect-sa
 
-echo ${PROJECT_ID}
 gcloud projects add-iam-policy-binding ${PROJECT_ID} \
  --member="serviceAccount:connect-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
  --role="roles/gkehub.connect"
@@ -60,6 +59,9 @@ cd asm
 kpt cfg set asm gcloud.container.cluster ${C1_NAME}
 kpt cfg set asm gcloud.core.project ${PROJECT_ID}
 kpt cfg set asm gcloud.compute.location ${C1_ZONE}
+
+gcloud container clusters get-credentials $C1_NAME \
+    --zone $C1_ZONE --project $PROJECT_ID
 
 istioctl install -f asm/istio/istio-operator.yaml -f ~/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/scripts/tracing.yaml
 
