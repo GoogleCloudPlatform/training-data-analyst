@@ -22,7 +22,3 @@ sudo apt-get install google-cloud-sdk-kpt
 curl -sLO https://raw.githubusercontent.com/ahmetb/kubectx/v0.7.0/kubectx 
 chmod +x kubectx 
 mv kubectx $LAB_DIR/bin
-
-
-
-mv kops-linux-amd64 $LAB_DIR/bin/kops

@@ -19,12 +19,11 @@ source ./scripts/env.sh
 gcloud config set compute/zone ${C1_ZONE}
 gcloud beta container clusters create ${C1_NAME} \
     --machine-type=n1-standard-4 \
-    --num-nodes=2 \
+    --num-nodes=4 \
     --workload-pool=${WORKLOAD_POOL} \
     --enable-stackdriver-kubernetes \
     --subnetwork=default \
     --labels mesh_id=${MESH_ID}
-    --release-channel=regular
 
 # service account requires additional role bindings
 kubectl create clusterrolebinding [BINDING_NAME] \
@@ -65,7 +64,7 @@ echo ${PROJECT_ID}
 echo ${C1_NAME}
 echo ${C1_ZONE}
 
-istioctl install -f asm/istio/istio-operator.yaml -f asm/istio/tracing.yaml
+istioctl install -f asm/istio/istio-operator.yaml -f ~/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/tracing.yaml
 
 kubectl wait --for=condition=available --timeout=600s deployment \
   --all -n istio-system
