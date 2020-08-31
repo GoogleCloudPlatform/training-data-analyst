@@ -42,6 +42,7 @@ gcloud container hub memberships register ${C1_NAME}-connect \
    --gke-cluster=${C1_ZONE}/${C1_NAME}  \
    --service-account-key-file=./connect-sa-key.json
 
+# config project for Anthos Service Mesh
 curl --request POST \
   --header "Authorization: Bearer $(gcloud auth print-access-token)" \
   --data '' \
