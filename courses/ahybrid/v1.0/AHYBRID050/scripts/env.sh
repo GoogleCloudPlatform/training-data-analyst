@@ -15,9 +15,9 @@
 # limitations under the License.
 
 # general values
-
-export PATH=$PATH:$LAB_DIR/bin:
 export HOME=~
+export PATH=$PATH:$LAB_DIR/bin:
+export PROJECT_ID=$(gcloud config get-value project)
 
 # gke cluster values
 export C1_NAME="gke"
