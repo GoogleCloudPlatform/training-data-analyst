@@ -43,13 +43,21 @@ def preprocess(in_test_mode, PROJECT, BUCKET, start_year):
 
   if in_test_mode:
     print('Launching local job ... hang on')
+<<<<<<< HEAD
     print('Launching local job ... hang on 1')
+=======
+    print('Launching local job ... hang on more')
+>>>>>>> 7f3f7429287ed44430f2b7dfcfc3022d91508ffc
     OUTPUT_DIR = './preproc'
     shutil.rmtree(OUTPUT_DIR, ignore_errors=True)
     os.makedirs(OUTPUT_DIR)
   else:
     print('Launching Dataflow job {} ... hang on'.format(job_name))
+<<<<<<< HEAD
     print('Launching local job ... hang on 2')
+=======
+    print('Launching local job ... hang on more..')
+>>>>>>> 7f3f7429287ed44430f2b7dfcfc3022d91508ffc
     if start_year == '2000':
       OUTPUT_DIR = 'gs://{0}/babyweight/preproc/'.format(BUCKET)
       try:
