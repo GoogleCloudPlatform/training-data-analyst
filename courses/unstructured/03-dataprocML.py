@@ -19,11 +19,6 @@
   
 '''
 
-import logging
-import argparse
-import json
-
-import os
 from googleapiclient.discovery import build
 
 from pyspark import SparkContext
