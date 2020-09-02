@@ -55,7 +55,7 @@ echo "Enabling Cloud Functions API"
 gcloud services enable cloudfunctions.googleapis.com
 
 echo "Creating Cloud Function"
-gcloud functions deploy process-feedback --runtime nodejs8 --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+gcloud functions deploy process-feedback --runtime nodejs10 --allow-unauthenticated --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 
 echo "Deploying to App Engine"
 sed -i -e "s/\[GCLOUD_PROJECT\]/$DEVSHELL_PROJECT_ID/g" ./frontend/app.yaml
