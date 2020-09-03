@@ -7,7 +7,7 @@
 # Then, change the repo-owner to be your GitHub id
 
 REPO_NAME=training-data-analyst
-REPO_OWNER=GoogleCloudPlatform
+REPO_OWNER=anshuman-cg
 
 #for trigger_name in trigger-000 trigger-001 trigger-002 trigger-003; do
 #  gcloud beta builds triggers delete --quiet $trigger_name
@@ -19,7 +19,7 @@ create_github_trigger() {
     gcloud beta builds triggers create github \
       --build-config="${DIR_IN_REPO}/cloudbuild.yaml" \
       --included-files="${DIR_IN_REPO}/**" \
-      --branch-pattern="^master$" \
+      --branch-pattern="anshuman" \
       --repo-name=${REPO_NAME} --repo-owner=${REPO_OWNER} 
 }
 

@@ -45,7 +45,8 @@ def preprocess(in_test_mode, PROJECT, BUCKET, start_year):
     print('Launching local job ... hang on')
 <<<<<<< HEAD
     print('Launching local job ... hang on 1')
-    print('Launching local job ... hang on 2')
+    print('Launching local job ... hang on ......')
+    print('Launching local job ... hang on ......')
 =======
     print('Launching local job ... hang on more')
 >>>>>>> 7f3f7429287ed44430f2b7dfcfc3022d91508ffc
