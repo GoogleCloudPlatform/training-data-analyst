@@ -37,7 +37,7 @@ class ObjectDict(dict):
 def preprocess_train_and_deploy(
     project='ai-analytics-solutions',
     bucket='ai-analytics-solutions-kfpdemo',
-    start_year='2000'
+    start_year='2019'
 ):
     """End-to-end Pipeline to train and deploy babyweight model"""
     # Step 1: create training dataset using Apache Beam on Cloud Dataflow
@@ -93,7 +93,7 @@ def preprocess_train_and_deploy(
 def train_and_deploy(
     project='ai-analytics-solutions',
     bucket='ai-analytics-solutions-kfpdemo',
-    start_year='2000'
+    start_year='2019'
 ):
     """Pipeline to retrain and deploy babyweight ML model only"""
     # Create dictionaries that correspond to output of previous steps
