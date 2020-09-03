@@ -43,14 +43,11 @@ def preprocess(in_test_mode, PROJECT, BUCKET, start_year):
 
   if in_test_mode:
     print('Launching local job ... hang on')
-    print('Launching local job ... hang on more')
     OUTPUT_DIR = './preproc'
     shutil.rmtree(OUTPUT_DIR, ignore_errors=True)
     os.makedirs(OUTPUT_DIR)
   else:
     print('Launching Dataflow job {} ... hang on'.format(job_name))
-    print('Launching local job ... hang on 2')
-    print('Launching local job ... hang on more..')
     if start_year == '2000':
       OUTPUT_DIR = 'gs://{0}/babyweight/preproc/'.format(BUCKET)
       try:
@@ -128,7 +125,7 @@ if __name__ == '__main__':
                       help='Bucket to store outputs.')
   parser.add_argument('--start_year',
                       type=str,
-                      default='2019',
+                      default='2000',
                       help='Year to start extracting data. If 2000, older data will be removed')
   parser.add_argument('--mode',
                       choices=['local', 'cloud'],
