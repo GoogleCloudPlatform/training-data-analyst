@@ -35,8 +35,8 @@ class ObjectDict(dict):
   description='Train Babyweight model from scratch'
 )
 def preprocess_train_and_deploy(
-    project='ai-analytics-solutions',
-    bucket='ai-analytics-solutions-kfpdemo',
+    project='ind-coe',
+    bucket='ind-coe',
     start_year='2019'
 ):
     """End-to-end Pipeline to train and deploy babyweight model"""
@@ -44,7 +44,7 @@ def preprocess_train_and_deploy(
     preprocess = dsl.ContainerOp(
           name='preprocess',
           # image needs to be a compile-time string
-          image='gcr.io/ai-analytics-solutions/babyweight-pipeline-bqtocsv:latest',
+          image='gcr.io/ind-coe/babyweight-pipeline-bqtocsv:latest',
           arguments=[
             '--project', project,
             '--mode', 'cloud',
@@ -59,7 +59,7 @@ def preprocess_train_and_deploy(
     hparam_train = dsl.ContainerOp(
         name='hypertrain',
         # image needs to be a compile-time string
-        image='gcr.io/ai-analytics-solutions/babyweight-pipeline-hypertrain:latest',
+        image='gcr.io/ind-coe/babyweight-pipeline-hypertrain:latest',
         arguments=[
             preprocess.outputs['bucket']
         ],
@@ -73,7 +73,7 @@ def preprocess_train_and_deploy(
     deploy_app = dsl.ContainerOp(
           name='deployapp',
           # image needs to be a compile-time string
-          image='gcr.io/ai-analytics-solutions/babyweight-pipeline-deployapp:latest',
+          image='gcr.io/ind-coe/babyweight-pipeline-deployapp:latest',
           arguments=[
             deploy_cmle.outputs['model'],
             deploy_cmle.outputs['version']
@@ -91,8 +91,8 @@ def preprocess_train_and_deploy(
   description='Train Babyweight model on current data in GCS'
 )
 def train_and_deploy(
-    project='ai-analytics-solutions',
-    bucket='ai-analytics-solutions-kfpdemo',
+    project='ind-coe',
+    bucket='ind-coe',
     start_year='2019'
 ):
     """Pipeline to retrain and deploy babyweight ML model only"""
@@ -106,7 +106,7 @@ def train_and_deploy(
     # Step 2: hyperparam train
     hparam_train = ObjectDict({
       'outputs': {
-        'jobname': os.environ.get('HPARAM_JOB', 'babyweight_200207_231639')
+        'jobname': os.environ.get('HPARAM_JOB', 'babyweight_200903_102736')
       }
     })
     
@@ -124,7 +124,7 @@ def train_and_deploy_helper(preprocess, hparam_train):
     train_tuned = dsl.ContainerOp(
       name='traintuned',
       # image needs to be a compile-time string
-      image='gcr.io/ai-analytics-solutions/babyweight-pipeline-traintuned:latest',
+      image='gcr.io/ind-coe/babyweight-pipeline-traintuned:latest',
       arguments=[
         hparam_train.outputs['jobname'],
         preprocess.outputs['bucket']
@@ -138,7 +138,7 @@ def train_and_deploy_helper(preprocess, hparam_train):
     deploy_cmle = dsl.ContainerOp(
       name='deploycmle',
       # image needs to be a compile-time string
-      image='gcr.io/ai-analytics-solutions/babyweight-pipeline-deploycmle:latest',
+      image='gcr.io/ind-coe/babyweight-pipeline-deploycmle:latest',
       arguments=[
         train_tuned.outputs['train'],  # modeldir
         'babyweight',

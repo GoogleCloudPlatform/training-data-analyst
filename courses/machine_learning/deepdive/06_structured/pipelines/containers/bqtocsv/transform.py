@@ -137,7 +137,7 @@ if __name__ == '__main__':
                       help='Bucket to store outputs.')
   parser.add_argument('--start_year',
                       type=str,
-                      default='2000',
+                      default='2019',
                       help='Year to start extracting data. If 2000, older data will be removed')
   parser.add_argument('--mode',
                       choices=['local', 'cloud'],
