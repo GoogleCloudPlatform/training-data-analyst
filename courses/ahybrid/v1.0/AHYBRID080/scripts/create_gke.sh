@@ -55,18 +55,30 @@ curl --request POST \
   https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize
 
 # download anthos service mesh software
-curl -LO https://storage.googleapis.com/gke-release/asm/istio-1.4.7-asm.0-linux.tar.gz
-tar xzf istio-1.4.7-asm.0-linux.tar.gz
+curl -LO https://storage.googleapis.com/gke-release/asm/istio-1.6.8-asm.9-linux-amd64.tar.gz
+tar xzf istio-1.6.8-asm.9-linux-amd64.tar.gz
+cd istio-1.6.8-asm.9
+export PATH=$PWD/bin:$PATH
 
+kpt pkg get https://github.com/GoogleCloudPlatform/anthos-service-mesh-packages@1.6.8-asm.9 asm
 
-./istio-1.4.7-asm.0/bin/istioctl manifest apply --set profile=asm \
- --set values.global.trustDomain=${WORKLOAD_POOL} \
- --set values.global.sds.token.aud=${WORKLOAD_POOL} \
- --set values.nodeagent.env.GKE_CLUSTER_URL=https://container.googleapis.com/v1/projects/${PROJECT_ID}/locations/${C1_ZONE}/clusters/${C1_NAME} \
- --set values.global.meshID=${MESH_ID} \
- --set values.global.proxy.env.GCP_METADATA="${PROJECT_ID}|${PROJECT_NUMBER}|${C1_NAME}|${C1_ZONE}" \
- --set values.tracing.enabled=true \
- --set values.global.proxy.tracer="stackdriver"
+cd asm
+kpt cfg set asm gcloud.container.cluster ${C1_NAME}
+kpt cfg set asm gcloud.project.environProjectNumber ${PROJECT_NUMBER}
+kpt cfg set asm gcloud.core.project ${PROJECT_ID}
+kpt cfg set asm gcloud.compute.location ${C1_ZONE}
+
+# To configure that all clusters are in the same project
+kpt cfg set asm anthos.servicemesh.profile asm-gcp
+
+gcloud container clusters get-credentials $C1_NAME \
+    --zone $C1_ZONE --project $PROJECT_ID
+
+# Install Istio + Enable tracing with Cloud Trace
+istioctl install -f asm/cluster/istio-operator.yaml -f $LAB_DIR/training-data-analyst/courses/ahybrid/v1.0/AHYBRID080/scripts/tracing.yaml
+
+# Enable the Anthos Service Mesh UI in Cloud Console
+kubectl apply -f asm/canonical-service/controller.yaml
 
 kubectl wait --for=condition=available --timeout=600s deployment \
 --all -n istio-system
@@ -74,5 +86,5 @@ kubectl wait --for=condition=available --timeout=600s deployment \
 kubectl create namespace prod
 kubectl label namespace prod istio-injection=enabled --overwrite
 kubectl apply -n prod -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/kubernetes-manifests.yaml
-kubectl apply -n prod-f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/istio-manifests.yaml
+kubectl apply -n prod -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/istio-manifests.yaml
 kubectl patch -n prod deployments/productcatalogservice -p '{"spec":{"template":{"metadata":{"labels":{"version":"v1"}}}}}'
