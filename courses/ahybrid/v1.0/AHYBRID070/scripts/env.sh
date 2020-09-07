@@ -26,4 +26,4 @@ export NODE_SIZE=n1-standard-4
 export KOPS_ZONES=$C2_ZONE
 export INSTANCE_IP=$(curl -s api.ipify.org)
 export INSTANCE_CIDR=$INSTANCE_IP/32
-export KOPS_STORE=gs://$PROJECT_ID-kops-$REMOTE_CLUSTER_NAME_BASE
+export KOPS_STORE=gs://$PROJECT_ID-kops-$C2_NAME
