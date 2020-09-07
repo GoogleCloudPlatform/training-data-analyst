@@ -34,21 +34,19 @@ export KOPS_FEATURE_FLAGS=AlphaAllowGCE
 
 echo "Create kops cluster..."
 kops create cluster \
-    --name=$REMOTE_CLUSTER_NAME \
-    --zones=$ZONES \
-    --state=$KOPS_STORE \
-    --project=${PROJECT_ID} \
-    --node-count=$NODE_COUNT \
-    --node-size=$NODE_SIZE \
-    --admin-access=0.0.0.0/0 \
-    --yes
-
-KUBECONFIG= kubectl config view --minify --flatten --context=$REMOTE_CLUSTER_NAME > $REMOTE_KUBECONFIG
+--name=$C2_FULLNAME \
+--zones=$KOPS_ZONES \
+--state=$KOPS_STORE \
+--project=${PROJECT_ID} \
+--node-count=$NODE_COUNT \
+--node-size=$NODE_SIZE \
+--admin-access=$INSTANCE_CIDR \
+--yes
 
 for (( c=1; c<=20; c++))
 do
 	echo "Check if cluster is ready - Attempt $c"
-        CHECK=`kops validate cluster --name $REMOTE_CLUSTER_NAME --state $KOPS_STORE | grep ready | wc -l`
+        CHECK=`kops validate cluster --name $C2_FULLNAME --state $KOPS_STORE | grep ready | wc -l`
         if [[ "$CHECK" == "1" ]]; then
                 break;
         fi
@@ -57,12 +55,15 @@ done
 
 sleep 20
 
-# Ensure you have cluster-admin on the remote cluster
-kubectl create clusterrolebinding user-cluster-admin --clusterrole cluster-admin --user $(gcloud config get-value account)
+kops export kubecfg --name $C2_FULLNAME --state=$KOPS_STORE
+gsutil cp ~/.kube/config $KOPS_STORE
 
-# Context
-#kops export kubecfg remotectx
-kubectx $REMOTE_CLUSTER_NAME_BASE=$REMOTE_CLUSTER_NAME && kubectx $REMOTE_CLUSTER_NAME_BASE
+# Ensure you have cluster-admin on the remote cluster
+export KSA=remote-admin-sa
+kubectl create serviceaccount $KSA
+kubectl create clusterrolebinding ksa-admin-binding \
+    --clusterrole cluster-admin \
+    --serviceaccount default:$KSA
 
 echo "### "
 echo "### Provision remote cluster complete"

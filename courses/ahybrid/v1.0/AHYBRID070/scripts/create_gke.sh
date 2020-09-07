@@ -20,8 +20,8 @@ echo "### "
 echo "### Begin Provision GKE"
 echo "### "
 
-gcloud beta container clusters create ${CLUSTER_NAME} --zone ${CLUSTER_ZONE} \
-    --username "admin" \
+gcloud config set compute/zone ${C1_ZONE}
+gcloud beta container clusters create ${C1_NAME} \
     --machine-type "n1-standard-4" \
     --image-type "COS" \
     --disk-size "100" \
@@ -35,23 +35,9 @@ gcloud beta container clusters create ${CLUSTER_NAME} --zone ${CLUSTER_ZONE} \
     --labels csm= \
     --release-channel=regular
 
-
-echo "Getting cluster credentials"
-gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE}
-
-echo "Renaming kubectx context to ${CLUSTER_NAME} and switching to context"
-kubectx ${CLUSTER_NAME}=gke_${PROJECT_ID}_${CLUSTER_ZONE}_${CLUSTER_NAME}
-kubectx ${CLUSTER_NAME}
-
-KUBECONFIG= kubectl config view --minify --flatten --context=$CLUSTER_NAME > $CLUSTER_KUBECONFIG
-
-EXISTING_BINDING=$(kubectl get clusterrolebinding cluster-admin-binding -o json | jq -r '.metadata.name')
-if [ "${EXISTING_BINDING}" == "cluster-admin-binding" ]; then
-    echo "clusterrolebinding already exists."
-else
-    echo "Creating clusterrolebinding"
-    kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --user="$(gcloud config get-value core/account)"
-fi
+# service account requires additional role bindings
+kubectl create clusterrolebinding [BINDING_NAME] \
+    --clusterrole cluster-admin --user [USER]
 
 echo "### "
 echo "### Provision GKE complete"
