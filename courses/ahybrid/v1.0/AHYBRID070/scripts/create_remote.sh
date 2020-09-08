@@ -58,13 +58,6 @@ sleep 20
 kops export kubecfg --name $C2_FULLNAME --state=$KOPS_STORE
 gsutil cp ~/.kube/config $KOPS_STORE
 
-# Ensure you have cluster-admin on the remote cluster
-export KSA=remote-admin-sa
-kubectl create serviceaccount $KSA
-kubectl create clusterrolebinding ksa-admin-binding \
-    --clusterrole cluster-admin \
-    --serviceaccount default:$KSA
-
 echo "### "
 echo "### Provision remote cluster complete"
 echo "### "
