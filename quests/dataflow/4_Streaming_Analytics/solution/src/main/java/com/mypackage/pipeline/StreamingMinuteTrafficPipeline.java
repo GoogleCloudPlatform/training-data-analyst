@@ -16,31 +16,29 @@
 
 package com.mypackage.pipeline;
 
-import com.google.api.services.bigquery.model.TableFieldSchema;
-import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
-import org.apache.beam.sdk.io.gcp.pubsub.PubsubMessage;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.options.StreamingOptions;
+import org.apache.beam.sdk.schemas.Schema;
+import org.apache.beam.sdk.schemas.transforms.AddFields;
+import org.apache.beam.sdk.schemas.transforms.Select;
 import org.apache.beam.sdk.transforms.*;
-import org.apache.beam.sdk.transforms.windowing.*;
+import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
+import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.Row;
+import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.beam.sdk.values.TupleTag;
-
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The {@link StreamingMinuteTrafficPipeline} is a sample pipeline which can be used as a base for creating a real
@@ -49,8 +47,8 @@ import java.util.List;
  * <p><b>Pipeline Requirements</b>
  *
  * <ul>
- * <li>Requirement #1
- * <li>Requirement #2
+ *   <li>Requirement #1
+ *   <li>Requirement #2
  * </ul>
  *
  * <p><b>Example Usage</b>
@@ -65,7 +63,7 @@ import java.util.List;
  *
  * # Build the template
  * mvn compile exec:java \
- * -Dexec.mainClass=com.mypackage.pipeline.StreamingMinuteTrafficPipeline \
+ * -Dexec.mainClass=com.mypackage.pipeline.BatchUserTrafficPipeline \
  * -Dexec.cleanupDaemonThreads=false \
  * -Dexec.args=" \
  * --project=${PROJECT_ID} \
@@ -77,11 +75,6 @@ import java.util.List;
  */
 public class StreamingMinuteTrafficPipeline {
 
-    static final TupleTag<CommonLog> parsedMessages = new TupleTag<CommonLog>() {
-    };
-    static final TupleTag<String> unparsedMessages = new TupleTag<String>() {
-    };
-
     /*
      * The logger to output status messages to.
      */
@@ -91,68 +84,51 @@ public class StreamingMinuteTrafficPipeline {
      * The {@link Options} class provides the custom execution options passed by the executor at the
      * command-line.
      */
-    public interface Options extends PipelineOptions, StreamingOptions {
-        @Description(
-                "The Cloud Pub/Sub topic to consume from.")
-        String getInputTopic();
-
-        void setInputTopic(String inputTopic);
-
-        @Description("Window duration length, in minutes")
+    public interface Options extends PipelineOptions {
+        @Description("Window duration length, in seconds")
         Integer getWindowDuration();
-
         void setWindowDuration(Integer windowDuration);
 
-        @Description(
-                "The Cloud BigQuery table name to write raw data to. "
-                        + "The name should be in the format of "
-                        + "<project-id>:<dataset>.<table-name>."
-        )
-        String getRawOutputTableName();
-        void setRawOutputTableName(String rawOutputTableName);
+        @Description("BigQuery aggregate table name")
+        String getAggregateTableName();
+        void setAggregateTableName(String aggregateTableName);
 
-        @Description(
-                "The Cloud BigQuery table name to write aggregated data to. "
-                        + "The name should be in the format of "
-                        + "<project-id>:<dataset>.<table-name>."
-        )
-        String getAggregateOutputTableName();
-        void setAggregateOutputTableName(String aggregateOutputTableName);
+        @Description("Input topic name")
+        String getInputTopic();
+        void setInputTopic(String inputTopic);
+
+        @Description("BigQuery raw table name")
+        String getRawTableName();
+        void setRawTableName(String rawTableName);
 
     }
 
+    @VisibleForTesting
     /**
-     * A DoFn which accepts a JSON string and emits a CommonLog
+     * A DoFn accepting Json and outputting CommonLog with Beam Schema
      */
-    public static class JsonToCommonLog
-            extends DoFn<String, CommonLog> {
+    static class JsonToCommonLog extends DoFn<String, CommonLog> {
 
         @ProcessElement
-        public void processElement(@Element String json,
-                                   OutputReceiver<CommonLog> receiver) {
-            // Use Expose() annotation, so that Gson does not expect processing_timestamp field
+        public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
             Gson gson = new Gson();
             CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-            receiver.output(commonLog);
+            r.output(commonLog);
         }
     }
 
-
-    /**
-     * A DoFn which accepts a JSON string outputs a instance of TableRow
-     */
-    static class LongToTableRowFn extends DoFn<Long, TableRow> {
-
-        @ProcessElement
-        public void processElement(@Element Long l,
-                                   OutputReceiver<TableRow> r, IntervalWindow window)  throws Exception {
-            Instant i = Instant.ofEpochMilli(window.end().getMillis());
-            TableRow tableRow = new TableRow();
-            tableRow.set("window_end", i.toString());
-            tableRow.set("pageviews", l.intValue());
-            r.output(tableRow);
-        }
-    }
+    public static final Schema pageviewsSchema = Schema
+            .builder()
+            .addInt64Field("pageviews")
+            //TODO: change window_end in other labs
+            .addDateTimeField("window_end")
+            .build();
+    public static final Schema rawSchema = Schema
+            .builder()
+            .addStringField("user_id")
+            .addDateTimeField("event_timestamp")
+            .addDateTimeField("processing_timestamp")
+            .build();
 
     /**
      * The main entry-point for pipeline execution. This method will start the pipeline but will not
@@ -164,8 +140,9 @@ public class StreamingMinuteTrafficPipeline {
      */
     public static void main(String[] args) {
         PipelineOptionsFactory.register(Options.class);
-        Options options = PipelineOptionsFactory.fromArgs(args).as(Options.class);
-        options.setStreaming(true);
+        Options options = PipelineOptionsFactory.fromArgs(args)
+                .withValidation()
+                .as(Options.class);
         run(options);
     }
 
@@ -184,71 +161,74 @@ public class StreamingMinuteTrafficPipeline {
         Pipeline pipeline = Pipeline.create(options);
         options.setJobName("streaming-minute-traffic-pipeline-" + System.currentTimeMillis());
 
-        List<TableFieldSchema> rawFields = new ArrayList<>();
-        rawFields.add(new TableFieldSchema().setName("user_id").setType("STRING"));
-        rawFields.add(new TableFieldSchema().setName("event_timestamp").setType("TIMESTAMP"));
-        rawFields.add(new TableFieldSchema().setName("processing_timestamp").setType("TIMESTAMP"));
-        TableSchema rawSchema = new TableSchema().setFields(rawFields);
-
-        List<TableFieldSchema> aggregateFields = new ArrayList<>();
-        aggregateFields.add(new TableFieldSchema().setName("window_end").setType("TIMESTAMP"));
-        aggregateFields.add(new TableFieldSchema().setName("pageviews").setType("INTEGER"));
-        TableSchema aggregateSchema = new TableSchema().setFields(aggregateFields);
+        /*
+         * Steps:
+         *  1) Read something
+         *  2) Transform something
+         *  3) Write something
+         */
 
         LOG.info("Building pipeline...");
 
-        // Read PubsubMessages, parse them into CommonLogs
-        // Add in a field representing processing time
-        PCollection<CommonLog> commonLogs =
-                pipeline.apply(
-                        "ReadPubSubMessages",
-                        PubsubIO.readStrings()
-                                // Retrieve timestamp information from Pubsub Message attributes
+
+        PCollection<CommonLog> commonLogs = pipeline
+                .apply("ReadMessage", PubsubIO.readStrings()
                                 .withTimestampAttribute("timestamp")
                                 .fromTopic(options.getInputTopic()))
-                        .apply("ConvertPubsubMessageToCommonLog", ParDo.of(new JsonToCommonLog()));
 
-        // Convert CommonLogs to format for raw table, dropping everything except for timestamps
-        // Then write to BigQuery
+                .apply("ParseJson", ParDo.of(new JsonToCommonLog()));
+
+        // Window and write to BQ
         commonLogs
-                .apply("CommonLogToRawTableRow",
-                        ParDo.of(new DoFn<CommonLog, TableRow>() {
-                            @ProcessElement
-                            public void processElement(@Element CommonLog commonLog,
-                                                       OutputReceiver<TableRow> r) {
-                                TableRow tableRow = new TableRow();
-                                tableRow.set("user_id", commonLog.user_id);
-                                tableRow.set("event_timestamp", commonLog.timestamp);
-                                tableRow.set("processing_timestamp", Instant.now().toString());
-                                r.output(tableRow);
-                            }
-                        }))
-                .apply("WriteRawDataToBigQuery",
-                        BigQueryIO
-                                .writeTableRows()
-                                .to(options.getRawOutputTableName())
-                                .withSchema(rawSchema)
+                .apply("WindowByMinute", Window.into(FixedWindows.of(Duration.standardSeconds(options.getWindowDuration()))))
+                // update to Group.globally() after resolved: https://issues.apache.org/jira/browse/BEAM-10297
+                // Only if supports Row output
+                .apply("CountPerMinute", Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults())
+                .apply("ConvertToRow", ParDo.of(new DoFn<Long, Row>() {
+                    @ProcessElement
+                    public void processElement(@Element Long views, OutputReceiver<Row> r, IntervalWindow window) {
+                        Instant i = Instant.ofEpochMilli(window.end().getMillis());
+                        Row row = Row.withSchema(pageviewsSchema)
+                                .addValues(views, i)
+                                .build();
+                        r.output(row);
+                    }
+                })).setRowSchema(pageviewsSchema)
+        // TODO: is this a streaming insert?
+        .apply("WriteToBQ",
+                BigQueryIO.<Row>write().to(options.getAggregateTableName()).useBeamSchema()
+                        .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
+                        .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+
+        // Write raw to BQ
+        // But we want to add a processing time indicator as well
+        commonLogs
+                .apply("SelectFields", Select.fieldNames("user_id", "timestamp"))
+                .apply("AddProcessingTimeField", AddFields.<Row>create().field("processing_timestamp", Schema.FieldType.DATETIME))
+                .apply("AddProcessingTime", MapElements.via(new SimpleFunction<Row, Row>() {
+                    @Override
+                    public Row apply(Row row) {
+                        return Row.withSchema(rawSchema)
+                                .addValues(
+                                        row.getString("user_id"),
+                                        new DateTime(row.getString("timestamp")),
+                                        DateTime.now())
+                                .build();
+                    }
+                }
+                )).setRowSchema(rawSchema)
+                .apply("WriteRawToBQ",
+                        BigQueryIO.<Row>write().to(options.getRawTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
-        // Window events, then count the number of events within each window
-        // Before finally converting to TableRow and writing to BigQuery
-        commonLogs
-                .apply("WindowCommonLogs",
-                        Window.into(
-                                FixedWindows.of(
-                                        Duration.standardMinutes(options.getWindowDuration()))))
-                .apply("CountEventsPerWindow",
-                        Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults())
-                .apply("ConvertLongToTableRow",
-                        ParDo.of(new LongToTableRowFn()))
-                .apply("WriteAggregatedDataToBigQuery",
-                        BigQueryIO
-                                .writeTableRows()
-                                .to(options.getAggregateOutputTableName())
-                                .withSchema(aggregateSchema)
-                                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
-                                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+
+
+        // Next Lab?
+        // Use SQL Query
+        // Then Do through UI
+        // Show Topic Preview
 
         return pipeline.run();
     }
 }
+
