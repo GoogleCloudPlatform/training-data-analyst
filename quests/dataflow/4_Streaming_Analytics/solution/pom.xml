@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.mypackage</groupId>
-  <artifactId>4_Streaming_Analytics</artifactId>
+  <artifactId>advanced-dataflow-lab-4-solution</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <inceptionYear>2018</inceptionYear>
