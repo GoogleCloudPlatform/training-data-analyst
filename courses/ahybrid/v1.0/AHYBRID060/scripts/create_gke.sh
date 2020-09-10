@@ -60,10 +60,12 @@ kpt cfg set asm gcloud.container.cluster ${C1_NAME}
 kpt cfg set asm gcloud.core.project ${PROJECT_ID}
 kpt cfg set asm gcloud.compute.location ${C1_ZONE}
 
+kpt cfg set asm anthos.servicemesh.profile asm-gcp
+
 gcloud container clusters get-credentials $C1_NAME \
     --zone $C1_ZONE --project $PROJECT_ID
 
-istioctl install -f asm/istio/istio-operator.yaml
+istioctl install -f asm/cluster/istio-operator.yaml
 
 kubectl wait --for=condition=available --timeout=600s deployment \
   --all -n istio-system
