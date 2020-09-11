@@ -32,7 +32,6 @@ gcloud beta container clusters create ${C1_NAME} \
     --enable-ip-alias \
     --workload-pool=${WORKLOAD_POOL} \
     --enable-stackdriver-kubernetes \
-    --labels csm= \
     --release-channel=regular
 
 # service account requires additional role bindings
