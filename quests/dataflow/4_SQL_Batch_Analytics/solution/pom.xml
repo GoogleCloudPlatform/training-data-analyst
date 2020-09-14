@@ -26,7 +26,7 @@
 
     <properties>
         <!-- Dependency properties -->
-        <beam.version>2.22.0</beam.version>
+        <beam.version>2.23.0</beam.version>
         <java.version>1.8</java.version>
         <slf4j.version>1.7.25</slf4j.version>
         <maven-shade-plugin.version>3.2.3</maven-shade-plugin.version>
