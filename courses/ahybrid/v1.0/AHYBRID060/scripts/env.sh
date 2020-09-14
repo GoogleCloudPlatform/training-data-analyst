@@ -14,15 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source ./scripts/env.sh
+# general values
+export HOME=~
+export PATH=$PATH:$LAB_DIR/bin:
+export PROJECT_ID=$(gcloud config get-value project)
 
-apt-get install kubectl
-sudo apt-get install google-cloud-sdk-kpt
+# gke cluster values
+export C1_NAME="gke"
+export C1_ZONE="us-central1-b"
+export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} \
+    --format="value(projectNumber)")
+export WORKLOAD_POOL=${PROJECT_ID}.svc.id.goog
+export MESH_ID="proj-${PROJECT_NUMBER}"
 
-curl -sLO https://raw.githubusercontent.com/ahmetb/kubectx/v0.7.0/kubectx 
-chmod +x kubectx 
-mv kubectx $LAB_DIR/bin
-	
-curl -sLO https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
-chmod +x kops-linux-amd64
-mv kops-linux-amd64 $LAB_DIR/bin/kops
+gcloud config set compute/zone C1_ZONE
