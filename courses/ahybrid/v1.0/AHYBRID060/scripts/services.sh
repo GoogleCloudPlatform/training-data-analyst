@@ -14,15 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source ./scripts/env.sh
-
-apt-get install kubectl
-sudo apt-get install google-cloud-sdk-kpt
-
-curl -sLO https://raw.githubusercontent.com/ahmetb/kubectx/v0.7.0/kubectx 
-chmod +x kubectx 
-mv kubectx $LAB_DIR/bin
-	
-curl -sLO https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
-chmod +x kops-linux-amd64
-mv kops-linux-amd64 $LAB_DIR/bin/kops
+gcloud services enable \
+    container.googleapis.com \
+    compute.googleapis.com \
+    monitoring.googleapis.com \
+    logging.googleapis.com \
+    cloudtrace.googleapis.com \
+    meshca.googleapis.com \
+    meshtelemetry.googleapis.com \
+    meshconfig.googleapis.com \
+    iamcredentials.googleapis.com \
+    anthos.googleapis.com \
+    gkeconnect.googleapis.com \
+    gkehub.googleapis.com \
+    cloudresourcemanager.googleapis.com
