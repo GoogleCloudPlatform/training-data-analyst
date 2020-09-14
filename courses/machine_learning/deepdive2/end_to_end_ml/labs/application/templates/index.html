@@ -1,0 +1,103 @@
+<head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+</head>
+
+<body style="background-color:#f1f3f4">
+  <header class="mdl-layout__header" style="margin-bottom:25px;">
+    <div class="mdl-layout__header-row">
+      <img style="height:40px;width:40px;"
+           src="{{url_for('static', filename='baby.png')}}">
+      <span class="mdl-layout-title">Baby Weight Predictor</span>
+    </div>
+  </header>
+  <div class="mdl-card mdl-shadow--2dp" style="padding:10px;margin:auto;">
+    <form id="myForm" style="padding:10px">
+      <!-- Mother's Age -->
+      <label for="ageSlider">Mother's Age:</label>
+      <table><tr><td>
+      <input type="range" min="15" max="99" id="ageSlider" name="motherAge"
+             oninput="updateAgeInput(this.value);"
+             class="mdl-slider mdl-js-slider"></td><td>
+      <input type="number" id="ageText" min="15" max="99"
+             oninput="updateAgeInput(this.value);"
+             class="mdl-textfield__input" required></td>
+      </tr></table><br>
+
+      <!-- Gestation Weeks -->
+      <label for="weeksSlider">Gestation Weeks:</label>
+      <table><tr><td>
+      <input type="range" min="30" max="49" id="weeksSlider" name="gestationWeeks"
+             oninput="updateWeeksInput(this.value);"
+             class="mdl-slider mdl-js-slider"></td><td>
+      <input type="number" id="weeksText" min="30" max="49"
+             oninput="updateWeeksInput(this.value);"
+             class="mdl-textfield__input" required></td>
+      </tr></table><br>
+
+      <!-- Plurality -->
+      <label for="plurality">Plurality:</label><br>
+      <select id="plurality" name="plurality">
+        <option value="1">Single</option>
+        <option value="2">Twins</option>
+        <option value="3">Triplets</option>
+      </select><br><br>
+
+      <!-- Gender -->
+      <label>Gender:</label><br>
+      <label for="male"
+             class="mdl-radio mdl-js-radio mdl-js-ripple-effect" >
+        <input type="radio" name="babyGender" id="male" value="male"
+               class="mdl-radio__button" required>
+        <span class="mdl-radio__label">Male</span>
+      </label>
+      <label for="female"
+             class="mdl-radio mdl-js-radio mdl-js-ripple-effect">
+      	<input type="radio" name="babyGender" id="female" value="female"
+               class="mdl-radio__button" required>
+        <span class="mdl-radio__label">Female</span>
+      </label>
+      <label for="unknown"
+             class="mdl-radio mdl-js-radio mdl-js-ripple-effect">
+      <input type="radio" name="babyGender" id="unknown" value="unknown"
+             class="mdl-radio__button" required>
+      <span class="mdl-radio__label">Unknown</span>
+      </label><br><br>
+
+      <!-- Submit -->
+      <button id="submit" style="float:right;"
+              class="mdl-button mdl-js-button mdl-button--raised
+                     mdl-js-ripple-effect mdl-button--primary">
+        Submit</button>
+    </form>
+  </div>
+
+    <script>
+        function updateAgeInput(val) {
+            document.getElementById('ageSlider').value = val;
+            document.getElementById('ageText').value = val;
+        }
+
+        function updateWeeksInput(val) {
+            document.getElementById('weeksSlider').value = val;
+            document.getElementById('weeksText').value = val;
+        }
+
+        const submitButton = document.getElementById('submit');
+        submitButton.addEventListener('click', function(event) {
+            const myForm = document.getElementById("myForm");
+            var formData = new FormData(myForm);
+            if (myForm.checkValidity()) {
+              event.preventDefault();
+
+              var xhr = new XMLHttpRequest();
+              xhr.open("POST", "/predict");
+              xhr.onload = function(event){
+                  alert(event.target.response); // Server Response
+              };
+              xhr.send(formData);
+            }
+        });
+    </script>
+</body>
