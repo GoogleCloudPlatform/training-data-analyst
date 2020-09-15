@@ -123,7 +123,7 @@ public class BatchMinuteTrafficSQLPipeline {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("batch-user-traffic-sql-pipeline-" + System.currentTimeMillis());
+        options.setJobName("batch-minute-traffic-sql-pipeline-" + System.currentTimeMillis());
 
         /*
          * Steps:
@@ -131,6 +131,8 @@ public class BatchMinuteTrafficSQLPipeline {
          * 2) Transform something
          * 3) Write something
          */
+
+        //TODO: annotate pipeline
 
         pipeline
                 // Read in lines from GCS and Parse to CommonLog
@@ -160,7 +162,7 @@ public class BatchMinuteTrafficSQLPipeline {
                     }
                 })).setRowSchema(jodaCommonLogSchema)
 
-                //TODO: add Longs to older labs
+                //TODO: add Longs and Doubles to older labs
                 .apply("WindowedAggregateQuery", SqlTransform.query("SELECT COUNT(*) AS count, tr.window_start FROM " +
                         "TUMBLE( TABLE PCOLLECTION , DESCRIPTOR(timestamp_joda)" +
                         ", \"INTERVAL 1 MINUTE\") AS tr GROUP BY tr.window_start"))
