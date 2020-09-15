@@ -45,11 +45,7 @@ public class BatchUserTrafficSQLPipeline {
      * The {@link Options} class provides the custom execution options passed by the
      * executor at the command-line.
      */
-<<<<<<< HEAD:quests/dataflow/4_Batch_Analytics_SQL/solution/src/main/java/com/mypackage/pipeline/BatchUserTrafficSQLPipeline.java
-    public interface Options extends PipelineOptions {
-=======
     public interface Options extends DataflowPipelineOptions, BeamSqlPipelineOptions {
->>>>>>> 4b835c7754c95a7008535d52524de67d46b863d8:quests/dataflow/4_SQL_Batch_Analytics/solution/src/main/java/com/mypackage/pipeline/BatchUserTrafficSQLPipeline.java
         @Description("Path to events.json")
         String getInputPath();
         void setInputPath(String inputPath);
@@ -122,15 +118,10 @@ public class BatchUserTrafficSQLPipeline {
                 .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
                 .apply("ParseJson", ParDo.of(new JsonToCommonLog()));
 
-<<<<<<< HEAD:quests/dataflow/4_Batch_Analytics_SQL/solution/src/main/java/com/mypackage/pipeline/BatchUserTrafficSQLPipeline.java
-        logs.apply("AggregateSQLQuery", SqlTransform.query("SELECT user_id," +
-                " COUNT(*) AS pageviews, SUM(num_bytes) as total_bytes, MAX(num_bytes) AS max_num_bytes, MIN" +
-=======
         logs
                 // Apply a SqlTransform.query(QUERY_TEXT) to count page views and other aggregations
                 .apply("AggregateSQLQuery", SqlTransform.query("SELECT user_id," +
                 "COUNT(*) AS pageviews, SUM(num_bytes) as total_bytes, MAX(num_bytes) AS max_num_bytes, MIN" +
->>>>>>> 4b835c7754c95a7008535d52524de67d46b863d8:quests/dataflow/4_SQL_Batch_Analytics/solution/src/main/java/com/mypackage/pipeline/BatchUserTrafficSQLPipeline.java
                 "(num_bytes) as min_num_bytes FROM PCOLLECTION GROUP BY user_id"))
                 .apply("WriteAggregateToBQ",
                         BigQueryIO.<Row>write().to(options.getAggregateTableName()).useBeamSchema()
