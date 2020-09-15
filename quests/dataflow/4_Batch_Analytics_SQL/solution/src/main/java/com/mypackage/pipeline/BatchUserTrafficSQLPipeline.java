@@ -19,7 +19,6 @@ package com.mypackage.pipeline;
 import com.google.gson.Gson;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.extensions.sql.impl.BeamSqlPipelineOptions;
 import org.apache.beam.sdk.extensions.sql.SqlTransform;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
@@ -77,7 +76,7 @@ public class BatchUserTrafficSQLPipeline {
      * The {@link Options} class provides the custom execution options passed by the executor at the
      * command-line.
      */
-    public interface Options extends PipelineOptions, BeamSqlPipelineOptions {
+    public interface Options extends PipelineOptions {
         @Description("Path to events.json")
         String getInputPath();
         void setInputPath(String inputPath);
@@ -117,7 +116,6 @@ public class BatchUserTrafficSQLPipeline {
         Options options = PipelineOptionsFactory.fromArgs(args)
                 .withValidation()
                 .as(Options.class);
-        options.setPlannerName("org.apache.beam.sdk.extensions.sql.zetasql.ZetaSQLQueryPlanner");
         run(options);
     }
 
@@ -149,7 +147,7 @@ public class BatchUserTrafficSQLPipeline {
                 .apply("ParseJson", ParDo.of(new BatchMinuteTrafficSQLPipeline.JsonToCommonLog()));
 
         logs.apply("AggregateSQLQuery", SqlTransform.query("SELECT user_id," +
-                "COUNT(*) AS pageviews, SUM(num_bytes) as total_bytes, MAX(num_bytes) AS max_num_bytes, MIN" +
+                " COUNT(*) AS pageviews, SUM(num_bytes) as total_bytes, MAX(num_bytes) AS max_num_bytes, MIN" +
                 "(num_bytes) as min_num_bytes FROM PCOLLECTION GROUP BY user_id"))
                 .apply("WriteAggregateToBQ",
                         BigQueryIO.<Row>write().to(options.getAggregateTableName()).useBeamSchema()
