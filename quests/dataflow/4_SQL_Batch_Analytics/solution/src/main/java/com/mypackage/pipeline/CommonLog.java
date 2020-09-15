@@ -21,16 +21,17 @@ import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
 
 /**
  * A class used for parsing JSON web server events
+ * Annotated with @DefaultSchema to the allow the use of Beam Schema and <Row> object
  */
 @DefaultSchema(JavaFieldSchema.class)
 public class CommonLog {
-    public String user_id;
-    public String ip;
-    @javax.annotation.Nullable public double lat;
-    @javax.annotation.Nullable public double lng;
-    public String timestamp;
-    public String http_request;
-    public String user_agent;
-    public Long http_response;
-    public Long num_bytes;
+    String user_id;
+    String ip;
+    @javax.annotation.Nullable Float lat;
+    @javax.annotation.Nullable Float lng;
+    String timestamp;
+    String http_request;
+    String user_agent;
+    Long http_response;
+    Long num_bytes;
 }

@@ -17,15 +17,17 @@
 package com.mypackage.pipeline;
 
 import com.google.gson.Gson;
+import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.extensions.sql.impl.BeamSqlPipelineOptions;
 import org.apache.beam.sdk.extensions.sql.SqlTransform;
+import org.apache.beam.sdk.extensions.sql.impl.BeamSqlPipelineOptions;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.schemas.transforms.Group;
+import org.apache.beam.sdk.schemas.transforms.Select;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
@@ -33,51 +35,19 @@ import org.apache.beam.sdk.values.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * The {@link BatchUserTrafficSQLPipeline} is a sample pipeline which can be used as a base for creating a real
- * Dataflow pipeline.
- *
- * <p><b>Pipeline Requirements</b>
- *
- * <ul>
- *   <li>Requirement #1
- *   <li>Requirement #2
- * </ul>
- *
- * <p><b>Example Usage</b>
- *
- * <pre>
- * # Set the pipeline vars
- * PROJECT_ID=PROJECT_ID
- * PIPELINE_FOLDER=gs://${PROJECT_ID}/dataflow/pipelines/sample-pipeline
- *
- * # Set the runner
- * RUNNER=DataflowRunner
- *
- * # Build the template
- * mvn compile exec:java \
- * -Dexec.mainClass=com.mypackage.pipeline.BatchUserTrafficPipeline \
- * -Dexec.cleanupDaemonThreads=false \
- * -Dexec.args=" \
- * --project=${PROJECT_ID} \
- * --stagingLocation=${PIPELINE_FOLDER}/staging \
- * --tempLocation=${PIPELINE_FOLDER}/temp \
- * --runner=${RUNNER} \
- * ADDITIONAL PARAMETERS HERE"
- * </pre>
- */
+
 public class BatchUserTrafficSQLPipeline {
 
-    /*
+    /**
      * The logger to output status messages to.
      */
     private static final Logger LOG = LoggerFactory.getLogger(BatchUserTrafficSQLPipeline.class);
 
     /**
-     * The {@link Options} class provides the custom execution options passed by the executor at the
-     * command-line.
+     * The {@link Options} class provides the custom execution options passed by the
+     * executor at the command-line.
      */
-    public interface Options extends PipelineOptions, BeamSqlPipelineOptions {
+    public interface Options extends DataflowPipelineOptions, BeamSqlPipelineOptions {
         @Description("Path to events.json")
         String getInputPath();
         void setInputPath(String inputPath);
@@ -103,12 +73,12 @@ public class BatchUserTrafficSQLPipeline {
         }
     }
 
-
     /**
-     * The main entry-point for pipeline execution. This method will start the pipeline but will not
-     * wait for it's execution to finish. If blocking execution is required, use the {@link
-     * BatchUserTrafficSQLPipeline#run(Options)} method to start the pipeline and invoke
-     * {@code result.waitUntilFinish()} on the {@link PipelineResult}.
+     * The main entry-point for pipeline execution. This method will start the
+     * pipeline but will not wait for it's execution to finish. If blocking
+     * execution is required, use the {@link BatchUserTrafficSQLPipeline#run(Options)} method to
+     * start the pipeline and invoke {@code result.waitUntilFinish()} on the
+     * {@link PipelineResult}.
      *
      * @param args The command-line args passed by the executor.
      */
@@ -121,11 +91,13 @@ public class BatchUserTrafficSQLPipeline {
         run(options);
     }
 
+
+
     /**
-     * Runs the pipeline to completion with the specified options. This method does not wait until the
-     * pipeline is finished before returning. Invoke {@code result.waitUntilFinish()} on the result
-     * object to block until the pipeline is finished running if blocking programmatic execution is
-     * required.
+     * Runs the pipeline to completion with the specified options. This method does
+     * not wait until the pipeline is finished before returning. Invoke
+     * {@code result.waitUntilFinish()} on the result object to block until the
+     * pipeline is finished running if blocking programmatic execution is required.
      *
      * @param options The execution options.
      * @return The pipeline result.
@@ -138,27 +110,35 @@ public class BatchUserTrafficSQLPipeline {
 
         /*
          * Steps:
-         *  1) Read something
-         *  2) Transform something
-         *  3) Write something
+         * 1) Read something
+         * 2) Transform something
+         * 3) Write something
          */
 
-        LOG.info("Building pipeline...");
 
-        PCollection<CommonLog> logs  = pipeline.apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
-                .apply("ParseJson", ParDo.of(new BatchMinuteTrafficSQLPipeline.JsonToCommonLog()));
+        PCollection<CommonLog> logs  = pipeline
+                // Read in lines from GCS and Parse to CommonLog
+                .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
+                .apply("ParseJson", ParDo.of(new JsonToCommonLog()));
 
-        logs.apply("AggregateSQLQuery", SqlTransform.query("SELECT user_id," +
+        logs
+                // Apply a SqlTransform.query(QUERY_TEXT) to count page views and other aggregations
+                .apply("AggregateSQLQuery", SqlTransform.query("SELECT user_id," +
                 "COUNT(*) AS pageviews, SUM(num_bytes) as total_bytes, MAX(num_bytes) AS max_num_bytes, MIN" +
                 "(num_bytes) as min_num_bytes FROM PCOLLECTION GROUP BY user_id"))
                 .apply("WriteAggregateToBQ",
                         BigQueryIO.<Row>write().to(options.getAggregateTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
-        logs.apply("WriteRawToBQ",
+
+        logs
+                // Write the raw logs to BigQuery
+                .apply("WriteRawToBQ",
                 BigQueryIO.<CommonLog>write().to(options.getRawTableName()).useBeamSchema()
                         .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
                         .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+
+        LOG.info("Building pipeline...");
 
         return pipeline.run();
     }
