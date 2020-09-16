@@ -7,4 +7,4 @@ ENV FLEX_TEMPLATE_JAVA_MAIN_CLASS="com.mypackage.pipeline.MyPipeline"
 ENV FLEX_TEMPLATE_JAVA_CLASSPATH="/template/pipeline.jar"
 
 # Make sure to package as a "fat JAR", including all dependencies.
-COPY target/advanced-dataflow-lab-1.0.jar ${FLEX_TEMPLATE_JAVA_CLASSPATH}
+COPY target/advanced-dataflow-lab-2-solution-1.0.jar ${FLEX_TEMPLATE_JAVA_CLASSPATH}
