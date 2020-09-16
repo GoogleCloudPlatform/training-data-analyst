@@ -26,12 +26,13 @@ import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.schemas.Schema;
+import org.apache.beam.sdk.schemas.Schema.FieldType;
 import org.apache.beam.sdk.schemas.transforms.AddFields;
-import org.apache.beam.sdk.schemas.transforms.Convert;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.transforms.WithTimestamps;
+import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
 import org.joda.time.DateTime;
 import org.joda.time.Instant;
@@ -79,18 +80,6 @@ public class BatchMinuteTrafficSQLPipeline {
     }
 
 
-    public static final Schema commonLogSchema = Schema.builder()
-            .addStringField("user_id")
-            .addStringField("ip")
-            .addDoubleField("lat")
-            .addDoubleField("lng")
-            .addStringField("timestamp")
-            .addStringField("http_request")
-            .addStringField("user_agent")
-            .addInt64Field("http_response")
-            .addInt64Field("num_bytes")
-            .build();
-
     public static final Schema jodaCommonLogSchema = Schema.builder()
             .addStringField("user_id")
             .addStringField("ip")
@@ -104,11 +93,6 @@ public class BatchMinuteTrafficSQLPipeline {
             .addDateTimeField("timestamp_joda")
             .build();
 
-    public static final Schema pageViewsSchema = Schema
-            .builder()
-            .addInt64Field("pageviews")
-            .addDateTimeField("minute")
-            .build();
 
     /**
      * Runs the pipeline to completion with the specified options. This method does
@@ -140,9 +124,10 @@ public class BatchMinuteTrafficSQLPipeline {
                 .apply("ParseJson", ParDo.of(new BatchUserTrafficSQLPipeline.JsonToCommonLog()))
                 .apply("AddEventTimestamps", WithTimestamps.of(
                         (CommonLog commonLog) -> Instant.parse(commonLog.timestamp)))
-                .apply("ConvertToRows", Convert.toRows())
-                .apply("AddDateTimeField", AddFields.<Row>create().field("timestamp_joda", Schema.FieldType.DATETIME))
-                .apply("AddDateTimeColumn", MapElements.via(new SimpleFunction<Row, Row>() {
+
+                // Add new DATETIME field to CommonLog, converting to a Row, then populate new row with Joda DateTime
+                .apply("AddDateTimeField", AddFields.<CommonLog>create().field("timestamp_joda", FieldType.DATETIME))
+                .apply("AddDateTimeValue", MapElements.via(new SimpleFunction<Row, Row>() {
                     @Override
                     public Row apply(Row row) {
                         DateTime dateTime = new DateTime(row.getString("timestamp"));
@@ -162,10 +147,11 @@ public class BatchMinuteTrafficSQLPipeline {
                     }
                 })).setRowSchema(jodaCommonLogSchema)
 
-                //TODO: add Longs and Doubles to older labs
-                .apply("WindowedAggregateQuery", SqlTransform.query("SELECT COUNT(*) AS count, tr.window_start FROM " +
-                        "TUMBLE( TABLE PCOLLECTION , DESCRIPTOR(timestamp_joda)" +
-                        ", \"INTERVAL 1 MINUTE\") AS tr GROUP BY tr.window_start"))
+                // Apply a SqlTransform.query(QUERY_TEXT) to count window and count total page views, write to BQ
+                .apply("WindowedAggregateQuery", SqlTransform.query(
+                        "SELECT COUNT(*) AS pageviews, tr.window_end AS minute FROM " + "TUMBLE( ( SELECT * FROM " +
+                                "PCOLLECTION ) , DESCRIPTOR(timestamp_joda)" + ", \"INTERVAL 1 MINUTE\") AS tr GROUP " +
+                                "BY tr.window_end"))
                 .apply("WriteToBQ",
                         BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
