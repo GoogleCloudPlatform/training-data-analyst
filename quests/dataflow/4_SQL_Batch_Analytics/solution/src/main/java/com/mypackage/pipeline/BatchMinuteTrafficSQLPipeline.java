@@ -116,8 +116,6 @@ public class BatchMinuteTrafficSQLPipeline {
          * 3) Write something
          */
 
-        //TODO: annotate pipeline
-
         pipeline
                 // Read in lines from GCS and Parse to CommonLog
                 .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
