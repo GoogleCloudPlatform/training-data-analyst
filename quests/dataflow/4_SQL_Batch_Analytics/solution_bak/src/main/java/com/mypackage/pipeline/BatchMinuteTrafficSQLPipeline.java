@@ -168,7 +168,7 @@ public class BatchMinuteTrafficSQLPipeline {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("batch-user-traffic-sql-pipeline-" + System.currentTimeMillis());
+        options.setJobName("batch-minute-traffic-sql-pipeline-" + System.currentTimeMillis());
 
         /*
          * Steps:
@@ -209,7 +209,7 @@ public class BatchMinuteTrafficSQLPipeline {
 
                 //TODO: add Longs to older labs
                 .apply("WindowedAggregateQuery", SqlTransform.query("SELECT COUNT(*) AS count, tr.window_start FROM " +
-                        "TUMBLE( TABLE PCOLLECTION , DESCRIPTOR(timestamp_joda)" +
+                        "TUMBLE( (SELECT * FROM PCOLLECTION) , DESCRIPTOR(timestamp_joda)" +
                         ", \"INTERVAL 1 MINUTE\") AS tr GROUP BY tr.window_start"))
                 .apply("WriteToBQ",
                         BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
