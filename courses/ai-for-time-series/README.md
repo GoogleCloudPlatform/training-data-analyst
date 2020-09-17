@@ -3,7 +3,7 @@
 This course contains a set of labs demonstrating how to use the Cloud AI Platform (CAIP) to solve time-series forecasting problems.
 
 Lab 1: [Creating and Visualizing a Time-Series Data Set](notebooks/01-explore.ipynb)
-* Tools: BigQuery, Google Cloud Storage, CAIP Notebooks
+* Tools: Google Cloud Storage, CAIP Notebooks
 * Topics:
   * Visualizing time-series data
   * Sampling frequency

@@ -16,39 +16,42 @@
 
 package com.mypackage.pipeline;
 
-import com.google.gson.Gson;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.extensions.sql.SqlTransform;
+import org.apache.beam.sdk.extensions.sql.impl.BeamSqlPipelineOptions;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.schemas.Schema;
-import org.apache.beam.sdk.transforms.*;
-import org.apache.beam.sdk.transforms.windowing.FixedWindows;
-import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
-import org.apache.beam.sdk.transforms.windowing.Window;
+import org.apache.beam.sdk.schemas.Schema.FieldType;
+import org.apache.beam.sdk.schemas.transforms.AddFields;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SimpleFunction;
+import org.apache.beam.sdk.transforms.WithTimestamps;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
-import org.joda.time.Duration;
+import org.joda.time.DateTime;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class BatchMinuteTrafficPipeline {
+public class BatchMinuteTrafficSQLPipeline {
 
     /**
      * The logger to output status messages to.
      */
-    private static final Logger LOG = LoggerFactory.getLogger(BatchMinuteTrafficPipeline.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BatchMinuteTrafficSQLPipeline.class);
 
     /**
      * The {@link Options} class provides the custom execution options passed by the
      * executor at the command-line.
      */
-    public interface Options extends DataflowPipelineOptions {
+    public interface Options extends DataflowPipelineOptions, BeamSqlPipelineOptions {
         @Description("Path to events.json")
         String getInputPath();
         void setInputPath(String inputPath);
@@ -61,40 +64,35 @@ public class BatchMinuteTrafficPipeline {
     /**
      * The main entry-point for pipeline execution. This method will start the
      * pipeline but will not wait for it's execution to finish. If blocking
-     * execution is required, use the {@link BatchMinuteTrafficPipeline#run(Options)} method to
+     * execution is required, use the {@link BatchMinuteTrafficSQLPipeline#run(Options)} method to
      * start the pipeline and invoke {@code result.waitUntilFinish()} on the
      * {@link PipelineResult}.
      *
      * @param args The command-line args passed by the executor.
      */
     public static void main(String[] args) {
-        Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-
+        PipelineOptionsFactory.register(Options.class);
+        Options options = PipelineOptionsFactory.fromArgs(args)
+                .withValidation()
+                .as(Options.class);
+        options.setPlannerName("org.apache.beam.sdk.extensions.sql.zetasql.ZetaSQLQueryPlanner");
         run(options);
     }
 
 
-    /**
-     * A DoFn acccepting Json and outputing CommonLog with Beam Schema
-     */
-    static class JsonToCommonLog extends DoFn<String, CommonLog> {
-
-        @ProcessElement
-        public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
-            Gson gson = new Gson();
-            CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-            r.output(commonLog);
-        }
-    }
-
-    /**
-     * A Beam schema for counting pageviews per minute
-     */
-    public static final Schema pageViewsSchema = Schema
-            .builder()
-            .addInt64Field("pageviews")
-            .addDateTimeField("minute")
+    public static final Schema jodaCommonLogSchema = Schema.builder()
+            .addStringField("user_id")
+            .addStringField("ip")
+            .addDoubleField("lat")
+            .addDoubleField("lng")
+            .addStringField("timestamp")
+            .addStringField("http_request")
+            .addStringField("user_agent")
+            .addInt64Field("http_response")
+            .addInt64Field("num_bytes")
+            .addDateTimeField("timestamp_joda")
             .build();
+
 
     /**
      * Runs the pipeline to completion with the specified options. This method does
@@ -109,7 +107,7 @@ public class BatchMinuteTrafficPipeline {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("batch-minute-traffic-pipeline-" + System.currentTimeMillis());
+        options.setJobName("batch-minute-traffic-sql-pipeline-" + System.currentTimeMillis());
 
         /*
          * Steps:
@@ -121,32 +119,37 @@ public class BatchMinuteTrafficPipeline {
         pipeline
                 // Read in lines from GCS and Parse to CommonLog
                 .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
-                .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
-
-                // Add timestamp based on the timestamp field
+                .apply("ParseJson", ParDo.of(new BatchUserTrafficSQLPipeline.JsonToCommonLog()))
                 .apply("AddEventTimestamps", WithTimestamps.of(
                         (CommonLog commonLog) -> Instant.parse(commonLog.timestamp)))
 
-                // Window by Minute
-                .apply("WindowByMinute", Window.into(FixedWindows.of(Duration.standardSeconds(60))))
-
-                // update to Group.globally() after resolved: https://issues.apache.org/jira/browse/BEAM-10297
-                // Only if supports Row output
-                .apply("CountPerMinute", Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults())
-
-                // Capture the window end timestamp, need to use new schema
-                .apply("AddWindowTimestamp", ParDo.of(new DoFn<Long, Row>() {
-                    @ProcessElement
-                    public void processElement(@Element Long pageviews, OutputReceiver<Row> r, IntervalWindow window) {
-                        Instant i = Instant.ofEpochMilli(window.start().getMillis());
-                        Row timestampedRow = Row.withSchema(pageViewsSchema)
-                                .addValues(pageviews, i)
+                // Add new DATETIME field to CommonLog, converting to a Row, then populate new row with Joda DateTime
+                .apply("AddDateTimeField", AddFields.<CommonLog>create().field("timestamp_joda", FieldType.DATETIME))
+                .apply("AddDateTimeValue", MapElements.via(new SimpleFunction<Row, Row>() {
+                    @Override
+                    public Row apply(Row row) {
+                        DateTime dateTime = new DateTime(row.getString("timestamp"));
+                        return Row.withSchema(row.getSchema())
+                                .addValues(
+                                        row.getString("user_id"),
+                                        row.getString("ip"),
+                                        row.getDouble("lat"),
+                                        row.getDouble("lng"),
+                                        row.getString("timestamp"),
+                                        row.getString("http_request"),
+                                        row.getString("user_agent"),
+                                        row.getInt64("http_response"),
+                                        row.getInt64("num_bytes"),
+                                        dateTime)
                                 .build();
-                        r.output(timestampedRow);
                     }
-                })).setRowSchema(pageViewsSchema)
+                })).setRowSchema(jodaCommonLogSchema)
 
-                // Write out results to BigQuery
+                // Apply a SqlTransform.query(QUERY_TEXT) to count window and count total page views, write to BQ
+                .apply("WindowedAggregateQuery", SqlTransform.query(
+                        "SELECT COUNT(*) AS pageviews, tr.window_end AS minute FROM " + "TUMBLE( ( SELECT * FROM " +
+                                "PCOLLECTION ) , DESCRIPTOR(timestamp_joda)" + ", \"INTERVAL 1 MINUTE\") AS tr GROUP " +
+                                "BY tr.window_end"))
                 .apply("WriteToBQ",
                         BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)

@@ -20,51 +20,72 @@ import com.google.gson.Gson;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.extensions.sql.SqlTransform;
+import org.apache.beam.sdk.extensions.sql.impl.BeamSqlPipelineOptions;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.schemas.transforms.Group;
-import org.apache.beam.sdk.schemas.transforms.Select;
-import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class BatchUserTrafficPipeline {
+public class BatchUserTrafficSQLPipeline {
 
     /**
      * The logger to output status messages to.
      */
-    private static final Logger LOG = LoggerFactory.getLogger(BatchUserTrafficPipeline.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BatchUserTrafficSQLPipeline.class);
 
     /**
      * The {@link Options} class provides the custom execution options passed by the
      * executor at the command-line.
      */
-    public interface Options extends DataflowPipelineOptions {
+    public interface Options extends DataflowPipelineOptions, BeamSqlPipelineOptions {
         @Description("Path to events.json")
         String getInputPath();
         void setInputPath(String inputPath);
 
-        @Description("BigQuery table name")
-        String getTableName();
-        void setTableName(String tableName);
+        @Description("BigQuery table name to write aggregations to")
+        String getAggregateTableName();
+        void setAggregateTableName(String aggregateTableName);
+
+        @Description("BigQuery table name to write raw data to")
+        String getRawTableName();
+        void setRawTableName(String rawTableName);
+    }
+
+    /**
+     * A DoFn acccepting Json and outputing CommonLog with Beam Schema
+     */
+    static class JsonToCommonLog extends DoFn<String, CommonLog> {
+        @ProcessElement
+        public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
+            Gson gson = new Gson();
+            CommonLog commonLog = gson.fromJson(json, CommonLog.class);
+            r.output(commonLog);
+        }
     }
 
     /**
      * The main entry-point for pipeline execution. This method will start the
      * pipeline but will not wait for it's execution to finish. If blocking
-     * execution is required, use the {@link BatchUserTrafficPipeline#run(Options)} method to
+     * execution is required, use the {@link BatchUserTrafficSQLPipeline#run(Options)} method to
      * start the pipeline and invoke {@code result.waitUntilFinish()} on the
      * {@link PipelineResult}.
      *
      * @param args The command-line args passed by the executor.
      */
     public static void main(String[] args) {
-        Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-
+        PipelineOptionsFactory.register(Options.class);
+        Options options = PipelineOptionsFactory.fromArgs(args)
+                .withValidation()
+                .as(Options.class);
+        options.setPlannerName("org.apache.beam.sdk.extensions.sql.zetasql.ZetaSQLQueryPlanner");
         run(options);
     }
 
@@ -83,7 +104,7 @@ public class BatchUserTrafficPipeline {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("batch-user-traffic-pipeline-" + System.currentTimeMillis());
+        options.setJobName("batch-user-traffic-sql-pipeline-" + System.currentTimeMillis());
 
         /*
          * Steps:
@@ -92,23 +113,28 @@ public class BatchUserTrafficPipeline {
          * 3) Write something
          */
 
-        pipeline
+
+        PCollection<CommonLog> logs  = pipeline
+                // Read in lines from GCS and Parse to CommonLog
                 .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
-                .apply("ParseJson", ParDo.of(new DoFn<String, CommonLog>() {
-                                                 @ProcessElement
-                                                 public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
-                                                     Gson gson = new Gson();
-                                                     CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-                                                     r.output(commonLog);
-                                                 }
-                                             }
-                ))
-                .apply("WriteToBQ",
-                        BigQueryIO.<CommonLog>write().to(options.getTableName()).useBeamSchema()
+                .apply("ParseJson", ParDo.of(new JsonToCommonLog()));
+
+        logs
+                // Apply a SqlTransform.query(QUERY_TEXT) to count page views and other aggregations
+                .apply("AggregateSQLQuery", SqlTransform.query("SELECT user_id," +
+                "COUNT(*) AS pageviews, SUM(num_bytes) as total_bytes, MAX(num_bytes) AS max_num_bytes, MIN" +
+                "(num_bytes) as min_num_bytes FROM PCOLLECTION GROUP BY user_id"))
+                .apply("WriteAggregateToBQ",
+                        BigQueryIO.<Row>write().to(options.getAggregateTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
-
+        logs
+                // Write the raw logs to BigQuery
+                .apply("WriteRawToBQ",
+                BigQueryIO.<CommonLog>write().to(options.getRawTableName()).useBeamSchema()
+                        .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
+                        .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
         LOG.info("Building pipeline...");
 
