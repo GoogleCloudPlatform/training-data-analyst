@@ -16,34 +16,42 @@
 
 package com.mypackage.pipeline;
 
-import com.google.gson.Gson;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.extensions.sql.SqlTransform;
+import org.apache.beam.sdk.extensions.sql.impl.BeamSqlPipelineOptions;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.schemas.transforms.Group;
-import org.apache.beam.sdk.schemas.transforms.Select;
-import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.schemas.Schema;
+import org.apache.beam.sdk.schemas.Schema.FieldType;
+import org.apache.beam.sdk.schemas.transforms.AddFields;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SimpleFunction;
+import org.apache.beam.sdk.transforms.WithTimestamps;
+import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
+import org.joda.time.DateTime;
+import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class BatchUserTrafficPipeline {
+public class BatchMinuteTrafficSQLPipeline {
 
     /**
      * The logger to output status messages to.
      */
-    private static final Logger LOG = LoggerFactory.getLogger(BatchUserTrafficPipeline.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BatchMinuteTrafficSQLPipeline.class);
 
     /**
      * The {@link Options} class provides the custom execution options passed by the
      * executor at the command-line.
      */
-    public interface Options extends DataflowPipelineOptions {
+    public interface Options extends DataflowPipelineOptions, BeamSqlPipelineOptions {
         @Description("Path to events.json")
         String getInputPath();
         void setInputPath(String inputPath);
@@ -56,18 +64,34 @@ public class BatchUserTrafficPipeline {
     /**
      * The main entry-point for pipeline execution. This method will start the
      * pipeline but will not wait for it's execution to finish. If blocking
-     * execution is required, use the {@link BatchUserTrafficPipeline#run(Options)} method to
+     * execution is required, use the {@link BatchMinuteTrafficSQLPipeline#run(Options)} method to
      * start the pipeline and invoke {@code result.waitUntilFinish()} on the
      * {@link PipelineResult}.
      *
      * @param args The command-line args passed by the executor.
      */
     public static void main(String[] args) {
-        Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-
+        PipelineOptionsFactory.register(Options.class);
+        Options options = PipelineOptionsFactory.fromArgs(args)
+                .withValidation()
+                .as(Options.class);
+        options.setPlannerName("org.apache.beam.sdk.extensions.sql.zetasql.ZetaSQLQueryPlanner");
         run(options);
     }
 
+
+    public static final Schema jodaCommonLogSchema = Schema.builder()
+            .addStringField("user_id")
+            .addStringField("ip")
+            .addDoubleField("lat")
+            .addDoubleField("lng")
+            .addStringField("timestamp")
+            .addStringField("http_request")
+            .addStringField("user_agent")
+            .addInt64Field("http_response")
+            .addInt64Field("num_bytes")
+            .addDateTimeField("timestamp_joda")
+            .build();
 
 
     /**
@@ -83,7 +107,7 @@ public class BatchUserTrafficPipeline {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("batch-user-traffic-pipeline-" + System.currentTimeMillis());
+        options.setJobName("batch-minute-traffic-sql-pipeline-" + System.currentTimeMillis());
 
         /*
          * Steps:
@@ -93,22 +117,20 @@ public class BatchUserTrafficPipeline {
          */
 
         pipeline
+                // Read in lines from GCS and Parse to CommonLog
                 .apply("ReadFromGCS", TextIO.read().from(options.getInputPath()))
-                .apply("ParseJson", ParDo.of(new DoFn<String, CommonLog>() {
-                                                 @ProcessElement
-                                                 public void processElement(@Element String json, OutputReceiver<CommonLog> r) throws Exception {
-                                                     Gson gson = new Gson();
-                                                     CommonLog commonLog = gson.fromJson(json, CommonLog.class);
-                                                     r.output(commonLog);
-                                                 }
-                                             }
-                ))
+                .apply("ParseJson", ParDo.of(new BatchUserTrafficSQLPipeline.JsonToCommonLog()))
+                .apply("AddEventTimestamps", WithTimestamps.of(
+                        (CommonLog commonLog) -> Instant.parse(commonLog.timestamp)))
+
+                // TODO: Add JODA Timestamp field to Row, Write Windowing SQL transform
+
+
+
                 .apply("WriteToBQ",
-                        BigQueryIO.<CommonLog>write().to(options.getTableName()).useBeamSchema()
+                        BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
-
-
 
         LOG.info("Building pipeline...");
 

@@ -109,7 +109,7 @@ public class BatchMinuteTrafficPipeline {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("my-pipeline-" + System.currentTimeMillis());
+        options.setJobName("batch-minute-traffic-pipeline-" + System.currentTimeMillis());
 
         /*
          * Steps:
@@ -138,7 +138,7 @@ public class BatchMinuteTrafficPipeline {
                 .apply("AddWindowTimestamp", ParDo.of(new DoFn<Long, Row>() {
                     @ProcessElement
                     public void processElement(@Element Long pageviews, OutputReceiver<Row> r, IntervalWindow window) {
-                        Instant i = Instant.ofEpochMilli(window.end().getMillis());
+                        Instant i = Instant.ofEpochMilli(window.start().getMillis());
                         Row timestampedRow = Row.withSchema(pageViewsSchema)
                                 .addValues(pageviews, i)
                                 .build();
