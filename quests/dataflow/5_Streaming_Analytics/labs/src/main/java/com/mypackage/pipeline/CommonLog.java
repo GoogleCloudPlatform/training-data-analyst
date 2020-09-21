@@ -16,24 +16,22 @@
 
 package com.mypackage.pipeline;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.beam.sdk.schemas.JavaFieldSchema;
 import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
 
-@VisibleForTesting
 /**
  * A class used for parsing JSON web server events
+ * Annotated with @DefaultSchema to the allow the use of Beam Schema and <Row> object
  */
 @DefaultSchema(JavaFieldSchema.class)
 public class CommonLog {
-    public String user_id;
-    public String ip;
-    public double lat;
-    public double lng;
-    public String timestamp;
-    public String http_request;
-    @javax.annotation.Nullable
-    public String user_agent;
-    public int http_response;
-    public int num_bytes;
+    String user_id;
+    String ip;
+    @javax.annotation.Nullable Double lat;
+    @javax.annotation.Nullable Double lng;
+    String timestamp;
+    String http_request;
+    String user_agent;
+    Long http_response;
+    Long num_bytes;
 }

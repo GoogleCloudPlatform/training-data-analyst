@@ -20,7 +20,6 @@ import com.google.gson.Gson;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.options.Description;
@@ -147,6 +146,7 @@ public class StreamingMinuteTrafficPipeline {
         // Window and write to BQ
         commonLogs
                 .apply("WindowByMinute", Window.into(FixedWindows.of(Duration.standardSeconds(options.getWindowDuration()))))
+
                 // update to Group.globally() after resolved: https://issues.apache.org/jira/browse/BEAM-10297
                 // Only if supports Row output
                 .apply("CountPerMinute", Combine.globally(Count.<CommonLog>combineFn()).withoutDefaults())
@@ -160,7 +160,7 @@ public class StreamingMinuteTrafficPipeline {
                         r.output(row);
                     }
                 })).setRowSchema(pageViewsSchema)
-                // TODO: is this a streaming insert?
+                // Streaming insert of aggregate data
                 .apply("WriteAggregateToBQ",
                         BigQueryIO.<Row>write().to(options.getAggregateTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
