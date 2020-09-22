@@ -136,6 +136,37 @@ public class StreamingMinuteTrafficPipeline {
          * 3) Write something
          */
 
+        PCollection<CommonLog> commonLogs = pipeline
+                //TODO: Read from PubSub
+                 .apply();
+
+
+        //TODO: Write aggregation logic and BQ Write
+
+
+
+        // Write raw to BQ
+        // But we want to add a processing time indicator as well
+        commonLogs
+                .apply("SelectFields", Select.fieldNames("user_id", "timestamp"))
+                .apply("AddProcessingTimeField", AddFields.<Row>create().field("processing_timestamp", Schema.FieldType.DATETIME))
+                .apply("AddProcessingTime", MapElements.via(new SimpleFunction<Row, Row>() {
+                                                                @Override
+                                                                public Row apply(Row row) {
+                                                                    return Row.withSchema(rawSchema)
+                                                                            .addValues(
+                                                                                    row.getString("user_id"),
+                                                                                    new DateTime(row.getString("timestamp")),
+                                                                                    DateTime.now())
+                                                                            .build();
+                                                                }
+                                                            }
+                )).setRowSchema(rawSchema)
+                .apply("WriteRawToBQ",
+                        BigQueryIO.<Row>write().to(options.getRawTableName()).useBeamSchema()
+                                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
+                                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+
 
 
         LOG.info("Building pipeline...");
