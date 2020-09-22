@@ -147,7 +147,7 @@ public class BatchMinuteTrafficSQLPipeline {
 
                 // Apply a SqlTransform.query(QUERY_TEXT) to count window and count total page views, write to BQ
                 .apply("WindowedAggregateQuery", SqlTransform.query(
-                        "SELECT COUNT(*) AS pageviews, tr.window_start AS minute FROM " + "TUMBLE( ( SELECT * FROM " +
+                        "SELECT COUNT(*) AS pageviews, tr.window_start AS minute FROM TUMBLE( ( SELECT * FROM " +
                                 "PCOLLECTION ) , DESCRIPTOR(timestamp_joda), \"INTERVAL 1 MINUTE\") AS tr GROUP " +
                                 "BY tr.window_start"))
                 .apply("WriteToBQ",
