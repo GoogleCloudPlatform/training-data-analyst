@@ -68,8 +68,8 @@ public class MyPipeline {
     public static class CommonLog {
         String user_id;
         String ip;
-        Float lat;
-        Float lng;
+        Double lat;
+        Double lng;
         String timestamp;
         String http_request;
         String user_agent;
