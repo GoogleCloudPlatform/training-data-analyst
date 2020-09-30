@@ -83,7 +83,7 @@ public class BatchUserTrafficPipeline {
 
         // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
-        options.setJobName("my-pipeline-" + System.currentTimeMillis());
+        options.setJobName("batch-user-traffic-pipeline-" + System.currentTimeMillis());
 
         /*
          * Steps:
