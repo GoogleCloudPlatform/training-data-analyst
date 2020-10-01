@@ -2,6 +2,10 @@
 
 Labs and demos for Google Cloud Platform courses (http://cloud.google.com/training).
 
+## Learn-Google-Cloud
+
+*https://www.qwiklabs.com
+
 ## Contributing to this repo
 
 * Small edits are welcome! Please submit a Pull-Request. See also [CONTRIBUTING.md](./CONTRIBUTING.md)
