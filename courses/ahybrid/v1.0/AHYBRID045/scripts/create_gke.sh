@@ -23,7 +23,7 @@ gcloud beta container clusters create ${C1_NAME} \
     --workload-pool=${WORKLOAD_POOL} \
     --enable-stackdriver-kubernetes \
     --subnetwork=default \
-    --labels mesh_id=${MESH_ID}
+    --labels mesh_id=${MESH_ID} \
     --release-channel=regular
 
 # service account requires additional role bindings
