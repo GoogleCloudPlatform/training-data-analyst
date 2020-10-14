@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2020 Google LLC
+# Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,35 +16,28 @@
 
 source ./scripts/env.sh
 
+echo "### "
+echo "### Begin Provision GKE"
+echo "### "
+
 gcloud config set compute/zone ${C1_ZONE}
 gcloud beta container clusters create ${C1_NAME} \
-    --machine-type=n1-standard-4 \
-    --num-nodes=2 \
+    --machine-type "n1-standard-4" \
+    --image-type "COS" \
+    --disk-size "100" \
+    --scopes "https://www.googleapis.com/auth/compute","https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
+    --num-nodes "2" \
+    --enable-autoscaling --min-nodes 2 --max-nodes 8 \
+    --network "default" \
+    --enable-ip-alias \
     --workload-pool=${WORKLOAD_POOL} \
     --enable-stackdriver-kubernetes \
-    --subnetwork=default \
-    --labels mesh_id=${MESH_ID} \
     --release-channel=regular
 
 # service account requires additional role bindings
 kubectl create clusterrolebinding [BINDING_NAME] \
     --clusterrole cluster-admin --user [USER]
 
-gcloud iam service-accounts create connect-sa
-
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
- --member="serviceAccount:connect-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
- --role="roles/gkehub.connect"
-
-gcloud iam service-accounts keys create connect-sa-key.json \
-  --iam-account=connect-sa@${PROJECT_ID}.iam.gserviceaccount.com
-
-gcloud container hub memberships register ${C1_NAME}-connect \
-   --gke-cluster=${C1_ZONE}/${C1_NAME}  \
-   --service-account-key-file=./connect-sa-key.json
-
-curl --request POST \
-  --header "Authorization: Bearer $(gcloud auth print-access-token)" \
-  --data '' \
-  https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize
-
+echo "### "
+echo "### Provision GKE complete"
+echo "### "
