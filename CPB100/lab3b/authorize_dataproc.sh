@@ -19,7 +19,7 @@ echo "Machines to authorize: $machines in $ZONE ... finding their IP addresses"
 
 ips=""
 for machine in $machines; do
-    IP_ADDRESS=$(gcloud compute instances describe $machine --zone=$ZONE --format='value(networkInterfaces.accessConfigs[].natIP)' | sed "s/\[u'//g" | sed "s/'\]//g" )/32
+    IP_ADDRESS=$(gcloud compute instances describe $machine --zone=$ZONE --format='value(networkInterfaces.accessConfigs[].natIP)' | sed "s/\['//g" | sed "s/'\]//g" )/32
     echo "IP address of $machine is $IP_ADDRESS"
     if [ -z  $ips ]; then
        ips=$IP_ADDRESS
