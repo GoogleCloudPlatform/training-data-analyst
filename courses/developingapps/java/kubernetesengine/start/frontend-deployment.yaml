@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: quiz-frontend
@@ -19,6 +19,10 @@ metadata:
     app: quiz-app
 spec:
   replicas: 3
+  selector:
+    matchLabels:
+      app: quiz-app
+      tier: frontend
   template:
     metadata:
       labels:
@@ -36,4 +40,4 @@ spec:
           - name: GCLOUD_PROJECT
             value: [GCLOUD_PROJECT]
           - name: GCLOUD_BUCKET
-            value: [GCLOUD_BUCKET] 
+            value: [GCLOUD_BUCKET]
