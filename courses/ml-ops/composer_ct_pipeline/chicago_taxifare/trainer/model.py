@@ -177,16 +177,16 @@ def train_and_evaluate(hparams):
 
     tf.saved_model.save(model, hparams['output_dir'])
 
-    val_metric = history.history['valRootMeanSquaredError'][NUM_EVALS-1]
+    val_metric = history.history['val_RootMeanSquaredError'][NUM_EVALS-1]
 
     client = bigquery.Client()
 
-    sql = """ INSERT chicago_taxi.model_metrics
-              VALUES('model_version', {0}),
-                    ('rmse', {1}),
-          """.format(Variable.get("VERSION_NAME"),val_metric)
+    sql = """ INSERT `{0}.model_metrics`
+              VALUES ('{1}',{2});
+              """.format(hparams['output_ds'], hparams['version_name'], val_metric)
 
     query_job = client.query(sql)
+    print(query_job.done())
 
 
     return history

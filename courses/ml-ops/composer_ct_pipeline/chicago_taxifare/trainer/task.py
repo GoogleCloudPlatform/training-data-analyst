@@ -16,7 +16,7 @@ if __name__ == "__main__":
         "--train_epochs",
         help="Steps to run the training job for (default: 5)",
         type=int,
-        default=10
+        default=50
     )
     parser.add_argument(
         "--eval_data_path",
@@ -30,7 +30,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--output_ds",
-        help="BigQuery dataset where training metrics will be written",
+        help="BigQuery project and dataset where training metrics will be written",
+        required=True
+    )
+    parser.add_argument(
+        "--version_name",
+        help="New version name, will be supplied by Airflow",
         required=True
     )
     parser.add_argument(

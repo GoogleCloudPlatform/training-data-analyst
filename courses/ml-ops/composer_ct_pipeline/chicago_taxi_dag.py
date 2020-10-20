@@ -25,6 +25,8 @@ from airflow.models import Variable
 
 from airflow.contrib.operators.bigquery_check_operator import (
     BigQueryCheckOperator)
+from airflow.contrib.operators.bigquery_check_operator import (
+    BigQueryValueCheckOperator)
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from airflow.contrib.operators.bigquery_to_gcs import (
     BigQueryToCloudStorageOperator)
@@ -42,10 +44,10 @@ from airflow.contrib.operators.mlengine_operator import MLEngineModelOperator
 from airflow.contrib.operators.mlengine_operator import MLEngineVersionOperator
 
 DEFAULT_ARGS = {
-    'owner': 'Michael Abel',
+    'owner': 'Google Cloud Learner',
     'depends_on_past': False,
     'start_date': datetime.datetime(2020, 7, 1),
-    'email': ['michaelabel.gcp@gmail.com'],
+    'email': ['gcp.learning@fake-email.com'],
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
@@ -236,7 +238,8 @@ with DAG(
         "--log_dir", log_dir,
         "--train_data_path", train_files + "chicago_taxi_trips/*.csv",
         "--eval_data_path", valid_files + "chicago_taxi_trips/*.csv",
-        "--output_ds", DESTINATION_DATASET
+        "--output_ds", f"{PROJECT_ID}.{DESTINATION_DATASET}",
+        "--version_name", Variable.get('NEW_VERSION_NAME'),
     ]
 
     bash_remove_trained_model_op = BashOperator(
@@ -263,11 +266,11 @@ with DAG(
 
     model_check_sql = """
                 SELECT
-                    IF(rmse - 4.0 >= 0, rmse - 4.0, 0) AS rmse
+                    IF(rmse - 5.0 >= 0, rmse - 5.0, 0) AS rmse
                 FROM
                     `{0}.{1}.{2}`
                 WHERE
-                    model_version = '{3}'
+                    version_name = '{3}'
                 """.format(PROJECT_ID, DESTINATION_DATASET, 'model_metrics',
                            Variable.get("NEW_VERSION_NAME"))
 
@@ -275,9 +278,8 @@ with DAG(
         task_id="bq_value_check_rmse_task",
         sql=model_check_sql,
         pass_value=0,
-        tolerence=1,
+        tolerence=0,
         use_legacy_sql=False,
-        location=location,
     )
 
     VALUE_ERROR_MESSAGE = b64e(b'Error. Model RMSE > 5.0')
@@ -406,17 +408,19 @@ with DAG(
     )
 
     bq_check_data_op >> publish_if_failed_check_op
+    bq_check_data_op >> python_new_version_name_op
     bq_check_data_op >> [bq_train_data_op, bq_valid_data_op]
     bq_train_data_op >> bq_export_train_csv_op
     bq_valid_data_op >> bq_export_valid_csv_op
     bq_check_data_op >>  bash_remove_trained_model_op
+    [bq_export_train_csv_op, bq_export_valid_csv_op] >> ml_engine_training_op
+    python_new_version_name_op >> ml_engine_training_op
     bash_remove_trained_model_op >> ml_engine_training_op
-    [bq_check_data_op, bq_train_data_op] >> ml_engine_training_op
 
     ml_engine_training_op >> bq_check_rmse_query_op
     bq_check_rmse_query_op >> publish_if_failed_value_check_op
 
-    bq_check_rmse_query_op >> python_version_name_op
+    bq_check_rmse_query_op >> python_current_version_name_op
     bq_check_rmse_query_op >>  bash_copy_saved_model_op
     bash_copy_saved_model_op >> ml_engine_create_version_op
 
@@ -426,6 +430,6 @@ with DAG(
     check_if_model_exists_op >> dont_create_model_dummy_op
     ml_engine_create_model_op >> ml_engine_create_version_op
     dont_create_model_dummy_op >> ml_engine_create_version_op
-    python_version_name_op >> ml_engine_create_version_op
+    python_current_version_name_op >> ml_engine_create_version_op
     ml_engine_create_version_op >> ml_engine_set_default_version_op
     ml_engine_set_default_version_op >> publish_on_success_op
