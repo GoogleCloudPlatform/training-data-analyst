@@ -139,8 +139,6 @@ public class StreamingMinuteTrafficSQLPipeline {
                     .fromTopic(options.getInputTopic()))
 
                 .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
-                .apply("AddEventTimestamps", WithTimestamps.of(
-                        (CommonLog commonLog) -> Instant.parse(commonLog.timestamp)))
 
                 // Add new DATETIME field to CommonLog, converting to a Row, then populate new row with Joda DateTime
                 .apply("AddDateTimeField", AddFields.<CommonLog>create().field("timestamp_joda", FieldType.DATETIME))
