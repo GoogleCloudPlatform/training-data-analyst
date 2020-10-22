@@ -6,7 +6,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hello-canary 
+      app: hello 
   template:
     metadata:
       labels:
