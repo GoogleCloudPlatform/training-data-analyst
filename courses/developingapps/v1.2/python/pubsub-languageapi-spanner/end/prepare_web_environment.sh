@@ -14,14 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "Creating quiz-account Service Account"
-gcloud iam service-accounts create quiz-account --display-name "Quiz Account"
-gcloud iam service-accounts keys create key.json --iam-account=quiz-account@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com
-export GOOGLE_APPLICATION_CREDENTIALS=key.json
-
-echo "Setting quiz-account IAM Role"
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member serviceAccount:quiz-account@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --role roles/owner
-
 echo "Creating Datastore/App Engine instance"
 gcloud app create --region "us-central"
 
@@ -43,5 +35,13 @@ pip install -r requirements.txt
 
 echo "Creating Datastore entities"
 python add_entities.py
+
+echo "Creating quiz-account Service Account"
+gcloud iam service-accounts create quiz-account --display-name "Quiz Account"
+gcloud iam service-accounts keys create key.json --iam-account=quiz-account@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com
+export GOOGLE_APPLICATION_CREDENTIALS=key.json
+
+echo "Setting quiz-account IAM Role"
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member serviceAccount:quiz-account@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --role roles/owner
 
 echo "Project ID: $DEVSHELL_PROJECT_ID"
