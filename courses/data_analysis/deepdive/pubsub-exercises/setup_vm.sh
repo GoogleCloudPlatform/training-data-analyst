@@ -10,14 +10,22 @@ function run_and_check {
   fi
 }
 
+function run_and_pass {
+  "$@"
+  status=$?
+  if [ $status -ne 0 ]; then
+    echo "Failed to run command $@. Skipping as it is not needed."
+  fi
+}
+
 run_and_check sudo apt-get update -y
 
 # Install Java pieces.
-run_and_check sudo apt-get install openjdk-8-jdk -y
+run_and_check sudo apt-get install openjdk-11-jdk -y
 
-run_and_check sudo update-alternatives --set javac /usr/lib/jvm/java-8-openjdk-amd64/bin/javac
+run_and_check sudo update-alternatives --set javac /usr/lib/jvm/java-11-openjdk-amd64/bin/javac
 
-run_and_check sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+run_and_check sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java
 
 run_and_check sudo apt-get install maven -y
 
@@ -25,6 +33,8 @@ run_and_check sudo apt-get update && sudo apt-get --only-upgrade install kubectl
 
 # Install Python pieces.
 run_and_check sudo apt-get install python3 -y
+run_and_pass sudo apt-get install python3-distutils -y
+run_and_pass sudo apt-get install python3-apt -y
 
 run_and_check curl https://bootstrap.pypa.io/get-pip.py | sudo python3
 
