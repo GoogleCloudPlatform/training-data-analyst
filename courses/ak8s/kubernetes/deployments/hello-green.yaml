@@ -12,11 +12,11 @@ spec:
       labels:
         app: hello
         track: stable
-        version: 1.0.0
+        version: 2.0.0
     spec:
       containers:
         - name: hello
-          image: "kelseyhightower/hello:1.0.0"
+          image: "kelseyhightower/hello:2.0.0"
           ports:
             - name: http
               containerPort: 80
