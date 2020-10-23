@@ -16,7 +16,7 @@ import logging
 import os
 project_id = os.getenv('GCLOUD_PROJECT')
 
-# TODO: Load the Cloud Pub/Sub module 
+# TODO: Load the Cloud Pub/Sub module
 
 
 
@@ -42,7 +42,7 @@ from flask import current_app
 
 # END TODO
 
-# TODO: Create a Subscription object named 
+# TODO: Create a Subscription object named
 # worker-subscription
 
 
@@ -50,7 +50,7 @@ from flask import current_app
 # END TODO
 
 """
-Publishes feedback info 
+Publishes feedback info
 - jsonify feedback object
 - encode as bytestring
 - publish message
@@ -61,9 +61,6 @@ def publish_feedback(feedback):
 # TODO: Publish the feedback object to the feedback topic
 
     
-    
-
-
 
 # END TODO
 
