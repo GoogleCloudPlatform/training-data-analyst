@@ -60,6 +60,9 @@ def save_feedback(data):
     # TODO: Create a batch object for database operations
 
     
+
+    # END TODO
+
         # TODO: Create a key for the record
         # from the email, quiz and timestamp
 
@@ -74,14 +77,5 @@ def save_feedback(data):
 
         
 
-
-
-
-
-
-        
-
         # END TODO
-
-    # END TODO
 
