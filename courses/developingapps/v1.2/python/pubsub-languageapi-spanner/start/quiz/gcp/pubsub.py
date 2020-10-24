@@ -30,7 +30,7 @@ from flask import current_app
 
 # END TODO
 
-# TODO: Create a Topic Object to reference the feedback topic
+# TODO: Create Topic Object to reference feedback topic
 
 
 

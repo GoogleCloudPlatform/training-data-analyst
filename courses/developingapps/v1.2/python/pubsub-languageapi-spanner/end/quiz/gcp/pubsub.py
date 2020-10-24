@@ -30,7 +30,7 @@ publisher = pubsub_v1.PublisherClient()
 
 # END TODO
 
-# TODO: Create a Topic Object to reference the feedback topic
+# TODO: Create Topic Object to reference feedback topic
 
 topic_path = publisher.topic_path(project_id, 'feedback')
 
