@@ -30,15 +30,15 @@ publisher = pubsub_v1.PublisherClient()
 
 # END TODO
 
-# TODO: Create a Pub/Sub Subscriber Client
-
-sub_client = pubsub_v1.SubscriberClient()
-
-# END TODO
-
 # TODO: Create a Topic Object to reference the feedback topic
 
 topic_path = publisher.topic_path(project_id, 'feedback')
+
+# END TODO
+
+# TODO: Create a Pub/Sub Subscriber Client
+
+sub_client = pubsub_v1.SubscriberClient()
 
 # END TODO
 

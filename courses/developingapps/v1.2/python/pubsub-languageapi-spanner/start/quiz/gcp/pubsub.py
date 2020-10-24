@@ -30,13 +30,13 @@ from flask import current_app
 
 # END TODO
 
-# TODO: Create a Pub/Sub Subscriber Client
+# TODO: Create a Topic Object to reference the feedback topic
 
 
 
 # END TODO
 
-# TODO: Create a Topic Object to reference the feedback topic
+# TODO: Create a Pub/Sub Subscriber Client
 
 
 
