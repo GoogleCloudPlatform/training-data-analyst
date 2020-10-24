@@ -35,7 +35,7 @@ def analyze(text):
 
     # TODO: Create a Document object
 
-    doc = types.Document(content=text, type_='PLAIN_TEXT')
+    doc = language_v1.types.Document(content=text, type_='PLAIN_TEXT')
 
     # END TODO
 
