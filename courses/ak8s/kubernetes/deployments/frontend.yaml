@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        track: stable
+    spec:
+      containers:
+        - name: nginx
+          image: "nginx:1.9.14"
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/usr/sbin/nginx","-s","quit"]
+          volumeMounts:
+            - name: "nginx-frontend-conf"
+              mountPath: "/etc/nginx/conf.d"
+            - name: "tls-certs"
+              mountPath: "/etc/tls"
+      volumes:
+        - name: "tls-certs"
+          secret:
+            secretName: "tls-certs"
+        - name: "nginx-frontend-conf"
+          configMap:
+            name: "nginx-frontend-conf"
+            items:
+              - key: "frontend.conf"
+                path: "frontend.conf"

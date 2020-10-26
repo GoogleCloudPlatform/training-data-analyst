@@ -17,7 +17,7 @@ import sys
 import time
 import json
 
-# TODO: Load the pubsub, languageapi and spanner modules from 
+# TODO: Load the pubsub, languageapi and spanner modules from
 # the quiz.gcp package
 
 
@@ -56,10 +56,10 @@ def pubsub_callback(message):
 
     # END TODO
 
-    data = json.loads(message.data)    
+    data = json.loads(message.data)
 
     # TODO: Use the languageapi module to
-    # analyze the sentiment 
+    # analyze the sentiment
 
     
 
@@ -82,18 +82,18 @@ def pubsub_callback(message):
 
     
 
-    # END TODO 
+    # END TODO
 
-    # TODO: Log a message to say the feedback 
+    # TODO: Log a message to say the feedback
     # has been saved
 
-        
+    
 
     # END TODO
 
 """
 Pulls messages and loops forever while waiting
-- initiate pull 
+- initiate pull
 - loop once a minute, forever
 """
 def main():
