@@ -60,12 +60,16 @@ def save_feedback(data):
     # TODO: Create a batch object for database operations
 
     with database.batch() as batch:
+
+    # END TODO
+
         # TODO: Create a key for the record
         # from the email, quiz and timestamp
 
-        feedback_id = '{}_{}_{}'.format(reverse_email(data['email']),
-                                        data['quiz'],
-                                        data['timestamp'])
+        feedback_id = '{}_{}_{}'.format(
+                    reverse_email(data['email']),
+                    data['quiz'],
+                    data['timestamp'])
 
         # END TODO
 
@@ -98,6 +102,4 @@ def save_feedback(data):
         )
 
         # END TODO
-
-    # END TODO
 
