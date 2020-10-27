@@ -1,13 +1,16 @@
-apiVersion: app/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-green
 spec:
   replicas: 3
+  selector:
+    matchLabels:
+      app: hello-green
   template:
     metadata:
       labels:
-        app: hello
+        app: hello-green
         track: stable
         version: 2.0.0
     spec:
