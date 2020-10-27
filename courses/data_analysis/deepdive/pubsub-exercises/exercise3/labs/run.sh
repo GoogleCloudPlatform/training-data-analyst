@@ -1,6 +1,6 @@
 #!/bin/bash
 set -m
-PROJECT=`curl http://metadata.google.internal/computeMetadata/v1/project/project-id -H "Metadata-Flavor: Google"`
+PROJECT=$(gcloud config get-value project)
 SUBSCRIPTION_KEY=`date +"%H%M%S%N"`
 SUBSCRIPTION=pubsub-e2e-example-sub-$SUBSCRIPTION_KEY
 OLD_SUBSCRIPTION=`cat .last_subscription`
