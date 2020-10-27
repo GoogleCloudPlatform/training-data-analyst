@@ -46,6 +46,13 @@ public class Subscriber implements MessageReceiver {
       description = "The Google Cloud Pub/Sub subscription name to which to subscribe."
     )
     public String subscription = null;
+
+    @Parameter(
+      names = {"--ordered", "-o"},
+      required = false,
+      description = "Whether or not to publish messages with an ordering key."
+    )
+    public Boolean ordered = false;
   }
 
   static class OrderStats {

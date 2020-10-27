@@ -42,6 +42,7 @@ public class Publisher {
       description = "The Google Cloud Pub/Sub project in which the topic exists."
     )
     public String project = null;
+
     @Parameter(
       names = {"--ordered", "-o"},
       required = false,
