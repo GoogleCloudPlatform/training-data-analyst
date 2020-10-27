@@ -61,6 +61,7 @@ public class Subscriber implements MessageReceiver {
   }
 
   private static final String TIMESTAMP_KEY = "publish_time";
+  private static final String SEQUENCE_NUM_KEY = "sequence_num";
 
   private final Args args;
   private com.google.cloud.pubsub.v1.Subscriber subscriber;
@@ -69,6 +70,7 @@ public class Subscriber implements MessageReceiver {
   private AtomicLong outOfOrderCount = new AtomicLong(0);
   private AtomicLong lastReceivedTimestamp = new AtomicLong(0);
   private ConcurrentHashMap<Long, OrderStats> orderStats = new ConcurrentHashMap<Long, OrderStats>();
+  private ConcurrentHashMap<Long, Long> seenSequenceNums = new ConcurrentHashMap<Long, Long>();
 
 
   private Subscriber(Args args) {
@@ -92,6 +94,11 @@ public class Subscriber implements MessageReceiver {
     long now = DateTime.now().getMillis();
     String publishTime = message.getAttributesOrDefault(TIMESTAMP_KEY, "");
     long receivedCount = receivedMessageCount.addAndGet(1);
+    long sequenceNum = Long.parseLong(message.getAttributesOrDefault(SEQUENCE_NUM_KEY, "-1"));
+    if (seenSequenceNums.putIfAbsent(sequenceNum, sequenceNum) != null) {
+      consumer.ack();
+      return;
+    }
     if (publishTime != "") {
       long publishTimeParsed = 0L;
       try {

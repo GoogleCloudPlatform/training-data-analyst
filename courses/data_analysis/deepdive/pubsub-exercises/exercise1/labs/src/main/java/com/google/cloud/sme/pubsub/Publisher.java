@@ -53,6 +53,7 @@ public class Publisher {
 
   private static final String SOURCE_DATA = "actions.csv";
   private static final String TIMESTAMP_KEY = "publish_time";
+  private static final String SEQUENCE_NUM_KEY = "sequence_num";
   private static final String TOPIC = "pubsub-e2e-example";
   private static final int MESSAGE_COUNT = 1000000;
 
@@ -84,14 +85,15 @@ public class Publisher {
     }
   }
 
-  private void Publish(Entities.Action publishAction) {
+  private void Publish(long sequenceNum, Entities.Action publishAction) {
     awaitedFutures.incrementAndGet();
     publishAction = Entities.Action.newBuilder(publishAction).setExtraInfo(this.extraInfo).build();
     final long publishTime = DateTime.now().getMillis();
     PubsubMessage.Builder messageBuilder =
         PubsubMessage.newBuilder()
             .setData(ActionUtils.encodeAction(publishAction))
-            .putAttributes(TIMESTAMP_KEY, Long.toString(publishTime));
+            .putAttributes(TIMESTAMP_KEY, Long.toString(publishTime))
+            .putAttributes(SEQUENCE_NUM_KEY, Long.toString(sequenceNum));
     if (args.ordered) {
       messageBuilder.setOrderingKey(Long.toString(publishAction.getUserId()));
     }
@@ -114,7 +116,7 @@ public class Publisher {
 
     Entities.Action nextAction = actionReader.next();
     for (int i = 0; i < MESSAGE_COUNT; ++i) {
-      Publish(nextAction);
+      Publish(i, nextAction);
       nextAction = actionReader.next();
       if ((i + 1) % 100000 == 0) {
         System.out.println("Published " + (i + 1) + " messages.");
