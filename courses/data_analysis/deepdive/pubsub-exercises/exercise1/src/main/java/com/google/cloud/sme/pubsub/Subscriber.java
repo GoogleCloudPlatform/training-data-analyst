@@ -20,9 +20,12 @@ import com.beust.jcommander.Parameter;
 import com.google.api.gax.batching.FlowControlSettings;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
+import com.google.cloud.sme.common.ActionUtils;
+import com.google.cloud.sme.Entities;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.joda.time.DateTime;
 import org.threeten.bp.Duration;
@@ -45,15 +48,20 @@ public class Subscriber implements MessageReceiver {
     public String subscription = null;
   }
 
+  static class OrderStats {
+    Long lastTimestamp = new Long(0);
+    Long lastReceivedTimestamp = new Long(0);
+  }
+
   private static final String TIMESTAMP_KEY = "publish_time";
 
   private final Args args;
   private com.google.cloud.pubsub.v1.Subscriber subscriber;
 
   private AtomicLong receivedMessageCount = new AtomicLong(0);
-  private Long lastTimestamp = new Long(0);
-  private Long outOfOrderCount = new Long(0);
-  private Long lastReceivedTimestamp = new Long(0);
+  private AtomicLong outOfOrderCount = new AtomicLong(0);
+  private AtomicLong lastReceivedTimestamp = new AtomicLong(0);
+  private ConcurrentHashMap<Long, OrderStats> orderStats = new ConcurrentHashMap<Long, OrderStats>();
 
 
   private Subscriber(Args args) {
@@ -72,6 +80,7 @@ public class Subscriber implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
+    Entities.Action action = ActionUtils.decodeAction(message.getData());
     long size = message.getData().size();
     long now = DateTime.now().getMillis();
     String publishTime = message.getAttributesOrDefault(TIMESTAMP_KEY, "");
@@ -84,19 +93,19 @@ public class Subscriber implements MessageReceiver {
         System.out.println("Could not parse " + publishTime);
       }
 
-      synchronized (lastTimestamp) {
-        lastReceivedTimestamp = now;
-        if (lastTimestamp > publishTimeParsed) {
-          ++outOfOrderCount;
-        } else {
-          lastTimestamp = publishTimeParsed;
+      OrderStats stats = orderStats.computeIfAbsent(action.getUserId(), k -> new OrderStats());
+      synchronized (stats) {
+        stats.lastReceivedTimestamp = now;
+        lastReceivedTimestamp.set(now);
+        if (stats.lastTimestamp > publishTimeParsed) {
+          outOfOrderCount.incrementAndGet();
         }
-        lastTimestamp = publishTimeParsed;
+        stats.lastTimestamp = publishTimeParsed;
       }
     }
     if (receivedCount % 100000 == 0) {
       System.out.println(
-          "Received " + receivedCount + " messages, " + outOfOrderCount + " were out of order.");
+          "Received " + receivedCount + " messages, " + outOfOrderCount.get() + " were out of order.");
     }
     consumer.ack();
   }
@@ -105,11 +114,10 @@ public class Subscriber implements MessageReceiver {
     subscriber.startAsync();
     while (true) {
       long now = DateTime.now().getMillis();
-      synchronized (lastTimestamp) {
-        if (lastReceivedTimestamp > 0 && ((now - lastReceivedTimestamp) > 10000)) {
-          subscriber.stopAsync();
-          break;
-        }
+      long currentReceived = lastReceivedTimestamp.get();
+      if (currentReceived > 0 && ((now - currentReceived) > 10000)) {
+        subscriber.stopAsync();
+        break;
       }
       try {
         Thread.sleep(5000);

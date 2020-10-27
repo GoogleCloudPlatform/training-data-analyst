@@ -42,6 +42,12 @@ public class Publisher {
       description = "The Google Cloud Pub/Sub project in which the topic exists."
     )
     public String project = null;
+    @Parameter(
+      names = {"--ordered", "-o"},
+      required = false,
+      description = "Whether or not to publish messages with an ordering key."
+    )
+    public Boolean ordered = false;
   }
 
   private static final String SOURCE_DATA = "actions.csv";
@@ -66,6 +72,9 @@ public class Publisher {
     ProjectTopicName topic = ProjectTopicName.of(args.project, TOPIC);
     com.google.cloud.pubsub.v1.Publisher.Builder builder =
         com.google.cloud.pubsub.v1.Publisher.newBuilder(topic);
+    if (args.ordered) {
+      builder.setEnableMessageOrdering(true);
+    }
     try {
       this.publisher = builder.build();
     } catch (Exception e) {
@@ -78,12 +87,14 @@ public class Publisher {
     awaitedFutures.incrementAndGet();
     publishAction = Entities.Action.newBuilder(publishAction).setExtraInfo(this.extraInfo).build();
     final long publishTime = DateTime.now().getMillis();
-    PubsubMessage message =
+    PubsubMessage.Builder messageBuilder =
         PubsubMessage.newBuilder()
             .setData(ActionUtils.encodeAction(publishAction))
-            .putAttributes(TIMESTAMP_KEY, Long.toString(publishTime))
-            .build();
-    ApiFuture<String> response = publisher.publish(message);
+            .putAttributes(TIMESTAMP_KEY, Long.toString(publishTime));
+    if (args.ordered) {
+      messageBuilder.setOrderingKey(Long.toString(publishAction.getUserId()));
+    }
+    ApiFuture<String> response = publisher.publish(messageBuilder.build());
     response.addListener(
         () -> {
           try {
