@@ -71,10 +71,12 @@ Publish feedback
 - Compose and return response
 """
 def publish_feedback(feedback):
-    # TODO: Publish the feedback using your pubsub module, return the result
+    # TODO: Publish the feedback using your pubsub module,
+    # return the result
 
     result = pubsub.publish_feedback(feedback)
-    response = Response(json.dumps(result, indent=2, sort_keys=True))
+    response = Response(json.dumps(result, indent=2,
+                                   sort_keys=True))
     response.headers['Content-Type'] = 'application/json'
     return response
 
