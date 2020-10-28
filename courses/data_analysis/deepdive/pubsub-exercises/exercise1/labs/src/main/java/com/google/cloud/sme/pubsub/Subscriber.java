@@ -112,7 +112,7 @@ public class Subscriber implements MessageReceiver {
     while (true) {
       long now = DateTime.now().getMillis();
       long currentReceived = lastReceivedTimestamp.get();
-      if (currentReceived > 0 && ((now - currentReceived) > 10000)) {
+      if (currentReceived > 0 && ((now - currentReceived) > 30000)) {
         subscriber.stopAsync();
         break;
       }
