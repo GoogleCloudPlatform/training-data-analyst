@@ -15,24 +15,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 package com.google.cloud.sme.pubsub;
 
-import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiFutureCallback;
-import com.google.api.core.ApiFutures;
-import com.google.api.gax.rpc.ApiException;
-import com.google.cloud.pubsub.v1.Publisher;
-import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.Entities;
-import com.google.pubsub.v1.PubsubMessage;
-import com.google.pubsub.v1.ProjectTopicName;
 
 /** A basic Pub/Sub publisher for purposes of demonstrating use of the API. */
 public class ActionPublisher {
 
   /** Creates a new publisher associated with the given project and topic. */
-  public ActionPublisher(String project, String topic) {
-  }
+  public ActionPublisher(String project, String topic) {}
 
   /** Publishes the action on the topic associated with this publisher. */
-  public void publish(Entities.Action action) {
-  }
+  public void publish(Entities.Action action) {}
 }

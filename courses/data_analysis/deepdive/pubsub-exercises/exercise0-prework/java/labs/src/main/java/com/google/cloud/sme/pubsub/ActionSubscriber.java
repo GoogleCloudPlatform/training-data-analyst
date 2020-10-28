@@ -15,20 +15,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 package com.google.cloud.sme.pubsub;
 
-import com.google.cloud.pubsub.v1.AckReplyConsumer;
-import com.google.cloud.pubsub.v1.MessageReceiver;
-import com.google.cloud.pubsub.v1.Subscriber;
-import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.Entities;
-import com.google.pubsub.v1.PubsubMessage;
-import com.google.pubsub.v1.ProjectSubscriptionName;
 
 /** A basic Pub/Sub subscriber for purposes of demonstrating use of the API. */
 public class ActionSubscriber {
 
   /** Creates a new subscriber associated with the given project and subscription. */
-  public ActionSubscriber(String project, String subscription) {
-  }
+  public ActionSubscriber(String project, String subscription) {}
 
   /** Returns the number of VIEW action seen */
   public long getViewCount() {

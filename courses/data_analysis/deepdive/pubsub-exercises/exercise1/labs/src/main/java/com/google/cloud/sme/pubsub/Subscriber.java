@@ -17,41 +17,35 @@ package com.google.cloud.sme.pubsub;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.google.api.gax.batching.FlowControlSettings;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
-import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.Entities;
-import com.google.pubsub.v1.PubsubMessage;
+import com.google.cloud.sme.common.ActionUtils;
 import com.google.pubsub.v1.ProjectSubscriptionName;
-import java.util.Map;
+import com.google.pubsub.v1.PubsubMessage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.joda.time.DateTime;
-import org.threeten.bp.Duration;
 
 /** A basic Pub/Sub subscriber for purposes of demonstrating use of the API. */
 public class Subscriber implements MessageReceiver {
   public static class Args {
     @Parameter(
-      names = {"--project", "-p"},
-      required = true,
-      description = "The Google Cloud Pub/Sub project in which the subscription exists."
-    )
+        names = {"--project", "-p"},
+        required = true,
+        description = "The Google Cloud Pub/Sub project in which the subscription exists.")
     public String project = null;
 
     @Parameter(
-      names = {"--subscription", "-s"},
-      required = true,
-      description = "The Google Cloud Pub/Sub subscription name to which to subscribe."
-    )
+        names = {"--subscription", "-s"},
+        required = true,
+        description = "The Google Cloud Pub/Sub subscription name to which to subscribe.")
     public String subscription = null;
 
     @Parameter(
-      names = {"--ordered", "-o"},
-      required = false,
-      description = "Whether or not to publish messages with an ordering key."
-    )
+        names = {"--ordered", "-o"},
+        required = false,
+        description = "Whether or not to publish messages with an ordering key.")
     public Boolean ordered = false;
   }
 
@@ -63,14 +57,15 @@ public class Subscriber implements MessageReceiver {
   private AtomicLong receivedMessageCount = new AtomicLong(0);
   private AtomicLong outOfOrderCount = new AtomicLong(0);
   private AtomicLong lastReceivedTimestamp = new AtomicLong(0);
-  private ConcurrentHashMap<Long, Long> largestSequenceNumPerUser = new ConcurrentHashMap<Long, Long>();
+  private ConcurrentHashMap<Long, Long> largestSequenceNumPerUser =
+      new ConcurrentHashMap<Long, Long>();
   private ConcurrentHashMap<Long, Long> seenSequenceNums = new ConcurrentHashMap<Long, Long>();
-
 
   private Subscriber(Args args) {
     this.args = args;
 
-    ProjectSubscriptionName subscription = ProjectSubscriptionName.of(args.project, args.subscription);
+    ProjectSubscriptionName subscription =
+        ProjectSubscriptionName.of(args.project, args.subscription);
     com.google.cloud.pubsub.v1.Subscriber.Builder builder =
         com.google.cloud.pubsub.v1.Subscriber.newBuilder(subscription, this);
     try {
@@ -94,15 +89,20 @@ public class Subscriber implements MessageReceiver {
     }
 
     lastReceivedTimestamp.set(now);
-    long largestSequeceNum = largestSequenceNumPerUser.compute(action.getUserId(), (k, v) -> v == null ? sequenceNum : Math.max(v, sequenceNum));
+    long largestSequeceNum =
+        largestSequenceNumPerUser.compute(
+            action.getUserId(), (k, v) -> v == null ? sequenceNum : Math.max(v, sequenceNum));
     if (largestSequeceNum > sequenceNum) {
       outOfOrderCount.incrementAndGet();
     }
 
-
     if (receivedCount % 100000 == 0) {
       System.out.println(
-          "Received " + receivedCount + " messages, " + outOfOrderCount.get() + " were out of order.");
+          "Received "
+              + receivedCount
+              + " messages, "
+              + outOfOrderCount.get()
+              + " were out of order.");
     }
     consumer.ack();
   }
@@ -122,8 +122,7 @@ public class Subscriber implements MessageReceiver {
         System.out.println("Error while waiting for completion: " + e);
       }
     }
-    System.out.println(
-        "Subscriber has not received message in 10s. Stopping.");
+    System.out.println("Subscriber has not received message in 10s. Stopping.");
     subscriber.awaitTerminated();
   }
 

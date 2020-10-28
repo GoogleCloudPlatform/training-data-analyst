@@ -18,43 +18,38 @@ package com.google.cloud.sme.pubsub;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.api.core.ApiFuture;
-import com.google.api.gax.batching.BatchingSettings;
-import com.google.api.gax.core.FixedExecutorProvider;
 import com.google.cloud.sme.Entities;
 import com.google.cloud.sme.common.ActionReader;
 import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.common.FileActionReader;
 import com.google.protobuf.ByteString;
-import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.ProjectTopicName;
-import java.util.concurrent.Executors;
+import com.google.pubsub.v1.PubsubMessage;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 import org.joda.time.DateTime;
-import org.threeten.bp.Duration;
 
 /** A basic Pub/Sub publisher for purposes of demonstrating use of the API. */
 public class Publisher {
   public static class Args {
     @Parameter(
-      names = {"--project", "-p"},
-      required = true,
-      description = "The Google Cloud Pub/Sub project in which the topic exists."
-    )
+        names = {"--project", "-p"},
+        required = true,
+        description = "The Google Cloud Pub/Sub project in which the topic exists.")
     public String project = null;
 
     @Parameter(
-      names = {"--ordered", "-o"},
-      required = false,
-      description = "Whether or not to publish messages with an ordering key."
-    )
+        names = {"--ordered", "-o"},
+        required = false,
+        description = "Whether or not to publish messages with an ordering key.")
     public Boolean ordered = false;
   }
 
   private static final String SOURCE_DATA = "actions.csv";
   private static final String SEQUENCE_NUM_KEY = "sequence_num";
   private static final String TOPIC = "pubsub-e2e-example";
-  private static final int MESSAGE_COUNT = 1000000;
+  private static final int MESSAGE_COUNT = 1000;
 
   private final Args args;
   private com.google.cloud.pubsub.v1.Publisher publisher;

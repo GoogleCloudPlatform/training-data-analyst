@@ -18,10 +18,10 @@ package com.google.cloud.sme.pubsub;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
-import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.Entities;
-import com.google.pubsub.v1.PubsubMessage;
+import com.google.cloud.sme.common.ActionUtils;
 import com.google.pubsub.v1.ProjectSubscriptionName;
+import com.google.pubsub.v1.PubsubMessage;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** A basic Pub/Sub subscriber for purposes of demonstrating use of the API. */
@@ -30,8 +30,7 @@ public class ActionSubscriber implements MessageReceiver {
   private ConcurrentHashMap<String, Boolean> seenIds = new ConcurrentHashMap<String, Boolean>();
 
   public ActionSubscriber(String project, String subscription) {
-    ProjectSubscriptionName fullSubscription =
-        ProjectSubscriptionName.of(project, subscription);
+    ProjectSubscriptionName fullSubscription = ProjectSubscriptionName.of(project, subscription);
     Subscriber.Builder builder = Subscriber.newBuilder(fullSubscription, this);
     try {
       this.subscriber = builder.build();

@@ -18,31 +18,26 @@ package com.google.cloud.sme.pubsub;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.api.core.ApiFuture;
-import com.google.api.gax.batching.BatchingSettings;
-import com.google.api.gax.core.FixedExecutorProvider;
 import com.google.cloud.sme.Entities;
 import com.google.cloud.sme.common.ActionReader;
-import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.common.FileActionReader;
 import com.google.protobuf.ByteString;
-import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.ProjectTopicName;
+import com.google.pubsub.v1.PubsubMessage;
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 import org.joda.time.DateTime;
-import org.threeten.bp.Duration;
 
 /** A basic Pub/Sub publisher for purposes of demonstrating use of the API. */
 public class Publisher {
   public static class Args {
     @Parameter(
-      names = {"--project", "-p"},
-      required = true,
-      description = "The Google Cloud Pub/Sub project in which the topic exists."
-    )
+        names = {"--project", "-p"},
+        required = true,
+        description = "The Google Cloud Pub/Sub project in which the topic exists.")
     public String project = null;
   }
 
@@ -109,7 +104,7 @@ public class Publisher {
     Entities.Action nextAction = actionReader.next();
     for (int i = 0; i < MESSAGE_COUNT; ++i) {
       Publish(nextAction);
-      if ((i+1) % 100000 == 0) {
+      if ((i + 1) % 100000 == 0) {
         System.out.println("Published " + (i + 1) + " messages.");
       }
       nextAction = actionReader.next();

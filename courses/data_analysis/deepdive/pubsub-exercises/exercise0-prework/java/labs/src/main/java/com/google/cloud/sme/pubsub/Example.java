@@ -19,42 +19,35 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.cloud.sme.Entities;
 import com.google.cloud.sme.common.ActionReader;
-import com.google.cloud.sme.common.ActionUtils;
 import com.google.cloud.sme.common.FileActionReader;
 
 /** A basic Pub/Sub example for demonstrating use of the API. */
 public class Example {
   public static class Args {
     @Parameter(
-      names = {"--input", "-i"},
-      description = "The file from which to grab the events to publish."
-    )
+        names = {"--input", "-i"},
+        description = "The file from which to grab the events to publish.")
     public String inputFile = null;
 
     @Parameter(
-      names = {"--project", "-p"},
-      required = true,
-      description = "The Google Cloud Pub/Sub project in which the topic exists."
-    )
+        names = {"--project", "-p"},
+        required = true,
+        description = "The Google Cloud Pub/Sub project in which the topic exists.")
     public String project = null;
 
     @Parameter(
-      names = {"--topic", "-t"},
-      description = "The Google Cloud Pub/Sub topic name to which to publish."
-    )
+        names = {"--topic", "-t"},
+        description = "The Google Cloud Pub/Sub topic name to which to publish.")
     public String topic = null;
 
     @Parameter(
-      names = {"--subscription", "-s"},
-      description =
-          "The Google Cloud Pub/Sub subscriber name on which to subscribe."
-    )
+        names = {"--subscription", "-s"},
+        description = "The Google Cloud Pub/Sub subscriber name on which to subscribe.")
     public String subscription = null;
 
     @Parameter(
-      names = {"--count", "-c"},
-      description = "The number of messages to publish."
-    )
+        names = {"--count", "-c"},
+        description = "The number of messages to publish.")
     public Integer messageCount = 10000;
   }
 

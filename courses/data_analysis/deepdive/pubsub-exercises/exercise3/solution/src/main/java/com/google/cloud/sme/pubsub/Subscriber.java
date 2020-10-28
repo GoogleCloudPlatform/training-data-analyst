@@ -18,34 +18,29 @@ package com.google.cloud.sme.pubsub;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.api.gax.batching.FlowControlSettings;
-import com.google.api.gax.core.FixedExecutorProvider;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
-import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.ProjectSubscriptionName;
-import java.util.Map;
+import com.google.pubsub.v1.PubsubMessage;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.joda.time.DateTime;
-import org.threeten.bp.Duration;
 
 /** A basic Pub/Sub subscriber for purposes of demonstrating use of the API. */
 public class Subscriber implements MessageReceiver {
   public static class Args {
     @Parameter(
-      names = {"--project", "-p"},
-      required = true,
-      description = "The Google Cloud Pub/Sub project in which the subscription exists."
-    )
+        names = {"--project", "-p"},
+        required = true,
+        description = "The Google Cloud Pub/Sub project in which the subscription exists.")
     public String project = null;
 
     @Parameter(
-      names = {"--subscription", "-s"},
-      required = true,
-      description = "The Google Cloud Pub/Sub subscription to which to subscribe."
-    )
+        names = {"--subscription", "-s"},
+        required = true,
+        description = "The Google Cloud Pub/Sub subscription to which to subscribe.")
     public String subscription = null;
   }
 
@@ -63,7 +58,8 @@ public class Subscriber implements MessageReceiver {
     this.args = args;
 
     this.executor = Executors.newScheduledThreadPool(1000);
-    ProjectSubscriptionName subscription = ProjectSubscriptionName.of(args.project, args.subscription);
+    ProjectSubscriptionName subscription =
+        ProjectSubscriptionName.of(args.project, args.subscription);
     com.google.cloud.pubsub.v1.Subscriber.Builder builder =
         com.google.cloud.pubsub.v1.Subscriber.newBuilder(subscription, this);
     // Each mssage allocates a 5MB buffer upon receiving the message. Memory on
@@ -71,10 +67,11 @@ public class Subscriber implements MessageReceiver {
     // approximately 1.2GB/5MB ~ 240 messages at a time. Round down to 200 to
     // account for other uses of memory. Since each message is the same 100
     // bytes, we can also limit based on size, which woudl be 200 * 100 = 20,000
-    builder.setFlowControlSettings(FlowControlSettings.newBuilder()
-           .setMaxOutstandingRequestBytes(20_000L)
-           .setMaxOutstandingElementCount(200L)
-           .build());
+    builder.setFlowControlSettings(
+        FlowControlSettings.newBuilder()
+            .setMaxOutstandingRequestBytes(20_000L)
+            .setMaxOutstandingElementCount(200L)
+            .build());
     try {
       this.subscriber = builder.build();
     } catch (Exception e) {
@@ -94,17 +91,20 @@ public class Subscriber implements MessageReceiver {
 
     byte[] extraBytes = new byte[5_000_000];
 
-    executor.schedule(() -> {
-      long now = DateTime.now().getMillis();
-      // This is here just to keep a hold on extraBytes so it isn't deallocated yet.
-      extraBytes[0] = (byte)now;
-      consumer.ack();
-      long processedCount = processedMessageCount.addAndGet(1);
-      if (processedCount % 100 == 0) {
-        System.out.println("Processed " + processedCount + " messages.");
-      }
-      lastReceivedTimestamp.set(now);
-    }, 30, TimeUnit.SECONDS);
+    executor.schedule(
+        () -> {
+          long now = DateTime.now().getMillis();
+          // This is here just to keep a hold on extraBytes so it isn't deallocated yet.
+          extraBytes[0] = (byte) now;
+          consumer.ack();
+          long processedCount = processedMessageCount.addAndGet(1);
+          if (processedCount % 100 == 0) {
+            System.out.println("Processed " + processedCount + " messages.");
+          }
+          lastReceivedTimestamp.set(now);
+        },
+        30,
+        TimeUnit.SECONDS);
   }
 
   private void run() {
@@ -122,8 +122,7 @@ public class Subscriber implements MessageReceiver {
         System.out.println("Error while waiting for completion: " + e);
       }
     }
-    System.out.println(
-        "Subscriber has not received message in 60s. Stopping.");
+    System.out.println("Subscriber has not received message in 60s. Stopping.");
     subscriber.awaitTerminated();
   }
 
