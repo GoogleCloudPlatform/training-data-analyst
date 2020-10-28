@@ -63,7 +63,7 @@ public class Subscriber implements MessageReceiver {
   private AtomicLong receivedMessageCount = new AtomicLong(0);
   private AtomicLong outOfOrderCount = new AtomicLong(0);
   private AtomicLong lastReceivedTimestamp = new AtomicLong(0);
-  private ConcurrentHashMap<Long, Long> largedSequenceNumPerUser = new ConcurrentHashMap<Long, Long>();
+  private ConcurrentHashMap<Long, Long> largestSequenceNumPerUser = new ConcurrentHashMap<Long, Long>();
   private ConcurrentHashMap<Long, Long> seenSequenceNums = new ConcurrentHashMap<Long, Long>();
 
 
@@ -94,7 +94,7 @@ public class Subscriber implements MessageReceiver {
     }
 
     lastReceivedTimestamp.set(now);
-    long largestSequeceNum = largedSequenceNumPerUser.compute(action.getUserId(), (k, v) -> Math.max(v, sequenceNum));
+    long largestSequeceNum = largestSequenceNumPerUser.compute(action.getUserId(), (k, v) -> v == null ? sequenceNum : Math.max(v, sequenceNum));
     if (largestSequeceNum > sequenceNum) {
       outOfOrderCount.incrementAndGet();
     }
