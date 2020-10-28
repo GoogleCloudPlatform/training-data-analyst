@@ -52,7 +52,6 @@ public class Publisher {
   }
 
   private static final String SOURCE_DATA = "actions.csv";
-  private static final String TIMESTAMP_KEY = "publish_time";
   private static final String SEQUENCE_NUM_KEY = "sequence_num";
   private static final String TOPIC = "pubsub-e2e-example";
   private static final int MESSAGE_COUNT = 1000000;
@@ -92,7 +91,6 @@ public class Publisher {
     PubsubMessage.Builder messageBuilder =
         PubsubMessage.newBuilder()
             .setData(ActionUtils.encodeAction(publishAction))
-            .putAttributes(TIMESTAMP_KEY, Long.toString(publishTime))
             .putAttributes(SEQUENCE_NUM_KEY, Long.toString(sequenceNum));
     if (args.ordered) {
       messageBuilder.setOrderingKey(Long.toString(publishAction.getUserId()));

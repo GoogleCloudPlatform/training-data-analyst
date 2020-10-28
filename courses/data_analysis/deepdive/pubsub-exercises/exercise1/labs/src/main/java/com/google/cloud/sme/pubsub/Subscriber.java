@@ -55,12 +55,6 @@ public class Subscriber implements MessageReceiver {
     public Boolean ordered = false;
   }
 
-  static class OrderStats {
-    Long lastTimestamp = new Long(0);
-    Long lastReceivedTimestamp = new Long(0);
-  }
-
-  private static final String TIMESTAMP_KEY = "publish_time";
   private static final String SEQUENCE_NUM_KEY = "sequence_num";
 
   private final Args args;
@@ -69,7 +63,7 @@ public class Subscriber implements MessageReceiver {
   private AtomicLong receivedMessageCount = new AtomicLong(0);
   private AtomicLong outOfOrderCount = new AtomicLong(0);
   private AtomicLong lastReceivedTimestamp = new AtomicLong(0);
-  private ConcurrentHashMap<Long, OrderStats> orderStats = new ConcurrentHashMap<Long, OrderStats>();
+  private ConcurrentHashMap<Long, Long> largedSequenceNumPerUser = new ConcurrentHashMap<Long, Long>();
   private ConcurrentHashMap<Long, Long> seenSequenceNums = new ConcurrentHashMap<Long, Long>();
 
 
@@ -92,31 +86,20 @@ public class Subscriber implements MessageReceiver {
     Entities.Action action = ActionUtils.decodeAction(message.getData());
     long size = message.getData().size();
     long now = DateTime.now().getMillis();
-    String publishTime = message.getAttributesOrDefault(TIMESTAMP_KEY, "");
     long receivedCount = receivedMessageCount.addAndGet(1);
     long sequenceNum = Long.parseLong(message.getAttributesOrDefault(SEQUENCE_NUM_KEY, "-1"));
     if (seenSequenceNums.putIfAbsent(sequenceNum, sequenceNum) != null) {
       consumer.ack();
       return;
     }
-    if (publishTime != "") {
-      long publishTimeParsed = 0L;
-      try {
-        publishTimeParsed = Long.parseLong(publishTime);
-      } catch (NumberFormatException e) {
-        System.out.println("Could not parse " + publishTime);
-      }
 
-      OrderStats stats = orderStats.computeIfAbsent(action.getUserId(), k -> new OrderStats());
-      synchronized (stats) {
-        stats.lastReceivedTimestamp = now;
-        lastReceivedTimestamp.set(now);
-        if (stats.lastTimestamp > publishTimeParsed) {
-          outOfOrderCount.incrementAndGet();
-        }
-        stats.lastTimestamp = publishTimeParsed;
-      }
+    lastReceivedTimestamp.set(now);
+    long largestSequeceNum = largedSequenceNumPerUser.compute(action.getUserId(), (k, v) -> Math.max(v, sequenceNum));
+    if (largestSequeceNum > sequenceNum) {
+      outOfOrderCount.incrementAndGet();
     }
+
+
     if (receivedCount % 100000 == 0) {
       System.out.println(
           "Received " + receivedCount + " messages, " + outOfOrderCount.get() + " were out of order.");
