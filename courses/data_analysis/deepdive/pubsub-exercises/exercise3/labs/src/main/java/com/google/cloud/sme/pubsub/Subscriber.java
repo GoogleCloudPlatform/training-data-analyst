@@ -122,7 +122,7 @@ public class Subscriber implements MessageReceiver {
         System.out.println("Error while waiting for completion: " + e);
       }
     }
-    System.out.println("Subscriber has not received message in 10s. Stopping.");
+    System.out.println("Subscriber has not received message in 30s. Stopping.");
     subscriber.awaitTerminated();
   }
 

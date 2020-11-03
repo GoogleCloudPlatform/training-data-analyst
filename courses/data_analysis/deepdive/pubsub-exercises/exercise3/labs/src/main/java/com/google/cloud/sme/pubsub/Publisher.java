@@ -49,7 +49,7 @@ public class Publisher {
   private static final String SOURCE_DATA = "actions.csv";
   private static final String SEQUENCE_NUM_KEY = "sequence_num";
   private static final String TOPIC = "pubsub-e2e-example";
-  private static final int MESSAGE_COUNT = 1000;
+  private static final int MESSAGE_COUNT = 1000000;
 
   private final Args args;
   private com.google.cloud.pubsub.v1.Publisher publisher;
