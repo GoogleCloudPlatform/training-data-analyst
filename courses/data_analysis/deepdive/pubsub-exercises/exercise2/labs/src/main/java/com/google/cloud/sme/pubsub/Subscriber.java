@@ -19,11 +19,11 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
-import com.google.cloud.sme.Entities;
-import com.google.cloud.sme.common.ActionUtils;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.joda.time.DateTime;
 
@@ -39,31 +39,24 @@ public class Subscriber implements MessageReceiver {
     @Parameter(
         names = {"--subscription", "-s"},
         required = true,
-        description = "The Google Cloud Pub/Sub subscription name to which to subscribe.")
+        description = "The Google Cloud Pub/Sub subscription to which to subscribe.")
     public String subscription = null;
-
-    @Parameter(
-        names = {"--ordered", "-o"},
-        required = false,
-        description = "Whether or not to publish messages with an ordering key.")
-    public Boolean ordered = false;
   }
 
-  private static final String SEQUENCE_NUM_KEY = "sequence_num";
+  private static final String TOPIC = "pubsub-e2e-example";
 
   private final Args args;
   private com.google.cloud.pubsub.v1.Subscriber subscriber;
+  private ScheduledExecutorService executor;
 
   private AtomicLong receivedMessageCount = new AtomicLong(0);
-  private AtomicLong outOfOrderCount = new AtomicLong(0);
+  private AtomicLong processedMessageCount = new AtomicLong(0);
   private AtomicLong lastReceivedTimestamp = new AtomicLong(0);
-  private ConcurrentHashMap<Long, Long> largestSequenceNumPerUser =
-      new ConcurrentHashMap<Long, Long>();
-  private ConcurrentHashMap<Long, Long> seenSequenceNums = new ConcurrentHashMap<Long, Long>();
 
   private Subscriber(Args args) {
     this.args = args;
 
+    this.executor = Executors.newScheduledThreadPool(1000);
     ProjectSubscriptionName subscription =
         ProjectSubscriptionName.of(args.project, args.subscription);
     com.google.cloud.pubsub.v1.Subscriber.Builder builder =
@@ -78,41 +71,37 @@ public class Subscriber implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
-    Entities.Action action = ActionUtils.decodeAction(message.getData());
-    long size = message.getData().size();
-    long now = DateTime.now().getMillis();
     long receivedCount = receivedMessageCount.addAndGet(1);
-    long sequenceNum = Long.parseLong(message.getAttributesOrDefault(SEQUENCE_NUM_KEY, "-1"));
-    if (seenSequenceNums.putIfAbsent(sequenceNum, sequenceNum) != null) {
-      consumer.ack();
-      return;
+    lastReceivedTimestamp.set(DateTime.now().getMillis());
+
+    if (receivedCount % 100 == 0) {
+      System.out.println("Received " + receivedCount + " messages.");
     }
 
-    lastReceivedTimestamp.set(now);
-    long largestSequeceNum =
-        largestSequenceNumPerUser.compute(
-            action.getUserId(), (k, v) -> v == null ? sequenceNum : Math.max(v, sequenceNum));
-    if (largestSequeceNum > sequenceNum) {
-      outOfOrderCount.incrementAndGet();
-    }
+    byte[] extraBytes = new byte[5000000];
 
-    if (receivedCount % 100000 == 0) {
-      System.out.println(
-          "Received "
-              + receivedCount
-              + " messages, "
-              + outOfOrderCount.get()
-              + " were out of order.");
-    }
-    consumer.ack();
+    executor.schedule(
+        () -> {
+          long now = DateTime.now().getMillis();
+          // This is here just to keep a hold on extraBytes so it isn't deallocated yet.
+          extraBytes[0] = (byte) now;
+          consumer.ack();
+          long processedCount = processedMessageCount.addAndGet(1);
+          if (processedCount % 100 == 0) {
+            System.out.println("Processed " + processedCount + " messages.");
+          }
+          lastReceivedTimestamp.set(now);
+        },
+        30,
+        TimeUnit.SECONDS);
   }
 
   private void run() {
     subscriber.startAsync();
     while (true) {
       long now = DateTime.now().getMillis();
-      long currentReceived = lastReceivedTimestamp.get();
-      if (currentReceived > 0 && ((now - currentReceived) > 30000)) {
+      long lastReceived = lastReceivedTimestamp.get();
+      if (lastReceived > 0 && ((now - lastReceived) > 60000)) {
         subscriber.stopAsync();
         break;
       }
@@ -122,7 +111,7 @@ public class Subscriber implements MessageReceiver {
         System.out.println("Error while waiting for completion: " + e);
       }
     }
-    System.out.println("Subscriber has not received message in 10s. Stopping.");
+    System.out.println("Subscriber has not received message in 60s. Stopping.");
     subscriber.awaitTerminated();
   }
 
