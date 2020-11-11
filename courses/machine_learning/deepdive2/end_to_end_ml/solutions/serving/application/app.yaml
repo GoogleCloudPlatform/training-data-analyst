@@ -1,0 +1,14 @@
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /
+  script: main.app
+- url: /.*
+  script: main.app
+  login: required
+
+env_variables:
+  MODEL_NAME: "babyweight"
+  VERSION_NAME: "ml_on_gcp"
