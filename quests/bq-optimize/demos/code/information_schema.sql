@@ -59,7 +59,7 @@ WHERE
 -- QUERY 4
 -- Question: If you wanted to query across multiple datasets, how could you do it?
 -- https://stackoverflow.com/questions/43457651/bigquery-select-tables-from-all-tables-within-project
--- Answer: With a UNION (or a Python script) to iterate through each dataset in `bq ls`
+-- Answer: With a UNION or a Python script to iterate through each dataset in `bq ls`
 
 -- For example, which table has the most rows?
 
