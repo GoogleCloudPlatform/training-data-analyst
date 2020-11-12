@@ -35,8 +35,7 @@ FROM
   `bigquery-public-data.baseball.__TABLES__`
 ORDER BY size_gb DESC;
 
--- Modify the query above to determine:
--- What is the largest table in terms of row count?
+-- Modify the query above to determine the largest table in terms of row count
 -- Is the same table as the largest in terms of GB?
 
 
@@ -50,7 +49,8 @@ SELECT * FROM
 
 -- QUERY 3
 -- Are there any partitioned or clustered columns?
--- For some datasets, this query will return no results. For dataset that will return results, use wikipedia.
+-- For some datasets, this query will return no results. 
+-- Running this query on the wikipedia datset will return results.
 
 SELECT * FROM 
   -- Replace baseball with a different dataset:
@@ -98,7 +98,8 @@ LIMIT 10;
 
 
 -- EXAMPLE QUERY FOR YOUR OWN PROJECT
--- Note that this query will not run on the BigQuery Public Dataset project but it will run in your own project
+-- Note that this query will not run on the BigQuery Public Data project.
+-- You can run this query in your own project (e.g. qwiklabs-gcp-XX-XXXXXXXXXX).
 -- Identify the most recently modified datasets in project and how long they have been around:
 
 SELECT
