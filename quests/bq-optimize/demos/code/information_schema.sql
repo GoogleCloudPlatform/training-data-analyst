@@ -106,7 +106,9 @@ SELECT
  TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), creation_time, DAY) AS days_live,
  option_value AS dataset_description
 FROM
+  -- Replace project-name with your project name
  `project-name.INFORMATION_SCHEMA.SCHEMATA` AS s
+   -- Replace project-name with your project name
  LEFT JOIN `project-name.INFORMATION_SCHEMA.SCHEMATA_OPTIONS` AS so
  USING (schema_name)
  
