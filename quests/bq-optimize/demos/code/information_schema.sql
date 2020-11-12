@@ -3,9 +3,6 @@
 -- Querying dataset metadata
 -- https://cloud.google.com/bigquery/docs/dataset-metadata
 
--- Advanced example: Using Dataset and Table metadata to create SQL DDL for version control
--- https://cloud.google.com/bigquery/docs/information-schema-tables#advanced_example
-
 
 -- QUERY 1
 -- Query table metadata to get table size
@@ -116,3 +113,7 @@ FROM
 ORDER BY last_modified_time DESC
 
 LIMIT 15;
+
+
+-- For advanced examples, see: Using Dataset and Table metadata to create SQL DDL for version control
+-- https://cloud.google.com/bigquery/docs/information-schema-tables#advanced_example
