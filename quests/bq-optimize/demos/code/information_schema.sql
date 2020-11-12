@@ -47,7 +47,7 @@ SELECT * FROM
 -- QUERY 3
 -- Are there any partitioned or clustered columns?
 -- For some datasets, this query will return no results. 
--- Running this query on the wikipedia datset will return results.
+-- Running this query on the wikipedia dataset will return results.
 
 SELECT * FROM 
   -- Replace baseball with a different dataset:
