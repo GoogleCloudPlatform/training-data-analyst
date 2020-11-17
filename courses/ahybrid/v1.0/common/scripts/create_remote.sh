@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source ./scripts/env.sh
-
 gsutil mb $KOPS_STORE
 
 n=0
