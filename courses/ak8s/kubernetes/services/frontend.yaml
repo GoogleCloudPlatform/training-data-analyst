@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: "frontend"
+spec:
+  selector:
+    app: "frontend"
+  ports:
+    - protocol: "TCP"
+      port: 443
+      targetPort: 443
+  type: LoadBalancer

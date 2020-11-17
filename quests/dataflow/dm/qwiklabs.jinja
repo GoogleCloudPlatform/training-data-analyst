@@ -1,0 +1,103 @@
+#% description: 
+resources:
+- name: theia-java-dataflow
+  type: gcp-types/compute-v1:instances
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: zones/{{ properties["zone"] }}/machineTypes/n1-standard-4
+    disks:
+    - boot: true
+      autoDelete: true
+      diskSizeGb: 100
+      initializeParams:
+        sourceImage: projects/qwiklabs-resources/global/images/family/theia-java-dataflow
+    networkInterfaces:
+    - network: global/networks/default
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+    serviceAccounts:
+    - email: {{ env['project'] }}@{{ env['project'] }}.iam.gserviceaccount.com
+      scopes:
+      - https://www.googleapis.com/auth/cloud-platform
+    tags:
+      items:
+        - theia
+    metadata:
+      items:
+      - key: startup-script
+        value: |
+          #! /bin/bash
+          
+          # Run container in background
+          # https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/quests/dataflow/container/Dockerfile
+          docker pull gcr.io/qwiklabs-resources/theia-java-dataflow
+          docker run -d  -p 3000:3000 -v "/home/theia-java-dataflow/:/home/project:cached" gcr.io/qwiklabs-resources/theia-java-dataflow
+
+          # check the endpoint is up
+          sleep 20
+          curl http://localhost:3000
+          if [ $? == 0 ]
+          then
+            STATE=success
+          else
+            STATE=failure
+          fi
+          gcloud beta runtime-config configs variables set \
+            ${STATE}/{{ env['deployment'] }}-theia-waiter \
+            ${STATE} --config-name {{ env['deployment'] }}-installer-config
+
+         
+
+          # Update gcloud silently
+          CONTAINER_ID=$(docker ps -q)
+          docker exec $CONTAINER_ID gcloud components update --quiet
+
+          # Change repo perms and update
+          docker exec -u root $CONTAINER_ID chown -R theia:theia /home/project/training-data-analyst
+          docker exec -u theia $CONTAINER_ID git -C /home/project/training-data-analyst/ pull
+
+
+
+
+
+{# The RuntimeConfig #}
+- type: runtimeconfig.v1beta1.config
+  name: {{ env['deployment'] }}-installer-config
+  properties:
+    config: {{ env['deployment'] }}-installer-config
+
+{# The Waiter #}
+- type: runtimeconfig.v1beta1.waiter
+  name: {{ env['deployment'] }}-theia-waiter
+  properties:
+    parent: $(ref.{{ env['deployment'] }}-installer-config.name)
+    waiter: {{ env['deployment'] }}-theia-waiter
+    timeout: 600s
+    success:
+      cardinality:
+        path: /success
+        number: 1
+    failure:
+      cardinality:
+        path: /failure
+        number: 1
+  metadata:
+    dependsOn:
+    - theia-java-dataflow
+
+
+
+
+- name: firewall-rule-allow-theia
+  type: compute.v1.firewall
+  properties:
+    network: global/networks/default
+    sourceRanges: ["0.0.0.0/0"]
+    targetTags: [theia]
+    allowed:
+    - IPProtocol: TCP
+      ports: ["3000"]
+outputs:
+- name: ide-url
+  value: http://$(ref.theia-java-dataflow.networkInterfaces[0].accessConfigs[0].natIP):3000/#/home/project/training-data-analyst/quests/dataflow/
