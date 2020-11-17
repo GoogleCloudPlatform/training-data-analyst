@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 gcloud beta container clusters create ${C1_NAME} \
     --zone ${C1_ZONE} \
     --no-enable-basic-auth \
