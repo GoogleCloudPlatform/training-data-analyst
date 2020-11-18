@@ -1,3 +1,9 @@
+curl --request POST \
+  --header "Authorization: Bearer $(gcloud auth print-access-token)" \
+  --data '' \
+  https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize
+
+
 curl -LO https://storage.googleapis.com/gke-release/asm/istio-1.6.8-asm.9-linux-amd64.tar.gz
 tar xzf istio-1.6.8-asm.9-linux-amd64.tar.gz
 cd istio-1.6.8-asm.9
@@ -26,13 +32,3 @@ kubectl apply -f asm/canonical-service/controller.yaml
 kubectl wait --for=condition=available --timeout=600s deployment \
   --all -n istio-system
 
-kubectl label namespace default istio-injection=enabled --overwrite
-
-# Deploy BookInfo application
-kubectl apply -f ../samples/bookinfo/platform/kube/bookinfo.yaml
-
-# Sleep while Bookinfo pods initialize
-sleep 30s
-
-# Expose Bookinfo external gateway/IP
-kubectl apply -f ../samples/bookinfo/networking/bookinfo-gateway.yaml

@@ -15,12 +15,13 @@
 # limitations under the License.
 gcloud beta container clusters create ${C1_NAME} \
     --zone ${C1_ZONE} \
-    --release-channel "regular" \
     --machine-type=n1-standard-4 \
     --num-nodes=${C1_NODES} \
     --workload-pool=${WORKLOAD_POOL} \
     --enable-stackdriver-kubernetes \
-    --labels mesh_id=${MESH_ID}
+    --subnetwork=default \
+    --labels mesh_id=${MESH_ID} \
+    --release-channel "regular"
 
 
 # service account requires additional role bindings
