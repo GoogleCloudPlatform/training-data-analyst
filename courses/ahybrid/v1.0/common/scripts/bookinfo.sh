@@ -9,4 +9,4 @@ sleep 30s
 
 # Expose Bookinfo external gateway/IP
 kubectl apply -f \
-.istio-1.6.8-asm.9/samples/bookinfo/networking/bookinfo-gateway.yaml
+./istio-1.6.8-asm.9/samples/bookinfo/networking/bookinfo-gateway.yaml
