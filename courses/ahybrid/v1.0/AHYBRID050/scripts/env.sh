@@ -29,4 +29,4 @@ export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} \
 export WORKLOAD_POOL=${PROJECT_ID}.svc.id.goog
 export MESH_ID="proj-${PROJECT_NUMBER}"
 
-gcloud config set compute/zone C1_ZONE
+gcloud config set compute/zone $C1_ZONE
