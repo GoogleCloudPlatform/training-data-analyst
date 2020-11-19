@@ -7,4 +7,4 @@ chmod +x install_asm
 --cluster_location $C1_ZONE \
 --mode install \
 --enable_apis \
---customer_overlay $LAB_DIR/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/scripts/tracing.yaml
+--custom_overlay $LAB_DIR/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/scripts/tracing.yaml
