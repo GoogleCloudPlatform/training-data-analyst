@@ -1175,12 +1175,12 @@ EOF
 init_meshca() {
   info "Initializing Mesh CA..."
   local TOKEN; TOKEN="$(retry 2 gcloud --project="${PROJECT_ID}" auth print-access-token)"
-  info ${TOKEN}
-  run curl --request POST --fail \
+  run curl --request POST \
+    --fail \
     --data ''\
     "https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize" \
     --header "Authorization: Bearer ${TOKEN}" \
-    --verbose
+    -o /dev/null
 }
 
 ### Cluster functions ###
