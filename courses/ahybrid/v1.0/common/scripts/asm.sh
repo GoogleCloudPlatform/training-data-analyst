@@ -15,10 +15,6 @@ chmod +x ../common/scripts/install_asm
 --enable_apis \
 --custom_overlay $LAB_DIR/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/scripts/tracing.yaml
 
-echo $(kubectl -n istio-system get pods -l app=istiod -o json | jq -r '.items[0].metadata.labels["istio.io/rev"]')
-
 kubectl label namespace default \
   istio.io/rev=$(kubectl -n istio-system get pods -l app=istiod -o json | jq -r '.items[0].metadata.labels["istio.io/rev"]') \
   --overwrite
-
-kubectl describe ns default
