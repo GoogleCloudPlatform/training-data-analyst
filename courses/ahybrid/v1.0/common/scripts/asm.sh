@@ -8,8 +8,8 @@ chmod +x install_asm
 --project_id $PROJECT_ID \
 --cluster_name $C1_NAME \
 --cluster_location $C1_ZONE \
+--service_account ${PROJECT_ID}@${PROJECT_ID}.iam.gserviceaccount.com \
+--key_file qwiklabs-user-sa.json \
 --mode install \
 --enable_apis \
---custom_overlay $LAB_DIR/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/scripts/tracing.yaml \
---service-acount ${PROJECT_ID}@${PROJECT_ID}.iam.gserviceaccount.com \
---key_file qwiklabs-user-sa.json
+--custom_overlay $LAB_DIR/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/scripts/tracing.yaml
