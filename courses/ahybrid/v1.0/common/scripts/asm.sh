@@ -1,3 +1,5 @@
+apt-get install jq
+
 curl https://storage.googleapis.com/csm-artifacts/asm/install_asm_1.7 > install_asm
 
 gcloud iam service-accounts keys create qwiklabs-user-sa.json \
