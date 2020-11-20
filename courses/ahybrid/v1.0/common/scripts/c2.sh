@@ -23,7 +23,6 @@ gcloud beta container clusters create ${C1_NAME} \
     --labels mesh_id=${MESH_ID} \
     --release-channel "regular"
 
-
 # service account requires additional role bindings
 kubectl create clusterrolebinding [BINDING_NAME] \
     --clusterrole cluster-admin --user [USER]
