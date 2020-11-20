@@ -3,8 +3,8 @@
 gcloud iam service-accounts keys create qwiklabs-user-sa.json \
   --iam-account=${PROJECT_ID}@${PROJECT_ID}.iam.gserviceaccount.com
 
-chmod +x install_asm
-./install_asm \
+chmod +x ../common/scripts/install_asm
+../common/scripts/install_asm \
 --project_id $PROJECT_ID \
 --cluster_name $C1_NAME \
 --cluster_location $C1_ZONE \

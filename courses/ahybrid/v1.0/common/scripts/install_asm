@@ -1179,7 +1179,8 @@ init_meshca() {
   run curl --request POST --fail \
     --data ''\
     "https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize" \
-    --header "Authorization: Bearer ${TOKEN}"
+    --header "Authorization: Bearer ${TOKEN}" \
+    --verbose
 }
 
 ### Cluster functions ###
