@@ -13,7 +13,7 @@ chmod +x ../common/scripts/install_asm
 --key_file qwiklabs-user-sa.json \
 --mode install \
 --enable_apis \
---custom_overlay $LAB_DIR/training-data-analyst/courses/ahybrid/v1.0/AHYBRID050/scripts/tracing.yaml
+--custom_overlay $LAB_DIR/training-data-analyst/courses/ahybrid/v1.0/common/scripts/tracing.yaml
 
 kubectl label namespace default \
   istio.io/rev=$(kubectl -n istio-system get pods -l app=istiod -o json | jq -r '.items[0].metadata.labels["istio.io/rev"]') \
