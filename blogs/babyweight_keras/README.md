@@ -8,10 +8,9 @@ This is an example notebook to explain how you can create a Keras model using th
 
 1. Create a new GCP project and enable the following API. 
 - AI Platform Training & Prediction API
-- Notebooks API
 - Dataflow API
 
-2. Launch a new notebook instance from the "AI Platform -> Notebook" menu. Choose "TensorFlow Enterprise 2.3 without GPUs" for the instance type.
+2. Launch a new notebook instance from the "AI Platform (Unified) -> Notebooks" menu. Choose "TensorFlow Enterprise 2.3 without GPUs" for the instance type.
 
 3. Open JupyterLab and execute the following commond from the JupyterLab terminal.
 
