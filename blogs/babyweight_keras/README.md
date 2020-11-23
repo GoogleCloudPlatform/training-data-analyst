@@ -15,7 +15,7 @@ This is an example notebook to explain how you can create a Keras model using th
 3. Open JupyterLab and execute the following commond from the JupyterLab terminal.
 
 ```
-git clone https://github.com/enakai00/training-data-analyst.git
+git clone https://github.com/GoogleCloudPlatform/training-data-analyst.git
 ```
 
 4. Open the notebook `training-data-analyst/blogs/babyweight_keras/babyweight.ipynb` and follow the instruction.
