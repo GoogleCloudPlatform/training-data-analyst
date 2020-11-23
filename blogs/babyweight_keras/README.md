@@ -11,7 +11,7 @@ This is an example notebook to explain how you can create a Keras model using th
 - Notebooks API
 - Dataflow API
 
-2. Launch a new notebook instance from the "AI Platform (Unified) -> Notebooks" menu. Choose "TensorFlow Enterprise 2.3 without GPUs" for the instance type.
+2. Launch a new notebook instance from the "AI Platform -> Notebooks" menu. Choose "TensorFlow Enterprise 2.3 without GPUs" for the instance type.
 
 3. Open JupyterLab and execute the following commond from the JupyterLab terminal.
 
