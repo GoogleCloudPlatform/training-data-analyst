@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+source ./scripts/env.sh
+
 gsutil mb $KOPS_STORE
 
 n=0
@@ -48,11 +50,9 @@ done
 
 sleep 20
 
-# SEE WHERE WE ARE HERE...
 
 kops export kubecfg --name $C2_FULLNAME --state=$KOPS_STORE
-gsutil cp .kube/config $KOPS_STORE
-export KUBECONFIG=.kube/config
+gsutil cp ~/.kube/config $KOPS_STORE
 
 gcloud iam service-accounts create connect-sa-op
 
@@ -73,3 +73,22 @@ kubectl create serviceaccount $KSA
 kubectl create clusterrolebinding ksa-admin-binding \
     --clusterrole cluster-admin \
     --serviceaccount default:$KSA
+
+ISTIO_VERSION="${ISTIO_VERSION:-1.5.2}"
+curl -L https://git.io/getLatestIstio | ISTIO_VERSION=$ISTIO_VERSION sh -
+
+kubectl create namespace istio-system
+kubectl create secret generic cacerts -n istio-system \
+--from-file=istio-$ISTIO_VERSION/samples/certs/ca-cert.pem \
+--from-file=istio-$ISTIO_VERSION/samples/certs/ca-key.pem \
+--from-file=istio-$ISTIO_VERSION/samples/certs/root-cert.pem \
+--from-file=istio-$ISTIO_VERSION/samples/certs/cert-chain.pem
+
+./istio-$ISTIO_VERSION/bin/istioctl manifest apply \
+--set profile=demo
+
+kubectl create namespace prod
+kubectl label namespace prod istio-injection=enabled --overwrite
+kubectl apply -n prod -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/kubernetes-manifests.yaml
+kubectl apply -n prod-f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/istio-manifests.yaml
+kubectl patch -n prod deployments/productcatalogservice -p '{"spec":{"template":{"metadata":{"labels":{"version":"v1"}}}}}'
