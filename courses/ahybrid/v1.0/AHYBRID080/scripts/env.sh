@@ -18,6 +18,10 @@
 
 export PATH=$PATH:$LAB_DIR/bin:
 export HOME=~
+export ENV=prod
+
+echo $ENV
+echo ${ENV}
 
 # gke cluster values
 export C1_NAME="gke"
@@ -39,4 +43,3 @@ export KOPS_ZONES=$C2_ZONE
 export INSTANCE_IP=$(curl -s api.ipify.org)
 export INSTANCE_CIDR=$INSTANCE_IP/32
 export KOPS_STORE=gs://$PROJECT_ID-kops-$C2_NAME
-export ENV=prod
