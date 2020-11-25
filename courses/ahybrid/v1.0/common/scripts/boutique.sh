@@ -3,7 +3,7 @@ echo ${ENV}
 
 kubectl create namespace ${ENV}
 
-if [ "$(ENV)" != 'REMOTE' ]; then
+if [ "$ENV" != 'REMOTE' ]; then
   kubectl label namespace ${ENV} \
     istio.io/rev=$(kubectl -n istio-system get pods -l app=istiod -o json | jq -r '.items[0].metadata.labels["istio.io/rev"]') \
     --overwrite
