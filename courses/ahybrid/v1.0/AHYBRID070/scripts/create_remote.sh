@@ -55,28 +55,9 @@ sleep 20
 
 kops export kubecfg --name $C2_FULLNAME --state=$KOPS_STORE
 gsutil cp ~/.kube/config $KOPS_STORE
-export KUBECONFIG=.kube/config
+export KUBECONFIG=~/.kube/config
 
-gcloud iam service-accounts create connect-sa-op
-
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
- --member="serviceAccount:connect-sa-op@${PROJECT_ID}.iam.gserviceaccount.com" \
- --role="roles/gkehub.connect"
-
-gcloud iam service-accounts keys create connect-sa-op-key.json \
-  --iam-account=connect-sa-op@${PROJECT_ID}.iam.gserviceaccount.com
-
-gcloud container hub memberships register ${C2_NAME}-connect \
-   --context=$C2_FULLNAME \
-   --service-account-key-file=./connect-sa-op-key.json \
-   --project=$PROJECT_ID
-
-export KSA=remote-admin-sa
-kubectl create serviceaccount $KSA
-kubectl create clusterrolebinding ksa-admin-binding \
-    --clusterrole cluster-admin \
-    --serviceaccount default:$KSA
-
+# should update to do cluster registration
 
 echo "### "
 echo "### Provision remote cluster complete"
