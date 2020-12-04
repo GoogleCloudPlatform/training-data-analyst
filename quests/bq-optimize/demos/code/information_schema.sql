@@ -3,34 +3,15 @@
 -- Querying dataset metadata
 -- https://cloud.google.com/bigquery/docs/dataset-metadata
 
+
 -- QUERY 1
--- Most recently modified BigQuery Public Datasets and how long they have been around:
-SELECT
- s.*,
- TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), creation_time, DAY) AS days_live,
- option_value AS dataset_description
-FROM
- `bigquery-public-data.INFORMATION_SCHEMA.SCHEMATA` AS s
- LEFT JOIN `bigquery-public-data.INFORMATION_SCHEMA.SCHEMATA_OPTIONS` AS so
- USING (schema_name)
-
-WHERE so.option_name = 'description'
- 
-ORDER BY last_modified_time DESC
-
-LIMIT 15;
-
--- Advanced example: Using Dataset and Table metadata to create SQL DDL for version control
--- https://cloud.google.com/bigquery/docs/information-schema-tables#advanced_example
-
-
--- QUERY 2
--- Querying table metadata to get table size
--- Pick any dataset in the bigquery-public-dataset and tell me
+-- Query table metadata to get table size
+-- Pick any dataset in the bigquery-public-dataset and tell me:
 
 -- How many tables it contains?
--- What is the largest table in GB?
--- What is the largest table in row count?
+-- What is the largest table in terms of GB?
+
+-- Dataset options include: bitcoin_blockchain, github_repos, nasa_wildfire, wikipedia, and more
 
 SELECT 
   dataset_id,
@@ -51,8 +32,11 @@ FROM
   `bigquery-public-data.baseball.__TABLES__`
 ORDER BY size_gb DESC;
 
+-- Modify the query above to determine the largest table in terms of row count
+-- Is the same table as the largest in terms of GB?
 
--- QUERY 3
+
+-- QUERY 2
 -- For the dataset you chose, how many columns of data are present?
 
 SELECT * FROM 
@@ -60,8 +44,10 @@ SELECT * FROM
  `bigquery-public-data.baseball.INFORMATION_SCHEMA.COLUMNS`;
 
 
--- QUERY 4
+-- QUERY 3
 -- Are there any partitioned or clustered columns?
+-- For some datasets, this query will return no results. 
+-- Running this query on the wikipedia dataset will return results.
 
 SELECT * FROM 
   -- Replace baseball with a different dataset:
@@ -70,10 +56,12 @@ WHERE
   is_partitioning_column = 'YES' OR clustering_ordinal_position IS NOT NULL;
 
 
--- QUERY 5
+-- QUERY 4
 -- Question: If you wanted to query across multiple datasets, how could you do it?
 -- https://stackoverflow.com/questions/43457651/bigquery-select-tables-from-all-tables-within-project
--- Answer: With a UNION or a python script to iterate through each dataset in `bq ls`
+-- Answer: With a UNION or a Python script to iterate through each dataset in `bq ls`
+
+-- For example, which table has the most rows?
 
 WITH ALL__TABLES__ AS (
   SELECT * FROM `bigquery-public-data.baseball.__TABLES__` UNION ALL
@@ -104,4 +92,28 @@ FROM ALL__TABLES__
 ORDER BY row_count DESC -- Top 10 tables with the most rows
 LIMIT 10;
 
--- Which table was it? 
+
+
+-- EXAMPLE QUERY FOR YOUR OWN PROJECT
+-- Note that this query will not run on the BigQuery Public Data project.
+-- You can run this query in your own project (e.g. qwiklabs-gcp-XX-XXXXXXXXXX).
+-- Identify the most recently modified datasets in project and how long they have been around:
+
+SELECT
+ s.*,
+ TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), creation_time, DAY) AS days_live,
+ option_value AS dataset_description
+FROM
+  -- Replace project-name with your project name
+ `project-name.INFORMATION_SCHEMA.SCHEMATA` AS s
+   -- Replace project-name with your project name
+ LEFT JOIN `project-name.INFORMATION_SCHEMA.SCHEMATA_OPTIONS` AS so
+ USING (schema_name)
+ 
+ORDER BY last_modified_time DESC
+
+LIMIT 15;
+
+
+-- For advanced examples, see: Using Dataset and Table metadata to create SQL DDL for version control
+-- https://cloud.google.com/bigquery/docs/information-schema-tables#advanced_example

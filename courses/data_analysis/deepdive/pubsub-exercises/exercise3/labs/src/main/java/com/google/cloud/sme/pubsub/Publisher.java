@@ -38,12 +38,18 @@ public class Publisher {
         required = true,
         description = "The Google Cloud Pub/Sub project in which the topic exists.")
     public String project = null;
+
+    @Parameter(
+        names = {"--ordered", "-o"},
+        required = false,
+        description = "Whether or not to publish messages with an ordering key.")
+    public Boolean ordered = false;
   }
 
   private static final String SOURCE_DATA = "actions.csv";
-  private static final String TIMESTAMP_KEY = "publish_time";
+  private static final String SEQUENCE_NUM_KEY = "sequence_num";
   private static final String TOPIC = "pubsub-e2e-example";
-  private static final int MESSAGE_COUNT = 1000;
+  private static final int MESSAGE_COUNT = 1000000;
 
   private final Args args;
   private com.google.cloud.pubsub.v1.Publisher publisher;
@@ -56,12 +62,15 @@ public class Publisher {
     this.args = args;
     this.actionReader = actionReader;
     this.awaitedFutures = new AtomicLong();
-    byte[] extraBytes = new byte[102400];
+    byte[] extraBytes = new byte[1024];
     this.extraInfo = ByteString.copyFrom(extraBytes);
 
     ProjectTopicName topic = ProjectTopicName.of(args.project, TOPIC);
     com.google.cloud.pubsub.v1.Publisher.Builder builder =
         com.google.cloud.pubsub.v1.Publisher.newBuilder(topic);
+    if (args.ordered) {
+      builder.setEnableMessageOrdering(true);
+    }
     try {
       this.publisher = builder.build();
     } catch (Exception e) {
@@ -70,16 +79,18 @@ public class Publisher {
     }
   }
 
-  private void Publish(Entities.Action publishAction) {
+  private void Publish(long sequenceNum, Entities.Action publishAction) {
     awaitedFutures.incrementAndGet();
     publishAction = Entities.Action.newBuilder(publishAction).setExtraInfo(this.extraInfo).build();
     final long publishTime = DateTime.now().getMillis();
-    PubsubMessage message =
+    PubsubMessage.Builder messageBuilder =
         PubsubMessage.newBuilder()
             .setData(ActionUtils.encodeAction(publishAction))
-            .putAttributes(TIMESTAMP_KEY, Long.toString(publishTime))
-            .build();
-    ApiFuture<String> response = publisher.publish(message);
+            .putAttributes(SEQUENCE_NUM_KEY, Long.toString(sequenceNum));
+    if (args.ordered) {
+      messageBuilder.setOrderingKey(Long.toString(publishAction.getUserId()));
+    }
+    ApiFuture<String> response = publisher.publish(messageBuilder.build());
     response.addListener(
         () -> {
           try {
@@ -96,11 +107,13 @@ public class Publisher {
   private void run() {
     awaitedFutures.incrementAndGet();
 
-    long count = 0;
     Entities.Action nextAction = actionReader.next();
     for (int i = 0; i < MESSAGE_COUNT; ++i) {
-      Publish(nextAction);
+      Publish(i, nextAction);
       nextAction = actionReader.next();
+      if ((i + 1) % 100000 == 0) {
+        System.out.println("Published " + (i + 1) + " messages.");
+      }
     }
     awaitedFutures.decrementAndGet();
   }
