@@ -41,7 +41,7 @@ echo "Enabling Cloud Functions API"
 gcloud services enable cloudfunctions.googleapis.com
 
 echo "Creating Cloud Functions"
-gcloud functions deploy process-feedback --runtime nodejs8 --trigger-topic feedback --source ./functions/feedback --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
-gcloud functions deploy process-answer --runtime nodejs8 --trigger-topic answers --source ./functions/answer --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+gcloud functions deploy process-feedback --runtime nodejs10 --trigger-topic feedback --source ./functions/feedback --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+gcloud functions deploy process-answer --runtime nodejs10 --trigger-topic answers --source ./functions/answer --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 
 echo "Project ID: $DEVSHELL_PROJECT_ID"

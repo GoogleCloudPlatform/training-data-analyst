@@ -1,0 +1,1399 @@
+#!/bin/bash
+set -CeE
+set -o pipefail
+if [[ "${BASH_VERSINFO:-0}" -lt 4 ]]; then
+  cat << EOF >&2
+WARNING: bash ${BASH_VERSION} does not support several modern safety features.
+This script was written with the latest POSIX standard in mind, and was only
+tested with modern shell standards. This script may not perform correctly in
+this environment.
+EOF
+  sleep 1
+else
+  set -u
+fi
+
+### Internal variables ###
+MAJOR="${MAJOR:=1}"
+MINOR="${MINOR:=7}"
+POINT="${POINT:=3}"
+REV="${REV:=6}"
+RELEASE="${MAJOR}.${MINOR}.${POINT}-asm.${REV}"
+RELEASE_LINE="${MAJOR}.${MINOR}."
+PREVIOUS_RELEASE_LINE="${MAJOR}.$(( MINOR - 1 ))."
+REVISION_LABEL="asm-${MAJOR}${MINOR}${POINT}-${REV}"
+KPT_BRANCH="release-${MAJOR}.${MINOR}-asm"
+readonly RELEASE; readonly RELEASE_LINE; readonly REVISION_LABEL; readonly KPT_BRANCH;
+K8S_MINOR=0
+
+### These are hooks for Cloud Build to be able to use debug/staging images
+### when necessary. Don't set these environment variables unless you're testing
+### in CI/CD.
+_CI_ASM_IMAGE_LOCATION="${_CI_ASM_IMAGE_LOCATION:=}"
+_CI_ASM_PKG_LOCATION="${_CI_ASM_PKG_LOCATION:=}"
+
+### File related constants ###
+ISTIO_FOLDER_NAME="istio-${RELEASE}"; readonly ISTIO_FOLDER_NAME;
+ISTIOCTL_REL_PATH="${ISTIO_FOLDER_NAME}/bin/istioctl"; readonly ISTIOCTL_REL_PATH;
+PACKAGE_DIRECTORY="asm/istio"; readonly PACKAGE_DIRECTORY;
+VALIDATION_FIX_SERVICE="${PACKAGE_DIRECTORY}/istiod-service.yaml"; readonly VALIDATION_FIX_SERVICE;
+OPTIONS_DIRECTORY="${PACKAGE_DIRECTORY}/options"; readonly OPTIONS_DIRECTORY;
+OPERATOR_MANIFEST="${PACKAGE_DIRECTORY}/istio-operator.yaml"; readonly OPERATOR_MANIFEST;
+MULTICLUSTER_MANIFEST="${OPTIONS_DIRECTORY}/multicluster.yaml"; readonly MULTICLUSTER_MANIFEST;
+BETA_CRD_MANIFEST="${OPTIONS_DIRECTORY}/v1beta1-crds.yaml"; readonly BETA_CRD_MANIFEST;
+
+SCRIPT_NAME="${0##*/}"
+
+PROJECT_NUMBER=""
+KPT_URL=""
+KUBECONFIG=""
+APATH=""
+ABS_OVERLAYS=""
+
+### Option variables ###
+PROJECT_ID="${PROJECT_ID:=}"
+CLUSTER_NAME="${CLUSTER_NAME:=}"
+CLUSTER_LOCATION="${CLUSTER_LOCATION:=}"
+MODE="${MODE:=}"
+CA="${CA:=}"
+
+CUSTOM_OVERLAY=""
+OPTIONAL_OVERLAY=""
+ENABLE_APIS="${ENABLE_APIS:=0}"
+DISABLE_CANONICAL_SERVICE="${DISABLE_CANONICAL_SERVICE:=0}"
+PRINT_CONFIG="${PRINT_CONFIG:=0}"
+SERVICE_ACCOUNT="${SERVICE_ACCOUNT:=}"
+KEY_FILE="${KEY_FILE:=}"
+OUTPUT_DIR="${OUTPUT_DIR:=}"
+
+CUSTOM_CA=0
+CA_CERT="${CA_CERT:=}"
+CA_KEY="${CA_KEY:=}"
+CA_ROOT="${CA_ROOT:=}"
+CA_CHAIN="${CA_CHAIN:=}"
+
+DRY_RUN="${DRY_RUN:=0}"
+ONLY_VALIDATE="${ONLY_VALIDATE:=0}"
+VERBOSE="${VERBOSE:=0}"
+PRINT_HELP=0
+
+main() {
+  init
+  parse_args "${@}"
+  # make sure to redirect stdout as soon as possible if we're dumping the config
+  if [[ "${PRINT_CONFIG}" -eq 1 ]]; then
+    exec 3>&1
+    exec 1>&2
+  fi
+  validate_args
+  set_up_local_workspace
+
+  validate_dependencies
+
+  info "Successfully validated all requirements to install ASM from this computer."
+  if [[ "${ONLY_VALIDATE}" -ne 0 ]]; then
+    return 0
+  fi
+
+  set_up_project
+  set_up_cluster
+  configure_package
+  if [[ "${PRINT_CONFIG}" -eq 1 ]]; then
+    print_config >&3
+    return 0
+  else
+    if [[ "${CUSTOM_CA}" -eq 1 ]]; then
+      install_secrets
+    fi
+    install_asm
+    info "Successfully installed ASM."
+  fi
+  return 0
+}
+
+init() {
+  # BSD-style readlink apparently doesn't have the same -f toggle on readlink
+  case "$(uname)" in
+    Linux ) APATH="readlink";;
+    Darwin) APATH="stat";;
+    *);;
+  esac
+}
+
+apath() {
+  "${APATH}" "${@}"
+}
+
+### Convenience functions ###
+
+#######
+# run takes a list of arguments that represents a command
+# If DRY_RUN or VERBOSE is enabled, it will print the command, and if DRY_RUN is
+# not enabled it runs the command.
+#######
+run() {
+  if [[ "${DRY_RUN}" -ne 0 ]]; then
+    warn "Would have executed: ${*}"
+    return
+  elif [[ "${VERBOSE}" -eq 0 ]]; then
+    "${@}" 2>/dev/null
+    return "$?"
+  fi
+  warn "Running: '${*}'"
+  warn "-------------"
+  local RETVAL;
+  { "${@}"; RETVAL="$?"; } || true
+  return $RETVAL
+}
+
+#######
+# retry takes an integer N as the first argument, and a list of arguments
+# representing a command afterwards. It will retry the given command up to N
+# times before returning 1. If the command is kubectl, it will try to
+# re-get credentials in case something caused the k8s IP to change.
+#######
+retry() {
+  local MAX_TRIES; MAX_TRIES="${1}";
+  shift 1
+  for i in $(seq 0 "${MAX_TRIES}"); do
+    if [[ "${i}" -eq "${MAX_TRIES}" ]]; then
+      return 1
+    fi
+    { "${@}" && return 0; } || true
+    warn "Failed, retrying...($((i+1)) of ${MAX_TRIES})"
+    sleep 2
+    if [[ "$1" == "kubectl" ]]; then
+      configure_kubectl
+    fi
+  done
+  return 1
+}
+
+configure_kubectl(){
+  info "Fetching/writing GCP credentials to kubeconfig file..."
+  retry 2 run gcloud container clusters get-credentials "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --zone="${CLUSTER_LOCATION}"
+
+  info "Verifying connectivity (20s)..."
+  local RETVAL; RETVAL=0;
+  kubectl cluster-info --request-timeout='20s' 1>/dev/null 2>/dev/null || RETVAL=$?
+  if [[ "${RETVAL}" -ne 0 ]]; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+Couldn't connect to ${CLUSTER_NAME}.
+If this is a private cluster, verify that the correct firewall rules are applied.
+https://cloud.google.com/service-mesh/docs/gke-install-overview#requirements
+EOF
+  fi
+}
+
+warn() {
+  info "${1}" >&2
+}
+
+info() {
+  echo "${SCRIPT_NAME}: ${1}"
+}
+
+fatal() {
+  warn "ERROR: ${1}"
+  exit 2
+}
+
+fatal_with_usage() {
+  warn "${1}"
+  usage_short >&2
+  exit 2
+}
+
+is_sa() {
+  [[ -n "${SERVICE_ACCOUNT}" ]] && return 0
+  return 1
+}
+
+needs_asm() {
+  if [[ "${PRINT_CONFIG}" -eq 0 ]] && ! can_modify && ! should_validate; then false; fi
+}
+
+### CLI/initial setup functions ###
+usage_short() {
+  cat << EOF
+usage: ${SCRIPT_NAME} [OPTION]...
+
+Set up, validate, and install ASM in a Google Cloud environment.
+Use -h|--help with -v|--verbose to show detailed descriptions.
+
+OPTIONS:
+  -l|--cluster_location  <LOCATION>
+  -n|--cluster_name      <NAME>
+  -p|--project_id        <ID>
+  -m|--mode              <MODE>
+  -c|--ca                <CA>
+
+  -o|--option            <FILE NAME>
+  -s|--service_account   <ACCOUNT>
+  -k|--key_file          <FILE PATH>
+  -D|--output_dir        <DIR PATH>
+  --co|--custom_overlay  <FILE NAME>
+
+  --ca_cert              <FILE PATH>
+  --ca_key               <FILE PATH>
+  --root_cert            <FILE PATH>
+  --cert_chain           <FILE PATH>
+
+FLAGS:
+  -e|--enable_apis
+     --print_config
+     --disable_canonical_service
+  -v|--verbose
+     --dry_run
+     --only_validate
+  -h|--help
+EOF
+}
+
+usage() {
+  cat << EOF
+usage: ${SCRIPT_NAME} [OPTION]...
+
+Set up, validate, and install ASM in a Google Cloud environment.
+Single argument options can also be passed via environment variables by using
+the ALL_CAPS name. Options specified via flags take precedence over environment
+variables.
+
+OPTIONS:
+  -l|--cluster_location  <LOCATION>   The GCP location of the target cluster.
+  -n|--cluster_name      <NAME>       The name of the target cluster.
+  -p|--project_id        <ID>         The GCP project ID.
+  -m|--mode              <MODE>       The type of installation to perform.
+                                      Passing --mode install will attempt a
+                                      new ASM installation. Passing --mode
+                                      migrate will attempt to migrate an Istio
+                                      installation to ASM. Passing --mode
+                                      upgrade will attempt to upgrade an
+                                      existing ASM installation to a newer
+                                      version. Allowed values for
+                                      <MODE> are {install|migrate|upgrade}.
+  -c|--ca                <CA>         The type of certificate authority to be
+                                      used. Defaults to "mesh_ca" for --mode
+                                      install. Specifying the CA is required
+                                      for --mode migrate.  Allowed values for
+                                      <CA> are {citadel|mesh_ca}.
+  -o|--option            <FILE NAME>  The name of a YAML file in the kpt pkg to
+                                      apply. For options, see the
+                                      anthos-service-mesh-package GitHub
+                                      repo under GoogleCloudPlatform. Files
+                                      should be in "asm/istio/options" folder,
+                                      and shouldn't include the .yaml extension.
+                                      (See https://git.io/JTDdi for options.)
+                                      To add multiple files, specify them with
+                                      multiple options one at a time.
+  -s|--service_account   <ACCOUNT>    The name of a service account used to
+                                      install ASM. If not specified, the gcloud
+                                      user currently configured will be used.
+  -k|--key_file          <FILE PATH>  The key file for a service account. This
+                                      option can be omitted if not using a
+                                      service account.
+  -D|--output_dir        <DIR PATH>   The directory where this script will place
+                                      downloaded ASM packages and configuration.
+                                      If not specified, a temporary directory
+                                      will be created. If specified and the
+                                      directory already contains the necessary
+                                      files, they will be used instead of
+                                      downloading them again.
+  --co|--custom_overlay  <FILE PATH>  The location of a YAML file to overlay on
+                                      the ASM IstioOperator. This option can be
+                                      omitted if not installing optional
+                                      features. To add multiple files, specify
+                                      them with multiple options one at a time.
+
+  The following four options must be passed together and are only necessary
+  for using a custom certificate for Citadel. Users that aren't sure whether
+  they need this probably don't.
+
+  --ca_cert              <FILE PATH>  The intermediate certificate
+  --ca_key               <FILE PATH>  The key for the intermediate certificate
+  --root_cert            <FILE PATH>  The root certificate
+  --cert_chain           <FILE PATH>  The certificate chain
+
+FLAGS:
+  -e|--enable_apis                    Allow this script to enable necessary APIs
+                                      on your behalf. Without this flag, it will
+                                      abort if APIs are not already enabled.
+     --print_config                   Instead of installing ASM, print all of
+                                      the compiled YAML to stdout. All other
+                                      output will be written to stderr, even if
+                                      it would normally go to stdout. Skip all
+                                      validations and setup.
+     --disable_canonical_service      Do not install the CanonicalService
+                                      controller. This is required for ASM UI to
+                                      support various features.
+  -v|--verbose                        Print commands before and after execution.
+     --dry_run                        Print commands, but don't execute them.
+     --only_validate                  Run validation, but don't install.
+  -h|--help                           Show this message and exit.
+
+EXAMPLE:
+The following invocation will install ASM to a cluster named "my_cluster" in
+project "my_project" in region "us-central1-c" using the default "mesh_ca" as
+the certificate authority:
+  $> ${SCRIPT_NAME} \\
+      -n my_cluster \\
+      -p my_project \\
+      -l us-central1-c \\
+      -m install
+EOF
+}
+
+arg_required() {
+  if [[ ! "${2:-}" || "${2:0:1}" = '-' ]]; then
+    fatal "Option ${1} requires an argument."
+  fi
+}
+
+parse_args() {
+  if [[ "${*}" = '' ]]; then
+    usage_short >&2
+    exit 2
+  fi
+
+  # shellcheck disable=SC2064
+  trap "$(shopt -p nocasematch)" RETURN
+  shopt -s nocasematch
+
+  while [[ $# != 0 ]]; do
+    case "${1}" in
+      -l | --cluster_location | --cluster-location)
+        arg_required "${@}"
+        CLUSTER_LOCATION="${2}"
+        shift 2
+        ;;
+      -n | --cluster_name | --cluster-name)
+        arg_required "${@}"
+        CLUSTER_NAME="${2}"
+        shift 2
+        ;;
+      -p | --project_id | --project-id)
+        arg_required "${@}"
+        PROJECT_ID="${2}"
+        shift 2
+        ;;
+      -m | --mode)
+        arg_required "${@}"
+        MODE="$(echo "${2}" | tr '[:upper:]' '[:lower:]')"
+        shift 2
+        ;;
+      -c | --ca)
+        arg_required "${@}"
+        CA="$(echo "${2}" | tr '[:upper:]' '[:lower:]')"
+        shift 2
+        ;;
+      -o | --option)
+        arg_required "${@}"
+        OPTIONAL_OVERLAY="${2},${OPTIONAL_OVERLAY}"
+        shift 2
+        ;;
+      --co | --custom_overlay | --custom-overlay)
+        arg_required "${@}"
+        CUSTOM_OVERLAY="${2},${CUSTOM_OVERLAY}"
+        shift 2
+        ;;
+      -e | --enable_apis | --enable-apis)
+        ENABLE_APIS=1
+        shift 1
+        ;;
+      --disable_canonical_service | --disable-canonical-service)
+        DISABLE_CANONICAL_SERVICE=1
+        shift 1
+        ;;
+      --print_config | --print-config)
+        PRINT_CONFIG=1
+        shift 1
+        ;;
+      -s | --service_account | --service-account)
+        arg_required "${@}"
+        SERVICE_ACCOUNT="${2}"
+        shift 2
+        ;;
+      -k | --key_file | --key-file)
+        arg_required "${@}"
+        KEY_FILE="${2}"
+        shift 2
+        ;;
+      -D | --output_dir | --output-dir)
+        arg_required "${@}"
+        OUTPUT_DIR="${2}"
+        shift 2
+        ;;
+      --dry_run | --dry-run)
+        DRY_RUN=1
+        shift 1
+        ;;
+      --only_validate | --only-validate)
+        ONLY_VALIDATE=1
+        shift 1
+        ;;
+      --ca_cert | --ca-cert)
+        arg_required "${@}"
+        CA_CERT="${2}"
+        CUSTOM_CA=1
+        shift 2
+        ;;
+      --ca_key | --ca-key)
+        arg_required "${@}"
+        CA_KEY="${2}"
+        CUSTOM_CA=1
+        shift 2
+        ;;
+      --root_cert | --root-cert)
+        arg_required "${@}"
+        CA_ROOT="${2}"
+        CUSTOM_CA=1
+        shift 2
+        ;;
+      --cert_chain | --cert-chain)
+        arg_required "${@}"
+        CA_CHAIN="${2}"
+        CUSTOM_CA=1
+        shift 2
+        ;;
+      -v | --verbose)
+        VERBOSE=1
+        shift 1
+        ;;
+      -h | --help)
+        PRINT_HELP=1
+        shift 1
+        ;;
+      *)
+        fatal_with_usage "Unknown option ${1}"
+        ;;
+    esac
+  done
+  if [[ "${PRINT_HELP}" -eq 1 ]]; then
+    if [[ "${VERBOSE}" -eq 1 ]]; then
+      usage
+    else
+      usage_short
+    fi
+    exit
+  fi
+}
+
+validate_args() {
+  if [[ "${MODE}" == "install" && -z "${CA}" ]]; then
+    CA="mesh_ca"
+  fi
+
+  local MISSING_ARGS=0
+  while read -r REQUIRED_ARG; do
+    if [[ -z "${!REQUIRED_ARG}" ]]; then
+      MISSING_ARGS=1
+      warn "Missing value for ${REQUIRED_ARG}"
+    fi
+    readonly "${REQUIRED_ARG}"
+  done <<EOF
+CLUSTER_LOCATION
+CLUSTER_NAME
+PROJECT_ID
+MODE
+EOF
+
+  if [[ "${MODE}" != "upgrade" ]]; then
+    case "${CA}" in
+      citadel | mesh_ca);;
+      "")
+        MISSING_ARGS=1
+        warn "Missing value for CA"
+        ;;
+      *) fatal "CA must be one of 'citadel', 'mesh_ca'";;
+    esac
+  fi
+
+  if [[ "${MISSING_ARGS}" -ne 0 ]]; then
+    fatal_with_usage "Missing one or more required options."
+  fi
+
+  if [[ "${MODE}" == "upgrade" && -n "${CA}" ]]; then
+    warn "The CA flag is ignored during an update operation."
+    warn "Update will proceed with the currently installed CA."
+  fi
+
+  # shellcheck disable=SC2064
+  case "${MODE}" in
+    install | migrate | upgrade);;
+    *) fatal "MODE must be one of 'install', 'migrate', 'upgrade'";;
+  esac
+
+
+  if [[ "${CUSTOM_CA}" -eq 1 ]]; then
+    validate_certs
+  fi
+
+  while read -r FLAG; do
+    if [[ "${!FLAG}" -ne 0 && "${!FLAG}" -ne 1 ]]; then
+      fatal "${FLAG} must be 0 (off) or 1 (on) if set via environment variables."
+    fi
+    readonly "${FLAG}"
+  done <<EOF
+DRY_RUN
+ENABLE_APIS
+DISABLE_CANONICAL_SERVICE
+ONLY_VALIDATE
+VERBOSE
+EOF
+
+  if [[ -n "$SERVICE_ACCOUNT" && -z "$KEY_FILE" || -z "$SERVICE_ACCOUNT" && -n "$KEY_FILE" ]]; then
+    fatal "Service account and key file must be used together."
+  fi
+
+  # since we cd to a tmp directory, we need the absolute path for the key file
+  # and yaml file
+  if [[ -f "${KEY_FILE}" ]]; then
+    KEY_FILE="$(apath -f "${KEY_FILE}")"
+    readonly KEY_FILE
+  elif [[ -n "${KEY_FILE}" ]]; then
+    fatal "Couldn't find key file ${KEY_FILE}."
+  fi
+
+  while read -d ',' -r yaml_file; do
+    if [[ -f "${yaml_file}" ]]; then
+      ABS_OVERLAYS="$(apath -f "${yaml_file}"),${ABS_OVERLAYS}"
+    elif [[ -n "${yaml_file}" ]]; then
+      fatal "Couldn't find yaml file ${yaml_file}."
+    fi
+  done <<EOF
+${CUSTOM_OVERLAY}
+EOF
+  if [[ "${CA}" = "citadel" ]]; then
+    ABS_OVERLAYS="${OPTIONS_DIRECTORY}/citadel-ca.yaml,${ABS_OVERLAYS}"
+  fi
+  CUSTOM_OVERLAY="${ABS_OVERLAYS}"
+
+  set_kpt_package_url
+  WORKLOAD_POOL="${PROJECT_ID}.svc.id.goog"
+}
+
+validate_certs() {
+  if [[ "${CA}" != "citadel" ]]; then
+    fatal "You must select Citadel as the CA in order to use custom certificates."
+  fi
+  if [[ -z "${CA_ROOT}" || -z "${CA_KEY}" || -z "${CA_CHAIN}" || -z "${CA_CERT}" ]]; then
+    fatal "All four certificate options must be present to use a custom cert."
+  fi
+  while read -r CERT_FILE; do
+    if ! [[ -f "${!CERT_FILE}" ]]; then
+      fatal "Couldn't find file ${!CERT_FILE}."
+    fi
+  done <<EOF
+CA_CERT
+CA_ROOT
+CA_KEY
+CA_CHAIN
+EOF
+
+  CA_CERT="$(apath -f "${CA_CERT}")"; readonly CA_CERT;
+  CA_KEY="$(apath -f "${CA_KEY}")"; readonly CA_KEY;
+  CA_CHAIN="$(apath -f "${CA_CHAIN}")"; readonly CA_CHAIN;
+  CA_ROOT="$(apath -f "${CA_ROOT}")"; readonly CA_ROOT;
+
+  info "Checking certificate files for consistency..."
+  if ! openssl rsa -in "${CA_KEY}" -check >/dev/null 2>/dev/null; then
+    fatal "${CA_KEY} failed an openssl consistency check."
+  fi
+  if ! openssl x509 -in "${CA_CERT}" -text -noout >/dev/null; then
+    fatal "${CA_CERT} failed an openssl consistency check."
+  fi
+  if ! openssl x509 -in "${CA_CHAIN}" -text -noout >/dev/null; then
+    fatal "${CA_CHAIN} failed an openssl consistency check."
+  fi
+  if ! openssl x509 -in "${CA_ROOT}" -text -noout >/dev/null; then
+    fatal "${CA_ROOT} failed an openssl consistency check."
+  fi
+
+  info "Checking key matches certificate..."
+  local CERT_HASH; local KEY_HASH;
+  CERT_HASH="$(openssl x509 -noout -modulus -in "${CA_CERT}" | openssl md5)";
+  KEY_HASH="$(openssl rsa -noout -modulus -in "${CA_KEY}" | openssl md5)";
+  if [[ "${CERT_HASH}" != "${KEY_HASH}" ]]; then
+    fatal "Keyfile does not match the given certificate."
+    fatal "Cert: ${CA_CERT}"
+    fatal "Key: ${CA_KEY}"
+  fi
+  unset CERT_HASH; unset KEY_HASH;
+
+  info "Verifying certificate chain of trust..."
+  if ! openssl verify -trusted "${CA_ROOT}" -untrusted "${CA_CHAIN}" "${CA_CERT}"; then
+    fatal "Unable to verify chain of trust."
+  fi
+}
+
+set_kpt_package_url() {
+  KPT_URL="https://github.com/GoogleCloudPlatform/anthos-service-mesh-packages"
+  KPT_URL="${KPT_URL}.git/asm@${KPT_BRANCH}"
+  readonly KPT_URL;
+}
+
+auth_service_account() {
+  info "Authorizing ${SERVICE_ACCOUNT} with ${KEY_FILE}..."
+  run gcloud auth activate-service-account \
+    --project="${PROJECT_ID}" \
+    "${SERVICE_ACCOUNT}" \
+    --key-file="${KEY_FILE}"
+}
+
+#######
+# set_up_local_workspace does everything that the script needs to avoid
+# polluting the environment or current working directory
+#######
+set_up_local_workspace() {
+  info "Setting up necessary files..."
+  if [[ -z "${OUTPUT_DIR}" ]]; then
+    info "Creating temp directory..."
+    OUTPUT_DIR="$(mktemp -d)"
+    if [[ -z "${OUTPUT_DIR}" ]]; then
+      fatal "Encountered error when running mktemp -d!"
+    fi
+  else
+    OUTPUT_DIR="$(apath -f "${OUTPUT_DIR}")"
+  fi
+  pushd "$OUTPUT_DIR" > /dev/null
+
+  info "Generating a new kubeconfig..."
+  KUBECONFIG="$(mktemp)"
+  if [[ -z "${KUBECONFIG}" ]]; then
+    fatal "Encountered error when running mktemp!"
+  fi
+  export KUBECONFIG
+}
+
+### Environment validation functions ###
+validate_dependencies() {
+  validate_cli_dependencies
+  if [[ "${PRINT_CONFIG}" -eq 1 ]]; then
+    return 0
+  fi
+
+  validate_gcp_resources
+  # configure kubectl does have side effects but we've generated a temprorary
+  # kubeconfig so we're not breaking the promise that --only_validate gives
+  configure_kubectl
+  validate_k8s
+  validate_expected_control_plane
+
+  if [[ "${MODE}" = "migrate" ]]; then
+    validate_istio_version
+  elif [[ "${MODE}" = "upgrade" ]]; then
+    validate_asm_version
+    validate_ca_consistency
+  fi
+
+  if [[ "${ENABLE_APIS}" -eq 0 || "${ONLY_VALIDATE}" -eq 1 ]]; then
+    exit_if_apis_not_enabled
+  fi
+}
+
+validate_cli_dependencies() {
+  local NOTFOUND; NOTFOUND="";
+  local EXITCODE; EXITCODE=0;
+
+  info "Checking installation tool dependencies..."
+  while read -r dependency; do
+    EXITCODE=0
+    hash "${dependency}" 2>/dev/null || EXITCODE=$?
+    if [[ "${EXITCODE}" -ne 0 ]]; then
+      NOTFOUND="${dependency},${NOTFOUND}"
+    fi
+  done <<EOF
+awk
+gcloud
+grep
+jq
+kpt
+kubectl
+sed
+tr
+EOF
+
+  if [[ "${CUSTOM_CA}" -eq 1 ]]; then
+    EXITCODE=0
+    hash openssl 2>/dev/null || EXITCODE=$?
+    if [[ "${EXITCODE}" -ne 0 ]]; then
+      NOTFOUND="openssl,${NOTFOUND}"
+    fi
+  fi
+
+  if [[ -n "${NOTFOUND}" ]]; then
+    NOTFOUND="${NOTFOUND::-1}"
+    for dep in $(echo "${NOTFOUND}" | tr ' ' '\n'); do
+      warn "Dependency not found: ${dep}"
+    done
+    fatal "One or more dependencies were not found. Please install them and retry."
+  fi
+
+  local OS
+  # shellcheck disable=SC2064
+  trap "$(shopt -p nocasematch)" RETURN
+  shopt -s nocasematch
+  if [[ "$(uname -m)" != "x86_64" ]]; then
+    fatal "Installation is only supported on x86_64."
+  fi
+  case "$(uname)" in
+    Linux ) OS="linux-amd64";;
+    Darwin) OS="osx";;
+    *     ) fatal "$(uname) is not a supported OS.";;
+  esac
+
+  if is_sa; then
+    auth_service_account
+  fi
+
+  if ! necessary_files_exist; then
+    info "Downloading ASM.."
+    download_asm "${OS}"
+
+    info "Downloading ASM kpt package..."
+    retry 3 run kpt pkg get "${KPT_URL}" asm
+  fi
+
+  local ABS_YAML
+  while read -d ',' -r yaml_file; do
+    ABS_YAML="${OPTIONS_DIRECTORY}/${yaml_file}.yaml"
+    if [[ ! -f "${ABS_YAML}" ]]; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+Couldn't find remote yaml file ${yaml_file}.
+See directory $(apath -f "${OPTIONS_DIRECTORY}") for available options.
+EOF
+    fi
+    CUSTOM_OVERLAY="${ABS_YAML},${CUSTOM_OVERLAY}"
+  done <<EOF
+${OPTIONAL_OVERLAY}
+EOF
+unset OPTIONAL_OVERLAY; readonly CUSTOM_OVERLAY
+}
+
+download_asm() {
+  local OS; OS="${1}";
+  local TARBALL; TARBALL="istio-${RELEASE}-${OS}.tar.gz"
+  if [[ -z "${_CI_ASM_PKG_LOCATION}" ]]; then
+    curl -L "https://storage.googleapis.com/gke-release/asm/${TARBALL}" \
+      | tar xz
+  else
+    local TOKEN; TOKEN="$(retry 2 gcloud --project="${PROJECT_ID}" auth print-access-token)"
+    run curl -L "https://storage.googleapis.com/${_CI_ASM_PKG_LOCATION}/asm/${TARBALL}" \
+      --header @- <<EOF | tar xz
+Authorization: Bearer ${TOKEN}
+EOF
+  fi
+}
+
+necessary_files_exist() {
+  if [[ ! -f "${OUTPUT_DIR}/${ISTIOCTL_REL_PATH}" ]]; then
+    return 1
+  fi
+  if [[ ! -f "${OUTPUT_DIR}/${OPERATOR_MANIFEST}" ]]; then
+    return 1
+  fi
+  return 0
+}
+
+validate_gcp_resources() {
+  validate_project
+  PROJECT_NUMBER="$(gcloud projects describe "${PROJECT_ID}" --format="value(projectNumber)")"
+  validate_cluster
+  validate_node_pool
+}
+
+validate_project() {
+  local RESULT; RESULT=""
+
+  info "Checking for project ${PROJECT_ID}..."
+  RESULT=$(gcloud projects list \
+    --filter="project_id=${PROJECT_ID}" \
+    --format="value(project_id)" || true)
+
+  if [[ -z "${RESULT}" ]]; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+Unable to find project ${PROJECT_ID}. Please verify the spelling and try
+again. To see a list of your projects, run:
+  gcloud projects list --format='value(project_id)'
+EOF
+  fi
+
+}
+
+validate_cluster() {
+  local RESULT; RESULT=""
+
+  info "Confirming cluster information..."
+  RESULT="$(gcloud container clusters list \
+    --project="${PROJECT_ID}" \
+    --filter="name = ${CLUSTER_NAME} and location = ${CLUSTER_LOCATION}" \
+    --format="value(name)" || true)"
+  if [[ -z "${RESULT}" ]]; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+Unable to find cluster ${CLUSTER_LOCATION}/${CLUSTER_NAME}.
+Please verify the spelling and try again. To see a list of your clusters, in
+this project, run:
+  gcloud container clusters list --format='value(name,zone)' --project="${PROJECT_ID}"
+EOF
+  fi
+}
+
+validate_k8s() {
+  K8S_MINOR="$(kubectl version -o json | jq .serverVersion.minor | sed 's/[^0-9]//g')"
+  if [[ "${K8S_MINOR}" -lt 15 ]]; then
+    fatal "ASM ${RELEASE} requires Kubernetes version 1.15+, found 1.${K8S_MINOR}"
+  fi
+}
+
+list_valid_pools() {
+  gcloud container node-pools list \
+    --project="${PROJECT_ID}" \
+    --region "${CLUSTER_LOCATION}" \
+    --cluster "${CLUSTER_NAME}" \
+    --filter "$(valid_pool_query "${1}")"\
+    --format=json
+}
+
+#######
+# valid_pool_query takes an integer argument: the minimum vCPU requirement.
+# It outputs to stdout a query for `gcloud container node-pools list`
+#######
+valid_pool_query() {
+  cat <<EOF | tr '\n' ' '
+    config.machineType.split(sep="-").slice(-1:) >= $1
+EOF
+}
+
+#######
+# validate_node_pool makes sure that the cluster meets ASM's minimum compute
+# requirements
+#######
+validate_node_pool() {
+  local MACHINE_CPU_REQ; MACHINE_CPU_REQ=4; readonly MACHINE_CPU_REQ;
+  local TOTAL_CPU_REQ; TOTAL_CPU_REQ=8; readonly TOTAL_CPU_REQ;
+
+  info "Confirming node pool requirements..."
+  local ACTUAL_CPU
+  ACTUAL_CPU="$(list_valid_pools "${MACHINE_CPU_REQ}" | \
+      jq '.[] |
+        (if .autoscaling.enabled then .autoscaling.maxNodeCount else .initialNodeCount end)
+        *
+        (.config.machineType / "-" | .[-1] | tonumber)
+      ' 2>/dev/null)" || true
+
+  local MAX_CPU; MAX_CPU=0;
+  for i in ${ACTUAL_CPU}; do
+    MAX_CPU="$(( i > MAX_CPU ? i : MAX_CPU))"
+  done
+
+  if [[ "$MAX_CPU" -lt "$TOTAL_CPU_REQ" ]]; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+ASM requires you to have at least ${TOTAL_CPU_REQ} vCPUs in node pools whose
+machine type is at least ${MACHINE_CPU_REQ} vCPUs.
+${CLUSTER_LOCATION}/${CLUSTER_NAME} does not meet this requirement. Please retry
+with a cluster that meets resource requirements.
+EOF
+  fi
+}
+
+validate_expected_control_plane(){
+  info "Checking Istio installations..."
+  check_no_istiod_outside_of_istio_system_namespace
+  if [[ "${MODE}" = "migrate" || "${MODE}" = "upgrade" ]]; then
+    check_istio_deployed
+  elif [[ "${MODE}" = "install" ]]; then
+    check_istio_not_deployed
+  fi
+}
+
+check_no_istiod_outside_of_istio_system_namespace() {
+  local IN_ANY_NAMESPACE; IN_ANY_NAMESPACE="$(kubectl get deployment -A --ignore-not-found=true | grep -c istiod || true)";
+  local IN_NAMESPACE; IN_NAMESPACE="$(kubectl get deployment -n istio-system --ignore-not-found=true | grep -c istiod || true)";
+  if [ "$IN_ANY_NAMESPACE" -gt "$IN_NAMESPACE" ]; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+found istiod deployment outside of istio-system namespace. This installer
+does not support that configuration.
+EOF
+  fi
+}
+
+get_istio_deployment_count(){
+  local OUTPUT
+  OUTPUT="$(retry 3 kubectl get deployment \
+    -n istio-system \
+    --ignore-not-found=true)"
+  grep -c istiod <<EOF || true
+$OUTPUT
+EOF
+}
+
+check_istio_deployed(){
+  local ISTIOD_COUNT; ISTIOD_COUNT="$(get_istio_deployment_count)";
+  info "Found ${ISTIOD_COUNT} deployment(s)."
+  if [[ "$ISTIOD_COUNT" -eq 0 ]]; then
+    fatal "${MODE} mode specified but no istiod deployment found. (Expected >=1.)"
+  fi
+}
+
+check_istio_not_deployed(){
+  local ISTIOD_COUNT; ISTIOD_COUNT="$(get_istio_deployment_count)";
+  if [[ "$ISTIOD_COUNT" -ne 0 ]]; then
+    fatal "Install mode specified, but ${ISTIOD_COUNT} existing istiod deployment(s) found. (Expected 0.)"
+  fi
+}
+
+validate_istio_version() {
+  info "Checking existing Istio version(s)..."
+  local VERSION_OUTPUT; VERSION_OUTPUT="$(retry 3 ./${ISTIOCTL_REL_PATH} version -o json)"
+  if [[ -z "${VERSION_OUTPUT}" ]]; then
+    fatal "Couldn't validate existing Istio versions."
+  fi
+  local FOUND_VALID_VERSION; FOUND_VALID_VERSION=0
+  for version in $(echo "${VERSION_OUTPUT}" | jq -r '.meshVersion[].Info.version' -r); do
+    if [[ "$version" =~ ^$RELEASE_LINE || "$version" =~ ^$PREVIOUS_RELEASE_LINE ]]; then
+      info "  $version (suitable for migration)"
+      FOUND_VALID_VERSION=1
+    else
+      info "  $version (not suitable for migration)"
+    fi
+    if [[ "$version" =~ "asm" ]]; then
+      fatal "Cannot migrate from version $version. Only migration from OSS Istio to the ASM distribution is supported."
+    fi
+  done
+  if [[ "$FOUND_VALID_VERSION" -eq 0 ]]; then
+    fatal "Migration requires an existing control plane in the ${RELEASE_LINE} line."
+  fi
+}
+
+validate_asm_version() {
+  info "Checking existing ASM version(s)..."
+  local VERSION_OUTPUT; VERSION_OUTPUT="$(retry 3 ./${ISTIOCTL_REL_PATH} version -o json)"
+  if [[ -z "${VERSION_OUTPUT}" ]]; then
+    fatal "Couldn't validate existing Istio versions."
+  fi
+  local FOUND_INVALID_VERSION; FOUND_INVALID_VERSION=0
+  for VERSION in $(echo "${VERSION_OUTPUT}" | jq -r '.meshVersion[].Info.version'); do
+    if ! [[ "${VERSION}" =~ "asm" ]]; then
+      fatal "Cannot upgrade from version ${VERSION}. Only upgrades from ASM distributions are supported."
+    fi
+
+    if version_valid_for_upgrade "${VERSION}"; then
+      info "  ${VERSION} (suitable for migration)"
+    else
+      info "  ${VERSION} (not suitable for migration)"
+      FOUND_INVALID_VERSION=1
+    fi
+  done
+  if [[ "$FOUND_INVALID_VERSION" -eq 1 ]]; then
+    fatal "Upgrade requires all existing control planes to be between versions 1.$((MINOR-1)).0 (inclusive) and ${RELEASE} (exclusive)."
+  fi
+}
+
+version_valid_for_upgrade() {
+  local VERSION; VERSION=$1
+
+  # if asm version found, pattern: 1.6.11-asm.1-586f900508ad482ed32b830dd15f6c54b32b93ed
+  local VERSION_MAJOR VERSION_MINOR VERSION_POINT VERSION_REV
+  IFS="." read -r VERSION_MAJOR VERSION_MINOR VERSION_POINT VERSION_REV <<EOF
+${VERSION}
+EOF
+  VERSION_POINT="$(sed 's/-.*//' <<EOF
+${VERSION_POINT}
+EOF
+)"
+  VERSION_REV="$(sed 's/-.*//' <<EOF
+${VERSION_REV}
+EOF
+)"
+  if is_major_minor_invalid || is_minor_point_rev_invalid; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+is_major_minor_invalid() {
+  [[ "$VERSION_MAJOR" -ne 1 ]] && return 0
+  [[ "$VERSION_MINOR" -lt $((MINOR-1))  ]] && return 0
+  [[ "$VERSION_MINOR" -gt "$MINOR" ]] && return 0
+}
+
+is_minor_point_rev_invalid() {
+  [[ "$VERSION_MINOR" -eq "$MINOR" ]] && is_point_rev_invalid && return 0
+}
+
+is_point_rev_invalid() {
+  [[ "$VERSION_POINT" -gt "$POINT" ]] && return 0
+  is_rev_invalid && return 0
+}
+
+is_rev_invalid() {
+  [[ "$VERSION_POINT" -eq "$POINT" && "$VERSION_REV" -ge "$REV" ]] && return 0
+}
+
+validate_ca_consistency() {
+  info "Checking existing CA..."
+  local INSTALLED_CA; INSTALLED_CA="$(kubectl -n istio-system get pod -l istio=ingressgateway \
+    -o jsonpath='{.items[].spec.containers[].env[?(@.name=="CA_ADDR")].value}')"
+
+  local CURRENT_CA; CURRENT_CA=citadel
+  if is_meshca_installed; then
+    CURRENT_CA=mesh_ca
+  fi
+  info "CA already in use: ${CURRENT_CA}"
+
+  if is_ca_citadel_to_meshca || is_ca_meshca_to_citadel; then
+    fatal "CA cannot be switched while performing upgrade. Please use ${CURRENT_CA} as the CA."
+  fi
+}
+
+is_ca_citadel_to_meshca() {
+  ! is_meshca_installed && [[ "${CA}" = "mesh_ca" ]] && return 0
+}
+
+is_ca_meshca_to_citadel() {
+  is_meshca_installed && [[ "${CA}" = "citadel" ]] && return 0
+}
+
+is_meshca_installed() {
+  [[ "${INSTALLED_CA}" =~ meshca\.googleapis\.com ]] && return 0
+}
+
+### Project functions ###
+set_up_project(){
+  if [[ "${PRINT_CONFIG}" -eq 1 ]]; then
+    return 0
+  fi
+
+  bind_user_to_iam_policy
+
+  # This if statement should always trigger, but just in case we should be
+  # careful about enabling things without explicit permission
+  if [[ "$ENABLE_APIS" == 1 ]]; then
+    enable_gcloud_apis
+  fi
+}
+
+bind_user_to_iam_policy(){
+  local ACCOUNT_TYPE
+  ACCOUNT_TYPE="user"
+  if is_sa; then
+    ACCOUNT_TYPE="serviceAccount"
+  fi
+  info "Getting account information..."
+  local GCLOUD_MEMBER;
+  GCLOUD_MEMBER="$(retry 3 gcloud auth list \
+    --project="${PROJECT_ID}" \
+    --filter="status:ACTIVE" \
+    --format="value(account)")"
+
+  info "Binding ${GCLOUD_MEMBER} to required IAM roles..."
+  while read -r role; do
+  retry 3 run gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+    --member "${ACCOUNT_TYPE}":"${GCLOUD_MEMBER}" \
+    --condition=None \
+    --role=roles/"${role}" >/dev/null
+  done <<EOF
+editor
+compute.admin
+container.admin
+resourcemanager.projectIamAdmin
+iam.serviceAccountAdmin
+iam.serviceAccountKeyAdmin
+gkehub.admin
+EOF
+}
+
+# [START required_apis]
+required_apis() {
+    cat << EOF
+container.googleapis.com
+compute.googleapis.com
+monitoring.googleapis.com
+logging.googleapis.com
+cloudtrace.googleapis.com
+meshca.googleapis.com
+meshtelemetry.googleapis.com
+meshconfig.googleapis.com
+iamcredentials.googleapis.com
+gkeconnect.googleapis.com
+gkehub.googleapis.com
+cloudresourcemanager.googleapis.com
+stackdriver.googleapis.com
+EOF
+}
+# [END required_apis]
+
+enable_gcloud_apis(){
+  info "Enabling required APIs..."
+  # shellcheck disable=SC2046
+  retry 3 gcloud services enable --project="${PROJECT_ID}" $(required_apis | tr '\n' ' ')
+}
+
+get_enabled_apis() {
+  local OUTPUT
+  OUTPUT="$(retry 3 gcloud services list \
+    --enabled \
+    --format='get(config.name)' \
+    --project="${PROJECT_ID}")"
+  echo "${OUTPUT}" | tr '\n' ','
+}
+
+exit_if_apis_not_enabled() {
+  local ENABLED; ENABLED="$(get_enabled_apis)";
+  local NOTFOUND; NOTFOUND="";
+  local EXITCODE; EXITCODE=0;
+
+  info "Checking required APIs..."
+  while read -r api; do
+    EXITCODE=0
+    grep -q "${api}" <<EOF || EXITCODE=$?
+$ENABLED
+EOF
+    if [[ "${EXITCODE}" -ne 0 ]]; then
+      NOTFOUND="${api},${NOTFOUND}"
+    fi
+  done <<EOF
+$(required_apis)
+EOF
+
+  if [[ -n "${NOTFOUND}" ]]; then
+    NOTFOUND=${NOTFOUND::-1}
+    for api in $(echo "${NOTFOUND}" | tr ' ' '\n'); do
+      warn "API not enabled - ${api}"
+    done
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+One or more APIs are not enabled. Please enable them and retry, or
+re-run the script with the '--enable_apis' flag to allow the script to enable
+them on your behalf.
+EOF
+  fi
+}
+
+init_meshca() {
+  info "Initializing Mesh CA..."
+  local TOKEN; TOKEN="$(retry 2 gcloud --project="${PROJECT_ID}" auth print-access-token)"
+  run curl --request POST --fail \
+    --data '' -o /dev/null \
+    "https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize" \
+    --header "Authorization: Bearer ${TOKEN}"
+}
+
+### Cluster functions ###
+set_up_cluster(){
+  if [[ "${PRINT_CONFIG}" -eq 1 ]]; then
+    return 0
+  fi
+  add_cluster_labels
+  enable_workload_identity
+
+  # this is project scope but requires workload identity
+  if [[ "${CA}" = "mesh_ca" ]]; then
+    init_meshca
+  fi
+
+  enable_stackdriver_kubernetes
+  bind_user_to_cluster_admin
+  ensure_istio_namespace_exists
+}
+
+add_cluster_labels(){
+  info "Reading labels for ${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
+  local LABELS;
+  LABELS="$(retry 2 gcloud container clusters describe "${CLUSTER_NAME}" \
+    --zone="${CLUSTER_LOCATION}" \
+    --project="${PROJECT_ID}" \
+    --format='value(resourceLabels)[delimiter=","]')";
+  local INSTALLER_LABEL; INSTALLER_LABEL="asmv=${RELEASE//\./-}"
+  local MESH_LABEL; MESH_LABEL="mesh_id=proj-${PROJECT_NUMBER}"
+  if [ "${LABELS}" ]; then
+    LABELS="${LABELS},"
+  fi
+  info "Adding labels to ${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
+  LABELS="${LABELS}${INSTALLER_LABEL},${MESH_LABEL}"
+  retry 2 run gcloud container clusters update "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --zone="${CLUSTER_LOCATION}" \
+    --update-labels="${LABELS}"
+}
+
+enable_workload_identity(){
+  info "Enabling Workload Identity on ${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
+  info "(This could take awhile, up to 10 minutes)"
+  retry 2 run gcloud container clusters update "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --zone="${CLUSTER_LOCATION}" \
+    --workload-pool="${WORKLOAD_POOL}"
+}
+
+enable_stackdriver_kubernetes(){
+  info "Enabling Stackdriver on ${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
+  retry 2 run gcloud container clusters update "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --zone="${CLUSTER_LOCATION}" \
+    --enable-stackdriver-kubernetes
+}
+
+bind_user_to_cluster_admin(){
+  info "Querying for core/account..."
+  local GCLOUD_USER; GCLOUD_USER="$(gcloud config get-value core/account)"
+  info "Binding ${GCLOUD_USER} to cluster admin role..."
+  local YAML; YAML="$(retry 5 kubectl create \
+    clusterrolebinding cluster-admin-binding \
+    --clusterrole=cluster-admin \
+    --user="${GCLOUD_USER}" \
+    --dry-run -o yaml)"
+  retry 3 run kubectl apply -f - <<EOF
+${YAML}
+EOF
+}
+
+ensure_istio_namespace_exists(){
+  info "Checking for istio-system namespace..."
+  if [ "$(retry 2 kubectl get ns | grep -c istio-system || true)" -eq 0 ]; then
+    info "Creating istio-system namespace..."
+    retry 2 run kubectl create ns istio-system
+  fi
+}
+
+### Installation functions ###
+configure_package() {
+  info "Configuring kpt package..."
+
+  run kpt cfg set asm gcloud.container.cluster "${CLUSTER_NAME}"
+  run kpt cfg set asm gcloud.core.project "${PROJECT_ID}"
+  run kpt cfg set asm gcloud.project.environProjectNumber "${PROJECT_NUMBER}"
+  run kpt cfg set asm gcloud.compute.location "${CLUSTER_LOCATION}"
+  run kpt cfg set asm anthos.servicemesh.rev "${REVISION_LABEL}"
+  if [[ -n "${_CI_ASM_IMAGE_LOCATION}" ]]; then
+    run kpt cfg set asm anthos.servicemesh.hub "${_CI_ASM_IMAGE_LOCATION}"
+    run kpt cfg set asm anthos.servicemesh.tag "${RELEASE}"
+  fi
+}
+
+print_config() {
+  echo "---"
+  sanitize_file "${OPERATOR_MANIFEST}"
+  while read -d ',' -r yaml_file; do
+    echo "---"
+    sanitize_file "${yaml_file}"
+  done <<EOF
+${CUSTOM_OVERLAY}
+EOF
+  if [[ "$DISABLE_CANONICAL_SERVICE" -ne 1 ]]; then
+    echo "---"
+    sanitize_file asm/canonical-service/controller.yaml
+  fi
+}
+
+# Strip comments, empty lines, trailing whitespace
+sanitize_file() {
+  sed -e 's/#.*$//g' \
+    -e '/^[[:space:]]*$/d' \
+    -e 's/[[:space:]]*$//g' \
+    "${1}"
+}
+
+install_secrets() {
+  info "Installing certificates into the cluster..."
+  run kubectl create secret generic cacerts -n istio-system \
+    --from-file="${CA_CERT}" \
+    --from-file="${CA_KEY}" \
+    --from-file="${CA_ROOT}" \
+    --from-file="${CA_CHAIN}"
+}
+
+does_istiod_exist(){
+  local RETVAL; RETVAL=0;
+  kubectl get service \
+    --request-timeout='20s' \
+    -n istio-system \
+    istiod 1>/dev/null 2>/dev/null || RETVAL=$?
+  return "${RETVAL}"
+}
+
+install_asm() {
+
+  local PARAMS
+  PARAMS="-f ${OPERATOR_MANIFEST} -f ${MULTICLUSTER_MANIFEST}"
+  while read -d ',' -r yaml_file; do
+    PARAMS="${PARAMS} -f ${yaml_file}"
+  done <<EOF
+${CUSTOM_OVERLAY}
+EOF
+
+  PARAMS="${PARAMS} --set revision=${REVISION_LABEL}"
+  if [[ "${K8S_MINOR}" -eq 15 ]]; then
+    PARAMS="${PARAMS} -f ${BETA_CRD_MANIFEST}"
+  fi
+  PARAMS="${PARAMS} -c ${KUBECONFIG}"
+
+  info "Installing ASM control plane..."
+  # shellcheck disable=SC2086
+  retry 5 run ./"${ISTIOCTL_REL_PATH}" install $PARAMS
+
+  # Prevent the stderr buffer from ^ messing up the terminal output below
+  sleep 1
+  info "...done!"
+
+  local RAW_YAML; RAW_YAML="${REVISION_LABEL}-manifest-raw.yaml"
+  local EXPANDED_YAML; EXPANDED_YAML="${REVISION_LABEL}-manifest-expanded.yaml"
+  print_config > "${RAW_YAML}"
+  run ./"${ISTIOCTL_REL_PATH}" manifest generate \
+    <"${RAW_YAML}" \
+    >"${EXPANDED_YAML}"
+
+  if ! does_istiod_exist; then
+    info "Installing validation webhook fix..."
+    retry 3 run kubectl apply -f "${VALIDATION_FIX_SERVICE}"
+  fi
+
+  if [[ "$DISABLE_CANONICAL_SERVICE" -ne 1 ]]; then
+    info "Installing ASM CanonicalService controller in asm-system namespace..."
+    retry 3 run kubectl apply -f asm/canonical-service/controller.yaml
+    info "Waiting for deployment..."
+    retry 3 run kubectl wait --for=condition=available --timeout=600s \
+        deployment/canonical-service-controller-manager -n asm-system
+    info "...done!"
+  fi
+
+  outro
+}
+
+outro() {
+  info ""
+  info "*****************************"
+  info "The ASM control plane installation is now complete."
+  info "To enable automatic sidecar injection on a namespace, you can use the following command:"
+  info "kubectl label namespace <NAMESPACE> istio-injection- istio.io/rev=${REVISION_LABEL} --overwrite"
+  info "If you use 'istioctl install' afterwards to modify this installation, you will need"
+  info "to specify the option '--set revision=${REVISION_LABEL}' to target this control plane"
+  info "instead of installing a new one."
+
+
+  if [[ "${MODE}" = "migrate" ]]; then
+    info "Please verify the new control plane and then: 1) migrate your workloads 2) remove old control plane."
+    info "For more information, see:"
+    info "https://cloud.google.com/service-mesh/docs/upgrading-gke#redeploying_workloads"
+  elif [[ "${MODE}" = "install" ]]; then
+    info "To finish the installation, enable Istio sidecar injection and restart your workloads."
+    info "For more information, see:"
+    info "https://cloud.google.com/service-mesh/docs/proxy-injection"
+  fi
+  if ! is_sa; then
+    info "The ASM package used for installation can be found at:"
+    info "${OUTPUT_DIR}/asm"
+    info "The version of istioctl that matches the installation can be found at:"
+    info "${OUTPUT_DIR}/${ISTIOCTL_REL_PATH}"
+    info "The combined configuration generated for installation can be found at:"
+    info "${OUTPUT_DIR}/${RAW_YAML}"
+    info "The full, expanded set of kubernetes resources can be found at:"
+    info "${OUTPUT_DIR}/${EXPANDED_YAML}"
+  fi
+
+  info "*****************************"
+}
+
+main "${@}"
