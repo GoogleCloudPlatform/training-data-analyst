@@ -133,46 +133,19 @@ public class StreamingMinuteTrafficSQLPipeline {
          */
 
         pipeline
-                // Read in lines from PubSub and Parse to CommonLog
-                .apply("ReadMessage", PubsubIO.readStrings()
-                    .withTimestampAttribute("timestamp")
-                    .fromTopic(options.getInputTopic()))
+                // TODO: implement steps in the pipeline
+                // Read from PubSub
+                // Parse Json
+                // Add "timestamp_joda" field
+                // Populate "timestamp_joda" field and build new Row with jodaCommonLogSchema schema
+                // Implement SqlTransform
 
-                .apply("ParseJson", ParDo.of(new JsonToCommonLog()))
-
-                // Add new DATETIME field to CommonLog, converting to a Row, then populate new row with Joda DateTime
-                .apply("AddDateTimeField", AddFields.<CommonLog>create().field("timestamp_joda", FieldType.DATETIME))
-                .apply("AddDateTimeValue", MapElements.via(new SimpleFunction<Row, Row>() {
-                    @Override
-                    public Row apply(Row row) {
-                        DateTime dateTime = new DateTime(row.getString("timestamp"));
-                        return Row.withSchema(row.getSchema())
-                                .addValues(
-                                        row.getString("user_id"),
-                                        row.getString("ip"),
-                                        row.getDouble("lat"),
-                                        row.getDouble("lng"),
-                                        row.getString("timestamp"),
-                                        row.getString("http_request"),
-                                        row.getString("user_agent"),
-                                        row.getInt64("http_response"),
-                                        row.getInt64("num_bytes"),
-                                        dateTime)
-                                .build();
-                    }
-                })).setRowSchema(jodaCommonLogSchema)
-
-                // Apply a SqlTransform.query(QUERY_TEXT) to count window and count total page views, write to BQ
-                .apply("WindowedAggregateQuery", SqlTransform.query(
-                        "SELECT COUNT(*) AS pageviews, tr.window_start AS minute FROM TUMBLE( ( SELECT * FROM " +
-                                "PCOLLECTION ) , DESCRIPTOR(timestamp_joda), \"INTERVAL 1 MINUTE\") AS tr GROUP " +
-                                "BY tr.window_start"))
                 .apply("WriteToBQ",
                         BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
-        
+
 
 
         LOG.info("Building pipeline...");
