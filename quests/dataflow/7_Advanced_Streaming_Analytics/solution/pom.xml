@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.mypackage</groupId>
-  <artifactId>advanced-dataflow-lab-5-solution</artifactId>
+  <artifactId>advanced-dataflow-lab-7-solution</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <inceptionYear>2018</inceptionYear>
@@ -31,7 +31,7 @@
     <url>https://cloud.google.com</url>
   </organization>
 
-  <name>4_Streaming_Analytics :: 1.0-SNAPSHOT</name>
+  <name>7_Advanced_Streaming_Analytics :: 1.0-SNAPSHOT</name>
   <url>http://example.com/dataflow-sample</url>
 
   <properties>
