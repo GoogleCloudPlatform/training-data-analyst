@@ -14,25 +14,7 @@
  * limitations under the License.
  */
 
-package com.mypackage.pipeline;
-
-import com.google.common.annotations.VisibleForTesting;
-import org.apache.beam.sdk.schemas.JavaFieldSchema;
-import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
-
-@VisibleForTesting
 /**
- * A class used for parsing JSON web server events
+ * All Dataflow pipelines contained within the project.
  */
-@DefaultSchema(JavaFieldSchema.class)
-public class CommonLog {
-    String user_id;
-    String ip;
-    @javax.annotation.Nullable Double lat;
-    @javax.annotation.Nullable Double lng;
-    String timestamp;
-    String http_request;
-    String user_agent;
-    Long http_response;
-    Long num_bytes;
-}
+package com.mypackage.pipeline;

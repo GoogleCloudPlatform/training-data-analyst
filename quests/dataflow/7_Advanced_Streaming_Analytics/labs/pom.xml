@@ -21,12 +21,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.mypackage</groupId>
-    <artifactId>advanced-dataflow-lab-6-solution</artifactId>
+    <artifactId>advanced-dataflow-lab-7-lab</artifactId>
     <version>1.0</version>
 
     <properties>
         <!-- Dependency properties -->
-        <beam.version>2.23.0</beam.version>
+        <beam.version>2.22.0</beam.version>
         <java.version>1.8</java.version>
         <slf4j.version>1.7.25</slf4j.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -59,17 +59,6 @@
             <artifactId>beam-sdks-java-extensions-google-cloud-platform-core</artifactId>
             <version>${beam.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.beam</groupId>
-            <artifactId>beam-sdks-java-extensions-sql</artifactId>
-            <version>${beam.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.beam</groupId>
-            <artifactId>beam-sdks-java-extensions-sql-zetasql</artifactId>
-            <version>${beam.version}</version>
-        </dependency>
-
 
         <!-- Logging -->
         <dependency>

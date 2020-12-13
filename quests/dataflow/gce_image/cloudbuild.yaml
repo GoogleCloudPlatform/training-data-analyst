@@ -3,7 +3,7 @@ steps:
     args:
     - build
     - -var
-    - image_name=theia-java-dataflow-v$_TIMESTAMP
+    - image_name=$_IMAGE_NAME
     - -force
     - packer.json
   - name: 'gcr.io/cloud-builders/gcloud'
@@ -11,6 +11,6 @@ steps:
     - compute
     - images
     - add-iam-policy-binding
-    - theia-java-dataflow-v$_TIMESTAMP
+    - $_IMAGE_NAME
     - --member=allAuthenticatedUsers
     - --role=roles/compute.imageUser
