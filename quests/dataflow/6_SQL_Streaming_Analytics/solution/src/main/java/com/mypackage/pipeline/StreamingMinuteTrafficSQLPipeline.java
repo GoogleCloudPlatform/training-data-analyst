@@ -172,7 +172,7 @@ public class StreamingMinuteTrafficSQLPipeline {
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
-        
+
 
 
         LOG.info("Building pipeline...");
