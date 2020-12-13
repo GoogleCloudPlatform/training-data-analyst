@@ -28,11 +28,13 @@ import org.apache.beam.sdk.schemas.Schema;
 import org.apache.beam.sdk.schemas.transforms.AddFields;
 import org.apache.beam.sdk.schemas.transforms.Select;
 import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.transforms.windowing.*;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
+import org.apache.beam.sdk.values.*;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
@@ -172,27 +174,7 @@ public class StreamingMinuteTrafficPipeline {
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 
-        // Write raw to BQ
-        // But we want to add a processing time indicator as well
-        commonLogs
-                .apply("SelectFields", Select.fieldNames("user_id", "timestamp"))
-                .apply("AddProcessingTimeField", AddFields.<Row>create().field("processing_timestamp", Schema.FieldType.DATETIME))
-                .apply("AddProcessingTime", MapElements.via(new SimpleFunction<Row, Row>() {
-                                                                @Override
-                                                                public Row apply(Row row) {
-                                                                    return Row.withSchema(rawSchema)
-                                                                            .addValues(
-                                                                                    row.getString("user_id"),
-                                                                                    new DateTime(row.getString("timestamp")),
-                                                                                    DateTime.now())
-                                                                            .build();
-                                                                }
-                                                            }
-                )).setRowSchema(rawSchema)
-                .apply("WriteRawToBQ",
-                        BigQueryIO.<Row>write().to(options.getRawTableName()).useBeamSchema()
-                                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
-                                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+
 
         LOG.info("Building pipeline...");
 
