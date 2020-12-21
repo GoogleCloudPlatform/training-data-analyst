@@ -55,10 +55,8 @@ curl --request POST \
   https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize
 
 # download anthos service mesh software
-curl -LO https://storage.googleapis.com/gke-release/asm/istio-istio-1.8.1-asm.5-linux-amd64.tar.gz
-tar xzf istio-istio-1.8.1-asm.5-linux-amd64.tar.gz
-cd istio-istio-1.8.1-asm.5
-export PATH=$PWD/bin:$PATH
+curl https://storage.googleapis.com/csm-artifacts/asm/install_asm_1.8 > install_asm
+chmod +x install_asm
 
 ./install_asm \
   --project_id ${PROJECT_ID} \
