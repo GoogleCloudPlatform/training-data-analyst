@@ -74,18 +74,11 @@ kubectl create clusterrolebinding ksa-admin-binding \
     --clusterrole cluster-admin \
     --serviceaccount default:$KSA
 
-ISTIO_VERSION="${ISTIO_VERSION:-1.5.2}"
+ISTIO_VERSION="${ISTIO_VERSION:-1.8.1}"
 curl -L https://git.io/getLatestIstio | ISTIO_VERSION=$ISTIO_VERSION sh -
 
 kubectl create namespace istio-system
-kubectl create secret generic cacerts -n istio-system \
---from-file=istio-$ISTIO_VERSION/samples/certs/ca-cert.pem \
---from-file=istio-$ISTIO_VERSION/samples/certs/ca-key.pem \
---from-file=istio-$ISTIO_VERSION/samples/certs/root-cert.pem \
---from-file=istio-$ISTIO_VERSION/samples/certs/cert-chain.pem
-
-./istio-$ISTIO_VERSION/bin/istioctl manifest apply \
---set profile=demo
+./istio-$ISTIO_VERSION/bin/istioctl install --set profile=demo
 
 kubectl create namespace prod
 kubectl label namespace prod istio-injection=enabled --overwrite

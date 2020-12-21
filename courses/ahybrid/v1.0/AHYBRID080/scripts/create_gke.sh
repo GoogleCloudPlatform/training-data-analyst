@@ -55,36 +55,24 @@ curl --request POST \
   https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize
 
 # download anthos service mesh software
-curl -LO https://storage.googleapis.com/gke-release/asm/istio-1.6.8-asm.9-linux-amd64.tar.gz
-tar xzf istio-1.6.8-asm.9-linux-amd64.tar.gz
-cd istio-1.6.8-asm.9
+curl -LO https://storage.googleapis.com/gke-release/asm/istio-istio-1.8.1-asm.5-linux-amd64.tar.gz
+tar xzf istio-istio-1.8.1-asm.5-linux-amd64.tar.gz
+cd istio-istio-1.8.1-asm.5
 export PATH=$PWD/bin:$PATH
 
-kpt pkg get https://github.com/GoogleCloudPlatform/anthos-service-mesh-packages@1.6.8-asm.9 asm
-
-cd asm
-kpt cfg set asm gcloud.container.cluster ${C1_NAME}
-kpt cfg set asm gcloud.project.environProjectNumber ${PROJECT_NUMBER}
-kpt cfg set asm gcloud.core.project ${PROJECT_ID}
-kpt cfg set asm gcloud.compute.location ${C1_ZONE}
-
-# To configure that all clusters are in the same project
-kpt cfg set asm anthos.servicemesh.profile asm-gcp
-
-gcloud container clusters get-credentials $C1_NAME \
-    --zone $C1_ZONE --project $PROJECT_ID
-
-# Install Istio + Enable tracing with Cloud Trace
-istioctl install -f asm/cluster/istio-operator.yaml -f $LAB_DIR/training-data-analyst/courses/ahybrid/v1.0/AHYBRID080/scripts/tracing.yaml
-
-# Enable the Anthos Service Mesh UI in Cloud Console
-kubectl apply -f asm/canonical-service/controller.yaml
+./install_asm \
+  --project_id ${PROJECT_ID} \
+  --cluster_name ${C1_NAME} \
+  --cluster_location ${C1_ZONE} \
+  --mode install \
+  --option cloud-tracing \
+  --enable_all
 
 kubectl wait --for=condition=available --timeout=600s deployment \
 --all -n istio-system
 
 kubectl create namespace prod
-kubectl label namespace prod istio-injection=enabled --overwrite
+kubectl label namespace prod istio-injection- istio.io/rev=asm-181-5 --overwrite
 kubectl apply -n prod -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/kubernetes-manifests.yaml
 kubectl apply -n prod -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/istio-manifests.yaml
 kubectl patch -n prod deployments/productcatalogservice -p '{"spec":{"template":{"metadata":{"labels":{"version":"v1"}}}}}'
