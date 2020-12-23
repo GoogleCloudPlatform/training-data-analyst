@@ -22,6 +22,7 @@ export HOME=~
 # gke cluster values
 export C1_NAME="gke"
 export C1_ZONE="us-central1-b"
+export C1_NODES=2
 export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} \
     --format="value(projectNumber)")
 export WORKLOAD_POOL=${PROJECT_ID}.svc.id.goog
