@@ -51,8 +51,8 @@ sleep 20
 # SEE WHERE WE ARE HERE...
 
 kops export kubecfg --name $C2_FULLNAME --state=$KOPS_STORE
-gsutil cp .kube/config $KOPS_STORE
-export KUBECONFIG=.kube/config
+gsutil cp ~/.kube/config $KOPS_STORE
+export KUBECONFIG=~/.kube/config
 
 gcloud iam service-accounts create connect-sa-op
 
