@@ -23,5 +23,6 @@ apt-get -y install docker-ce docker-ce-cli containerd.io
 # Clone repo
 git clone https://github.com/GoogleCloudPlatform/training-data-analyst.git /home/theia-java-dataflow/training-data-analyst
 
-# Pull container
-docker pull gcr.io/qwiklabs-resources/theia-java-dataflow
+# Pull containers
+docker pull gcr.io/qwiklabs-resources/java-theia-ide-training-data-analyst
+docker pull gcr.io/qwiklabs-resources/python-theia-ide-training-data-analyst
