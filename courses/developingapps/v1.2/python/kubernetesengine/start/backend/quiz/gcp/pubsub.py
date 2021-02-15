@@ -16,11 +16,13 @@ import logging
 import os
 project_id = os.getenv('GCLOUD_PROJECT')
 
-# TODO: Load the Cloud Pub/Sub module 
+# TODO: Load the Cloud Pub/Sub module
 
 from google.cloud import pubsub_v1
 
 # END TODO
+
+from flask import current_app
 
 # TODO: Create a Pub/Sub Subscriber Client
 

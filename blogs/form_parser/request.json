@@ -1,0 +1,12 @@
+{
+   "inputConfig":{
+      "gcsSource":{
+         "uri":"gs://ai-analytics-solutions-kfpdemo/formparsing/scott_walker.pdf"
+      },
+      "mimeType":"application/pdf"
+   },
+   "documentType":"general",
+   "formExtractionParams":{
+      "enabled":true
+   }
+}
