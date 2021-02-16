@@ -1,6 +1,6 @@
 FROM gcr.io/google_appengine/python
 
-RUN virtualenv -p python3.6 /env
+RUN virtualenv -p python3.7 /env
 
 ENV VIRTUAL_ENV /env
 ENV PATH /env/bin:$PATH

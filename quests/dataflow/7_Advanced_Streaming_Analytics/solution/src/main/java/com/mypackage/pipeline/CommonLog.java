@@ -26,14 +26,13 @@ import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
  */
 @DefaultSchema(JavaFieldSchema.class)
 public class CommonLog {
-    public String user_id;
-    public String ip;
-    public double lat;
-    public double lng;
-    public String timestamp;
-    public String http_request;
-    @javax.annotation.Nullable
-    public String user_agent;
-    public int http_response;
-    public int num_bytes;
+    String user_id;
+    String ip;
+    @javax.annotation.Nullable Double lat;
+    @javax.annotation.Nullable Double lng;
+    String timestamp;
+    String http_request;
+    String user_agent;
+    Long http_response;
+    Long num_bytes;
 }

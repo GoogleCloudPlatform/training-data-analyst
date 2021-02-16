@@ -87,7 +87,6 @@ public class StreamingMinuteTrafficPipeline {
     public interface Options extends PipelineOptions {
         @Description("Window duration length, in seconds")
         Integer getWindowDuration();
-
         void setWindowDuration(Integer windowDuration);
 
         @Description("BigQuery table name")
@@ -96,18 +95,15 @@ public class StreamingMinuteTrafficPipeline {
 
         @Description("Input topic name")
         String getInputTopic();
-
         void setInputTopic(String inputTopic);
 
 
         @Description("Window allowed lateness, in days")
         Integer getAllowedLateness();
-
         void setAllowedLateness(Integer allowedLateness);
 
         @Description("The Cloud Storage bucket used for writing " + "unparseable Pubsub Messages.")
         String getDeadletterBucket();
-
         void setDeadletterBucket(String deadletterBucket);
 
     }
