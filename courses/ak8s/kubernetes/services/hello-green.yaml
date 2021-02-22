@@ -4,7 +4,7 @@ metadata:
   name: hello
 spec:
   selector:
-    app: hello
+    app: hello-green
     version: 2.0.0
   ports:
     - protocol: TCP
