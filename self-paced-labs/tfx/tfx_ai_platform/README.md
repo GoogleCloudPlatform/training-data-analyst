@@ -4,6 +4,6 @@ In this lab you will develop, deploy and run a TFX pipeline that runs on Google 
 
 ## Lab instructions
 
-The lab instructions are in the `/labs/lab-02.ipynb` notebook.
+The lab instructions are in the `/labs/lab_exercise.ipynb` notebook.
 
 Please reference the `/solutions` folder to reference completed exercises if you are blocked.
