@@ -1,0 +1,45 @@
+{
+  "fairness_favourable_classes": ["No Risk"],
+  "fairness_unfavourable_classes": ["Risk"],
+  "fairness_features": [
+    {
+      "feature_name": "Sex",
+      "majority": ["male"],
+      "minority": ["female"],
+      "threshold": 0.95
+    },
+    {
+      "feature_name": "Age",
+      "majority": [[26,75]],
+      "minority": [[18,25]],
+      "threshold": 0.95
+    }
+  ],
+  "model_schema": [
+    {"metadata": {"measure": "discrete","modeling_role": "feature"}, "name": "CheckingStatus", "nullable": true, "type": "string"},
+    {"metadata": {"modeling_role": "feature"}, "name": "LoanDuration", "nullable": true, "type": "integer"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"}, "name": "CreditHistory", "nullable": true, "type": "string"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"}, "name": "LoanPurpose", "nullable": true, "type": "string"},
+    {"metadata": {"modeling_role": "feature"}, "name": "LoanAmount", "nullable": true, "type": "integer"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"}, "name": "ExistingSavings", "nullable": true, "type": "string"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"}, "name": "EmploymentDuration", "nullable": true, "type": "string"},
+    {"metadata": {"modeling_role": "feature"}, "name": "InstallmentPercent", "nullable": true, "type": "integer"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"}, "name": "Sex","nullable": true,"type": "string"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"},"name": "OthersOnLoan","nullable": true,"type": "string"},
+    {"metadata": {"modeling_role": "feature"},"name": "CurrentResidenceDuration","nullable": true,"type": "integer"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"},"name": "OwnsProperty","nullable": true,"type": "string"},
+    {"metadata": {"modeling_role": "feature"},"name": "Age","nullable": true,"type": "integer"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"},"name": "InstallmentPlans","nullable": true,"type": "string"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"},"name": "Housing","nullable": true,"type": "string"},
+    {"metadata": {"modeling_role": "feature"},"name": "ExistingCreditsCount","nullable": true,"type": "integer"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"},"name": "Job","nullable": true,"type": "string"},
+    {"metadata": {"modeling_role": "feature"},"name": "Dependents","nullable": true,"type": "integer"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"},"name": "Telephone","nullable": true,"type": "string"},
+    {"metadata": {"measure": "discrete", "modeling_role": "feature"},"name": "ForeignWorker","nullable": true,"type": "string"},
+    {"metadata": {"modeling_role": "probability"},"name": "probability","nullable": true,"type": {"containsNull": true, "elementType": "double", "type": "array"}},
+    {"metadata": {"modeling_role": "prediction"},"name": "prediction","nullable": true,"type": "double"},
+    {"metadata": {"modeling_role": "decoded-target"},"name": "predictedLabel","nullable": true,"type": "string"},
+    {"metadata": {"modeling_role": "debiased-prediction"},"name": "debiased_prediction","nullable": true,"type": "double"},
+    {"metadata": {"modeling_role": "debiased-probability"},"name": "debiased_probability","nullable": true,"type": {"containsNull": true,"elementType": "double","type": "array"}}
+  ]
+}

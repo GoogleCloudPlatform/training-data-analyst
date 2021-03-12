@@ -1,0 +1,13 @@
+name: train mnist model
+description: train mnist model
+inputs:
+  - {name: storage_bucket, type: GCSPath}
+outputs:
+  - {name: logdir, type: string}
+implementation:
+  container:
+    image: train_image_location
+    command: ['python', '/mnist.py']
+    args: ['--storage_bucket', {inputValue: storage_bucket}]
+    fileOutputs: 
+      logdir: /logdir.txt
