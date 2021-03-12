@@ -1,0 +1,13 @@
+name: visualize table
+description: visualize dataset in table
+inputs:
+  - {name: train_file_path, type: string}
+outputs:
+  - {name: MLPipeline UI metadata, type: UI metadata}
+implementation:
+  container:
+    image: visualizetable_image_location
+    command: ['python', 'visualize.py']
+    args: ['--train_file_path', {inputValue: train_file_path}]
+    fileOutputs: 
+      MLPipeline UI metadata: /mlpipeline-ui-metadata.json

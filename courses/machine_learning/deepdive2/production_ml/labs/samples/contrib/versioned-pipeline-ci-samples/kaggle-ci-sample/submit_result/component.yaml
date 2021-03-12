@@ -1,0 +1,11 @@
+name: submit result
+description: submit prediction result to kaggle
+inputs:
+  - {name: result_file, type: string}
+  - {name: submit_message, type: string}
+implementation:
+  container:
+    image: submit_image_location
+    command: ['python', 'submit_result.py']
+    args: ['--result_file', {inputValue: result_file},
+           '--submit_message', {inputValue: submit_message}]
