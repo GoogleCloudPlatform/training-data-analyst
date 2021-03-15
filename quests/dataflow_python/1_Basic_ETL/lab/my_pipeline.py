@@ -30,46 +30,7 @@ def run():
     # TODO: Add static input and output strings
 
     # Table schema for BigQuery
-    table_schema = {
-        "fields": [
-            {
-                "name": "ip",
-                "type": "STRING"
-            },
-            {
-                "name": "user_id",
-                "type": "STRING"
-            },
-            {
-                "name": "lat",
-                "type": "FLOAT"
-            },
-            {
-                "name": "lng",
-                "type": "FLOAT"
-            },
-            {
-                "name": "timestamp",
-                "type": "STRING"
-            },
-            {
-                "name": "http_request",
-                "type": "STRING"
-            },
-            {
-                "name": "http_response",
-                "type": "INTEGER"
-            },
-            {
-                "name": "num_bytes",
-                "type": "INTEGER"
-            },
-            {
-                "name": "user_agent",
-                "type": "STRING"
-            }
-        ]
-    }
+    table_schema = # TODO: Add table schema
 
     # Create the pipeline
     p = beam.Pipeline(options=options)

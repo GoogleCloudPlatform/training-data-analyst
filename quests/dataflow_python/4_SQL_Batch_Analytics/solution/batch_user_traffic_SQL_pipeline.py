@@ -2,18 +2,40 @@ import argparse
 import time
 import logging
 import json
+import typing
 import apache_beam as beam
 from apache_beam.options.pipeline_options import GoogleCloudOptions
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import StandardOptions
+from apache_beam.transforms.sql import SqlTransform
 from apache_beam.runners import DataflowRunner, DirectRunner
 
 # ### functions and classes
 
-def parse_json(element):
-    return json.loads(element)
+class CommonLog (typing.NamedTuple):
+    ip: str
+    user_id: str
+    lat: float
+    lng: float
+    timestamp: str
+    http_request: str
+    http_response: int
+    num_bytes: int
+    user_agent: str
 
-# TODO: Define drop_fields function.
+beam.coders.registry.register_coder(CommonLog, beam.coders.RowCoder)
+
+def parse_json(element):
+    row = json.loads(element)
+    return CommonLog(**row)
+
+def to_dict(row):
+    return {'user_id': row.user_id,
+            'page_views' : row.page_views,
+            'total_bytes' : row.total_bytes,
+            'max_bytes' : row.max_bytes,
+            'min_bytes' : row.min_bytes}
+
 
 # ### main
 
@@ -25,81 +47,68 @@ def run():
     parser.add_argument('--stagingLocation', required=True, help='Specify Cloud Storage bucket for staging')
     parser.add_argument('--tempLocation', required=True, help='Specify Cloud Storage bucket for temp')
     parser.add_argument('--runner', required=True, help='Specify Apache Beam Runner')
+    parser.add_argument('--inputPath', required=True, help='Path to events.json')
+    parser.add_argument('--tableName', required=True, help='BigQuery table name')
 
-    # TODO: Add command-line arguments for input path, output path and table name
-
-    opts = parser.parse_args()
+    opts, pipeline_opts = parser.parse_known_args()
 
     # Setting up the Beam pipeline options
-    options = PipelineOptions()
+    options = PipelineOptions(pipeline_opts, save_main_session=True)
     options.view_as(GoogleCloudOptions).project = opts.project
     options.view_as(GoogleCloudOptions).region = opts.region
     options.view_as(GoogleCloudOptions).staging_location = opts.stagingLocation
     options.view_as(GoogleCloudOptions).temp_location = opts.tempLocation
-    options.view_as(GoogleCloudOptions).job_name = '{0}{1}'.format('my-pipeline-',time.time_ns())
+    options.view_as(GoogleCloudOptions).job_name = '{0}{1}'.format('batch-user-traffic-pipeline-sql-'
+                                                                   ,time.time_ns())
     options.view_as(StandardOptions).runner = opts.runner
 
-    # TODO: Set variables equal to input_path, output_path and table_name from
-    # argumnent parser
+    input_path = opts.inputPath
+    table_name = opts.tableName
 
     # Table schema for BigQuery
     table_schema = {
         "fields": [
-            {
-                "name": "ip",
-                "type": "STRING"
-            },
+
             {
                 "name": "user_id",
                 "type": "STRING"
             },
             {
-                "name": "lat",
-                "type": "FLOAT"
-            },
-            {
-                "name": "lng",
-                "type": "FLOAT"
-            },
-            {
-                "name": "timestamp",
-                "type": "STRING"
-            },
-            {
-                "name": "http_request",
-                "type": "STRING"
-            },
-            {
-                "name": "http_response",
+                "name": "page_views",
                 "type": "INTEGER"
             },
             {
-                "name": "num_bytes",
+                "name": "total_bytes",
                 "type": "INTEGER"
-            }
+            },
+            {
+                "name": "max_bytes",
+                "type": "INTEGER"
+            },
+            {
+                "name": "min_bytes",
+                "type": "INTEGER"
+            },
         ]
     }
+
+    query = """
+        SELECT user_id,
+        COUNT(*) AS page_views, SUM(num_bytes) as total_bytes,
+        MAX(num_bytes) AS max_bytes, MIN(num_bytes) as min_bytes
+        FROM PCOLLECTION
+        GROUP BY user_id
+        """
 
     # Create the pipeline
     p = beam.Pipeline(options=options)
 
-    '''
-
-    Steps:
-    1) Read something
-    2) Transform something
-    3) Write something
-
-    '''
-
-    # TODO: Refactor pipeline to branch, with one branch writing directly to GCS
-
-    (p
-        | 'ReadFromGCS' >> beam.io.ReadFromText(input)
-        | 'ParseJson' >> beam.Map(parse_json)
-        # TODO: Apply filter to elements
-        | 'WriteToBQ' >> beam.io.WriteToBigQuery(
-            output,
+    (p | 'ReadFromGCS' >> beam.io.ReadFromText(input_path)
+       | 'ParseJson' >> beam.Map(parse_json).with_output_types(CommonLog)
+       | 'PerUserAggregations' >> SqlTransform(query, dialect='zetasql')
+       | 'ToDict' >> beam.Map(to_dict)
+       | 'WriteToBQ' >> beam.io.WriteToBigQuery(
+            table_name,
             schema=table_schema,
             create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
             write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE
