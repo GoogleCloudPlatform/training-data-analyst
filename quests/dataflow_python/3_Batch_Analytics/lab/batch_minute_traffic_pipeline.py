@@ -31,12 +31,12 @@ def parse_json(element):
     return CommonLog(**row)
 
 def add_timestamp(element):
-    ts = datetime.strptime(element.timestamp[:-8], "%Y-%m-%dT%H:%M:%S").timestamp()
+    ts = #TODO: Extract timestamp from element and convert to a datetime object
     return beam.window.TimestampedValue(element, ts)
 
 class GetTimestampFn(beam.DoFn):
     def process(self, element, window=beam.DoFn.WindowParam):
-        window_start = window.start.to_utc_datetime().strftime("%Y-%m-%dT%H:%M:%S")
+        window_start = # TODO: Extract window start time and convert to string to match BQ schema.
         output = {'page_views': element, 'timestamp': window_start}
         yield output
 
@@ -90,8 +90,8 @@ def run():
     (p | 'ReadFromGCS' >> beam.io.ReadFromText(input_path)
        | 'ParseJson' >> beam.Map(parse_json).with_output_types(CommonLog)
        | 'AddEventTimestamp' >> beam.Map(add_timestamp)
-       | "WindowByMinute" >> beam.WindowInto(beam.window.FixedWindows(60))
-       | "CountPerMinute" >> beam.CombineGlobally(CountCombineFn()).without_defaults()
+       | "WindowByMinute" >> # TODO: Window into Fixed Windows of length 1 minute
+       | "CountPerMinute" >> # TODO: Count number of page views per window using combiner
        | "AddWindowTimestamp" >> beam.ParDo(GetTimestampFn())
        | 'WriteToBQ' >> beam.io.WriteToBigQuery(
             table_name,
