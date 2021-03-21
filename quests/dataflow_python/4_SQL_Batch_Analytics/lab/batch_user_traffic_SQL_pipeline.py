@@ -7,7 +7,7 @@ import apache_beam as beam
 from apache_beam.options.pipeline_options import GoogleCloudOptions
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import StandardOptions
-from apache_beam.transforms.sql import SqlTransform
+# TODO: Import SqlTransform
 from apache_beam.runners import DataflowRunner, DirectRunner
 
 # ### functions and classes
@@ -138,11 +138,7 @@ def run():
     }
 
     query = """
-        SELECT user_id,
-        COUNT(*) AS page_views, SUM(num_bytes) as total_bytes,
-        MAX(num_bytes) AS max_bytes, MIN(num_bytes) as min_bytes
-        FROM PCOLLECTION
-        GROUP BY user_id
+        #TODO: Write SQL query
         """
 
     # Create the pipeline
@@ -151,14 +147,9 @@ def run():
     logs = (p | 'ReadFromGCS' >> beam.io.ReadFromText(input_path)
               | 'ParseJson' >> beam.Map(parse_json).with_output_types(CommonLog))
 
-    logs | 'WriteRawToBQ' >> beam.io.WriteToBigQuery(
-      raw_table_name,
-      schema=raw_table_schema,
-      create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
-      write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE
-      )
+    logs | 'WriteRawToBQ' >> # TODO: Write Transform to write raw data to BigQuery
 
-    (logs | 'PerUserAggregations' >> SqlTransform(query, dialect='zetasql')
+    (logs | 'PerUserAggregations' >> # TODO: Apply SqlTransform using ZetaSQL Dialect
           | 'ToDict' >> beam.Map(to_dict)
           | 'WriteAggToBQ' >> beam.io.WriteToBigQuery(
             agg_table_name,
