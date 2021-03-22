@@ -22,20 +22,16 @@ def run():
     parser = argparse.ArgumentParser(description='Load from Json into BigQuery')
     parser.add_argument('--project',required=True, help='Specify Google Cloud project')
     parser.add_argument('--region', required=True, help='Specify Google Cloud region')
-    parser.add_argument('--stagingLocation', required=True, help='Specify Cloud Storage bucket for staging')
-    parser.add_argument('--tempLocation', required=True, help='Specify Cloud Storage bucket for temp')
     parser.add_argument('--runner', required=True, help='Specify Apache Beam Runner')
 
     # TODO: Add command-line arguments for input path, output path and table name
 
-    opts = parser.parse_args()
+    opts, pipeline_opts = parser.parse_known_args()
 
     # Setting up the Beam pipeline options
-    options = PipelineOptions()
+    options = PipelineOptions(pipeline_opts)
     options.view_as(GoogleCloudOptions).project = opts.project
     options.view_as(GoogleCloudOptions).region = opts.region
-    options.view_as(GoogleCloudOptions).staging_location = opts.stagingLocation
-    options.view_as(GoogleCloudOptions).temp_location = opts.tempLocation
     options.view_as(GoogleCloudOptions).job_name = '{0}{1}'.format('my-pipeline-',time.time_ns())
     options.view_as(StandardOptions).runner = opts.runner
 
