@@ -1,0 +1,12 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nvidia-workspace-read-claim
+  namespace: kubeflow
+spec:
+  storageClassName: manual
+  accessModes:
+          - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi

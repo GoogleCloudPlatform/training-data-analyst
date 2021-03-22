@@ -1,0 +1,15 @@
+{
+    "new_cluster": {
+        "spark_version": "5.3.x-scala2.11",
+        "node_type_id": "Standard_D3_v2",
+        "num_workers": 2
+    },
+    "spark_submit_task": {
+        "parameters": [
+            "--class",
+            "org.apache.spark.examples.SparkPi",
+            "dbfs:/docs/sparkpi.jar",
+            "10"
+        ]
+    }
+}
