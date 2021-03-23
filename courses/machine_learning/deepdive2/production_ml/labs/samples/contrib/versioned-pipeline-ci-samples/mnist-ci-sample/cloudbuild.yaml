@@ -1,0 +1,107 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "${_GCR_PATH}/mnist_train:$COMMIT_SHA",
+        "-t",
+        "${_GCR_PATH}/mnist_train:latest",
+        "${_CODE_PATH}/train",
+        "-f",
+        "${_CODE_PATH}/train/Dockerfile",
+      ]
+    id: "MnistBuildFirstImage"
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "${_GCR_PATH}/mnist_train:$COMMIT_SHA",
+      ]
+    id: "MnistPushFirstImage"
+    waitFor: ["MnistBuildFirstImage"]
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "${_GCR_PATH}/mnist_tensorboard:$COMMIT_SHA",
+        "-t",
+        "${_GCR_PATH}/mnist_tensorboard:latest",
+        "${_CODE_PATH}/tensorboard",
+        "-f",
+        "${_CODE_PATH}/tensorboard/Dockerfile",
+      ]
+    id: "MnistBuildSecondImage"
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "${_GCR_PATH}/mnist_tensorboard:$COMMIT_SHA",
+      ]
+    id: "MnistPushSecondImage"
+    waitFor: ["MnistBuildSecondImage"]
+
+  - name: "python:3.7-slim"
+    entrypoint: "/bin/sh"
+    args: [
+        "-c",
+        "cd ${_CODE_PATH};
+        pip3 install cffi==1.12.3 --upgrade;
+        pip3 install kfp==0.1.37;
+        sed -i 's|image: train_image_location|image: ${_GCR_PATH}/mnist_train:$COMMIT_SHA|g' ./train/component.yaml;
+        sed -i 's|image: tensorboard_image_location|image: ${_GCR_PATH}/mnist_tensorboard:$COMMIT_SHA|g' ./tensorboard/component.yaml;
+        sed -i 's|ui_metadata_path|${_UI_METADATA_PATH}|g' ./tensorboard/component.yaml;
+        python pipeline.py --gcr_address ${_GCR_PATH};
+        cp pipeline.py.zip /workspace/pipeline.zip",
+      ]
+    id: "MnistPackagePipeline"
+
+  - name: "gcr.io/cloud-builders/gsutil"
+    args:
+      [
+        "cp",
+        "/workspace/pipeline.zip",
+        "${_GS_BUCKET}/$COMMIT_SHA/pipeline.zip"
+      ]
+    id: "MnistUploadPipeline"
+    waitFor: ["MnistPackagePipeline"]
+
+
+  - name: "gcr.io/cloud-builders/kubectl"
+    entrypoint: "/bin/sh"
+    args: [
+        "-c",
+        "cd ${_CODE_PATH};
+        apt-get update;
+        apt-get install -y python3-pip;
+        apt-get install -y libssl-dev libffi-dev;
+        /builder/kubectl.bash;
+        pip3 install kfp==0.1.37;
+        pip3 install kubernetes;
+        python3 create_pipeline_version_and_run.py 
+        --bucket_name ${_GS_BUCKET}
+        --commit_sha $COMMIT_SHA
+        --pipeline_id ${_PIPELINE_ID}
+        --output_path ${_UI_METADATA_PATH}"
+      ]
+    env:
+      - "CLOUDSDK_COMPUTE_ZONE=[Your cluster zone, for example: us-central1-a]"
+      - "CLOUDSDK_CONTAINER_CLUSTER=[Your cluster name, for example: my-cluster]"
+    id: "MnistCreatePipelineVersionAndRun"
+
+images:
+  - "${_GCR_PATH}/mnist_train:latest"
+  - "${_GCR_PATH}/mnist_tensorboard:latest"
+
+substitutions:
+  _CODE_PATH: /workspace/samples/contrib/versioned-pipeline-ci-samples/mnist-ci-sample
+  _NAMESPACE: kubeflow
+  _GCR_PATH: [Your cloud registry path. For example, gcr.io/my-project-id]
+  _GS_BUCKET: [Name of your cloud storage bucket. For example, gs://my-project-bucket]
+  _PIPELINE_ID: [Your kubeflow pipeline id to create a version on. Get it from Kubeflow Pipeline UI.
+                 For example, f6f8558a-6eec-4ef4-b343-a650473ee613]
+  _UI_METADATA_PATH: [Path to the file which specifies where your metadata is located. For example, /mlpipeline-ui-metadata.json ]

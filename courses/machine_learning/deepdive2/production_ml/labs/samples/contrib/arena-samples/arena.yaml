@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: arena-installer
+  namespace: kube-system
+spec:
+  restartPolicy: Never
+  serviceAccountName: admin
+  hostNetwork: true
+  containers:
+  - name: arena
+    image: registry.cn-beijing.aliyuncs.com/acs/arena:0.2.0-f6b6188

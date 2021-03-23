@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    getambassador.io/config: |-
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name: webapp-WORKFLOW_NAME
+      prefix: /WEBAPP_PREFIX/
+      rewrite: /
+      timeout_ms: 1200000
+      service: webappsvc.KUBEFLOW_NAMESPACE:WEBAPP_PORT
+  name: webappsvc
+  labels:
+    app: demo-client-ui
+    role: frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: WEBAPP_PORT
+    targetPort: "http-server"
+  selector:
+    app: demo-client-ui
+    role: frontend
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: webapp
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: demo-client-ui
+        role: frontend
+    spec:
+      containers:
+      - name: webapp
+        image: <webapp-image>
+        imagePullPolicy: Always
+        env:
+        - name: TRTSERVER_HOST
+          value: TRTSERVER_NAME.KUBEFLOW_NAMESPACE
+        - name: MODEL_SERVE_NAME
+          value: MODEL_PASSIN_NAME
+        - name: MODEL_VERSION
+          value: "MODEL_PASSIN_VERSION"
+        - name: TRTSERVER_PORT
+          value: "8001"
+        ports:
+        - name: http-server
+          containerPort: 8080
