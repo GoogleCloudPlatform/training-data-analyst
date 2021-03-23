@@ -44,25 +44,25 @@ def run():
     parser = argparse.ArgumentParser(description='Load from Json into BigQuery')
     parser.add_argument('--project',required=True, help='Specify Google Cloud project')
     parser.add_argument('--region', required=True, help='Specify Google Cloud region')
-    parser.add_argument('--stagingLocation', required=True, help='Specify Cloud Storage bucket for staging')
-    parser.add_argument('--tempLocation', required=True, help='Specify Cloud Storage bucket for temp')
+    parser.add_argument('--staging_location', required=True, help='Specify Cloud Storage bucket for staging')
+    parser.add_argument('--temp_location', required=True, help='Specify Cloud Storage bucket for temp')
     parser.add_argument('--runner', required=True, help='Specify Apache Beam Runner')
-    parser.add_argument('--inputPath', required=True, help='Path to events.json')
-    parser.add_argument('--tableName', required=True, help='BigQuery table name')
+    parser.add_argument('--input_path', required=True, help='Path to events.json')
+    parser.add_argument('--table_name', required=True, help='BigQuery table name')
 
     opts = parser.parse_args()
 
     # Setting up the Beam pipeline options
-    options = PipelineOptions()
+    options = PipelineOptions(save_main_session=True)
     options.view_as(GoogleCloudOptions).project = opts.project
     options.view_as(GoogleCloudOptions).region = opts.region
-    options.view_as(GoogleCloudOptions).staging_location = opts.stagingLocation
-    options.view_as(GoogleCloudOptions).temp_location = opts.tempLocation
+    options.view_as(GoogleCloudOptions).staging_location = opts.staging_location
+    options.view_as(GoogleCloudOptions).temp_location = opts.temp_location
     options.view_as(GoogleCloudOptions).job_name = '{0}{1}'.format('batch-user-traffic-pipeline-',time.time_ns())
     options.view_as(StandardOptions).runner = opts.runner
 
-    input_path = opts.inputPath
-    table_name = opts.tableName
+    input_path = opts.input_path
+    table_name = opts.table_name
 
     # Table schema for BigQuery
     table_schema = {
