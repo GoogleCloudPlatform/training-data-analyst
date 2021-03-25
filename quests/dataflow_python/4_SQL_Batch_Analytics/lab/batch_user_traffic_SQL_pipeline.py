@@ -147,7 +147,8 @@ def run():
     logs = (p | 'ReadFromGCS' >> beam.io.ReadFromText(input_path)
               | 'ParseJson' >> beam.Map(parse_json).with_output_types(CommonLog))
 
-    logs | 'WriteRawToBQ' >> # TODO: Write Transform to write raw data to BigQuery
+    logs | 'To_Dict' >> beam.Map(lambda row : row._asdict())
+         | 'WriteRawToBQ' >> # TODO: Write Transform to write raw data to BigQuery
 
     (logs | 'PerUserAggregations' >> # TODO: Apply SqlTransform using ZetaSQL Dialect
           | 'ToDict' >> beam.Map(to_dict)
