@@ -64,8 +64,8 @@ def run():
     options.view_as(StandardOptions).runner = opts.runner
 
     input_path = opts.input_path
-    output_path = opts.output_path
-    table_name = opts.table_name
+    agg_table_name = opts.agg_table_name
+    raw_table_name = opts.raw_table_name
 
     # Table schema for BigQuery
     raw_table_schema = {
