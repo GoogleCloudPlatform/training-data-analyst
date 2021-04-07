@@ -27,4 +27,5 @@ gcloud services enable \
     anthos.googleapis.com \
     gkeconnect.googleapis.com \
     gkehub.googleapis.com \
-    cloudresourcemanager.googleapis.com
+    cloudresourcemanager.googleapis.com \
+    stackdriver.googleapis.com

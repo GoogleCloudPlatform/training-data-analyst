@@ -14,17 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-gcloud services enable \
-    container.googleapis.com \
-    compute.googleapis.com \
-    monitoring.googleapis.com \
-    logging.googleapis.com \
-    cloudtrace.googleapis.com \
-    meshca.googleapis.com \
-    meshtelemetry.googleapis.com \
-    meshconfig.googleapis.com \
-    iamcredentials.googleapis.com \
-    anthos.googleapis.com \
-    gkeconnect.googleapis.com \
-    gkehub.googleapis.com \
-    cloudresourcemanager.googleapis.com
+# gke cluster values
+export C1_NAME="cluster-2"
+export C1_ZONE="us-central1-b"
+export C1_NODES=3
+
+gcloud config set compute/zone $C1_ZONE

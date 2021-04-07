@@ -16,7 +16,7 @@
 
 source ./scripts/env.sh
 
-apt-get install kubectl
+apt-get install kubectl jq google-cloud-sdk-kpt -q -y
 
 curl -sLO https://raw.githubusercontent.com/ahmetb/kubectx/v0.7.0/kubectx 
 chmod +x kubectx 

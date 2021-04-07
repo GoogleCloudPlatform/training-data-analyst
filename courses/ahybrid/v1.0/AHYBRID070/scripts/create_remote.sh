@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source ./scripts/env.sh
-
 echo "### "
 echo "### Begin provision remote cluster"
 echo "### "
@@ -57,6 +55,9 @@ sleep 20
 
 kops export kubecfg --name $C2_FULLNAME --state=$KOPS_STORE
 gsutil cp ~/.kube/config $KOPS_STORE
+export KUBECONFIG=~/.kube/config
+
+# should update to do cluster registration
 
 echo "### "
 echo "### Provision remote cluster complete"
