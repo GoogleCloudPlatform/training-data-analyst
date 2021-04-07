@@ -138,8 +138,8 @@ def create_pipeline(pipeline_name: Text,
   # Tuner component from pipeline and feed Trainer with tuned hyperparameters.
   if enable_tuning:
     # The Tuner component launches 1 AI Platform Training job for flock management.
-    # For example, 3 workers (defined by num_parallel_trials) in the flock
-    # management AI Platform Training job, each runs Tuner.Executor.
+    # For example, n_workers (defined by num_parallel_trials) in the flock
+    # management AI Platform Training job, each run Tuner.Executor in parallel.
     tuner = Tuner(
         module_file=TRAIN_MODULE_FILE,
         examples=transform.outputs.transformed_examples,
@@ -147,8 +147,8 @@ def create_pipeline(pipeline_name: Text,
         train_args={'num_steps': train_steps},
         eval_args={'num_steps': eval_steps},
         tune_args=tuner_pb2.TuneArgs(
-            # num_parallel_trials=3 means that 3 search loops are running in parallel.
-            num_parallel_trials=3),
+            # num_parallel_trials can be configured for distributed training.
+            num_parallel_trials=1),
         custom_config={
             # Configures Cloud AI Platform-specific configs. For details, see
             # https://cloud.google.com/ai-platform/training/docs/reference/rest/v1/projects.jobs#traininginput.
