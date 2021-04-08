@@ -29,14 +29,6 @@ def parse_json(element):
     row = json.loads(element)
     return CommonLog(**row)
 
-def to_dict(row):
-    return {'user_id': row.user_id,
-            'page_views' : row.page_views,
-            'total_bytes' : row.total_bytes,
-            'max_bytes' : row.max_bytes,
-            'min_bytes' : row.min_bytes}
-
-
 # ### main
 
 def run():
@@ -151,16 +143,16 @@ def run():
     logs = (p | 'ReadFromGCS' >> beam.io.ReadFromText(input_path)
               | 'ParseJson' >> beam.Map(parse_json).with_output_types(CommonLog))
 
-    logs | 'To_Dict' >> beam.Map(lambda row : row._asdict())
-         | 'WriteRawToBQ' >> beam.io.WriteToBigQuery(
+    (logs | 'RawToDict' >> beam.Map(lambda row : row._asdict())
+          | 'WriteRawToBQ' >> beam.io.WriteToBigQuery(
            raw_table_name,
            schema=raw_table_schema,
            create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
            write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE
-      )
+      ))
 
     (logs | 'PerUserAggregations' >> SqlTransform(query, dialect='zetasql')
-          | 'ToDict' >> beam.Map(to_dict)
+          | 'AggToDict' >> beam.Map(lambda row : row._asdict())
           | 'WriteAggToBQ' >> beam.io.WriteToBigQuery(
             agg_table_name,
             schema=agg_table_schema,
