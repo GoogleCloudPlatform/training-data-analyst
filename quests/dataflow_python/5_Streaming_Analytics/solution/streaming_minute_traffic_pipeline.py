@@ -99,6 +99,10 @@ def run():
                 "type": "STRING"
             },
             {
+                "name": "user_agent",
+                "type": "STRING"
+            },
+            {
                 "name": "lat",
                 "type": "FLOAT",
                 "mode": "NULLABLE"
