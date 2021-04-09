@@ -36,7 +36,7 @@ class GetEventTimestampFn(beam.DoFn):
         event_ts = timestamp.to_utc_datetime().strftime("%Y-%m-%dT%H:%M:%S")
         row['event_timestamp'] = event_ts
         yield CommonLog(**row)
-        
+
 class ParseAndGetEventTimestamp(beam.PTransform):
     def expand(self, pcoll):
         return (
@@ -85,7 +85,7 @@ def run():
                 "type": "INTEGER"
             },
             {
-                "name": "timestamp",
+                "name": "start_time",
                 "type": "STRING"
             },
 

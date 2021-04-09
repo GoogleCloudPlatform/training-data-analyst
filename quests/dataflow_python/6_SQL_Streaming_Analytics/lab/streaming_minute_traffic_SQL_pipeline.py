@@ -85,7 +85,7 @@ def run():
                 "type": "INTEGER"
             },
             {
-                "name": "timestamp",
+                "name": "start_time",
                 "type": "STRING"
             },
 
