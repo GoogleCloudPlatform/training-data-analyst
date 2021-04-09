@@ -5,6 +5,7 @@ import json
 import typing
 from datetime import datetime
 import apache_beam as beam
+from apache_beam.io import fileio
 from apache_beam.options.pipeline_options import GoogleCloudOptions
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import StandardOptions
@@ -110,9 +111,9 @@ def run():
         | 'BatchOver10s' >> beam.WindowInto(beam.window.FixedWindows(120),
                                             trigger=AfterProcessingTime(120),
                                             accumulation_mode=AccumulationMode.DISCARDING)
-        | 'WriteUnparsedToGCS' >> beam.fileio.WriteToFiles(output_path,
-                                                           shards=1,
-                                                           max_writers_per_bundle=0)
+        | 'WriteUnparsedToGCS' >> fileio.WriteToFiles(output_path,
+                                                      shards=1,
+                                                      max_writers_per_bundle=0)
         )
 
     (rows.parsed_row
