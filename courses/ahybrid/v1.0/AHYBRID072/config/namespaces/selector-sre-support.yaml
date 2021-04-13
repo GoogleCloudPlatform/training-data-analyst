@@ -1,0 +1,8 @@
+kind: NamespaceSelector
+apiVersion: configmanagement.gke.io/v1
+metadata:
+  name: sre-supported
+spec:
+  selector:
+    matchLabels:
+      env: prod
