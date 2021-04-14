@@ -4,8 +4,8 @@ This labs guides you through the process of implementing a TensorFlow Extended (
 
 The below diagram represents the workflow orchestrated by the pipeline.
 
-![TFX_CAIP](/images/tfx-caip.png).
-training-data-analyst/self-paced-labs/tfx/tfx_ai_platform/images/tfx-caip.png
+![TFX_CAIP](images/tfx-caip.png).
+
 1. Training data in the CSV format is ingested from a GCS location using *CsvExampleGen*. The URI to the data root is passed as a runtime parameter. The *CsvExampleGen* component splits the source data into training and evaluation splits and converts the data into the TFRecords format.
 2. The *StatisticsGen* component generates statistics for both splits.
 3. The *SchemaGen* component autogenerates a schema . This is done for data validation and anomaly detection. The pipeline uses a curated schema imported by the *ImportedNode* component.
@@ -24,7 +24,7 @@ The ML model utilized in the labs  is a multi-class classifier that predicts the
 ## Preparing the lab environment
 You will use the lab environment configured as on the below diagram:
 
-![Lab env](/images/tfx-caip.png)
+![Lab env](images/tfx-caip.png)
 
 The core services in the environment are:
 - ML experimentation and development - AI Platform Notebooks 
