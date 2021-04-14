@@ -19,7 +19,7 @@ The below diagram represents the workflow orchestrated by the pipeline.
 11. The *InfraValidator* component validates the model serving infrastructure and provides a "infra_blessing" that the model can be loaded and queried for predictions.
 12. If the new model is blessed by the *Evaluator* and *InfraValidator*, the *Pusher* deploys the model to AI Platform Prediction.
 
-The ML model utilized in the labs  is a multi-class classifier that predicts the type of  forest cover from cartographic data. The model is trained on the [Covertype Data Set](/Covertype_Dataset.md) dataset.
+The ML model utilized in the labs  is a multi-class classifier that predicts the type of  forest cover from cartographic data. The model is trained on the [Covertype Data Set](Covertype_Dataset.md) dataset.
 
 ## Preparing the lab environment
 You will use the lab environment configured as on the below diagram:
