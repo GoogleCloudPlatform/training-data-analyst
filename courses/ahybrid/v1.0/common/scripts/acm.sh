@@ -47,6 +47,7 @@ spec:
     syncWait: 2
 EOF
 
+gcloud services enable anthosconfigmanagement.googleapis.com
 gcloud alpha container hub config-management enable
 gcloud alpha container hub config-management apply \
   --membership=${C1_NAME}-connect \
