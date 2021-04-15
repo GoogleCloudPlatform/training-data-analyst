@@ -4,7 +4,7 @@ This labs guides you through the process of implementing a TensorFlow Extended (
 
 The below diagram represents the workflow orchestrated by the pipeline.
 
-![TFX_CAIP](/training-data-analyst/self-paced-labs/tfx/tfx_ai_platform/images/tfx-caip.png).
+![TFX_CAIP](images/tfx-caip.png).
 
 1. Training data in the CSV format is ingested from a GCS location using *CsvExampleGen*. The URI to the data root is passed as a runtime parameter. The *CsvExampleGen* component splits the source data into training and evaluation splits and converts the data into the TFRecords format.
 2. The *StatisticsGen* component generates statistics for both splits.
@@ -19,12 +19,12 @@ The below diagram represents the workflow orchestrated by the pipeline.
 11. The *InfraValidator* component validates the model serving infrastructure and provides a "infra_blessing" that the model can be loaded and queried for predictions.
 12. If the new model is blessed by the *Evaluator* and *InfraValidator*, the *Pusher* deploys the model to AI Platform Prediction.
 
-The ML model utilized in the labs  is a multi-class classifier that predicts the type of  forest cover from cartographic data. The model is trained on the [Covertype Data Set](/training-data-analyst/self-paced-labs/tfx/tfx_ai_platform/Covertype_Dataset.md) dataset.
+The ML model utilized in the labs  is a multi-class classifier that predicts the type of  forest cover from cartographic data. The model is trained on the [Covertype Data Set](Covertype_Dataset.md) dataset.
 
 ## Preparing the lab environment
 You will use the lab environment configured as on the below diagram:
 
-![Lab env](/training-data-analyst/self-paced-labs/tfx/tfx_ai_platform/images/tfx-caip.png)
+![Lab env](images/tfx-caip.png)
 
 The core services in the environment are:
 - ML experimentation and development - AI Platform Notebooks 
@@ -43,7 +43,6 @@ In this environment, all services are provisioned in the same [Google Cloud Proj
 To enable Cloud Services utilized in the lab environment:
 
 1. Launch [Cloud Shell](https://cloud.google.com/shell/docs/launching-cloud-shell)
-t
 2. Set your project ID
 ```
 PROJECT_ID=[YOUR PROJECT ID]
