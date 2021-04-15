@@ -1,0 +1,26 @@
+{
+    "new_cluster": {
+        "spark_version": "5.3.x-scala2.11",
+        "node_type_id": "Standard_D3_v2",
+        "num_workers": 2
+    },
+    "libraries": [
+        { 
+            "jar": "dbfs:/my-jar.jar"
+        },
+        {
+            "maven": {
+                "coordinates": "org.jsoup:jsoup:1.7.2"
+            }
+        }
+    ],
+    "timeout_seconds": 3600,
+    "max_retries": 1,
+    "schedule": {
+        "quartz_cron_expression": "0 15 22 ? * *",
+        "timezone_id": "America/Los_Angeles"
+    },
+    "spark_jar_task": {
+        "main_class_name": "com.databricks.ComputeModels"
+    }
+}

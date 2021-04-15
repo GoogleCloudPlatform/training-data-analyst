@@ -1,0 +1,48 @@
+{
+  "pipelineSpec": {
+    "tasks": [
+      {
+        "inputs": {
+          "parameters": { "text": { "componentInputParameter": "text" } }
+        },
+        "taskInfo": {
+          "name": "Hello world"
+        },
+        "executorLabel": "Hello world"
+      }
+    ],
+    "schemaVersion": "v2alpha1",
+    "runtimeParameters": {
+      "text": {
+        "type": "STRING",
+        "defaultValue": {
+          "stringValue": "hi there"
+        }
+      }
+    },
+    "pipelineInfo": {
+      "name": "hello-world"
+    },
+    "deploymentConfig": {
+      "@type": "type.googleapis.com/ml_pipelines.PipelineDeploymentConfig",
+      "executors": {
+        "Hello world": {
+          "container": {
+            "image": "python:3.7",
+            "args": ["--text", "{{$.inputs.parameters['text']}}"],
+            "command": [
+              "python3",
+              "-u",
+              "-c",
+              "def hello_world(text):\n    print(text)\n    return text\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Hello world', description='')\n_parser.add_argument(\"--text\", dest=\"text\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = hello_world(**_parsed_args)\n"
+            ]
+          }
+        }
+      }
+    },
+    "sdkVersion": "kfp-1.2.0"
+  },
+  "runtimeConfig": {
+    "gcsOutputDirectory": "gs://gongyuan-test/hello_world"
+  }
+}
