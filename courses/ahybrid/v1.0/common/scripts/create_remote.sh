@@ -83,7 +83,7 @@ gcloud container hub memberships register ${C2_NAME}-connect \
 
 echo "creating a clusterrolebinding"
 export KSA=remote-admin-sa
-kubectl create serviceaccount $KSA --config 
+kubectl create serviceaccount $KSA
 kubectl create clusterrolebinding ksa-admin-binding \
     --clusterrole cluster-admin \
     --serviceaccount default:$KSA
