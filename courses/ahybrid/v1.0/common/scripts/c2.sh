@@ -23,19 +23,7 @@ gcloud beta container clusters create ${C1_NAME} \
     --labels mesh_id=${MESH_ID} \
     --release-channel "regular"
 
-# service account requires additional role bindings
-kubectl create clusterrolebinding [BINDING_NAME] \
-    --clusterrole cluster-admin --user [USER]
-
-gcloud iam service-accounts create ${C1_NAME}-connect-sa
-
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
- --member="serviceAccount:${C1_NAME}-connect-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
- --role="roles/gkehub.connect"
-
-gcloud iam service-accounts keys create ${C1_NAME}-connect-sa-key.json \
-  --iam-account=${C1_NAME}-connect-sa@${PROJECT_ID}.iam.gserviceaccount.com
-
+echo "Registering the gke cluster..."
 gcloud container hub memberships register ${C1_NAME}-connect \
    --gke-cluster=${C1_ZONE}/${C1_NAME}  \
-   --service-account-key-file=./${C1_NAME}-connect-sa-key.json
+   --enable-workload-identity
