@@ -204,7 +204,7 @@ def tuner_fn(fn_args: TrainerFnArgs) -> TunerFnResult:
       build_keras_model_fn,
       project_id=fn_args.custom_config['ai_platform_training_args']['project'],
       region=fn_args.custom_config['ai_platform_training_args']['region'],      
-      max_trials=30,
+      max_trials=24,
       hyperparameters=_get_hyperparameters(),
       objective=kerastuner.Objective('val_sparse_categorical_accuracy', 'max'),
       directory=fn_args.working_dir)
