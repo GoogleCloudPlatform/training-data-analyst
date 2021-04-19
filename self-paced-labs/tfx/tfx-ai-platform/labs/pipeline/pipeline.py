@@ -148,7 +148,7 @@ def create_pipeline(pipeline_name: Text,
         eval_args={'num_steps': eval_steps},
         tune_args=tuner_pb2.TuneArgs(
             # num_parallel_trials can be configured for distributed training.
-            num_parallel_trials=1),
+            num_parallel_trials=2),
         custom_config={
             # Configures Cloud AI Platform-specific configs. For details, see
             # https://cloud.google.com/ai-platform/training/docs/reference/rest/v1/projects.jobs#traininginput.
