@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+echo "Creating the gke cluster..."
 gcloud beta container clusters create ${C1_NAME} \
     --zone ${C1_ZONE} \
     --no-enable-basic-auth \
@@ -35,20 +36,7 @@ gcloud beta container clusters create ${C1_NAME} \
     --subnetwork=default \
     --scopes ${C1_SCOPE}
 
-
-# service account requires additional role bindings
-kubectl create clusterrolebinding [BINDING_NAME] \
-    --clusterrole cluster-admin --user [USER]
-
-gcloud iam service-accounts create ${C1_NAME}-connect-sa
-
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
- --member="serviceAccount:${C1_NAME}-connect-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
- --role="roles/gkehub.connect"
-
-gcloud iam service-accounts keys create ${C1_NAME}-connect-sa-key.json \
-  --iam-account=${C1_NAME}-connect-sa@${PROJECT_ID}.iam.gserviceaccount.com
-
+echo "Registering the gke cluster..."
 gcloud container hub memberships register ${C1_NAME}-connect \
    --gke-cluster=${C1_ZONE}/${C1_NAME}  \
-   --service-account-key-file=./${C1_NAME}-connect-sa-key.json
+   --enable-workload-identity

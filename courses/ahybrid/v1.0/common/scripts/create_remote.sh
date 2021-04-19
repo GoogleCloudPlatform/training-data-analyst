@@ -26,6 +26,7 @@ done
 
 export KOPS_FEATURE_FLAGS=AlphaAllowGCE
 
+echo "Creating the remote cluster..."
 kops create cluster \
 --name=$C2_FULLNAME \
 --zones=$KOPS_ZONES \
@@ -36,23 +37,32 @@ kops create cluster \
 --admin-access=$INSTANCE_CIDR \
 --yes
 
-for (( c=1; c<=30; c++))
+for (( c=1; c<=40; c++))
 do
 	echo "Check if cluster is ready - Attempt $c"
-        CHECK=`kops validate cluster --name $C2_FULLNAME --state $KOPS_STORE | grep ready | wc -l`
-        if [[ "$CHECK" == "1" ]]; then
-                break;
-        fi
-        sleep 10
+  CHECK=`kops validate cluster --name $C2_FULLNAME --state $KOPS_STORE | grep ready | wc -l`
+  if [[ "$CHECK" == "1" ]]; then
+    echo "Cluster is ready!"
+    break;
+  fi
+  sleep 10
 done
 
 sleep 20
 
 # SEE WHERE WE ARE HERE...
+if [[ -f ".kube/config" ]]
+then
+  export KF=".kube/config"
+else
+  export KF="/root/.kube/config"
+fi
 
+echo "copying the kubeconfig file for later use..."
 kops export kubecfg --name $C2_FULLNAME --state=$KOPS_STORE
-gsutil cp ~/.kube/config $KOPS_STORE
+gsutil cp $KF $KOPS_STORE
 
+echo "creating service account and granting role..."
 gcloud iam service-accounts create connect-sa-op
 
 gcloud projects add-iam-policy-binding ${PROJECT_ID} \
@@ -62,11 +72,16 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
 gcloud iam service-accounts keys create connect-sa-op-key.json \
   --iam-account=connect-sa-op@${PROJECT_ID}.iam.gserviceaccount.com
 
+kubectl config view
+
+echo "registering the remote cluster"
 gcloud container hub memberships register ${C2_NAME}-connect \
    --context=$C2_FULLNAME \
    --service-account-key-file=./connect-sa-op-key.json \
-   --project=$PROJECT_ID
+   --project=$PROJECT_ID \
+   --kubeconfig $KF
 
+echo "creating a clusterrolebinding"
 export KSA=remote-admin-sa
 kubectl create serviceaccount $KSA
 kubectl create clusterrolebinding ksa-admin-binding \
