@@ -48,7 +48,9 @@ spec:
 EOF
 
 gcloud services enable anthosconfigmanagement.googleapis.com
+sleep 20
 gcloud alpha container hub config-management enable
+sleep 20
 gcloud alpha container hub config-management apply \
   --membership=${C1_NAME}-connect \
   --config=config-management.yaml \
