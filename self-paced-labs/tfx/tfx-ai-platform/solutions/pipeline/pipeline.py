@@ -101,7 +101,7 @@ def create_pipeline(pipeline_name: Text,
 
  
   # Brings data into the pipeline and splits the data into training and eval splits
-  output_config = example_gen_pb2.Output(
+  output = example_gen_pb2.Output(
     split_config=example_gen_pb2.SplitConfig(splits=[
         example_gen_pb2.SplitConfig.Split(name='train', hash_buckets=4),
         example_gen_pb2.SplitConfig.Split(name='eval', hash_buckets=1)
