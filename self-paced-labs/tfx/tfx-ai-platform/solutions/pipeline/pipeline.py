@@ -107,7 +107,8 @@ def create_pipeline(pipeline_name: Text,
         example_gen_pb2.SplitConfig.Split(name='eval', hash_buckets=1)
     ]))
 
-  examplegen = CsvExampleGen(input_base=data_root_uri)
+  examplegen = CsvExampleGen(input_base=data_root_uri,
+                             output_config=output)
 
   # Computes statistics over data for visualization and example validation.
   statisticsgen = StatisticsGen(examples=examplegen.outputs.examples)
