@@ -101,13 +101,14 @@ def create_pipeline(pipeline_name: Text,
 
  
   # Brings data into the pipeline and splits the data into training and eval splits
-  output_config = example_gen_pb2.Output(
+  output = example_gen_pb2.Output(
     split_config=example_gen_pb2.SplitConfig(splits=[
         example_gen_pb2.SplitConfig.Split(name='train', hash_buckets=4),
         example_gen_pb2.SplitConfig.Split(name='eval', hash_buckets=1)
     ]))
 
-  examplegen = CsvExampleGen(input_base=data_root_uri)
+  examplegen = CsvExampleGen(input_base=data_root_uri,
+                             output_config=output)
 
   # Computes statistics over data for visualization and example validation.
   statisticsgen = StatisticsGen(examples=examplegen.outputs.examples)
@@ -148,7 +149,7 @@ def create_pipeline(pipeline_name: Text,
         eval_args={'num_steps': eval_steps},
         tune_args=tuner_pb2.TuneArgs(
             # num_parallel_trials can be configured for distributed training.
-            num_parallel_trials=1),
+            num_parallel_trials=2),
         custom_config={
             # Configures Cloud AI Platform-specific configs. For details, see
             # https://cloud.google.com/ai-platform/training/docs/reference/rest/v1/projects.jobs#traininginput.
