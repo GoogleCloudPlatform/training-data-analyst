@@ -6,11 +6,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hello-canary
+      app: hello
   template:
     metadata:
       labels:
-        app: hello-canary
+        app: hello
         track: canary
         version: 2.0.0
     spec:
