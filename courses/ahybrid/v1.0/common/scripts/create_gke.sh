@@ -21,7 +21,6 @@ gcloud beta container clusters create ${C1_NAME} \
     --max-surge-upgrade 1 \
     --max-unavailable-upgrade 0 \
     --enable-autorepair \
-    --image-type "COS" \
     --release-channel "regular" \
     --machine-type=n1-standard-4 \
     --num-nodes=${C1_NODES} \
