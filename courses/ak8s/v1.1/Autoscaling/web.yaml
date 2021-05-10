@@ -17,4 +17,9 @@ spec:
         name: web
         ports:
         - containerPort: 8080
-          protocol: TCP
+          protocol: TCP  
+        resources:
+          # You must specify requests for CPU to autoscale
+          # based on CPU utilization
+          requests:
+            cpu: "250m"
