@@ -44,7 +44,7 @@ def simulate(topic, ifp, firstObsTime, programStart, speedFactor):
    # sleep computation
    def compute_sleep_secs(obs_time):
         time_elapsed = (datetime.datetime.utcnow() - programStart).seconds
-        sim_time_elapsed = (obs_time - firstObsTime).seconds / speedFactor
+        sim_time_elapsed = ((obs_time - firstObsTime).days * 86400.0 + (obs_time - firstObsTime).seconds) / speedFactor
         to_sleep_secs = sim_time_elapsed - time_elapsed
         return to_sleep_secs
 
