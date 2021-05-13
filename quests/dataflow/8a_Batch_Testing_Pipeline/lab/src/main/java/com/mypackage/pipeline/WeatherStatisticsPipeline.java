@@ -83,7 +83,7 @@ public class WeatherStatisticsPipeline {
         public void processElement(@Element WeatherRecord record,
                                    OutputReceiver<WeatherRecord> o) throws Exception {
             Double lowTempF = record.lowTemp * 1.8 + 32.0;
-            Double highTempF = record.highTemp * 1.8 + 32.0;
+            Double highTempF = record.highTemp * 1.8 + 31.0;
             WeatherRecord recordF = new WeatherRecord(record.locId, record.lat, record.lng, record.date, lowTempF, highTempF, record.precip);
             o.output(recordF);
         }

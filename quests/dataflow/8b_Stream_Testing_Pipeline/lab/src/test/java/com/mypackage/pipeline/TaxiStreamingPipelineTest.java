@@ -101,28 +101,28 @@ public class TaxiStreamingPipelineTest {
 
   /* UNCOMMENT FOR TASK 3 */
 
-  @Test
-  @Category(NeedsRunner.class)
-  public void testTaxiRideLateData() throws Exception {
+  // @Test
+  // @Category(NeedsRunner.class)
+  // public void testTaxiRideLateData() throws Exception {
 
-    Instant startTime = new Instant(0);
+  //   Instant startTime = new Instant(0);
     
-    String json = "{\"ride_id\":\"x\",\"point_idx\":1,\"latitude\":0.0,"
-                  + "\"longitude\":0.0,\"timestamp\":\"00:00:00\",\"meter_reading\":1.0,"
-                  +  "\"meter_increment\":0.1,\"ride_status\":\"%s\",\"passenger_count\":1}";
+  //   String json = "{\"ride_id\":\"x\",\"point_idx\":1,\"latitude\":0.0,"
+  //                 + "\"longitude\":0.0,\"timestamp\":\"00:00:00\",\"meter_reading\":1.0,"
+  //                 +  "\"meter_increment\":0.1,\"ride_status\":\"%s\",\"passenger_count\":1}";
 
-    TestStream<String> createEvents = /* CreateTestStream */
+  //   TestStream<String> createEvents = /* CreateTestStream */
 
-    PCollection<Long> outputCount = p
-                                    .apply(createEvents)
-                                    .apply(new TaxiCountTransform());
+  //   PCollection<Long> outputCount = p
+  //                                   .apply(createEvents)
+  //                                   .apply(new TaxiCountTransform());
 
-    IntervalWindow window1 = new IntervalWindow(startTime, 
-                                                startTime.plus(Duration.standardMinutes(1)));
+  //   IntervalWindow window1 = new IntervalWindow(startTime, 
+  //                                               startTime.plus(Duration.standardMinutes(1)));
 
-    PAssert.that(outputCount).inOnTimePane(window1).containsInAnyOrder(2L);
-    PAssert.that(outputCount).inFinalPane(window1).containsInAnyOrder(3L);
+  //   PAssert.that(outputCount).inOnTimePane(window1).containsInAnyOrder(2L);
+  //   PAssert.that(outputCount).inFinalPane(window1).containsInAnyOrder(3L);
 
-    p.run().waitUntilFinish();
-  }
+  //   p.run().waitUntilFinish();
+  // }
 }
