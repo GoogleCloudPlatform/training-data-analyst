@@ -9,5 +9,7 @@ gcloud pubsub subscriptions delete $OLD_SUBSCRIPTION
 echo "Create new subscription."
 gcloud pubsub subscriptions create --topic pubsub-e2e-example $SUBSCRIPTION
 echo $SUBSCRIPTION > .last_subscription
-echo "Starting publisher and publishing 10M messages."
+echo "Starting publisher and publishing 1000 messages."
 java -Xmx1024m -cp target/pubsub.jar com.google.cloud.sme.pubsub.Publisher $@ -p $PROJECT
+echo "Starting subscriber."
+java -Xmx1280m -XX:GCTimeLimit=2 -XX:GCHeapFreeLimit=10 -cp target/pubsub.jar com.google.cloud.sme.pubsub.Subscriber -p $PROJECT -s $SUBSCRIPTION
