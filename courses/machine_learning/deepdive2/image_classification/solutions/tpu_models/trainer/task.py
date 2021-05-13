@@ -30,7 +30,7 @@ def _parse_arguments(argv):
         type=str, default="gs://cloud-ml-data/img/flower_photos/eval_set.csv")
     parser.add_argument(
         '--tpu_address',
-        help='The path to the evaluation data',
+        help='The path to the TPUs we will use in training',
         type=str, required=True)
     parser.add_argument(
         '--hub_path',
