@@ -1,0 +1,82 @@
+{
+  "pipelineSpec": {
+    "sdkVersion": "kfp-1.2.0",
+    "tasks": [
+      {
+        "inputs": {
+          "parameters": { "text": { "componentInputParameter": "text" } }
+        },
+        "taskInfo": {
+          "name": "Producer"
+        },
+        "outputs": {
+          "parameters": {
+            "output_value": {
+              "type": "STRING"
+            }
+          }
+        },
+        "executorLabel": "Producer"
+      },
+      {
+        "executorLabel": "Consumer",
+        "inputs": {
+          "parameters": {
+            "input_value": {
+              "taskOutputParameter": {
+                "producerTask": "Producer",
+                "outputParameterKey": "output_value"
+              }
+            }
+          }
+        },
+        "taskInfo": {
+          "name": "Consumer"
+        }
+      }
+    ],
+    "schemaVersion": "v2alpha1",
+    "runtimeParameters": {
+      "text": {
+        "defaultValue": {
+          "stringValue": "Hello world"
+        },
+        "type": "STRING"
+      }
+    },
+    "pipelineInfo": {
+      "name": "simple-two-step-pipeline-gongyuan-1609817103"
+    },
+    "deploymentConfig": {
+      "executors": {
+        "Consumer": {
+          "container": {
+            "image": "google/cloud-sdk:latest",
+            "command": [
+              "sh",
+              "-c",
+              "set -e -x\necho \"Read from an input parameter: \" && echo \"$0\"\n",
+              "{{$.inputs.parameters['input_value']}}"
+            ]
+          }
+        },
+        "Producer": {
+          "container": {
+            "image": "google/cloud-sdk:latest",
+            "command": [
+              "sh",
+              "-c",
+              "set -e -x\necho \"$0, this is an output parameter\" | gsutil cp - \"$1\"\n",
+              "{{$.inputs.parameters['text']}}",
+              "{{$.outputs.parameters['output_value'].output_file}}"
+            ]
+          }
+        }
+      },
+      "@type": "type.googleapis.com/ml_pipelines.PipelineDeploymentConfig"
+    }
+  },
+  "runtimeConfig": {
+    "gcsOutputDirectory": "gs://gongyuan-test/pipeline_root/gongyuan"
+  }
+}
