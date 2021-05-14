@@ -1,6 +1,7 @@
 import logging
 import json
 import unittest
+import sys
 
 from weather_statistics_pipeline import *
 
