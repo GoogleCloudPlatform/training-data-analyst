@@ -1,14 +1,23 @@
 import logging
 import json
 import unittest
+import sys
+
+import apache_beam as beam
 
 from taxi_streaming_pipeline import *
 from apache_beam.testing.test_pipeline import TestPipeline
 from apache_beam.testing.util import BeamAssertException
-from apache_beam.testing.util import assert_that, equal_to
+from apache_beam.testing.util import assert_that, equal_to_per_window
 from apache_beam.testing.test_stream import TestStream
-from apache_beam.transforms.window import TimestampedValue
+from apache_beam.transforms.window import TimestampedValue, IntervalWindow
 from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
+
+def main(out = sys.stderr, verbosity = 2):
+    loader = unittest.TestLoader()
+  
+    suite = loader.loadTestsFromModule(sys.modules[__name__])
+    unittest.TextTestRunner(out, verbosity = verbosity).run(suite)
 
 
 class TaxiWindowingTest(unittest.TestCase):
@@ -42,11 +51,12 @@ class TaxiWindowingTest(unittest.TestCase):
                              | TaxiCountTransform()
                           )
 
-            EXPECTED_COUNTS = [{'taxi_rides': 3, 'timestamp': '1970-01-01T00:00:00'},
-                               {'taxi_rides': 1, 'timestamp': '1970-01-01T00:01:00'}, 
-                               {'taxi_rides': 1, 'timestamp': '1970-01-01T00:02:00'}]
+            EXPECTED_WINDOW_COUNTS = {IntervalWindow(0,60): [3],
+                                      IntervalWindow(60,120): [1],
+                                      IntervalWindow(120,180): [1]}
 
-            assert_that(taxi_counts, equal_to(EXPECTED_COUNTS))
+            assert_that(taxi_counts, equal_to_per_window(EXPECTED_WINDOW_COUNTS),
+                        reify_windows=True)
 
 class TaxiLateDataTest(unittest.TestCase):
 
@@ -70,12 +80,15 @@ class TaxiLateDataTest(unittest.TestCase):
                     TimestampedValue(base_json_pickup, 0)
                 ])
 
-                EXPECTED_RESULTS = [{'taxi_rides': 2, 'timestamp': '1970-01-01T00:00:00'}, ## On Time
-                                    {'taxi_rides': 3, 'timestamp': '1970-01-01T00:00:00'}] ## Late trigger
+                EXPECTED_RESULTS = {IntervalWindow(0,60): [2,3]}  #On Time and Late Result
 
-                taxi_counts = (p | test_stream
-                             | TaxiCountTransform()
-                          )
+                taxi_counts_late = (p | test_stream
+                                      | TaxiCountTransform()
+                                   )
 
+                assert_that(taxi_counts_late, equal_to_per_window(EXPECTED_RESULTS),
+                            reify_windows=True)
 
-                assert_that(taxi_counts, equal_to(EXPECTED_RESULTS))
+if __name__ == '__main__':
+    with open('testing.out', 'w') as f:
+        main(f)

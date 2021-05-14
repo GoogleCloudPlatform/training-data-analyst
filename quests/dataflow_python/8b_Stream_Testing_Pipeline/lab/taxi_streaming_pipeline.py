@@ -45,7 +45,6 @@ class TaxiCountTransform(beam.PTransform):
                                               allowed_lateness=60,
                                               accumulation_mode=AccumulationMode.ACCUMULATING)
                     | "CountPerMinute" >> beam.CombineGlobally(CountCombineFn()).without_defaults()
-                    | "ConvertToDict" >> beam.ParDo(ConvertCountToDict())
                  )
 
         return output
@@ -78,6 +77,7 @@ def run():
 
     (p | "ReadFromPubSub" >> beam.io.ReadFromPubSub(topic="projects/pubsub-public-data/topics/taxirides-realtime") 
        | "TaxiPickupCount" >> TaxiCountTransform()
+       | "ConvertToDict" >> beam.ParDo(ConvertCountToDict())
        | 'WriteAggToBQ' >> beam.io.WriteToBigQuery(
                 table_name,
                 schema=table_schema,

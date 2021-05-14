@@ -1,11 +1,19 @@
 import logging
 import json
 import unittest
+import sys
 
 from weather_statistics_pipeline import *
 from apache_beam.testing.test_pipeline import TestPipeline
 from apache_beam.testing.util import BeamAssertException
 from apache_beam.testing.util import assert_that, equal_to
+
+def main(out = sys.stderr, verbosity = 2):
+    loader = unittest.TestLoader()
+  
+    suite = loader.loadTestsFromModule(sys.modules[__name__])
+    unittest.TextTestRunner(out, verbosity = verbosity).run(suite)
+
 
 class ConvertToWeatherRecordTest(unittest.TestCase):
 
@@ -80,3 +88,6 @@ class WeatherStatsTransformTest(unittest.TestCase):
 
             assert_that(output, equal_to(EXPECTED_STATS))
             
+if __name__ == '__main__':
+    with open('testing.out', 'w') as f:
+        main(f)
