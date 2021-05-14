@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -CeE
 set -o pipefail
 if [[ "${BASH_VERSINFO:-0}" -lt 4 ]]; then
@@ -13,42 +13,66 @@ else
   set -u
 fi
 
-### Internal variables ###
-MAJOR="${MAJOR:=1}"
-MINOR="${MINOR:=7}"
-POINT="${POINT:=3}"
-REV="${REV:=6}"
-RELEASE="${MAJOR}.${MINOR}.${POINT}-asm.${REV}"
-RELEASE_LINE="${MAJOR}.${MINOR}."
-PREVIOUS_RELEASE_LINE="${MAJOR}.$(( MINOR - 1 ))."
-REVISION_LABEL="asm-${MAJOR}${MINOR}${POINT}-${REV}"
-KPT_BRANCH="release-${MAJOR}.${MINOR}-asm"
-readonly RELEASE; readonly RELEASE_LINE; readonly REVISION_LABEL; readonly KPT_BRANCH;
-K8S_MINOR=0
-
 ### These are hooks for Cloud Build to be able to use debug/staging images
 ### when necessary. Don't set these environment variables unless you're testing
 ### in CI/CD.
 _CI_ASM_IMAGE_LOCATION="${_CI_ASM_IMAGE_LOCATION:=}"
+_CI_ASM_IMAGE_TAG="${_CI_ASM_IMAGE_TAG:=}"
 _CI_ASM_PKG_LOCATION="${_CI_ASM_PKG_LOCATION:=}"
+_CI_CLOUDRUN_IMAGE_HUB="${_CI_CLOUDRUN_IMAGE_HUB:=}"
+_CI_CLOUDRUN_IMAGE_TAG="${_CI_CLOUDRUN_IMAGE_TAG:=}"
+_CI_REVISION_PREFIX="${_CI_REVISION_PREFIX:=}"
+_CI_NO_VALIDATE="${_CI_NO_VALIDATE:=0}"
+_CI_NO_REVISION="${_CI_NO_REVISION:=0}"
+_CI_ISTIOCTL_REL_PATH="${_CI_ISTIOCTL_REL_PATH:=}"
+_CI_TRUSTED_GCP_PROJECTS="${_CI_TRUSTED_GCP_PROJECTS:=}"
+_CI_ENVIRON_PROJECT_NUMBER="${_CI_ENVIRON_PROJECT_NUMBER:=}"
+_CI_CRC_VERSION="${_CI_CRC_VERSION:=0}"
+_CI_I_AM_A_TEST_ROBOT="${_CI_I_AM_A_TEST_ROBOT:=0}"
+
+### Internal variables ###
+MAJOR="${MAJOR:=1}"; readonly MAJOR;
+MINOR="${MINOR:=9}"; readonly MINOR;
+POINT="${POINT:=3}"; readonly POINT;
+REV="${REV:=2}"; readonly REV;
+CONFIG_VER="${CONFIG_VER:="4"}"; readonly CONFIG_VER;
+K8S_MINOR=0
 
 ### File related constants ###
-ISTIO_FOLDER_NAME="istio-${RELEASE}"; readonly ISTIO_FOLDER_NAME;
-ISTIOCTL_REL_PATH="${ISTIO_FOLDER_NAME}/bin/istioctl"; readonly ISTIOCTL_REL_PATH;
-PACKAGE_DIRECTORY="asm/istio"; readonly PACKAGE_DIRECTORY;
-VALIDATION_FIX_SERVICE="${PACKAGE_DIRECTORY}/istiod-service.yaml"; readonly VALIDATION_FIX_SERVICE;
-OPTIONS_DIRECTORY="${PACKAGE_DIRECTORY}/options"; readonly OPTIONS_DIRECTORY;
-OPERATOR_MANIFEST="${PACKAGE_DIRECTORY}/istio-operator.yaml"; readonly OPERATOR_MANIFEST;
-MULTICLUSTER_MANIFEST="${OPTIONS_DIRECTORY}/multicluster.yaml"; readonly MULTICLUSTER_MANIFEST;
-BETA_CRD_MANIFEST="${OPTIONS_DIRECTORY}/v1beta1-crds.yaml"; readonly BETA_CRD_MANIFEST;
+VALIDATION_FIX_FILE_NAME="istiod-service.yaml"
+ASM_VERSION_FILE=".asm_version"
+ISTIO_FOLDER_NAME=""
+ISTIOCTL_REL_PATH=""
+BASE_REL_PATH=""
+PACKAGE_DIRECTORY=""
+VALIDATION_FIX_SERVICE=""
+OPTIONS_DIRECTORY=""
+OPERATOR_MANIFEST=""
+BETA_CRD_MANIFEST=""
+MANAGED_MANIFEST=""
+MANAGED_WEBHOOKS=""
+EXPOSE_ISTIOD_SERVICE=""
+CANONICAL_CONTROLLER_MANIFEST=""
 
 SCRIPT_NAME="${0##*/}"
 
 PROJECT_NUMBER=""
+GKE_CLUSTER_URI=""
+GCE_NETWORK_NAME=""
+GCLOUD_USER_OR_SA=""
 KPT_URL=""
 KUBECONFIG=""
 APATH=""
+AKUBECTL=""
+AKPT=""
+AGCLOUD=""
 ABS_OVERLAYS=""
+RELEASE=""
+REVISION_LABEL=""
+RELEASE_LINE=""
+PREVIOUS_RELEASE_LINE=""
+KPT_BRANCH=""
+NAMESPACE_EXISTS=0
 
 ### Option variables ###
 PROJECT_ID="${PROJECT_ID:=}"
@@ -59,55 +83,207 @@ CA="${CA:=}"
 
 CUSTOM_OVERLAY=""
 OPTIONAL_OVERLAY=""
-ENABLE_APIS="${ENABLE_APIS:=0}"
+
+ENABLE_ALL="${ENABLE_ALL:=0}"
+ENABLE_CLUSTER_ROLES="${ENABLE_CLUSTER_ROLES:=0}"
+ENABLE_CLUSTER_LABELS="${ENABLE_CLUSTER_LABELS:=0}"
+ENABLE_GCP_APIS="${ENABLE_GCP_APIS:=0}"
+ENABLE_GCP_IAM_ROLES="${ENABLE_GCP_IAM_ROLES:=0}"
+ENABLE_GCP_COMPONENTS="${ENABLE_GCP_COMPONENTS:=0}"
+ENABLE_REGISTRATION="${ENABLE_REGISTRATION:=0}"
+
 DISABLE_CANONICAL_SERVICE="${DISABLE_CANONICAL_SERVICE:=0}"
 PRINT_CONFIG="${PRINT_CONFIG:=0}"
 SERVICE_ACCOUNT="${SERVICE_ACCOUNT:=}"
 KEY_FILE="${KEY_FILE:=}"
 OUTPUT_DIR="${OUTPUT_DIR:=}"
 
-CUSTOM_CA=0
 CA_CERT="${CA_CERT:=}"
 CA_KEY="${CA_KEY:=}"
 CA_ROOT="${CA_ROOT:=}"
 CA_CHAIN="${CA_CHAIN:=}"
+CA_NAME="${CA_NAME:=}"
 
 DRY_RUN="${DRY_RUN:=0}"
 ONLY_VALIDATE="${ONLY_VALIDATE:=0}"
+ONLY_ENABLE="${ONLY_ENABLE:=0}"
 VERBOSE="${VERBOSE:=0}"
+MANAGED="${MANAGED:=0}"
+MANAGED_SERVICE_ACCOUNT=""
+
 PRINT_HELP=0
+PRINT_VERSION=0
+CUSTOM_CA=0
+USE_HUB_WIP=0
+USE_VM=0
+ENVIRON_PROJECT_ID=""
+HUB_MEMBERSHIP_ID=""
+WI_ENABLED=0
+CUSTOM_REVISION=0
 
 main() {
   init
   parse_args "${@}"
+
   # make sure to redirect stdout as soon as possible if we're dumping the config
   if [[ "${PRINT_CONFIG}" -eq 1 ]]; then
     exec 3>&1
     exec 1>&2
   fi
+
   validate_args
+
   set_up_local_workspace
+  configure_kubectl
 
-  validate_dependencies
+  validate_cli_dependencies
 
-  info "Successfully validated all requirements to install ASM from this computer."
-  if [[ "${ONLY_VALIDATE}" -ne 0 ]]; then
+  if is_sa; then
+    auth_service_account
+  fi
+
+  if should_validate || can_modify_at_all; then
+    local_iam_user > /dev/null
+    validate_gcp_resources
+  fi
+
+  if needs_asm && ! necessary_files_exist; then
+    download_asm
+  fi
+
+  if needs_asm; then
+    organize_kpt_files
+  fi
+
+  if should_validate && ! is_managed; then
+    validate_dependencies
+  fi
+
+  if can_modify_gcp_apis; then
+    enable_gcloud_apis
+  elif should_validate; then
+    exit_if_apis_not_enabled
+  fi
+
+  if can_register_cluster; then
+    register_cluster
+  elif should_validate && [[ "${USE_HUB_WIP}" -eq 1 ]]; then
+    exit_if_cluster_unregistered
+  fi
+
+  # Managed must be able to set IAM permissions on a generated user, so the flow
+  # is a bit different
+  if is_managed; then
+    if can_modify_gcp_components; then
+      enable_workload_identity
+      enable_stackdriver_kubernetes
+    else
+      exit_if_no_workload_identity
+      exit_if_stackdriver_not_enabled
+    fi
+    if can_modify_gcp_iam_roles; then
+      bind_user_to_iam_policy "roles/meshconfig.admin" "$(local_iam_user)"
+    fi
+    if can_modify_at_all; then
+      MANAGED_SERVICE_JSON="$(init_meshconfig_managed)"
+      MANAGED_SERVICE_ACCOUNT="$(echo "${MANAGED_SERVICE_JSON}" | jq -r .serviceAccount)"
+      if [[ -z "${MANAGED_SERVICE_JSON}" || "${MANAGED_SERVICE_ACCOUNT}" == "null" ]]; then
+        fatal "Couldn't initialize meshconfig, do you have the required permission resourcemanager.projects.setIamPolicy?"
+      fi
+      unset MANAGED_SERVICE_JSON
+      bind_user_to_iam_policy "$(required_iam_roles_mcp_sa)" "$(iam_user)"
+    fi
+  else
+    if can_modify_gcp_iam_roles; then
+      bind_user_to_iam_policy "$(required_iam_roles)" "$(iam_user)"
+    elif should_validate; then
+      exit_if_out_of_iam_policy
+    fi
+  fi
+
+  get_project_number
+  if can_modify_cluster_labels; then
+    add_cluster_labels
+  elif should_validate; then
+    exit_if_cluster_unlabeled
+  fi
+
+  if ! is_managed; then
+    if can_modify_gcp_components; then
+      enable_workload_identity
+      init_meshconfig
+      if [[ "${CA}" = "gcp_cas" ]]; then
+        # This sets up IAM privileges for the project to be able to access GCP CAS.
+        # If modify_gcp_component permissions are not granted, it is assumed that the
+        # user has taken care of this, else Istio setup will fail
+        init_gcp_cas
+      fi
+      enable_stackdriver_kubernetes
+      if should_enable_service_mesh_feature; then
+        enable_service_mesh_feature
+      fi
+    elif should_validate; then
+      exit_if_no_workload_identity
+      exit_if_stackdriver_not_enabled
+      if should_enable_service_mesh_feature; then
+        exit_if_service_mesh_feature_not_enabled
+      fi
+    fi
+  fi
+
+  if can_modify_cluster_roles; then
+    bind_user_to_cluster_admin
+  elif should_validate; then
+    exit_if_not_cluster_admin
+  fi
+
+  if can_create_namespace; then
+    create_istio_namespace
+  elif should_validate; then
+    warn_if_istio_namespace_not_exists
+  fi
+
+  if [[ "${ONLY_VALIDATE}" -eq 1 ]]; then
+    info "Successfully validated all requirements to install ASM in this environment."
     return 0
   fi
 
-  set_up_project
-  set_up_cluster
+  if only_enable; then
+    info "Successfully performed specified --enable actions."
+    return 0
+  fi
+
+  if [[ "${PRINT_CONFIG}" -eq 1 && "${USE_HUB_WIP}" -eq 1 ]]; then
+    populate_environ_info
+  fi
+
+  if can_modify_at_all && [[ "${MANAGED}" -eq 1 ]]; then
+    start_managed_control_plane
+    configure_package
+    install_managed_components
+    outro
+    return 0
+  fi
+
+  if [[ "${USE_VM}" -eq 1 ]]; then
+    register_gce_identity_provider
+  fi
+
   configure_package
+  handle_multi_yaml_bug
+
   if [[ "${PRINT_CONFIG}" -eq 1 ]]; then
     print_config >&3
     return 0
-  else
-    if [[ "${CUSTOM_CA}" -eq 1 ]]; then
-      install_secrets
-    fi
-    install_asm
-    info "Successfully installed ASM."
   fi
+
+  if [[ "${CUSTOM_CA}" -eq 1 ]]; then
+    install_secrets
+  fi
+
+  install_asm
+
+  info "Successfully installed ASM."
   return 0
 }
 
@@ -118,10 +294,36 @@ init() {
     Darwin) APATH="stat";;
     *);;
   esac
-}
 
-apath() {
-  "${APATH}" "${@}"
+  if [[ "${POINT}" == "alpha" ]]; then
+    RELEASE="${MAJOR}.${MINOR}-alpha.${REV}"
+    REVISION_LABEL="${_CI_REVISION_PREFIX}asm-${MAJOR}${MINOR}${POINT}"
+    KPT_BRANCH="${_CI_ASM_KPT_BRANCH:=master}"
+  else
+    RELEASE="${MAJOR}.${MINOR}.${POINT}-asm.${REV}"
+    REVISION_LABEL="${_CI_REVISION_PREFIX}asm-${MAJOR}${MINOR}${POINT}-${REV}"
+    KPT_BRANCH="${_CI_ASM_KPT_BRANCH:=release-${MAJOR}.${MINOR}-asm}"
+  fi
+  RELEASE_LINE="${MAJOR}.${MINOR}."
+  PREVIOUS_RELEASE_LINE="${MAJOR}.$(( MINOR - 1 ))."
+  readonly RELEASE; readonly RELEASE_LINE; readonly PREVIOUS_RELEASE_LINE; readonly KPT_BRANCH;
+
+  ISTIO_FOLDER_NAME="istio-${RELEASE}"; readonly ISTIO_FOLDER_NAME;
+  ISTIOCTL_REL_PATH="${ISTIO_FOLDER_NAME}/bin/istioctl"; readonly ISTIOCTL_REL_PATH;
+  BASE_REL_PATH="${ISTIO_FOLDER_NAME}/manifests/charts/base/files/gen-istio-cluster.yaml"; readonly BASE_REL_PATH;
+  PACKAGE_DIRECTORY="asm/istio"; readonly PACKAGE_DIRECTORY;
+  VALIDATION_FIX_SERVICE="${PACKAGE_DIRECTORY}/${VALIDATION_FIX_FILE_NAME}"; readonly VALIDATION_FIX_SERVICE;
+  OPTIONS_DIRECTORY="${PACKAGE_DIRECTORY}/options"; readonly OPTIONS_DIRECTORY;
+  OPERATOR_MANIFEST="${PACKAGE_DIRECTORY}/istio-operator.yaml"; readonly OPERATOR_MANIFEST;
+  BETA_CRD_MANIFEST="${OPTIONS_DIRECTORY}/v1beta1-crds.yaml"; readonly BETA_CRD_MANIFEST;
+  MANAGED_MANIFEST="${OPTIONS_DIRECTORY}/managed-control-plane.yaml"; readonly MANAGED_MANIFEST;
+  MANAGED_WEBHOOKS="${OPTIONS_DIRECTORY}/managed-control-plane-webhooks.yaml"; readonly MANAGED_WEBHOOKS;
+  EXPOSE_ISTIOD_SERVICE="${PACKAGE_DIRECTORY}/expansion/expose-istiod.yaml"; readonly EXPOSE_ISTIOD_SERVICE;
+  CANONICAL_CONTROLLER_MANIFEST="asm/canonical-service/controller.yaml"; readonly CANONICAL_CONTROLLER_MANIFEST;
+
+  AKUBECTL="$(which kubectl || true)"
+  AGCLOUD="$(which gcloud || true)"
+  AKPT="$(which kpt || true)"
 }
 
 ### Convenience functions ###
@@ -132,19 +334,48 @@ apath() {
 # not enabled it runs the command.
 #######
 run() {
-  if [[ "${DRY_RUN}" -ne 0 ]]; then
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
     warn "Would have executed: ${*}"
     return
   elif [[ "${VERBOSE}" -eq 0 ]]; then
     "${@}" 2>/dev/null
     return "$?"
   fi
-  warn "Running: '${*}'"
-  warn "-------------"
-  local RETVAL;
+  info "Running: '${*}'"
+  info "-------------"
+  local RETVAL
   { "${@}"; RETVAL="$?"; } || true
   return $RETVAL
 }
+
+apath() {
+  "${APATH}" "${@}"
+}
+
+gcloud() {
+  run "${AGCLOUD}" "${@}"
+}
+
+kubectl() {
+  run "${AKUBECTL}" "${@}"
+}
+
+kpt() {
+  run "${AKPT}" "${@}"
+}
+
+istioctl() {
+  run "$(istioctl_path)" "${@}"
+}
+
+istioctl_path() {
+  if [[ -n "${_CI_ISTIOCTL_REL_PATH}" && -f "${_CI_ISTIOCTL_REL_PATH}" ]]; then
+    echo "${_CI_ISTIOCTL_REL_PATH}"
+  else
+    echo "./${ISTIOCTL_REL_PATH}"
+  fi
+}
+
 
 #######
 # retry takes an integer N as the first argument, and a list of arguments
@@ -157,27 +388,59 @@ retry() {
   shift 1
   for i in $(seq 0 "${MAX_TRIES}"); do
     if [[ "${i}" -eq "${MAX_TRIES}" ]]; then
-      return 1
+      break
     fi
     { "${@}" && return 0; } || true
     warn "Failed, retrying...($((i+1)) of ${MAX_TRIES})"
     sleep 2
-    if [[ "$1" == "kubectl" ]]; then
-      configure_kubectl
-    fi
   done
-  return 1
+  false
+}
+
+find_missing_strings() {
+  local NEEDLES; NEEDLES="${1}";
+  local HAYSTACK; HAYSTACK="${2}";
+  local NOTFOUND; NOTFOUND="";
+
+  while read -r needle; do
+    EXITCODE=0
+    grep -q "${needle}" <<EOF || EXITCODE=$?
+${HAYSTACK}
+EOF
+    if [[ "${EXITCODE}" -ne 0 ]]; then
+      NOTFOUND="${needle},${NOTFOUND}"
+    fi
+  done <<EOF
+${NEEDLES}
+EOF
+
+  if [[ -n "${NOTFOUND}" ]]; then NOTFOUND="$(strip_trailing_commas "${NOTFOUND}")"; fi
+  echo "${NOTFOUND}"
+}
+
+strip_trailing_commas() {
+  # shellcheck disable=SC2001
+  echo "${1}" | sed 's/,*$//g'
 }
 
 configure_kubectl(){
   info "Fetching/writing GCP credentials to kubeconfig file..."
-  retry 2 run gcloud container clusters get-credentials "${CLUSTER_NAME}" \
+  retry 2 gcloud container clusters get-credentials "${CLUSTER_NAME}" \
     --project="${PROJECT_ID}" \
     --zone="${CLUSTER_LOCATION}"
 
-  info "Verifying connectivity (20s)..."
+  if ! hash nc 2>/dev/null; then
+     warn "nc not found, skipping k8s connection verification"
+     warn "(Installation will continue normally.)"
+     return
+  fi
+
+  info "Verifying connectivity (10s)..."
+  local ADDR
+  ADDR="$(kubectl config view --minify=true -ojson | jq .clusters[0].cluster.server -r)"
+
   local RETVAL; RETVAL=0;
-  kubectl cluster-info --request-timeout='20s' 1>/dev/null 2>/dev/null || RETVAL=$?
+  run nc -zvw 10 "${ADDR:8:${#ADDR}}" 443 || RETVAL=$?
   if [[ "${RETVAL}" -ne 0 ]]; then
     { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
 Couldn't connect to ${CLUSTER_NAME}.
@@ -185,39 +448,152 @@ If this is a private cluster, verify that the correct firewall rules are applied
 https://cloud.google.com/service-mesh/docs/gke-install-overview#requirements
 EOF
   fi
+  info "kubeconfig set to ${PROJECT_ID}/${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
 }
 
 warn() {
-  info "${1}" >&2
+  info "[WARNING]: ${1}" >&2
+}
+
+warn_pause() {
+  warn "${1}"
+  sleep 2
+}
+
+error() {
+  info "[ERROR]: ${1}" >&2
 }
 
 info() {
-  echo "${SCRIPT_NAME}: ${1}"
+  echo "${SCRIPT_NAME}: ${1}" >&2
 }
 
 fatal() {
-  warn "ERROR: ${1}"
+  error "${1}"
   exit 2
 }
 
 fatal_with_usage() {
-  warn "${1}"
+  error "${1}"
   usage_short >&2
   exit 2
 }
 
+starline() {
+  echo "*****************************"
+}
+
+is_managed() {
+  if [[ "${MANAGED}" -ne 1 ]]; then false; fi
+}
+
 is_sa() {
-  [[ -n "${SERVICE_ACCOUNT}" ]] && return 0
-  return 1
+  if [[ -z "${SERVICE_ACCOUNT}" ]]; then false; fi
+}
+
+should_validate() {
+  if [[ "${PRINT_CONFIG}" -eq 1 || "${_CI_NO_VALIDATE}" -eq 1 ]] || only_enable; then false; fi
+}
+
+only_enable() {
+  if [[ "${ONLY_ENABLE}" -eq 0 ]]; then false; fi
+}
+
+can_modify_at_all() {
+  if [[ "${ONLY_VALIDATE}" -eq 1 || "${PRINT_CONFIG}" -eq 1 ]]; then false; fi
+}
+
+can_modify_cluster_roles() {
+  if ! can_modify_at_all; then false; return; fi
+
+  if is_managed || [[ "${ENABLE_ALL}" -eq 1 || "${ENABLE_CLUSTER_ROLES}" -eq 1 ]]; then
+    true
+  else
+    false
+  fi
+}
+
+can_modify_cluster_labels() {
+  if ! can_modify_at_all; then false; return; fi
+
+  if [[ "${ENABLE_ALL}" -eq 1 || "${ENABLE_CLUSTER_LABELS}" -eq 1 ]]; then
+    true
+  else
+    false
+  fi
+}
+
+can_modify_gcp_apis() {
+  if ! can_modify_at_all; then false; return; fi
+
+  if [[ "${ENABLE_ALL}" -eq 1 || "${ENABLE_GCP_APIS}" -eq 1 ]]; then
+    true
+  else
+    false
+  fi
+}
+
+can_modify_gcp_iam_roles() {
+  if ! can_modify_at_all; then false; return; fi
+
+  if is_managed || [[ "${ENABLE_ALL}" -eq 1 || "${ENABLE_GCP_IAM_ROLES}" -eq 1 ]]; then
+    true
+  else
+    false
+  fi
+}
+
+can_modify_gcp_components() {
+  if ! can_modify_at_all; then false; return; fi
+
+  if is_managed || [[ "${ENABLE_ALL}" -eq 1 || "${ENABLE_GCP_COMPONENTS}" -eq 1 ]]; then
+    true
+  else
+    false
+  fi
+}
+
+can_register_cluster() {
+  if ! can_modify_at_all; then false; return; fi
+
+  if [[ "${ENABLE_ALL}" -eq 1 && ("${USE_VM}" -eq 1 || "${USE_HUB_WIP}" -eq 1) ]] \
+    || [[ "${ENABLE_REGISTRATION}" -eq 1 ]]; then
+    true
+  else
+    false
+  fi
+}
+
+can_create_namespace() {
+  if ! can_modify_at_all; then false; return; fi
 }
 
 needs_asm() {
-  if [[ "${PRINT_CONFIG}" -eq 0 ]] && ! can_modify && ! should_validate; then false; fi
+  if only_enable; then false; return; fi
+
+  if [[ "${PRINT_CONFIG}" -eq 1 ]] || can_modify_at_all || should_validate; then
+    true
+  else
+    false
+  fi
+}
+
+enable_common_message() {
+  echo "Alternatively, use --enable_all|-e to allow this tool to handle all dependencies."
+}
+
+version_message() {
+  local VER; VER="${MAJOR}.${MINOR}.${POINT}-asm.${REV}+config${CONFIG_VER}";
+  if [[ "${_CI_CRC_VERSION}" -eq 1 ]]; then
+    VER="${VER}-$(crc32 "$0")"
+  fi
+  echo "${VER}"
 }
 
 ### CLI/initial setup functions ###
 usage_short() {
   cat << EOF
+${SCRIPT_NAME} $(version_message)
 usage: ${SCRIPT_NAME} [OPTION]...
 
 Set up, validate, and install ASM in a Google Cloud environment.
@@ -240,20 +616,34 @@ OPTIONS:
   --ca_key               <FILE PATH>
   --root_cert            <FILE PATH>
   --cert_chain           <FILE PATH>
+  --ca_name              <CA NAME>
+  -r|--revision_name     <REVISION NAME>
 
 FLAGS:
-  -e|--enable_apis
+  -e|--enable_all
+     --enable_cluster_roles
+     --enable_cluster_labels
+     --enable_gcp_apis
+     --enable_gcp_iam_roles
+     --enable_gcp_components
+     --enable_registration
+
+     --managed
+
      --print_config
      --disable_canonical_service
   -v|--verbose
      --dry_run
      --only_validate
+     --only_enable
   -h|--help
+  --version
 EOF
 }
 
 usage() {
   cat << EOF
+${SCRIPT_NAME} $(version_message)
 usage: ${SCRIPT_NAME} [OPTION]...
 
 Set up, validate, and install ASM in a Google Cloud environment.
@@ -278,7 +668,7 @@ OPTIONS:
                                       used. Defaults to "mesh_ca" for --mode
                                       install. Specifying the CA is required
                                       for --mode migrate.  Allowed values for
-                                      <CA> are {citadel|mesh_ca}.
+                                      <CA> are {citadel|mesh_ca|gcp_cas}.
   -o|--option            <FILE NAME>  The name of a YAML file in the kpt pkg to
                                       apply. For options, see the
                                       anthos-service-mesh-package GitHub
@@ -306,7 +696,15 @@ OPTIONS:
                                       omitted if not installing optional
                                       features. To add multiple files, specify
                                       them with multiple options one at a time.
-
+  --ca_name              <CA NAME>    Required only if --ca option is gcp_cas.
+                                      Name of the ca in the GCP CAS service used to
+                                      sign certificates in the format
+                                      'projects/project_name/locations/ \
+                                      ca_region/certificateAuthorities/ca_name'.
+  -r|--revision_name <REVISION NAME>  Custom revision label. Label needs to follow DNS
+                                      label formats (re: RFC 1123). Not supported if
+                                      control plane is managed. Prefixing the revision
+                                      name with 'asm' is recommended.
   The following four options must be passed together and are only necessary
   for using a custom certificate for Citadel. Users that aren't sure whether
   they need this probably don't.
@@ -317,9 +715,33 @@ OPTIONS:
   --cert_chain           <FILE PATH>  The certificate chain
 
 FLAGS:
-  -e|--enable_apis                    Allow this script to enable necessary APIs
-                                      on your behalf. Without this flag, it will
-                                      abort if APIs are not already enabled.
+
+  The following several flags all relate to allowing the script to create, set,
+  or enable required APIs, roles, or services. These can all be performed
+  manually before running the script if desired. To allow the script to perform
+  every necessary action, pass the -e|--enable_all flag. All of these flags
+  are incompatible with --only_validate.
+
+  -e|--enable_all                     Allow the script to perform all of the
+                                      individual enable actions below. (Environ
+                                      registration won't happen unless necessary
+                                      for a selected option.)
+     --enable_cluster_roles           Allow the script to attempt to set
+                                      the necessary cluster roles.
+     --enable_cluster_labels          Allow the script to attempt to set
+                                      necessary cluster labels.
+     --enable_gcp_apis                Allow the script to enable GCP APIs on
+                                      the user's behalf
+     --enable_gcp_iam_roles           Allow the script to set the required GCP
+                                      IAM permissions
+     --enable_gcp_components          Allow the script to enable required GCP
+                                      managed services and components
+     --enable_registration            Allow the script to register the cluster
+                                      to an environ
+
+     --managed                        Provision a remote, managed control plane
+                                      instead of installing one in-cluster.
+
      --print_config                   Instead of installing ASM, print all of
                                       the compiled YAML to stdout. All other
                                       output will be written to stderr, even if
@@ -331,7 +753,11 @@ FLAGS:
   -v|--verbose                        Print commands before and after execution.
      --dry_run                        Print commands, but don't execute them.
      --only_validate                  Run validation, but don't install.
+     --only_enable                    Perform the specified steps to set up the
+                                      current user/cluster but don't install
+                                      anything.
   -h|--help                           Show this message and exit.
+  --version                           Print the version of this tool and exit.
 
 EXAMPLE:
 The following invocation will install ASM to a cluster named "my_cluster" in
@@ -388,9 +814,20 @@ parse_args() {
         CA="$(echo "${2}" | tr '[:upper:]' '[:lower:]')"
         shift 2
         ;;
+      --ca_name | --ca-name)
+        arg_required "${@}"
+        CA_NAME="${2}"
+        shift 2
+        ;;
       -o | --option)
         arg_required "${@}"
         OPTIONAL_OVERLAY="${2},${OPTIONAL_OVERLAY}"
+        if [[ "${2}" == "hub-meshca" ]]; then
+          USE_HUB_WIP=1
+        fi
+        if [[ "${2}" == "vm" ]]; then
+          USE_VM=1
+        fi
         shift 2
         ;;
       --co | --custom_overlay | --custom-overlay)
@@ -398,8 +835,37 @@ parse_args() {
         CUSTOM_OVERLAY="${2},${CUSTOM_OVERLAY}"
         shift 2
         ;;
-      -e | --enable_apis | --enable-apis)
-        ENABLE_APIS=1
+      -e | --enable_all | --enable-all)
+        ENABLE_ALL=1
+        shift 1
+        ;;
+      --enable_cluster_roles | --enable-cluster-roles)
+        ENABLE_CLUSTER_ROLES=1
+        shift 1
+        ;;
+      --enable_cluster_labels | --enable-cluster-labels)
+        ENABLE_CLUSTER_LABELS=1
+        shift 1
+        ;;
+      --enable_gcp_apis | --enable-gcp-apis)
+        ENABLE_GCP_APIS=1
+        shift 1
+        ;;
+      --enable_gcp_iam_roles | --enable-gcp-iam-roles)
+        ENABLE_GCP_IAM_ROLES=1
+        shift 1
+        ;;
+      --enable_gcp_components | --enable-gcp-components)
+        ENABLE_GCP_COMPONENTS=1
+        shift 1
+        ;;
+      --enable_registration | --enable-registration)
+        ENABLE_REGISTRATION=1
+        shift 1
+        ;;
+      --managed)
+        MANAGED=1
+        REVISION_LABEL="asm-managed"
         shift 1
         ;;
       --disable_canonical_service | --disable-canonical-service)
@@ -433,6 +899,10 @@ parse_args() {
         ONLY_VALIDATE=1
         shift 1
         ;;
+      --only_enable | --only-enable)
+        ONLY_ENABLE=1
+        shift 1
+        ;;
       --ca_cert | --ca-cert)
         arg_required "${@}"
         CA_CERT="${2}"
@@ -457,6 +927,12 @@ parse_args() {
         CUSTOM_CA=1
         shift 2
         ;;
+      -r | --revision_name | --revision-name)
+        arg_required "${@}"
+        CUSTOM_REVISION=1
+        REVISION_LABEL="${2}"
+        shift 2
+        ;;
       -v | --verbose)
         VERBOSE=1
         shift 1
@@ -465,24 +941,65 @@ parse_args() {
         PRINT_HELP=1
         shift 1
         ;;
+      --version)
+        PRINT_VERSION=1
+        shift 1
+        ;;
       *)
         fatal_with_usage "Unknown option ${1}"
         ;;
     esac
   done
-  if [[ "${PRINT_HELP}" -eq 1 ]]; then
-    if [[ "${VERBOSE}" -eq 1 ]]; then
+  if [[ "${PRINT_HELP}" -eq 1 || "${PRINT_VERSION}" -eq 1 ]]; then
+    if [[ "${PRINT_VERSION}" -eq 1 ]]; then
+      version_message
+    elif [[ "${VERBOSE}" -eq 1 ]]; then
       usage
     else
       usage_short
     fi
     exit
   fi
+  readonly REVISION_LABEL
 }
 
 validate_args() {
   if [[ "${MODE}" == "install" && -z "${CA}" ]]; then
     CA="mesh_ca"
+  fi
+
+  if [[ "${CUSTOM_REVISION}" -eq 1 ]]; then
+    validate_revision_label
+  fi
+
+  if is_managed; then
+    if [[ "${MODE}" != "install" ]]; then
+      fatal "Migrate and upgrade are incompatible with managed control plane."
+    fi
+
+    if [[ "${CA}" == "citadel" ]]; then
+      fatal "Citadel is not supported with managed control plane."
+    fi
+
+    if [[ "${CA}" == "gcp_cas" ]]; then
+      fatal "Google Certificate Authority Service integration is not supported with managed control plane."
+    fi
+
+    if [[ "${CUSTOM_CA}" -eq 1 ]]; then
+      fatal "Specifying a custom CA with managed control plane is not supported."
+    fi
+
+    if [[ "${USE_VM}" -eq 1 ]]; then
+      fatal "Adding VM workloads with managed control plane is not supported."
+    fi
+
+    if [[ -n "${CUSTOM_OVERLAY}" ]]; then
+      fatal "Specifying a custom overlay file with managed control plane is not supported."
+    fi
+
+    if [[ "${CUSTOM_REVISION}" -eq 1 ]]; then
+      fatal "Specifying a revision label with managed control plane is not supported"
+    fi
   fi
 
   local MISSING_ARGS=0
@@ -501,12 +1018,12 @@ EOF
 
   if [[ "${MODE}" != "upgrade" ]]; then
     case "${CA}" in
-      citadel | mesh_ca);;
+      citadel | mesh_ca | gcp_cas);;
       "")
         MISSING_ARGS=1
         warn "Missing value for CA"
         ;;
-      *) fatal "CA must be one of 'citadel', 'mesh_ca'";;
+      *) fatal "CA must be one of 'citadel', 'mesh_ca', 'gcp_cas'";;
     esac
   fi
 
@@ -519,12 +1036,26 @@ EOF
     warn "Update will proceed with the currently installed CA."
   fi
 
+  if [[ "${CA}" = "gcp_cas" ]]; then
+    validate_gcp_cas_args
+  fi
+
   # shellcheck disable=SC2064
   case "${MODE}" in
     install | migrate | upgrade);;
     *) fatal "MODE must be one of 'install', 'migrate', 'upgrade'";;
   esac
 
+  if [[ "${MODE}" != "install" && "${USE_HUB_WIP}" -eq 1 ]]; then
+    fatal "Hub Workload Identity Pool is only supported in new installation"
+  fi
+  if [[ "${CA}" == "citadel" && "${USE_HUB_WIP}" -eq 1 ]]; then
+    fatal "Hub Workload Identity Pool is only supported for Mesh CA"
+  fi
+
+  if [[ "${USE_VM}" -eq 1 && "${USE_HUB_WIP}" -eq 0 ]]; then
+    fatal "Hub Workload Identity Pool is required to add VM workloads. Run the script with the -o hub-meshca option."
+  fi
 
   if [[ "${CUSTOM_CA}" -eq 1 ]]; then
     validate_certs
@@ -537,11 +1068,30 @@ EOF
     readonly "${FLAG}"
   done <<EOF
 DRY_RUN
-ENABLE_APIS
+ENABLE_ALL
+ENABLE_CLUSTER_ROLES
+ENABLE_CLUSTER_LABELS
+ENABLE_GCP_APIS
+ENABLE_GCP_IAM_ROLES
+ENABLE_GCP_COMPONENTS
+ENABLE_REGISTRATION
+MANAGED
 DISABLE_CANONICAL_SERVICE
 ONLY_VALIDATE
+ONLY_ENABLE
 VERBOSE
 EOF
+
+  if [[ "${ENABLE_ALL}" -eq 1 || "${ENABLE_CLUSTER_ROLES}" -eq 1 || \
+    "${ENABLE_CLUSTER_LABELS}" -eq 1 || "${ENABLE_GCP_APIS}" -eq 1 || \
+    "${ENABLE_GCP_IAM_ROLES}" -eq 1 || "${ENABLE_GCP_COMPONENTS}" -eq 1 || \
+    "${ENABLE_REGISTRATION}" -eq 1 ]]; then
+    if [[ "${ONLY_VALIDATE}" -eq 1 ]]; then
+      fatal "The only_validate flag cannot be used with any --enable* flag"
+    fi
+  elif only_enable; then
+    fatal "You must specify at least one --enable* flag with --only_enable"
+  fi
 
   if [[ -n "$SERVICE_ACCOUNT" && -z "$KEY_FILE" || -z "$SERVICE_ACCOUNT" && -n "$KEY_FILE" ]]; then
     fatal "Service account and key file must be used together."
@@ -567,11 +1117,44 @@ ${CUSTOM_OVERLAY}
 EOF
   if [[ "${CA}" = "citadel" ]]; then
     ABS_OVERLAYS="${OPTIONS_DIRECTORY}/citadel-ca.yaml,${ABS_OVERLAYS}"
+  elif [[ "${CA}" = "gcp_cas" ]]; then
+    ABS_OVERLAYS="${OPTIONS_DIRECTORY}/private-ca.yaml,${ABS_OVERLAYS}"
   fi
   CUSTOM_OVERLAY="${ABS_OVERLAYS}"
 
   set_kpt_package_url
   WORKLOAD_POOL="${PROJECT_ID}.svc.id.goog"
+}
+
+validate_revision_label() {
+  # Matches DNS label formats of RFC 1123
+  local DNS_1123_LABEL_MAX_LEN; DNS_1123_LABEL_MAX_LEN=63;
+  readonly DNS_1123_LABEL_MAX_LEN
+
+  local DNS_1123_LABEL_FMT; DNS_1123_LABEL_FMT="^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?$";
+  readonly DNS_1123_LABEL_FMT
+
+  if [[ ${#REVISION_LABEL} -gt ${DNS_1123_LABEL_MAX_LEN} ]]; then
+    fatal "Revision label cannot be longer than $DNS_1123_LABEL_MAX_LEN."
+  fi
+
+  if ! [[ "${REVISION_LABEL}" =~ ${DNS_1123_LABEL_FMT} ]]; then
+    fatal "Revision label does not follow RFC 1123 formatting convention."
+  fi
+}
+
+validate_gcp_cas_args() {
+  local CA_NAME_TEMPLATE
+  CA_NAME_TEMPLATE="projects/project_name/locations/ca_region/certificateAuthorities/ca_name"
+  readonly CA_NAME_TEMPLATE
+
+  if [[ -z ${CA_NAME} ]]; then
+    fatal "A ca-name must be provided for integration with Google Certificate Authority Service."
+  elif [[ $(grep -o "/" <<< "${CA_NAME}" | wc -l) != $(grep -o "/" <<< "${CA_NAME_TEMPLATE}" | wc -l) ]]; then
+    fatal "Malformed ca-name. ca-name must be of the form ${CA_NAME_TEMPLATE}."
+  elif [[ "$(echo "${CA_NAME}" | cut -f1 -d/)" != "$(echo "${CA_NAME_TEMPLATE}" | cut -f1 -d/)" ]]; then
+    fatal "Malformed ca-name. ca-name must be of the form ${CA_NAME_TEMPLATE}."
+  fi
 }
 
 validate_certs() {
@@ -636,7 +1219,7 @@ set_kpt_package_url() {
 
 auth_service_account() {
   info "Authorizing ${SERVICE_ACCOUNT} with ${KEY_FILE}..."
-  run gcloud auth activate-service-account \
+  gcloud auth activate-service-account \
     --project="${PROJECT_ID}" \
     "${SERVICE_ACCOUNT}" \
     --key-file="${KEY_FILE}"
@@ -654,30 +1237,33 @@ set_up_local_workspace() {
     if [[ -z "${OUTPUT_DIR}" ]]; then
       fatal "Encountered error when running mktemp -d!"
     fi
+    info ""
+    info "$(starline)"
+    info "No output folder was specified with --output_dir|-D, so configuration and"
+    info "binaries will be stored in the following directory."
+    info "${OUTPUT_DIR}"
+    info "$(starline)"
+    info ""
+    sleep 2
   else
     OUTPUT_DIR="$(apath -f "${OUTPUT_DIR}")"
+    if [[ ! -a "${OUTPUT_DIR}" ]]; then
+      if ! mkdir -p "${OUTPUT_DIR}"; then
+        fatal "Failed to create directory ${OUTPUT_DIR}"
+      fi
+    elif [[ ! -d "${OUTPUT_DIR}" ]]; then
+      fatal "${OUTPUT_DIR} exists and is not a directory, please specify another directory."
+    fi
   fi
   pushd "$OUTPUT_DIR" > /dev/null
 
-  info "Generating a new kubeconfig..."
-  KUBECONFIG="$(mktemp)"
-  if [[ -z "${KUBECONFIG}" ]]; then
-    fatal "Encountered error when running mktemp!"
-  fi
+  KUBECONFIG="asm_kubeconfig"
   export KUBECONFIG
 }
 
 ### Environment validation functions ###
 validate_dependencies() {
-  validate_cli_dependencies
-  if [[ "${PRINT_CONFIG}" -eq 1 ]]; then
-    return 0
-  fi
-
-  validate_gcp_resources
-  # configure kubectl does have side effects but we've generated a temprorary
-  # kubeconfig so we're not breaking the promise that --only_validate gives
-  configure_kubectl
+  validate_node_pool
   validate_k8s
   validate_expected_control_plane
 
@@ -687,9 +1273,47 @@ validate_dependencies() {
     validate_asm_version
     validate_ca_consistency
   fi
+}
 
-  if [[ "${ENABLE_APIS}" -eq 0 || "${ONLY_VALIDATE}" -eq 1 ]]; then
-    exit_if_apis_not_enabled
+organize_kpt_files() {
+  local ABS_YAML
+  while read -d ',' -r yaml_file; do
+    ABS_YAML="${OPTIONS_DIRECTORY}/${yaml_file}.yaml"
+    if [[ ! -f "${ABS_YAML}" ]]; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+Couldn't find yaml file ${yaml_file}.
+See directory $(apath -f "${OPTIONS_DIRECTORY}") for available options.
+EOF
+    fi
+    CUSTOM_OVERLAY="${ABS_YAML},${CUSTOM_OVERLAY}"
+  done <<EOF
+${OPTIONAL_OVERLAY}
+EOF
+  unset OPTIONAL_OVERLAY
+}
+
+# This is a workaround for https://github.com/istio/istio/issues/30632
+# which doesn't handle files with multiple operator specs correctly.
+# This will split all of the files based off of the yaml document separator.
+handle_multi_yaml_bug() {
+  local CSPLIT_OUTPUT; CSPLIT_OUTPUT="";
+  local BASE_NAME
+  while read -d ',' -r yaml_file; do
+    BASE_NAME="$(basename "${yaml_file}")"
+    if [[ "$(csplit -f "overlay-${BASE_NAME}" "${yaml_file}" '/^---$/' '{*}' | wc -l)" -eq 1 ]]; then
+      CSPLIT_OUTPUT="${CSPLIT_OUTPUT},${yaml_file}"
+    else
+      for split_file in overlay-"${BASE_NAME}"*; do
+        if [[ -s "${split_file}" ]]; then
+          CSPLIT_OUTPUT="${CSPLIT_OUTPUT},$(apath -f "${split_file}")"
+        fi
+      done
+    fi
+  done <<EOF
+${CUSTOM_OVERLAY}
+EOF
+  if [[ -n "${CSPLIT_OUTPUT}" ]]; then
+    CUSTOM_OVERLAY="${CSPLIT_OUTPUT:1:${#CSPLIT_OUTPUT}},"
   fi
 }
 
@@ -706,13 +1330,25 @@ validate_cli_dependencies() {
     fi
   done <<EOF
 awk
-gcloud
+$AGCLOUD
 grep
 jq
-kpt
-kubectl
+$AKUBECTL
+$AKPT
 sed
 tr
+head
+csplit
+EOF
+
+  while read -r FLAG; do
+    if [[ -z "${!FLAG}" ]]; then
+      NOTFOUND="${FLAG},${NOTFOUND}"
+    fi
+  done <<EOF
+AKUBECTL
+AGCLOUD
+AKPT
 EOF
 
   if [[ "${CUSTOM_CA}" -eq 1 ]]; then
@@ -723,8 +1359,8 @@ EOF
     fi
   fi
 
-  if [[ -n "${NOTFOUND}" ]]; then
-    NOTFOUND="${NOTFOUND::-1}"
+  if [[ "${#NOTFOUND}" -gt 1 ]]; then
+    NOTFOUND="$(strip_trailing_commas "${NOTFOUND}")"
     for dep in $(echo "${NOTFOUND}" | tr ' ' '\n'); do
       warn "Dependency not found: ${dep}"
     done
@@ -738,42 +1374,18 @@ EOF
   if [[ "$(uname -m)" != "x86_64" ]]; then
     fatal "Installation is only supported on x86_64."
   fi
+}
+
+download_asm() {
+  local OS
+
   case "$(uname)" in
     Linux ) OS="linux-amd64";;
     Darwin) OS="osx";;
     *     ) fatal "$(uname) is not a supported OS.";;
   esac
 
-  if is_sa; then
-    auth_service_account
-  fi
-
-  if ! necessary_files_exist; then
-    info "Downloading ASM.."
-    download_asm "${OS}"
-
-    info "Downloading ASM kpt package..."
-    retry 3 run kpt pkg get "${KPT_URL}" asm
-  fi
-
-  local ABS_YAML
-  while read -d ',' -r yaml_file; do
-    ABS_YAML="${OPTIONS_DIRECTORY}/${yaml_file}.yaml"
-    if [[ ! -f "${ABS_YAML}" ]]; then
-    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
-Couldn't find remote yaml file ${yaml_file}.
-See directory $(apath -f "${OPTIONS_DIRECTORY}") for available options.
-EOF
-    fi
-    CUSTOM_OVERLAY="${ABS_YAML},${CUSTOM_OVERLAY}"
-  done <<EOF
-${OPTIONAL_OVERLAY}
-EOF
-unset OPTIONAL_OVERLAY; readonly CUSTOM_OVERLAY
-}
-
-download_asm() {
-  local OS; OS="${1}";
+  info "Downloading ASM.."
   local TARBALL; TARBALL="istio-${RELEASE}-${OS}.tar.gz"
   if [[ -z "${_CI_ASM_PKG_LOCATION}" ]]; then
     curl -L "https://storage.googleapis.com/gke-release/asm/${TARBALL}" \
@@ -785,34 +1397,68 @@ download_asm() {
 Authorization: Bearer ${TOKEN}
 EOF
   fi
+
+  ln -s "${ISTIOCTL_REL_PATH}" .
+
+  info "Downloading ASM kpt package..."
+  retry 3 kpt pkg get --auto-set=false "${KPT_URL}" asm
+  version_message > "${ASM_VERSION_FILE}"
 }
 
 necessary_files_exist() {
   if [[ ! -f "${OUTPUT_DIR}/${ISTIOCTL_REL_PATH}" ]]; then
-    return 1
+    false
+    return
+  elif [[ ! -f "${OUTPUT_DIR}/${OPERATOR_MANIFEST}" ]]; then
+    false
+    return
   fi
-  if [[ ! -f "${OUTPUT_DIR}/${OPERATOR_MANIFEST}" ]]; then
-    return 1
+
+  # Refuse to overwrite configuration downloaded from a different version
+  if [[ ! -f "${OUTPUT_DIR}/${ASM_VERSION_FILE}" ]]; then
+    warn "Re-using existing configuration in ${OUTPUT_DIR}."
+    warn_pause "If this was unintentional, please re-run with a different output directory."
+    return
   fi
-  return 0
+
+  local EXISTING_VER; EXISTING_VER="$(cat "${ASM_VERSION_FILE}")";
+  if [[ "${EXISTING_VER}" != "$(version_message)" ]]; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+The existing configuration in ${OUTPUT_DIR} is from a different version.
+Existing: ${EXISTING_VER}
+Current: $(version_message)
+Please try again and specify a different output directory.
+EOF
+  fi
 }
 
 validate_gcp_resources() {
-  validate_project
-  PROJECT_NUMBER="$(gcloud projects describe "${PROJECT_ID}" --format="value(projectNumber)")"
   validate_cluster
-  validate_node_pool
 }
 
-validate_project() {
+populate_cluster_values() {
+  if [[ -z "${GKE_CLUSTER_URI}" && -z "${GCE_NETWORK_NAME}" ]]; then
+    CLUSTER_DATA="$(retry 2 gcloud container clusters describe "${CLUSTER_NAME}" \
+      --zone="${CLUSTER_LOCATION}" \
+      --project="${PROJECT_ID}" \
+      --format='value(selfLink, network)')"
+    read -r GKE_CLUSTER_URI GCE_NETWORK_NAME <<EOF
+${CLUSTER_DATA}
+EOF
+
+    GCE_NETWORK_NAME="${PROJECT_ID}-${GCE_NETWORK_NAME}"
+    readonly GKE_CLUSTER_URI; readonly GCE_NETWORK_NAME;
+  fi
+}
+
+get_project_number() {
   local RESULT; RESULT=""
 
   info "Checking for project ${PROJECT_ID}..."
-  RESULT=$(gcloud projects list \
-    --filter="project_id=${PROJECT_ID}" \
-    --format="value(project_id)" || true)
 
-  if [[ -z "${RESULT}" ]]; then
+  PROJECT_NUMBER="$(gcloud projects describe "${PROJECT_ID}" --format="value(projectNumber)")"
+
+  if [[ -z "${PROJECT_NUMBER}" ]]; then
     { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
 Unable to find project ${PROJECT_ID}. Please verify the spelling and try
 again. To see a list of your projects, run:
@@ -825,10 +1471,10 @@ EOF
 validate_cluster() {
   local RESULT; RESULT=""
 
-  info "Confirming cluster information..."
+  info "Confirming cluster information for ${PROJECT_ID}/${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
   RESULT="$(gcloud container clusters list \
     --project="${PROJECT_ID}" \
-    --filter="name = ${CLUSTER_NAME} and location = ${CLUSTER_LOCATION}" \
+    --filter="name = ${CLUSTER_NAME} AND location = ${CLUSTER_LOCATION}" \
     --format="value(name)" || true)"
   if [[ -z "${RESULT}" ]]; then
     { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
@@ -874,13 +1520,14 @@ validate_node_pool() {
   local MACHINE_CPU_REQ; MACHINE_CPU_REQ=4; readonly MACHINE_CPU_REQ;
   local TOTAL_CPU_REQ; TOTAL_CPU_REQ=8; readonly TOTAL_CPU_REQ;
 
-  info "Confirming node pool requirements..."
+  info "Confirming node pool requirements for ${PROJECT_ID}/${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
   local ACTUAL_CPU
   ACTUAL_CPU="$(list_valid_pools "${MACHINE_CPU_REQ}" | \
       jq '.[] |
         (if .autoscaling.enabled then .autoscaling.maxNodeCount else .initialNodeCount end)
         *
-        (.config.machineType / "-" | .[-1] | tonumber)
+        (.config.machineType / "-" | .[-1] | try tonumber catch 1)
+        * (.locations | length)
       ' 2>/dev/null)" || true
 
   local MAX_CPU; MAX_CPU=0;
@@ -889,11 +1536,13 @@ validate_node_pool() {
   done
 
   if [[ "$MAX_CPU" -lt "$TOTAL_CPU_REQ" ]]; then
-    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+    { read -r -d '' MSG; warn_pause "${MSG}"; } <<EOF || true
+
 ASM requires you to have at least ${TOTAL_CPU_REQ} vCPUs in node pools whose
 machine type is at least ${MACHINE_CPU_REQ} vCPUs.
-${CLUSTER_LOCATION}/${CLUSTER_NAME} does not meet this requirement. Please retry
-with a cluster that meets resource requirements.
+${CLUSTER_LOCATION}/${CLUSTER_NAME} does not meet this requirement. ASM
+may not function as expected.
+
 EOF
   fi
 }
@@ -909,8 +1558,10 @@ validate_expected_control_plane(){
 }
 
 check_no_istiod_outside_of_istio_system_namespace() {
-  local IN_ANY_NAMESPACE; IN_ANY_NAMESPACE="$(kubectl get deployment -A --ignore-not-found=true | grep -c istiod || true)";
-  local IN_NAMESPACE; IN_NAMESPACE="$(kubectl get deployment -n istio-system --ignore-not-found=true | grep -c istiod || true)";
+  local IN_ANY_NAMESPACE IN_NAMESPACE
+  IN_ANY_NAMESPACE="$(kubectl get deployment -A --ignore-not-found=true | grep -c istiod || true)";
+  IN_NAMESPACE="$(kubectl get deployment -n istio-system --ignore-not-found=true | grep -c istiod || true)";
+
   if [ "$IN_ANY_NAMESPACE" -gt "$IN_NAMESPACE" ]; then
     { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
 found istiod deployment outside of istio-system namespace. This installer
@@ -933,20 +1584,25 @@ check_istio_deployed(){
   local ISTIOD_COUNT; ISTIOD_COUNT="$(get_istio_deployment_count)";
   info "Found ${ISTIOD_COUNT} deployment(s)."
   if [[ "$ISTIOD_COUNT" -eq 0 ]]; then
-    fatal "${MODE} mode specified but no istiod deployment found. (Expected >=1.)"
+    warn_pause "${MODE} mode specified but no istiod deployment found. (Expected >=1.)"
   fi
 }
 
 check_istio_not_deployed(){
   local ISTIOD_COUNT; ISTIOD_COUNT="$(get_istio_deployment_count)";
   if [[ "$ISTIOD_COUNT" -ne 0 ]]; then
-    fatal "Install mode specified, but ${ISTIOD_COUNT} existing istiod deployment(s) found. (Expected 0.)"
+    { read -r -d '' MSG; warn_pause "${MSG}"; } <<EOF || true
+
+Install mode specified, but ${ISTIOD_COUNT} existing istiod deployment(s) found. (Expected 0.)
+Installation may overwrite existing control planes with the same revision.
+
+EOF
   fi
 }
 
 validate_istio_version() {
   info "Checking existing Istio version(s)..."
-  local VERSION_OUTPUT; VERSION_OUTPUT="$(retry 3 ./${ISTIOCTL_REL_PATH} version -o json)"
+  local VERSION_OUTPUT; VERSION_OUTPUT="$(retry 3 istioctl version -o json)"
   if [[ -z "${VERSION_OUTPUT}" ]]; then
     fatal "Couldn't validate existing Istio versions."
   fi
@@ -969,7 +1625,7 @@ validate_istio_version() {
 
 validate_asm_version() {
   info "Checking existing ASM version(s)..."
-  local VERSION_OUTPUT; VERSION_OUTPUT="$(retry 3 ./${ISTIOCTL_REL_PATH} version -o json)"
+  local VERSION_OUTPUT; VERSION_OUTPUT="$(retry 3 istioctl version -o json)"
   if [[ -z "${VERSION_OUTPUT}" ]]; then
     fatal "Couldn't validate existing Istio versions."
   fi
@@ -1008,9 +1664,7 @@ ${VERSION_REV}
 EOF
 )"
   if is_major_minor_invalid || is_minor_point_rev_invalid; then
-    return 1
-  else
-    return 0
+    false
   fi
 }
 
@@ -1034,87 +1688,166 @@ is_rev_invalid() {
 }
 
 validate_ca_consistency() {
-  info "Checking existing CA..."
-  local INSTALLED_CA; INSTALLED_CA="$(kubectl -n istio-system get pod -l istio=ingressgateway \
-    -o jsonpath='{.items[].spec.containers[].env[?(@.name=="CA_ADDR")].value}')"
-
-  local CURRENT_CA; CURRENT_CA=citadel
+  local CURRENT_CA; CURRENT_CA="citadel"
   if is_meshca_installed; then
-    CURRENT_CA=mesh_ca
+    CURRENT_CA="mesh_ca"
+  elif is_gcp_cas_installed; then
+    CURRENT_CA="gcp_cas"
   fi
+
   info "CA already in use: ${CURRENT_CA}"
 
-  if is_ca_citadel_to_meshca || is_ca_meshca_to_citadel; then
+  if [[ -z "${CA}" ]]; then
+    CA="${CURRENT_CA}"
+  fi
+
+  if [[ "${CA}" != "${CURRENT_CA}" ]]; then
     fatal "CA cannot be switched while performing upgrade. Please use ${CURRENT_CA} as the CA."
   fi
 }
 
-is_ca_citadel_to_meshca() {
-  ! is_meshca_installed && [[ "${CA}" = "mesh_ca" ]] && return 0
-}
-
-is_ca_meshca_to_citadel() {
-  is_meshca_installed && [[ "${CA}" = "citadel" ]] && return 0
-}
-
 is_meshca_installed() {
+  local INSTALLED_CA; INSTALLED_CA="$(kubectl -n istio-system get pod -l istio=ingressgateway \
+    -o jsonpath='{.items[].spec.containers[].env[?(@.name=="CA_ADDR")].value}')"
   [[ "${INSTALLED_CA}" =~ meshca\.googleapis\.com ]] && return 0
 }
 
-### Project functions ###
-set_up_project(){
-  if [[ "${PRINT_CONFIG}" -eq 1 ]]; then
-    return 0
-  fi
-
-  bind_user_to_iam_policy
-
-  # This if statement should always trigger, but just in case we should be
-  # careful about enabling things without explicit permission
-  if [[ "$ENABLE_APIS" == 1 ]]; then
-    enable_gcloud_apis
-  fi
+is_gcp_cas_installed() {
+  local INSTALLED_CA; INSTALLED_CA="$(kubectl -n istio-system get pod -l istio=istiod \
+    -o jsonpath='{.items[].spec.containers[].env[?(@.name=="EXTERNAL_CA")].value}')"
+  [[ "${INSTALLED_CA}" = "ISTIOD_RA_CAS_API" ]] && return 0
 }
 
 bind_user_to_iam_policy(){
-  local ACCOUNT_TYPE
-  ACCOUNT_TYPE="user"
-  if is_sa; then
-    ACCOUNT_TYPE="serviceAccount"
+  local ROLES; ROLES="${1}"
+  local GCLOUD_MEMBER; GCLOUD_MEMBER="${2}"
+  info "Binding ${GCLOUD_MEMBER} to required IAM roles..."
+  while read -r role; do
+  retry 3 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+    --member "${GCLOUD_MEMBER}" \
+    --role="${role}" --condition=None >/dev/null
+  done <<EOF
+${ROLES}
+EOF
+}
+
+exit_if_out_of_iam_policy() {
+  local GCLOUD_MEMBER; GCLOUD_MEMBER="$(iam_user)";
+  local MEMBER_ROLES
+  MEMBER_ROLES="$(gcloud projects \
+    get-iam-policy "${PROJECT_ID}" \
+    --flatten='bindings[].members' \
+    --filter="bindings.members:$(iam_user)" \
+    --format='value(bindings.role)')"
+
+  if [[ "${MEMBER_ROLES}" = *"roles/owner"* ]]; then
+    return
   fi
+
+  local REQUIRED; REQUIRED="$(required_iam_roles)";
+
+  local NOTFOUND; NOTFOUND="$(find_missing_strings "${REQUIRED}" "${MEMBER_ROLES}")"
+
+  if [[ -n "${NOTFOUND}" ]]; then
+    for role in $(echo "${NOTFOUND}" | tr ',' '\n'); do
+      warn "IAM role not enabled - ${role}"
+    done
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+One or more IAM roles required to install ASM is missing. Please add
+${GCLOUD_MEMBER} to the roles above, or run
+the script with "--enable_gcp_iam_roles" to allow the script to add
+them on your behalf.
+$(enable_common_message)
+EOF
+  fi
+}
+
+iam_user() {
+  if ! is_managed; then
+    local_iam_user
+    return
+  fi
+
+  echo "serviceAccount:${MANAGED_SERVICE_ACCOUNT}"
+}
+
+local_iam_user() {
+  if [[ -n "${GCLOUD_USER_OR_SA}" ]]; then
+    echo "${GCLOUD_USER_OR_SA}"
+    return
+  fi
+
   info "Getting account information..."
-  local GCLOUD_MEMBER;
-  GCLOUD_MEMBER="$(retry 3 gcloud auth list \
+  local ACCOUNT_NAME
+  ACCOUNT_NAME="$(retry 3 gcloud auth list \
     --project="${PROJECT_ID}" \
     --filter="status:ACTIVE" \
     --format="value(account)")"
+  if [[ -z "${ACCOUNT_NAME}" ]]; then
+    fatal "Failed to get account name from gcloud. Please authorize and re-try installation."
+  fi
 
-  info "Binding ${GCLOUD_MEMBER} to required IAM roles..."
-  while read -r role; do
-  retry 3 run gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
-    --member "${ACCOUNT_TYPE}":"${GCLOUD_MEMBER}" \
-    --condition=None \
-    --role=roles/"${role}" >/dev/null
-  done <<EOF
-editor
-compute.admin
-container.admin
-resourcemanager.projectIamAdmin
-iam.serviceAccountAdmin
-iam.serviceAccountKeyAdmin
-gkehub.admin
+  local ACCOUNT_TYPE
+  ACCOUNT_TYPE="user"
+  if is_sa || [[ "${ACCOUNT_NAME}" = *.iam.gserviceaccount.com ]]; then
+    ACCOUNT_TYPE="serviceAccount"
+  fi
+
+  GCLOUD_USER_OR_SA="${ACCOUNT_TYPE}:${ACCOUNT_NAME}"
+
+  echo "${GCLOUD_USER_OR_SA}"
+}
+
+required_iam_roles_mcp_sa() {
+  cat <<EOF
+roles/serviceusage.serviceUsageConsumer
+roles/container.admin
+roles/monitoring.metricWriter
 EOF
 }
+
+# [START required_iam_roles]
+required_iam_roles() {
+  # meshconfig.admin - required for init, stackdriver, UI elements, etc.
+  # servicemanagement.admin/serviceusage.serviceUsageAdmin - enables APIs
+  if can_modify_gcp_components || \
+     can_modify_cluster_labels || \
+     can_modify_cluster_roles; then
+    echo roles/container.admin
+  fi
+  if can_modify_gcp_components; then
+    echo roles/meshconfig.admin
+  fi
+  if can_modify_gcp_apis; then
+    echo roles/servicemanagement.admin
+    echo roles/serviceusage.serviceUsageAdmin
+  fi
+  if can_modify_gcp_iam_roles; then
+    echo roles/resourcemanager.projectIamAdmin
+  fi
+  if is_sa; then
+    echo roles/iam.serviceAccountAdmin
+  fi
+  if can_register_cluster; then
+    echo roles/gkehub.admin
+  fi
+  if [[ "${CA}" = "gcp_cas" ]]; then
+    echo roles/privateca.admin
+  fi
+  if [[ "${_CI_I_AM_A_TEST_ROBOT}" -eq 1 ]]; then
+    echo roles/compute.admin
+    echo roles/iam.serviceAccountKeyAdmin
+  fi
+}
+# [END required_iam_roles]
 
 # [START required_apis]
 required_apis() {
     cat << EOF
 container.googleapis.com
-compute.googleapis.com
 monitoring.googleapis.com
 logging.googleapis.com
 cloudtrace.googleapis.com
-meshca.googleapis.com
 meshtelemetry.googleapis.com
 meshconfig.googleapis.com
 iamcredentials.googleapis.com
@@ -1123,6 +1856,19 @@ gkehub.googleapis.com
 cloudresourcemanager.googleapis.com
 stackdriver.googleapis.com
 EOF
+  case "${CA}" in
+   mesh_ca)
+     echo meshca.googleapis.com
+     ;;
+   gcp_cas)
+     echo privateca.googleapis.com
+     ;;
+    *);;
+  esac
+
+  if [[ "${_CI_I_AM_A_TEST_ROBOT}" -eq 1 ]]; then
+    echo compute.googleapis.com
+  fi
 }
 # [END required_apis]
 
@@ -1143,120 +1889,408 @@ get_enabled_apis() {
 
 exit_if_apis_not_enabled() {
   local ENABLED; ENABLED="$(get_enabled_apis)";
+  local REQUIRED; REQUIRED="$(required_apis)";
   local NOTFOUND; NOTFOUND="";
-  local EXITCODE; EXITCODE=0;
 
   info "Checking required APIs..."
-  while read -r api; do
-    EXITCODE=0
-    grep -q "${api}" <<EOF || EXITCODE=$?
-$ENABLED
-EOF
-    if [[ "${EXITCODE}" -ne 0 ]]; then
-      NOTFOUND="${api},${NOTFOUND}"
-    fi
-  done <<EOF
-$(required_apis)
-EOF
+  NOTFOUND="$(find_missing_strings "${REQUIRED}" "${ENABLED}")"
 
   if [[ -n "${NOTFOUND}" ]]; then
-    NOTFOUND=${NOTFOUND::-1}
     for api in $(echo "${NOTFOUND}" | tr ' ' '\n'); do
       warn "API not enabled - ${api}"
     done
     { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
-One or more APIs are not enabled. Please enable them and retry, or
-re-run the script with the '--enable_apis' flag to allow the script to enable
-them on your behalf.
+One or more APIs are not enabled. Please enable them and retry, or run the
+script with the '--enable_gcp_apis' flag to allow the script to enable them on
+your behalf.
+$(enable_common_message)
 EOF
   fi
 }
 
-init_meshca() {
-  info "Initializing Mesh CA..."
-  local TOKEN; TOKEN="$(retry 2 gcloud --project="${PROJECT_ID}" auth print-access-token)"
-  run curl --request POST \
-    --fail \
-    --data ''\
+init_meshconfig() {
+  info "Initializing meshconfig API..."
+  if [[ "${USE_HUB_WIP}" -eq 1 ]]; then
+    populate_environ_info
+    info "Cluster has Membership ID ${HUB_MEMBERSHIP_ID} in the Hub of project ${ENVIRON_PROJECT_ID}"
+    if [[ "${ENVIRON_PROJECT_ID}" != "${PROJECT_ID}" ]]; then
+      info "Skip initializing meshconfig API as the Hub is not hosted in the project ${PROJECT_ID}"
+      return 0
+    fi
+    # initialize replaces the existing Workload Identity Pools in the IAM binding, so we need to support both Hub and GKE Workload Identity Pools
+    local POST_DATA; POST_DATA='{"workloadIdentityPools":["'${ENVIRON_PROJECT_ID}'.hub.id.goog","'${ENVIRON_PROJECT_ID}'.svc.id.goog"]}'
+    run curl --request POST --fail \
+    --data "${POST_DATA}" -o /dev/null \
     "https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize" \
-    --header "Authorization: Bearer ${TOKEN}" \
-    -o /dev/null
+    --header "Content-Type: application/json" \
+    -K <(auth_header "$(get_auth_token)")
+  else
+    run curl --request POST --fail \
+    --data '' -o /dev/null \
+    "https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize" \
+    -K <(auth_header "$(get_auth_token)")
+  fi
 }
 
-### Cluster functions ###
-set_up_cluster(){
-  if [[ "${PRINT_CONFIG}" -eq 1 ]]; then
-    return 0
-  fi
-  add_cluster_labels
-  enable_workload_identity
+init_meshconfig_managed() {
+  info "Initializing meshconfig managed API..."
+  run curl --request POST --fail \
+    --data '{"prepare_istiod": true}' \
+    "https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}:initialize" \
+    --header "X-Server-Timeout: 600" \
+    --header "Content-Type: application/json" \
+    -K <(auth_header "$(get_auth_token)")
+}
 
-  # this is project scope but requires workload identity
-  if [[ "${CA}" = "mesh_ca" ]]; then
-    init_meshca
-  fi
+get_auth_token() {
+  local TOKEN; TOKEN="$(retry 2 gcloud --project="${PROJECT_ID}" auth print-access-token)"
+  echo "${TOKEN}"
+}
 
-  enable_stackdriver_kubernetes
-  bind_user_to_cluster_admin
-  ensure_istio_namespace_exists
+# LTS releases don't have curl 7.55 so we can't use the @- construction,
+# using -K keeps the token from printing if this script is run with -v
+auth_header() {
+  local TOKEN; TOKEN="${1}"
+  echo "--header \"Authorization: Bearer ${TOKEN}\""
 }
 
 add_cluster_labels(){
-  info "Reading labels for ${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
-  local LABELS;
-  LABELS="$(retry 2 gcloud container clusters describe "${CLUSTER_NAME}" \
-    --zone="${CLUSTER_LOCATION}" \
-    --project="${PROJECT_ID}" \
-    --format='value(resourceLabels)[delimiter=","]')";
-  local INSTALLER_LABEL; INSTALLER_LABEL="asmv=${RELEASE//\./-}"
-  local MESH_LABEL; MESH_LABEL="mesh_id=proj-${PROJECT_NUMBER}"
-  if [ "${LABELS}" ]; then
+  local LABELS; LABELS="$(get_cluster_labels)";
+
+  local VERSION_TAG
+  VERSION_TAG="${RELEASE//\./-}"
+  local WANT; WANT="$(mesh_id_label; echo "asmv=${VERSION_TAG}")";
+
+  local NOTFOUND; NOTFOUND="$(find_missing_strings "${WANT}" "${LABELS}")"
+
+  if [[ -z "${NOTFOUND}" ]]; then return 0; fi
+
+  if [[ -n "${LABELS}" ]]; then
     LABELS="${LABELS},"
   fi
+  LABELS="${LABELS}${NOTFOUND}"
+
   info "Adding labels to ${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
-  LABELS="${LABELS}${INSTALLER_LABEL},${MESH_LABEL}"
-  retry 2 run gcloud container clusters update "${CLUSTER_NAME}" \
+  retry 2 gcloud container clusters update "${CLUSTER_NAME}" \
     --project="${PROJECT_ID}" \
     --zone="${CLUSTER_LOCATION}" \
     --update-labels="${LABELS}"
 }
 
+exit_if_cluster_unlabeled() {
+  local LABELS; LABELS="$(get_cluster_labels)";
+  local REQUIRED; REQUIRED="$(mesh_id_label)";
+  local NOTFOUND; NOTFOUND="$(find_missing_strings "${REQUIRED}" "${LABELS}")"
+
+  if [[ -n "${NOTFOUND}" ]]; then
+    for label in $(echo "${NOTFOUND}" | tr ',' '\n'); do
+      warn "Cluster label not found - ${label}"
+    done
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+One or more required cluster labels were not found. Please label them and retry,
+or run the script with the '--enable_cluster_labels' flag to allow the script
+to enable them on your behalf.
+$(enable_common_message)
+EOF
+  fi
+}
+
+mesh_id_label() {
+  echo "mesh_id=proj-${PROJECT_NUMBER}"
+}
+
+get_cluster_labels() {
+  info "Reading labels for ${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
+  local LABELS
+  LABELS="$(retry 2 gcloud container clusters describe "${CLUSTER_NAME}" \
+    --zone="${CLUSTER_LOCATION}" \
+    --project="${PROJECT_ID}" \
+    --format='value(resourceLabels)[delimiter=","]')";
+  echo "${LABELS}"
+}
+
+is_cluster_registered() {
+  if ! is_membership_crd_installed; then
+    false
+    return
+  fi
+
+  local IDENTITY_PROVIDER
+  IDENTITY_PROVIDER="$(retry 2 kubectl get memberships.hub.gke.io \
+    membership -ojson 2>/dev/null | jq .spec.identity_provider)"
+
+  if [[ -z "${IDENTITY_PROVIDER}" ]] || [[ "${IDENTITY_PROVIDER}" == 'null' ]]; then
+    false
+  fi
+
+  populate_environ_info
+
+  local WANT
+  WANT="//container.googleapis.com/projects/${PROJECT_ID}/locations/${CLUSTER_LOCATION}/clusters/${CLUSTER_NAME}"
+  local LIST
+  LIST="$(gcloud container hub memberships list --project "${ENVIRON_PROJECT_ID}" \
+    --format=json | grep "${WANT}")"
+  if [[ -z "${LIST}" ]]; then
+    { read -r -d '' MSG; warn "${MSG}"; } <<EOF || true
+Cluster is registered in the project ${ENVIRON_PROJECT_ID}, but the script is
+unable to verify in the project. The script will continue to execute.
+EOF
+  fi
+}
+
+generate_membership_name() {
+  local MEMBERSHIP_NAME
+  MEMBERSHIP_NAME="${CLUSTER_NAME}"
+  if [[ "$(retry 2 gcloud container hub memberships list --format='value(name)' \
+   --project "${PROJECT_ID}" | grep -c "^${MEMBERSHIP_NAME}$" || true)" -ne 0 ]]; then
+    MEMBERSHIP_NAME="${CLUSTER_NAME}-${PROJECT_ID}-${CLUSTER_LOCATION}"
+  fi
+  if [[ "${#MEMBERSHIP_NAME}" -gt 63 ]] || [[ "$(retry 2 gcloud container hub \
+   memberships list --format='value(name)' --project "${PROJECT_ID}" | grep -c \
+   "^${MEMBERSHIP_NAME}$" || true)" -ne 0 ]]; then
+    local RAND
+    RAND="$(tr -dc "a-z0-9" </dev/urandom | head -c8 || true)"
+    MEMBERSHIP_NAME="${CLUSTER_NAME:0:54}-${RAND}"
+  fi
+  echo "${MEMBERSHIP_NAME}"
+}
+
+register_cluster() {
+  if is_cluster_registered; then return; fi
+
+  if can_modify_gcp_components; then
+    enable_workload_identity
+  else
+    exit_if_no_workload_identity
+  fi
+
+  populate_cluster_values
+  local MEMBERSHIP_NAME
+  MEMBERSHIP_NAME="$(generate_membership_name)"
+  info "Registering the cluster as ${MEMBERSHIP_NAME}..."
+  retry 2 gcloud beta container hub memberships register "${MEMBERSHIP_NAME}" \
+    --project="${PROJECT_ID}" \
+    --gke-uri="${GKE_CLUSTER_URI}" \
+    --enable-workload-identity
+}
+
+exit_if_cluster_unregistered() {
+  if ! is_cluster_registered; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+Cluster is not registered to an environ. Please register the cluster and
+retry, or run the script with the '--enable_registration' flag to allow
+the script to register to the current project's environ on your behalf.
+EOF
+  fi
+}
+
+is_workload_identity_enabled() {
+  if [[ "${WI_ENABLED}" -eq 1 ]]; then return; fi
+
+  local ENABLED
+  ENABLED="$(gcloud container clusters describe \
+    --project="${PROJECT_ID}" \
+    --region "${CLUSTER_LOCATION}" \
+    "${CLUSTER_NAME}" \
+    --format=json | \
+    jq .workloadIdentityConfig)"
+
+  if [[ "${ENABLED}" = 'null' ]]; then false; else WI_ENABLED=1; fi
+}
+
+is_membership_crd_installed() {
+  if ! kubectl api-resources --api-group=hub.gke.io | grep -q memberships; then
+    false
+    return
+  fi
+
+  if [[ "$(retry 2 kubectl get memberships.hub.gke.io -ojsonpath="{..metadata.name}" \
+    | grep -w -c membership || true)" -eq 0 ]]; then
+    false
+  fi
+}
+
+populate_environ_info() {
+  if [[ -n "${ENVIRON_PROJECT_ID}" && -n "${HUB_MEMBERSHIP_ID}" ]]; then return; fi
+  if ! is_membership_crd_installed; then return; fi
+  HUB_MEMBERSHIP_ID="$(kubectl get memberships.hub.gke.io membership -o=json | jq .spec.owner.id | sed 's/^\"\/\/gkehub.googleapis.com\/projects\/\(.*\)\/locations\/global\/memberships\/\(.*\)\"$/\2/g')"
+  ENVIRON_PROJECT_ID="$(kubectl get memberships.hub.gke.io membership -o=json | jq .spec.workload_identity_pool | sed 's/^\"\(.*\).\(svc\|hub\).id.goog\"$/\1/g')"
+}
+
 enable_workload_identity(){
+  if is_workload_identity_enabled; then return; fi
   info "Enabling Workload Identity on ${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
   info "(This could take awhile, up to 10 minutes)"
-  retry 2 run gcloud container clusters update "${CLUSTER_NAME}" \
+  retry 2 gcloud container clusters update "${CLUSTER_NAME}" \
     --project="${PROJECT_ID}" \
     --zone="${CLUSTER_LOCATION}" \
     --workload-pool="${WORKLOAD_POOL}"
 }
 
+exit_if_no_workload_identity() {
+  if ! is_workload_identity_enabled; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+Workload identity is not enabled on ${CLUSTER_NAME}. Please enable it and
+retry, or run the script with the '--enable_gcp_components' flag to allow
+the script to enable it on your behalf.
+$(enable_common_message)
+EOF
+  fi
+}
+
+is_stackdriver_enabled() {
+  local ENABLED
+  ENABLED="$(gcloud container clusters describe \
+    --project="${PROJECT_ID}" \
+    --region "${CLUSTER_LOCATION}" \
+    "${CLUSTER_NAME}" \
+    --format=json | \
+    jq '.
+    | [
+    select(
+      .loggingService == "logging.googleapis.com/kubernetes"
+      and .monitoringService == "monitoring.googleapis.com/kubernetes")
+      ] | length')"
+
+  if [[ "${ENABLED}" -lt 1 ]]; then false; fi
+}
+
 enable_stackdriver_kubernetes(){
   info "Enabling Stackdriver on ${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
-  retry 2 run gcloud container clusters update "${CLUSTER_NAME}" \
+  retry 2 gcloud container clusters update "${CLUSTER_NAME}" \
     --project="${PROJECT_ID}" \
     --zone="${CLUSTER_LOCATION}" \
     --enable-stackdriver-kubernetes
+}
+
+exit_if_stackdriver_not_enabled() {
+  if ! is_stackdriver_enabled; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+Cloud Operations (Stackdriver)  is not enabled on ${CLUSTER_NAME}.
+Please enable it and retry, or run the script with the
+'--enable_gcp_components' flag to allow the script to enable it on your behalf.
+$(enable_common_message)
+EOF
+  fi
+}
+
+is_user_cluster_admin() {
+  local GCLOUD_USER; GCLOUD_USER="$(gcloud config get-value core/account)"
+  local IAM_USER; IAM_USER="$(local_iam_user)"
+  local ROLES
+  ROLES="$(\
+    kubectl get clusterrolebinding \
+    --all-namespaces \
+    -o jsonpath='{range .items[?(@.subjects[0].name=="'"${GCLOUD_USER}"'")]}[{.roleRef.name}]{end}'\
+    2>/dev/null)"
+  if echo "${ROLES}" | grep -q cluster-admin; then return; fi
+
+  ROLES="$(gcloud projects \
+    get-iam-policy "${PROJECT_ID}" \
+    --flatten='bindings[].members' \
+    --filter="bindings.members:${IAM_USER}" \
+    --format='value(bindings.role)' 2>/dev/null)"
+  if echo "${ROLES}" | grep -q roles/container.admin; then return; fi
+
+  false
 }
 
 bind_user_to_cluster_admin(){
   info "Querying for core/account..."
   local GCLOUD_USER; GCLOUD_USER="$(gcloud config get-value core/account)"
   info "Binding ${GCLOUD_USER} to cluster admin role..."
+  local PREFIX; PREFIX="$(echo "${GCLOUD_USER}" | cut -f 1 -d @)"
   local YAML; YAML="$(retry 5 kubectl create \
-    clusterrolebinding cluster-admin-binding \
+    clusterrolebinding "${PREFIX}-cluster-admin-binding" \
     --clusterrole=cluster-admin \
     --user="${GCLOUD_USER}" \
     --dry-run -o yaml)"
-  retry 3 run kubectl apply -f - <<EOF
+  retry 3 kubectl apply -f - <<EOF
 ${YAML}
 EOF
 }
 
-ensure_istio_namespace_exists(){
+exit_if_not_cluster_admin() {
+  if ! is_user_cluster_admin; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+Current user must have the cluster-admin role on ${CLUSTER_NAME}.
+Please add the cluster role binding and retry, or run the script with the
+'--enable_cluster_roles' flag to allow the script to enable it on your behalf.
+$(enable_common_message)
+EOF
+  fi
+}
+
+create_istio_namespace() {
+  info "Creating istio-system namespace..."
+
+  if istio_namespace_exists; then return; fi
+
+  retry 2 kubectl create ns istio-system
+}
+
+warn_if_istio_namespace_not_exists() {
   info "Checking for istio-system namespace..."
-  if [ "$(retry 2 kubectl get ns | grep -c istio-system || true)" -eq 0 ]; then
-    info "Creating istio-system namespace..."
-    retry 2 run kubectl create ns istio-system
+  if ! istio_namespace_exists; then
+    { read -r -d '' MSG; warn "${MSG}"; } <<EOF || true
+The istio-system namespace doesn't exist.
+Please create the "istio-system" namespace , or make sure that the user
+installing ASM has sufficient permissions to create namespaces.
+EOF
+  fi
+}
+
+istio_namespace_exists() {
+  if [[ "${NAMESPACE_EXISTS}" -eq 1 ]]; then return; fi
+  if [[ "$(retry 2 kubectl get ns | grep -c istio-system || true)" -eq 0 ]]; then
+    false
+  else
+    NAMESPACE_EXISTS=1
+  fi
+}
+
+register_gce_identity_provider() {
+  info "Registering GCE Identity Provider in the cluster..."
+  retry 3 kubectl apply -f asm/identity-provider/identityprovider-crd.yaml
+  retry 3 kubectl apply -f asm/identity-provider/googleidp.yaml
+}
+
+should_enable_service_mesh_feature() {
+  if [[ "${USE_VM}" -eq 0 ]]; then
+    false
+  fi
+}
+
+enable_service_mesh_feature() {
+  info "Enabling the service mesh feature..."
+
+  # IAM permission: gkehub.features.create
+  retry 2 run curl -s -H "Content-Type: application/json" \
+    -XPOST "https://gkehub.googleapis.com/v1alpha1/projects/${PROJECT_ID}/locations/global/features?feature_id=servicemesh"\
+    -d '{servicemesh_feature_spec: {}}' \
+    -K <(auth_header "$(get_auth_token)")
+}
+
+exit_if_service_mesh_feature_not_enabled() {
+  if ! is_service_mesh_feature_enabled; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+The service mesh feature is not enabled on project ${PROJECT_ID}.
+Please run the script with the '--enable_gcp_components' flag to allow the
+script to enable it on your behalf.
+$(enable_common_message)
+EOF
+  fi
+}
+
+is_service_mesh_feature_enabled() {
+  local RESPONSE
+  # IAM permission: gkehub.features.get
+  RESPONSE="$(run curl -s -H "X-Goog-User-Project: ${PROJECT_ID}"  \
+    "https://gkehub.googleapis.com/v1alpha1/projects/${PROJECT_ID}/locations/global/features/servicemesh" \
+    -K <(auth_header "$(get_auth_token)"))"
+
+  if [[ "$(echo "${RESPONSE}" | jq -r '.featureState.lifecycleState')" != "ENABLED" ]]; then
+    false
   fi
 }
 
@@ -1264,47 +2298,100 @@ ensure_istio_namespace_exists(){
 configure_package() {
   info "Configuring kpt package..."
 
-  run kpt cfg set asm gcloud.container.cluster "${CLUSTER_NAME}"
-  run kpt cfg set asm gcloud.core.project "${PROJECT_ID}"
-  run kpt cfg set asm gcloud.project.environProjectNumber "${PROJECT_NUMBER}"
-  run kpt cfg set asm gcloud.compute.location "${CLUSTER_LOCATION}"
-  run kpt cfg set asm anthos.servicemesh.rev "${REVISION_LABEL}"
+  populate_cluster_values
+  populate_environ_info
+  kpt cfg set asm gcloud.container.cluster "${CLUSTER_NAME}"
+  kpt cfg set asm gcloud.core.project "${PROJECT_ID}"
+  kpt cfg set asm gcloud.project.environProjectNumber "${PROJECT_NUMBER}"
+  if [[ -n "${_CI_ENVIRON_PROJECT_NUMBER}" ]]; then
+    kpt cfg set asm gcloud.project.environProjectNumber "${_CI_ENVIRON_PROJECT_NUMBER}"
+  fi
+  kpt cfg set asm gcloud.compute.location "${CLUSTER_LOCATION}"
+  kpt cfg set asm gcloud.compute.network "${GCE_NETWORK_NAME}"
+  kpt cfg set asm anthos.servicemesh.rev "${REVISION_LABEL}"
+  kpt cfg set asm anthos.servicemesh.tag "${RELEASE}"
   if [[ -n "${_CI_ASM_IMAGE_LOCATION}" ]]; then
-    run kpt cfg set asm anthos.servicemesh.hub "${_CI_ASM_IMAGE_LOCATION}"
-    run kpt cfg set asm anthos.servicemesh.tag "${RELEASE}"
+    kpt cfg set asm anthos.servicemesh.hub "${_CI_ASM_IMAGE_LOCATION}"
+  fi
+  if [[ -n "${_CI_ASM_IMAGE_TAG}" ]]; then
+    kpt cfg set asm anthos.servicemesh.tag "${_CI_ASM_IMAGE_TAG}"
+  fi
+
+  if [[ "${USE_HUB_WIP}" -eq 1 ]]; then
+    kpt cfg set asm gcloud.project.environProjectID "${ENVIRON_PROJECT_ID}"
+    kpt cfg set asm anthos.servicemesh.hubMembershipID "${HUB_MEMBERSHIP_ID}"
+  fi
+  if [[ -n "${CA_NAME}" && "${CA}" = "gcp_cas" ]]; then
+    kpt cfg set asm anthos.servicemesh.external_ca.ca_name "${CA_NAME}"
+  fi
+
+  if [[ "${USE_VM}" -eq 1 ]] && [[ "${_CI_NO_REVISION}" -eq 0 ]]; then
+    kpt cfg set asm anthos.servicemesh.istiodHost "istiod-${REVISION_LABEL}.istio-system.svc"
+    kpt cfg set asm anthos.servicemesh.istiodHostFQDN "istiod-${REVISION_LABEL}.istio-system.svc.cluster.local"
+    kpt cfg set asm anthos.servicemesh.istiod-vs-name "istiod-vs-${REVISION_LABEL}"
+  fi
+
+  if [[ "${CA}" == "mesh_ca" && -n "${_CI_TRUSTED_GCP_PROJECTS}" ]]; then
+    # Gather the trust domain aliases from projects.
+    TRUST_DOMAIN_ALIASES="${PROJECT_ID}.svc.id.goog"
+    while IFS=',' read -r trusted_gcp_project; do
+      TRUST_DOMAIN_ALIASES="${TRUST_DOMAIN_ALIASES} ${trusted_gcp_project}.svc.id.goog"
+    done <<EOF
+${_CI_TRUSTED_GCP_PROJECTS}
+EOF
+    # kpt treats words in quotes as a single param, while kpt need ${TRUST_DOMAIN_ALIASES} to be splitting params for a list. If we remove quotes, the lint will complain.
+    # eval will translate the quoted TRUST_DOMAIN_ALIASES into params to workaround both.
+    run eval kpt cfg set asm anthos.servicemesh.trustDomainAliases "${TRUST_DOMAIN_ALIASES}"
+  fi
+
+  if [[ "${MANAGED}" -eq 1 ]]; then
+    local VALIDATION_URL; local CLOUDRUN_ADDR;
+    read -r VALIDATION_URL CLOUDRUN_ADDR <<EOF
+$(scrape_managed_urls)
+EOF
+
+    kpt cfg set asm anthos.servicemesh.controlplane.validation-url "${VALIDATION_URL}"
+    kpt cfg set asm anthos.servicemesh.managed-controlplane.cloudrun-addr "${CLOUDRUN_ADDR}"
   fi
 }
 
 print_config() {
-  echo "---"
-  sanitize_file "${OPERATOR_MANIFEST}"
+  if [[ "${MANAGED}" -eq 1 ]]; then
+    cat "${MANAGED_MANIFEST}"
+    return
+  fi
+
+  PARAMS="-f ${OPERATOR_MANIFEST}"
   while read -d ',' -r yaml_file; do
-    echo "---"
-    sanitize_file "${yaml_file}"
+    PARAMS="${PARAMS} -f ${yaml_file} "
   done <<EOF
 ${CUSTOM_OVERLAY}
 EOF
-  if [[ "$DISABLE_CANONICAL_SERVICE" -ne 1 ]]; then
-    echo "---"
-    sanitize_file asm/canonical-service/controller.yaml
-  fi
-}
-
-# Strip comments, empty lines, trailing whitespace
-sanitize_file() {
-  sed -e 's/#.*$//g' \
-    -e '/^[[:space:]]*$/d' \
-    -e 's/[[:space:]]*$//g' \
-    "${1}"
+  # shellcheck disable=SC2086
+  istioctl profile dump ${PARAMS}
 }
 
 install_secrets() {
   info "Installing certificates into the cluster..."
-  run kubectl create secret generic cacerts -n istio-system \
+  kubectl create secret generic cacerts -n istio-system \
     --from-file="${CA_CERT}" \
     --from-file="${CA_KEY}" \
     --from-file="${CA_ROOT}" \
     --from-file="${CA_CHAIN}"
+}
+
+init_gcp_cas() {
+  local WORKLOAD_IDENTITY; WORKLOAD_IDENTITY="$PROJECT_ID.svc.id.goog[istio-system/istiod-service-account]"
+
+  local NAME; NAME=$(echo "${CA_NAME}" | cut -f6 -d/)
+  local CA_LOCATION; CA_LOCATION=$(echo "${CA_NAME}" | cut -f4 -d/)
+  local CA_PROJECT; CA_PROJECT=$(echo "${CA_NAME}" | cut -f2 -d/)
+
+  retry 3 gcloud beta privateca subordinates add-iam-policy-binding "${NAME}" \
+    --location "${CA_LOCATION}" \
+    --project "${CA_PROJECT}" \
+    --member "serviceAccount:${WORKLOAD_IDENTITY}" \
+    --role "roles/privateca.certificateManager"
 }
 
 does_istiod_exist(){
@@ -1317,24 +2404,34 @@ does_istiod_exist(){
 }
 
 install_asm() {
+  if ! does_istiod_exist && [[ "${_CI_NO_REVISION}" -ne 1 ]]; then
+    info "Installing validation webhook fix..."
+    retry 3 kubectl apply -f "${VALIDATION_FIX_SERVICE}"
+  elif [[ "${MODE}" == "upgrade" ]]; then
+    cp "${VALIDATION_FIX_SERVICE}" .
+  fi
 
   local PARAMS
-  PARAMS="-f ${OPERATOR_MANIFEST} -f ${MULTICLUSTER_MANIFEST}"
+  PARAMS="-f ${OPERATOR_MANIFEST}"
   while read -d ',' -r yaml_file; do
     PARAMS="${PARAMS} -f ${yaml_file}"
   done <<EOF
 ${CUSTOM_OVERLAY}
 EOF
 
-  PARAMS="${PARAMS} --set revision=${REVISION_LABEL}"
+  if [[ "${_CI_NO_REVISION}" -ne 1 ]]; then
+    PARAMS="${PARAMS} --set revision=${REVISION_LABEL}"
+  fi
+
   if [[ "${K8S_MINOR}" -eq 15 ]]; then
     PARAMS="${PARAMS} -f ${BETA_CRD_MANIFEST}"
   fi
   PARAMS="${PARAMS} -c ${KUBECONFIG}"
+  PARAMS="${PARAMS} --skip-confirmation"
 
   info "Installing ASM control plane..."
   # shellcheck disable=SC2086
-  retry 5 run ./"${ISTIOCTL_REL_PATH}" install $PARAMS
+  retry 5 istioctl install $PARAMS
 
   # Prevent the stderr buffer from ^ messing up the terminal output below
   sleep 1
@@ -1342,31 +2439,92 @@ EOF
 
   local RAW_YAML; RAW_YAML="${REVISION_LABEL}-manifest-raw.yaml"
   local EXPANDED_YAML; EXPANDED_YAML="${REVISION_LABEL}-manifest-expanded.yaml"
-  print_config > "${RAW_YAML}"
-  run ./"${ISTIOCTL_REL_PATH}" manifest generate \
+  print_config >| "${RAW_YAML}"
+  istioctl manifest generate \
     <"${RAW_YAML}" \
-    >"${EXPANDED_YAML}"
+    >|"${EXPANDED_YAML}"
 
-  if ! does_istiod_exist; then
-    info "Installing validation webhook fix..."
-    retry 3 run kubectl apply -f "${VALIDATION_FIX_SERVICE}"
+  if [[ "$DISABLE_CANONICAL_SERVICE" -eq 0 ]]; then
+    install_canonical_controller
   fi
 
-  if [[ "$DISABLE_CANONICAL_SERVICE" -ne 1 ]]; then
-    info "Installing ASM CanonicalService controller in asm-system namespace..."
-    retry 3 run kubectl apply -f asm/canonical-service/controller.yaml
-    info "Waiting for deployment..."
-    retry 3 run kubectl wait --for=condition=available --timeout=600s \
-        deployment/canonical-service-controller-manager -n asm-system
-    info "...done!"
+  if [[ "${USE_VM}" -eq 1 ]]; then
+    info "Exposing the control plane for VM workloads..."
+    expose_istiod
+
+    # The default istiod service is exposed so that any fallback on the VM side
+    # to use the default Istiod service can still connect to the control plane.
+    kpt cfg set asm anthos.servicemesh.istiodHost "istiod.istio-system.svc"
+    kpt cfg set asm anthos.servicemesh.istiodHostFQDN "istiod.istio-system.svc.cluster.local"
+    kpt cfg set asm anthos.servicemesh.istiod-vs-name "istiod-vs"
+    expose_istiod
   fi
 
   outro
 }
 
+install_canonical_controller() {
+  info "Installing ASM CanonicalService controller in asm-system namespace..."
+  retry 3 kubectl apply -f "${CANONICAL_CONTROLLER_MANIFEST}"
+  info "Waiting for deployment..."
+  retry 3 kubectl wait --for=condition=available --timeout=600s \
+      deployment/canonical-service-controller-manager -n asm-system
+  info "...done!"
+}
+
+expose_istiod() {
+  retry 3 kubectl apply -f "${EXPOSE_ISTIOD_SERVICE}"
+}
+
+start_managed_control_plane() {
+  local CR_IMAGE_JSON; CR_IMAGE_JSON="";
+  if [[ -n "${_CI_CLOUDRUN_IMAGE_HUB}" ]]; then
+    CR_IMAGE_JSON=$(cat <<EOF
+{"image": "${_CI_CLOUDRUN_IMAGE_HUB}:${_CI_CLOUDRUN_IMAGE_TAG}"}
+EOF
+)
+  fi
+  retry 2 run curl --request POST \
+    "https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}/locations/${CLUSTER_LOCATION}/clusters/${CLUSTER_NAME}:runIstiod" \
+    --data "${CR_IMAGE_JSON}" \
+    --header "X-Server-Timeout: 600" \
+    --header "Content-Type: application/json" \
+    -K <(auth_header "$(get_auth_token)")
+}
+
+scrape_managed_urls() {
+  local URL
+  URL="$(kubectl get mutatingwebhookconfiguration istiod-asm-managed -ojson | jq .webhooks[0].clientConfig.url -r)"
+  # shellcheck disable=SC2001
+  VALIDATION_URL="$(echo "${URL}" | sed 's/inject.*$/validate/g')"
+  # shellcheck disable=SC2001
+  CLOUDRUN_ADDR=$(echo "${URL}" | cut -d'/' -f3)
+
+  echo "${VALIDATION_URL} ${CLOUDRUN_ADDR}"
+}
+
+install_managed_components() {
+  info "Configuring base installation for managed control plane..."
+  kubectl apply --overwrite=true -f "${BASE_REL_PATH}"
+
+  info "Configuring ASM managed control plane validating webhook config..."
+  kubectl apply -f "${MANAGED_WEBHOOKS}"
+
+  info "Configuring ASM managed control plane components..."
+  print_config >| managed_control_plane_gateway.yaml
+
+
+  if [[ "$DISABLE_CANONICAL_SERVICE" -eq 0 ]]; then
+    install_canonical_controller
+  fi
+}
+
 outro() {
+
   info ""
-  info "*****************************"
+  info "$(starline)"
+  istioctl version
+  info "$(starline)"
   info "The ASM control plane installation is now complete."
   info "To enable automatic sidecar injection on a namespace, you can use the following command:"
   info "kubectl label namespace <NAMESPACE> istio-injection- istio.io/rev=${REVISION_LABEL} --overwrite"
@@ -1375,27 +2533,35 @@ outro() {
   info "instead of installing a new one."
 
 
-  if [[ "${MODE}" = "migrate" ]]; then
+  if [[ "${MODE}" = "migrate" || "${MODE}" = "upgrade" ]]; then
     info "Please verify the new control plane and then: 1) migrate your workloads 2) remove old control plane."
     info "For more information, see:"
     info "https://cloud.google.com/service-mesh/docs/upgrading-gke#redeploying_workloads"
+    info "Before removing the old control plane, update the service used by validation if necessary."
+    info "If the 'istiod' service has a revision label different than ${REVISION_LABEL}, then apply"
+    info "${OUTPUT_DIR}/${VALIDATION_FIX_FILE_NAME} using 'kubectl apply'"
   elif [[ "${MODE}" = "install" ]]; then
     info "To finish the installation, enable Istio sidecar injection and restart your workloads."
     info "For more information, see:"
     info "https://cloud.google.com/service-mesh/docs/proxy-injection"
   fi
-  if ! is_sa; then
-    info "The ASM package used for installation can be found at:"
-    info "${OUTPUT_DIR}/asm"
-    info "The version of istioctl that matches the installation can be found at:"
-    info "${OUTPUT_DIR}/${ISTIOCTL_REL_PATH}"
+  info "The ASM package used for installation can be found at:"
+  info "${OUTPUT_DIR}/asm"
+  info "The version of istioctl that matches the installation can be found at:"
+  info "${OUTPUT_DIR}/${ISTIOCTL_REL_PATH}"
+  info "A symlink to the istioctl binary can be found at:"
+  info "${OUTPUT_DIR}/istioctl"
+  if ! is_managed; then
     info "The combined configuration generated for installation can be found at:"
     info "${OUTPUT_DIR}/${RAW_YAML}"
     info "The full, expanded set of kubernetes resources can be found at:"
     info "${OUTPUT_DIR}/${EXPANDED_YAML}"
+  else
+    info "You can find the gateway config to install with istioctl here:"
+    info "${OUTPUT_DIR}/managed_control_plane_gateway.yaml"
   fi
 
-  info "*****************************"
+  info "$(starline)"
 }
 
 main "${@}"
