@@ -159,6 +159,7 @@ def rmse(y_true, y_pred):
 
 
 def build_dnn_model(nbuckets, nnsize, lr):
+    # input layer is all float except for pickup_datetime which is a string
     STRING_COLS = ['pickup_datetime']
     NUMERIC_COLS = (
             set(CSV_COLUMNS) - set([LABEL_COLUMN, 'key']) - set(STRING_COLS)
@@ -183,6 +184,7 @@ def build_dnn_model(nbuckets, nnsize, lr):
     output = layers.Dense(1, name='fare')(x)
 
     model = models.Model(inputs, output)
+    #TODO 1a
     lr_optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
     model.compile(optimizer=lr_optimizer, loss='mse', metrics=[rmse, 'mse'])
 
@@ -190,6 +192,7 @@ def build_dnn_model(nbuckets, nnsize, lr):
 
 
 def train_and_evaluate(hparams):
+    #TODO 1b
     batch_size = hparams['batch_size']
     nbuckets = hparams['nbuckets']
     lr = hparams['lr']
