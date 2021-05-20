@@ -29,14 +29,14 @@ from pyspark.sql.types import StructType, StructField, StringType, FloatType
 CLOUDSQL_INSTANCE_IP = '104.155.188.32'   # CHANGE (database server IP)
 CLOUDSQL_DB_NAME = 'recommendation_spark'
 CLOUDSQL_USER = 'root'
-CLOUDSQL_PWD  = 'root'  # CHANGE
+CLOUDSQL_PWD  = 'easyPassword1@' #CHANGE (root password)
 
 conf = SparkConf().setAppName("train_model")
 sc = SparkContext(conf=conf)
 sqlContext = SQLContext(sc)
 
 jdbcDriver = 'com.mysql.jdbc.Driver'
-jdbcUrl    = 'jdbc:mysql://%s:3306/%s?user=%s&password=%s' % (CLOUDSQL_INSTANCE_IP, CLOUDSQL_DB_NAME, CLOUDSQL_USER, CLOUDSQL_PWD)
+jdbcUrl    = 'jdbc:mysql://%s/%s?user=%s&password=%s' % (CLOUDSQL_INSTANCE_IP, CLOUDSQL_DB_NAME, CLOUDSQL_USER, CLOUDSQL_PWD)
 
 # checkpointing helps prevent stack overflow errors
 sc.setCheckpointDir('checkpoint/')
@@ -58,7 +58,7 @@ for USER_ID in range(0, 100):
   pairsPotential = rddPotential.map(lambda x: (USER_ID, x[0]))
   predictions = model.predictAll(pairsPotential).map(lambda p: (str(p[0]), str(p[1]), float(p[2])))
   predictions = predictions.takeOrdered(5, key=lambda x: -x[2]) # top 5
-  print("predicted for user={0}".format(USER_ID))
+  print(("predicted for user={0}".format(USER_ID)))
   if (allPredictions == None):
     allPredictions = predictions
   else:
