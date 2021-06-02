@@ -1,0 +1,17 @@
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+    <springProfile name="cloud">
+        <include resource="org/springframework/cloud/gcp/logging/logback-appender.xml"/>
+        <root level="INFO">
+            <appender-ref ref="STACKDRIVER"/>
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+    <springProfile name="default">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+</configuration>

@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: guestbook-frontend
+  name: guestbook-frontend
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: guestbook-frontend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: guestbook-frontend
+  name: guestbook-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: guestbook-frontend
+  template:
+    metadata:
+      labels:
+        app: guestbook-frontend
+    spec:
+      volumes:
+      - name: credentials
+        secret:
+          secretName: guestbook-service-account
+      containers:
+      - name: guestbook-frontend
+        image: saturnism/spring-gcp-guestbook-frontend:latest
+        volumeMounts:
+        - name: credentials 
+          mountPath: "/etc/credentials"
+          readOnly: true
+        env:
+        - name: SPRING_CLOUD_CONFIG_ENABLED
+          value: "false"
+        - name: SPRING_CLOUD_GCP_CONFIG_ENABLED
+          value: "false"
+        - name: MESSAGES_ENDPOINT
+          value: http://guestbook-service:8080/guestbookMessages
+        - name: SPRING_PROFILES_ACTIVE
+          value: cloud
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/credentials/service-account.json
+        ports:
+        - name: http
+          containerPort: 8080
