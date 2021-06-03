@@ -12,14 +12,10 @@ spec:
   retention: 720h
   scrapeInterval: 15s
   serviceAccountName: prometheus
-  serviceMonitorSelector:
-    any: true
-  serviceMonitorNamespaceSelector:
-    any: true
-  podMonitorSelector:
-    any: true
-  podMonitorNamespaceSelector:
-    any: true
+  serviceMonitorSelector: {}
+  serviceMonitorNamespaceSelector: {}
+  podMonitorSelector: {}
+  podMonitorNamespaceSelector: {}
   enableAdminAPI: false
   podMetadata:
     labels:
