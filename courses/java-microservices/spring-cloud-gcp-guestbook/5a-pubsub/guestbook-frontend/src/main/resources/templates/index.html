@@ -1,0 +1,54 @@
+<html>
+<head>
+    <title>Guestbook</title>
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
+    <meta charset="utf-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+    <style>
+      body { padding-top: 80px; }
+      form span { font-weight: bold; padding-right: 1em; display: block; }
+      form input[type="submit"] { display: block; margin-top: 1em; }
+      .greeting { padding-bottom: 0.5em; }
+      .messages { border-top: 1px solid black }
+      .message { display: block; }
+      .message span { padding-top: 0.5em; }
+      .message .username { font-weight: bold; width: 100px; float: left;}
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">Guestbook</a>
+        </div>
+    </div>
+</nav>
+
+<div class="main container">
+    <div class="input">
+        <form action="/post" method="post">
+            <span>Your name:</span><input type="text" name="name" th:value="${name}"/>
+            <span>Message:</span><input type="text" name="message"/>
+            <input type="submit" value="Post"/>
+        </form>
+    </div>
+
+    <div th:if="${greeting != null}" class="greeting">
+        <span th:text="${greeting}">Greeting</span>
+    </div>
+
+    <div class="messages">
+        <div th:each="message: ${messages}" class="message">
+            <span th:text="${message.name}" class="username">Username</span>
+            <span th:text="${message.message}" class="message">Message</span>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+</body>
+</html>
+
