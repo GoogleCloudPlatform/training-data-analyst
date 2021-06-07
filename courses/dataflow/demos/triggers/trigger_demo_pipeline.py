@@ -12,22 +12,22 @@ from apache_beam.transforms.combiners import CountCombineFn
 from apache_beam.runners import DataflowRunner
 from apache_beam.transforms.trigger import AfterProcessingTime, AfterWatermark
 
-class CommonLog(typing.NamedTuple):
-    ip: str
-    user_id: str
-    lat: float
-    lng: float
+class TaxiRide(typing.NamedTuple):
+    ride_id: str
+    point_idx: int
+    latitude: float
+    longitude: float
     timestamp: str
-    http_request: str
-    http_response: int
-    num_bytes: int
-    user_agent: str
+    meter_reading: float
+    meter_increment: float
+    ride_status: str
+    passenger_count: int
 
-beam.coders.registry.register_coder(CommonLog, beam.coders.RowCoder)
+beam.coders.registry.register_coder(TaxiRide, beam.coders.RowCoder)
 
 def parse_json(element):
     row = json.loads(element.decode('utf-8'))
-    return CommonLog(**row)
+    return TaxiRide(**row)
 
 class GetTimestampFn(beam.DoFn):
     def process(self, element, window=beam.DoFn.WindowParam):
@@ -59,7 +59,7 @@ def run():
     table_schema = {
         "fields": [
             {
-                "name": "page_views",
+                "name": "taxi_events",
                 "type": "INTEGER"
             },
             {
@@ -70,7 +70,7 @@ def run():
         ]
     }
 
-    input_topic = f"projects/{opts.project}/topics/my_topic"
+    input_topic = "projects/pubsub-public-data/topics/taxirides-realtime"
     output_table = f"{opts.project}:dataflow_demos.{opts.accum_mode}"
 
     if opts.accum_mode == 'accumulating':
@@ -83,7 +83,7 @@ def run():
     p = beam.Pipeline(options=options)
 
     (p | 'ReadFromPubSub' >> beam.io.ReadFromPubSub(input_topic)
-       | 'ParseJson' >> beam.Map(parse_json).with_output_types(CommonLog)
+       | 'ParseJson' >> beam.Map(parse_json).with_output_types(TaxiRide)
        | 'WindowByMinute' >> beam.WindowInto(beam.window.FixedWindows(60),
                                               trigger=AfterWatermark(early=AfterProcessingTime(10)),
                                               accumulation_mode=accum_mode)

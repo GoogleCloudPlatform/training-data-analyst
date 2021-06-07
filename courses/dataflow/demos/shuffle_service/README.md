@@ -19,7 +19,7 @@ git clone https://github.com/GoogleCloudPlatform/training-data-analyst
 and the set your environment variables and create a GCS bucket and BigQuery dataset if needed
 
 ```bash
-cd ~/training-data-analyst/courses/dataflow/demos/shuffle_service
+cd ./training-data-analyst/courses/dataflow/demos/shuffle_service
 
 PROJECT_ID=$(gcloud config get-value project)
 REGION=us-central1
