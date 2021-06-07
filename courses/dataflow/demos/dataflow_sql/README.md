@@ -4,7 +4,9 @@ In this demo we will create a Dataflow pipeline to analyze a simulated stream of
 
 Dataflow SQL is a service accessible via the BigQuery console which will parse a SQL statement (in the ZetaSQL dialect) and build a Dataflow pipeline. This is a tool that can ease the use of Dataflow for processing data when custom transformations are not needed in the pipeline.
 
-## Simulated Stream Setup
+**Note**: This demo is a fork of a demo also available in the Data Engineering class. Some concepts are explored differently in this demo, but roughly the same concepts and tools are used. It is recommended to have the `training-data-analyst` repo cloned in advance and to compress the **Demo Setup** section into a single script which will be included below. 
+
+## Demo Setup
 
 First we need to set up the simulated stream of traffic data. We will leverage some public traffic data from San Diego and use that to simulate our real-time stream. First we need to download the data we will be streaming.
 
@@ -15,16 +17,11 @@ git clone https://github.com/GoogleCloudPlatform/training-data-analyst
 
 ```
 
-After cloning the repo, we're ready to download the traffic data from a public Cloud Storage location.
+After cloning the repo, we're ready to download and start streaming the traffic data from a public Cloud Storage location.
 
 ```bash
 cd ../courses/data-engineering/demos/sandiego_dataflow_sql
 bash ./publish/download_data.sh
-```
-
-After downloading the data, we just need to set up the stream. The `send_sensor_data.py` Python script will grab batches of data from the file we downloaded and send them to Pub/Sub. The script creates the Pub/Sub topic `sandiego` if it does not already exist in your project.
-
-```bash
 export PROJECT_ID=$(gcloud config get-value project)
 python ./publish/send_sensor_data.py --speedFactor=60 --project $PROJECT_ID
 ```
@@ -38,7 +35,7 @@ Where `k1, k2 ,...,kn` are string-valued keys and `v1, v2,..., vn` are the corre
 
 Minimize (but do not close!) the Cloud Shell terminal and leave the stream simulator running for now.
 
-## Creating Dataflow Pub/Sub Source and Schema
+## The Demo: Creating Dataflow Pub/Sub Source and Schema
 
 Next we need to create our Pub/Sub data source for Dataflow SQL and assign a schema to the incoming data. Dataflow will use this schema to assign a Beam schema to our data for processing.
 
@@ -117,6 +114,8 @@ Once there, click on the **Edit Schema** button and copy paste the following JSO
 ]
 ```
 
+## The Demo: Executing a Dataflow Pipeline using SQL
+
 Now that we have registered our schema, we're ready to execute our query! Let us point out a few parts of our query.
 
 ```sql
@@ -131,7 +130,7 @@ FROM
     "INTERVAL 20 SECOND")
 ```
 
-Note that we are using the `HOP` function to define our sliding windows. We could use `TUMBLE` for fixed windows or `SESSION` for session windows instead. In this case we will be working with windows of length 20 seconds and offset 10 seconds. For this example we will use the Pub/Sub generated `event_timestamp` field, but we could provide our own custom timestamp field here.
+Note that we are using the `HOP` function to define our sliding windows. We could use `TUMBLE` for fixed windows or `SESSION` for session windows instead. In this case we will be working with windows of length 20 seconds and offset 10 seconds. For this example we will use the Pub/Sub generated `event_timestamp` field. The `event_timestamp` field is a required field for Pub/Sub Dataflow sources and is provided as the publication timestamp of the Pub/Sub message.
 
 Finally what about the syntax for our sources? `pubsub.topic` specifies that our source is a Pub/Sub topic and then we provide the project ID and topic name of the topic we wish to use.
 
@@ -172,7 +171,7 @@ We're ready to create our Dataflow SQL job! Click on **Create Cloud Dataflow job
 
 It will take around 5 minutes to spin up the pipeline cluster and start processing data. Note that you may want to check that the simulated sensor script is still running and restart if needed.
 
-After a few minutes, you should be able to see results by simply querying the resutls table.
+After a few minutes, you should be able to see results by simply querying the results table.
 
 ```sql
 SELECT * FROM demos.average_speed_dfsql ORDER BY period_start
