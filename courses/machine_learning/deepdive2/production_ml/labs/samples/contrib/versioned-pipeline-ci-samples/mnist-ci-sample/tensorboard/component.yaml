@@ -1,0 +1,16 @@
+name: tensorboard visualization
+description: visualize training in tensorboard
+inputs:
+  - {name: logdir, type: string}
+  - {name: output_path, type: string}
+outputs:
+  - {name: MLPipeline UI metadata, type: UI metadata}
+implementation:
+  container:
+    image: tensorboard_image_location
+    command: ['python', '/tensorboard.py']
+    args: ['--logdir', {inputValue: logdir},
+           '--output_path', {inputValue: output_path}]
+    fileOutputs: 
+      MLPipeline UI metadata: ui_metadata_path
+    

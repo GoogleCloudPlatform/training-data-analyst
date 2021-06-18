@@ -1,0 +1,15 @@
+name: download dataset
+description: visualize training in tensorboard
+inputs:
+  - {name: bucket_name, type: GCSPath}
+outputs:
+  - {name: train_dataset, type: string}
+  - {name: test_dataset, type: string}
+implementation:
+  container:
+    image: download_image_location
+    command: ['python', 'download_data.py']
+    args: ['--bucket_name', {inputValue: bucket_name}]
+    fileOutputs: 
+      train_dataset: /train.txt
+      test_dataset: /test.txt

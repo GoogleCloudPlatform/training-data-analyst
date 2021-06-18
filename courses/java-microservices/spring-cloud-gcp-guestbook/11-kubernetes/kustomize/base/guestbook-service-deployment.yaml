@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: guestbook-service
+  name: guestbook-service
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: guestbook-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: guestbook-service
+  name: guestbook-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: guestbook-service
+  template:
+    metadata:
+      labels:
+        app: guestbook-service
+    spec:
+      volumes:
+      - name: credentials
+        secret:
+          secretName: guestbook-service-account
+      containers:
+      - name: guestbook-service
+        image: gcr.io/devnexus-test/guestbook-service
+        volumeMounts:
+        - name: credentials 
+          mountPath: "/etc/credentials"
+          readOnly: true
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: cloud
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/credentials/service-account.json
+        - name: PORT
+          value: "8080"
+        ports:
+        - name: http
+          containerPort: 8080
