@@ -8,7 +8,7 @@ Dataflow SQL is a service accessible via the BigQuery console which will parse a
 
 First we need to set up the simulated stream of traffic data. We will leverage some public traffic data from San Diego and use that to simulate our real-time stream. First we need to download the data we will be streaming.
 
-In Cloud Shell, if you have not already clone the `michaelabel-demos` repo by running the following command
+In Cloud Shell, if you have not already clone the `training-data-analyst` repo by running the following command
 
 ```bash
 git clone https://github.com/GoogleCloudPlatform/training-data-analyst

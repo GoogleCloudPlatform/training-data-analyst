@@ -69,7 +69,7 @@ public class Subscriber implements MessageReceiver {
     // bytes, we can also limit based on size, which woudl be 200 * 100 = 20,000
     builder.setFlowControlSettings(
         FlowControlSettings.newBuilder()
-            .setMaxOutstandingRequestBytes(20_000L)
+            .setMaxOutstandingRequestBytes(2_000_000L)
             .setMaxOutstandingElementCount(200L)
             .build());
     try {

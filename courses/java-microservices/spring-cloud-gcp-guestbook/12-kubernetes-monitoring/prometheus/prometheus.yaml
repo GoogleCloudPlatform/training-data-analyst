@@ -1,0 +1,98 @@
+# This config is cooked based on following resource:
+# https://godoc.org/github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1#Prometheus
+# https://github.com/istio/installer/blob/master/istio-telemetry/prometheus-operator/templates/prometheus.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+  labels:
+spec:
+  image: "docker.io/prom/prometheus:v2.12.0"
+  version: v2.12.0
+  retention: 720h
+  scrapeInterval: 15s
+  serviceAccountName: prometheus
+  serviceMonitorSelector: {}
+  serviceMonitorNamespaceSelector: {}
+  podMonitorSelector: {}
+  podMonitorNamespaceSelector: {}
+  enableAdminAPI: false
+  podMetadata:
+    labels:
+      app: prometheus
+  containers:
+  - name: sd-sidecar
+    image: gcr.io/stackdriver-prometheus/stackdriver-prometheus-sidecar:0.7.3
+    args:
+    - --stackdriver.project-id=${PROJECT_ID}
+    - --prometheus.wal-directory=/prometheus/wal
+    - --stackdriver.kubernetes.location=us-central1
+    - --stackdriver.kubernetes.cluster-name=guestbook-cluster
+    ports:
+    - name: sidecar
+      containerPort: 9091
+    volumeMounts:
+    - name: prometheus-prometheus-db
+      mountPath: /prometheus
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus
+  labels:
+    app: prometheus
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - services
+      - endpoints
+      - pods
+      - nodes/proxy
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-default
+  labels:
+    app: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  annotations:
+    prometheus.io/scrape: 'true'
+  labels:
+    app: prometheus
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - name: http-prometheus
+      protocol: TCP
+      port: 9090
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: default
+  labels:
+    app: prometheus
+
