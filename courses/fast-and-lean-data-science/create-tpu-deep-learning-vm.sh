@@ -3,7 +3,7 @@
 # please configure your login, project region and zone first by running gcloud init
 # region us-central1 zone us-central1-b usually have TPUs available
 
-DEFAULT_TF_VERSION="2.4" # WARNING: DLVM release is tf2-2-3-cpu but contains TF 2.3.1
+DEFAULT_TF_VERSION="2.5" # WARNING: for TF 2.3, the DLVM release is tf2-2-3-cpu but contains TF 2.3.1
 IMAGE_FAMILY_PATTERN="tf2-2-x-cpu"
 
 usage()
@@ -33,7 +33,8 @@ create_vm() # params: machine_name, machine_type, tfnightly, version
     if [ "$3" != 0 ]; # if tf-nighty requested
     then
         # since DLVM move to conda, system pip does not work for installing tf-nightly anymore
-        extra_install="./opt/conda/bin/pip install tf-nightly; ./opt/conda/bin/pip install behave";
+	# since keras moved to a separate repository, you must uninstall keras ans TensorFlow before installing tf-nightly
+        extra_install="./opt/conda/bin/pip uninstall -y keras tensorflow; ./opt/conda/bin/pip install tf-nightly; ./opt/conda/bin/pip install behave";
         maj_min_version $DEFAULT_TF_VERSION # result in variable "maj_min_version". No sub-minor TF versions in DLVM images.
         vm_version=$maj_min_version
         version_msg="tf-nightly (2.x)";
