@@ -507,7 +507,7 @@
         "stringValue": "bq://dougkelly-vertex-demos:chicago_taxi.chicago_taxi_tips_raw"
       },
       "display_name": {
-        "stringValue": "automl-tab-chicago-taxi-tips-1624228195"
+        "stringValue": "automl-tab-chicago-taxi-tips-1624573137"
       },
       "gcp_region": {
         "stringValue": "us-central1"
