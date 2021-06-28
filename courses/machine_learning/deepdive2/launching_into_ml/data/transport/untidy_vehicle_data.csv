@@ -1,0 +1,1000 @@
+Date,Zip Code,Model Year,Fuel,Make,Light_Duty,Vehicles
+10/1/2018,90000,2006,Gasoline,OTHER/UNK,,1
+10/1/2018,,2014,Gasoline,,Yes,1
+,90000,,Gasoline,OTHER/UNK,Yes,
+10/1/2018,90000,2017,Gasoline,OTHER/UNK,Yes,1
+10/1/2018,90000,<2006,Diesel and Diesel Hybrid,OTHER/UNK,No,55
+10/1/2018,90000,<2006,Diesel and Diesel Hybrid,OTHER/UNK,Yes,2
+10/1/2018,90000,<2006,Diesel and Diesel Hybrid,WHITE,No,19
+10/1/2018,90000,<2006,Battery Electric,OTHER/UNK,No,4
+10/1/2018,90000,<2006,Gasoline,Type_A,Yes,33
+10/2/2018,90000,<2006,Gasoline,Type_B,Yes,11
+10/3/2018,90000,<2006,Gasoline,Type_C,Yes,28
+10/4/2018,90000,<2006,Gasoline,Type_D,Yes,19
+10/5/2018,90000,<2006,Gasoline,OTHER/UNK,No,55
+10/6/2018,90000,<2006,Gasoline,OTHER/UNK,Yes,35
+10/7/2018,90000,<2006,Gasoline,Type_E,Yes,59
+10/8/2018,90000,<2006,Other,OTHER/UNK,Yes,6
+10/9/2018,90001,2006,Diesel and Diesel Hybrid,Type_C,No,16
+10/10/2018,90001,2006,Diesel and Diesel Hybrid,OTHER/UNK,No,23
+10/11/2018,90001,2006,Diesel and Diesel Hybrid,OTHER/UNK,Yes,9
+10/12/2018,,2006,,,Yes,
+10/13/2018,90001,2007,Diesel and Diesel Hybrid,OTHER/UNK,Yes,10
+10/14/2018,90001,2007,Flex-Fuel,Type_A,Yes,78
+10/15/2018,90001,2007,Flex-Fuel,OTHER/UNK,Yes,17
+10/16/2018,90001,2007,Gasoline,Type_F,Yes,16
+10/17/2018,90001,2007,Gasoline,Type_G,Yes,40
+10/18/2018,90001,2007,Gasoline,Type_H,Yes,35
+10/19/2018,90001,2007,Gasoline,Type_A,Yes,183
+10/20/2018,90001,2007,Gasoline,Type_I,Yes,63
+10/21/2018,90001,2007,Gasoline,Type_B,Yes,87
+10/22/2018,90001,2007,Gasoline,Type_C,Yes,101
+10/23/2018,90001,2007,Gasoline,Type_D,Yes,47
+10/24/2018,90001,2007,Gasoline,Type_J,Yes,182
+10/25/2018,90001,2007,Gasoline,Type_J,Yes,21
+10/26/2018,90001,2007,Gasoline,Type_Y,Yes,34
+10/27/2018,90001,2007,Gasoline,Type_K,Yes,30
+10/28/2018,90001,2007,Gasoline,Type_L,Yes,16
+10/29/2018,90001,2007,Gasoline,Type_S,Yes,39
+10/30/2018,90001,2007,Gasoline,Type_GG,Yes,14
+10/31/2018,90001,2007,Gasoline,Type_T,Yes,12
+11/1/2018,90001,2007,Gasoline,Type_M,Yes,15
+11/2/2018,90001,2007,Gasoline,Type_N,Yes,182
+,90001,,Gasoline,Type_N,,
+10/2/2018,90001,2008,Diesel and Diesel Hybrid,OTHER/UNK,No,56
+10/3/2018,90001,2008,Diesel and Diesel Hybrid,OTHER/UNK,Yes,8
+10/4/2018,90001,2008,Battery Electric,OTHER/UNK,Yes,1
+10/5/2018,90001,2008,Flex-Fuel,Type_A,Yes,30
+10/6/2018,90001,2008,Flex-Fuel,OTHER/UNK,Yes,18
+10/7/2018,90001,2008,Gasoline,Type_F,Yes,13
+10/8/2018,90001,2008,Gasoline,Type_G,Yes,40
+10/9/2018,90001,2008,Gasoline,Type_H,Yes,25
+10/10/2018,90001,2008,Gasoline,Type_A,Yes,102
+10/11/2018,90001,2008,Gasoline,Type_I,Yes,35
+10/12/2018,90001,2008,Gasoline,Type_B,Yes,69
+10/13/2018,90001,2008,Gasoline,Type_C,Yes,76
+10/14/2018,90001,2008,Gasoline,Type_D,Yes,24
+10/15/2018,90001,2008,Gasoline,Type_J,Yes,160
+10/16/2018,90001,2008,Gasoline,Type_J,Yes,21
+10/17/2018,90001,2008,Gasoline,Type_Y,Yes,35
+10/18/2018,9001,2008,,,,26
+10/19/2018,90001,2009,Gasoline,OTHER/UNK,No,2
+10/20/2018,90001,2009,Gasoline,OTHER/UNK,Yes,55
+10/21/2018,90001,2009,Gasoline,Type_X,Yes,22
+10/22/2018,90001,2009,Gasoline,Type_Q,Yes,163
+10/23/2018,90001,2009,Gasoline,Type_R,Yes,11
+10/24/2018,90001,2009,Hybrid Gasoline,OTHER/UNK,Yes,18
+10/25/2018,90001,2009,Natural Gas,OTHER/UNK,No,2
+10/26/2018,90001,2010,Diesel and Diesel Hybrid,OTHER/UNK,No,27
+10/27/2018,90001,2010,Diesel and Diesel Hybrid,OTHER/UNK,Yes,2
+10/28/2018,90001,2010,Flex-Fuel,Type_A,Yes,30
+10/29/2018,90001,2010,Flex-Fuel,Type_C,Yes,14
+10/30/2018,90001,2010,Flex-Fuel,OTHER/UNK,Yes,15
+10/31/2018,90001,2010,Gasoline,Type_A,Yes,36
+11/1/2018,90001,2010,Gasoline,Type_I,Yes,16
+11/2/2018,90001,2010,Gasoline,Type_B,Yes,52
+10/2/2018,90001,2010,Gasoline,Type_C,Yes,52
+10/3/2018,90001,2010,Gasoline,Type_J,Yes,101
+10/4/2018,90001,2010,Gasoline,Type_J,Yes,20
+10/5/2018,90001,2010,Gasoline,Type_K,Yes,14
+10/6/2018,90001,2010,Gasoline,Type_L,Yes,19
+10/7/2018,90001,2010,Gasoline,Type_S,Yes,14
+10/8/2018,90001,2010,Gasoline,Type_T,Yes,13
+10/9/2018,90001,2010,Gasoline,Type_M,Yes,20
+10/10/2018,90001,2010,Gasoline,Type_N,Yes,93
+10/11/2018,90001,2010,Gasoline,OTHER/UNK,Yes,55
+10/12/2018,90001,2010,Gasoline,Type_X,Yes,21
+10/13/2018,90001,2010,Gasoline,Type_Q,Yes,149
+10/14/2018,90001,2010,Gasoline,Type_R,Yes,14
+10/15/2018,90001,2010,Hybrid Gasoline,OTHER/UNK,Yes,13
+10/16/2018,90001,2010,Hybrid Gasoline,Type_Q,Yes,23
+10/17/2018,90001,2011,Diesel and Diesel Hybrid,Type_MM,No,13
+10/18/2018,90001,2011,Diesel and Diesel Hybrid,Type_NN,No,12
+10/19/2018,90001,2011,Diesel and Diesel Hybrid,OTHER/UNK,No,22
+10/20/2018,90001,2011,Diesel and Diesel Hybrid,OTHER/UNK,Yes,3
+10/21/2018,90001,2011,Flex-Fuel,Type_A,Yes,49
+10/22/2018,90001,2011,Flex-Fuel,Type_C,Yes,19
+10/23/2018,90001,2011,Flex-Fuel,OTHER/UNK,No,4
+10/24/2018,90001,2011,Flex-Fuel,OTHER/UNK,Yes,20
+10/25/2018,90001,2011,Gasoline,Type_G,Yes,36
+10/26/2018,90001,2011,Gasoline,Type_A,Yes,53
+10/27/2018,90001,2011,Gasoline,Type_B,Yes,17
+10/28/2018,90001,2011,Gasoline,Type_C,Yes,55
+10/29/2018,90001,2011,Gasoline,Type_J,Yes,76
+10/30/2018,90001,2011,Gasoline,Type_J,Yes,17
+10/31/2018,90001,2011,Gasoline,Type_K,Yes,18
+11/1/2018,90001,2011,Gasoline,Type_L,Yes,34
+11/2/2018,90001,2011,Gasoline,Type_M,Yes,16
+10/2/2018,90001,2011,Gasoline,Type_N,Yes,119
+10/3/2018,90001,2011,Gasoline,OTHER/UNK,Yes,80
+10/4/2018,90001,2011,Gasoline,Type_X,Yes,13
+10/5/2018,90001,2011,Gasoline,Type_Q,Yes,192
+10/6/2018,90001,2011,Gasoline,Type_R,Yes,13
+10/7/2018,90001,2011,Hybrid Gasoline,OTHER/UNK,Yes,7
+10/8/2018,90001,2011,Hybrid Gasoline,Type_Q,Yes,15
+10/9/2018,90001,2012,Diesel and Diesel Hybrid,Type_MM,No,23
+10/10/2018,90001,2012,Diesel and Diesel Hybrid,OTHER/UNK,No,32
+10/11/2018,90001,2012,Diesel and Diesel Hybrid,OTHER/UNK,Yes,4
+10/12/2018,90001,2012,Flex-Fuel,Type_A,Yes,17
+10/13/2018,90001,2012,Flex-Fuel,OTHER/UNK,No,1
+10/14/2018,90001,2012,Flex-Fuel,OTHER/UNK,Yes,34
+10/15/2018,90001,2012,Gasoline,Type_G,Yes,16
+10/16/2018,90001,2012,Gasoline,Type_A,Yes,62
+10/17/2018,90001,2012,Gasoline,Type_I,Yes,19
+10/18/2018,90001,2012,Gasoline,Type_B,Yes,23
+10/19/2018,90001,2012,Gasoline,Type_C,Yes,43
+10/20/2018,90001,2012,Gasoline,Type_J,Yes,158
+10/21/2018,90001,2012,Gasoline,Type_J,Yes,23
+10/22/2018,90001,2012,Gasoline,Type_K,Yes,25
+10/23/2018,90001,2012,Gasoline,Type_L,Yes,49
+10/24/2018,90001,2012,Gasoline,Type_M,Yes,14
+10/25/2018,90001,2012,Gasoline,Type_N,Yes,168
+10/26/2018,90001,2012,Gasoline,OTHER/UNK,No,1
+10/27/2018,90001,2012,Gasoline,OTHER/UNK,Yes,72
+10/28/2018,90001,2012,Gasoline,Type_X,Yes,26
+10/29/2018,90001,2012,Gasoline,Type_Q,Yes,159
+10/30/2018,90001,2012,Gasoline,Type_R,Yes,18
+10/31/2018,90001,2012,Hybrid Gasoline,OTHER/UNK,Yes,6
+11/1/2018,90001,2012,Hybrid Gasoline,Type_Q,Yes,16
+11/2/2018,90001,2012,Plug-in Hybrid,OTHER/UNK,Yes,1
+10/2/2018,90001,2013,Diesel and Diesel Hybrid,OTHER/UNK,No,27
+10/3/2018,90001,2013,Diesel and Diesel Hybrid,OTHER/UNK,Yes,5
+10/4/2018,90001,2013,Battery Electric,OTHER/UNK,Yes,1
+10/5/2018,90001,2013,Flex-Fuel,Type_A,Yes,28
+10/6/2018,90001,2013,Flex-Fuel,Type_C,Yes,28
+10/7/2018,90001,2013,Flex-Fuel,OTHER/UNK,Yes,25
+10/8/2018,90001,2013,Gasoline,Type_G,Yes,12
+10/9/2018,90001,2013,Gasoline,Type_A,Yes,88
+10/10/2018,90001,2013,Gasoline,Type_I,Yes,13
+10/11/2018,90001,2013,Gasoline,Type_B,Yes,59
+10/12/2018,90001,2013,Gasoline,Type_C,Yes,68
+10/13/2018,90001,2013,Gasoline,Type_J,Yes,138
+10/14/2018,90001,2013,Gasoline,Type_J,Yes,55
+10/15/2018,90001,2013,Gasoline,Type_Y,Yes,15
+10/16/2018,90001,2013,Gasoline,Type_K,Yes,11
+10/17/2018,90001,2013,Gasoline,Type_L,Yes,75
+10/18/2018,90001,2013,Gasoline,Type_M,Yes,22
+10/19/2018,90001,2013,Gasoline,Type_N,Yes,195
+10/20/2018,90001,2013,Gasoline,OTHER/UNK,No,1
+10/21/2018,90001,2013,Gasoline,OTHER/UNK,Yes,52
+10/22/2018,90001,2013,Gasoline,Type_O,Yes,12
+10/23/2018,90001,2013,Gasoline,Type_X,Yes,25
+10/24/2018,90001,2013,Gasoline,Type_Q,Yes,201
+10/25/2018,90001,2013,Gasoline,Type_R,Yes,31
+10/26/2018,90001,2013,Hybrid Gasoline,OTHER/UNK,Yes,9
+10/27/2018,90001,2013,Hybrid Gasoline,Type_Q,Yes,30
+10/28/2018,90001,2013,Plug-in Hybrid,OTHER/UNK,Yes,7
+10/29/2018,90001,2014,Diesel and Diesel Hybrid,Type_MM,No,12
+10/30/2018,90001,2014,Diesel and Diesel Hybrid,OTHER/UNK,No,13
+10/31/2018,90001,2014,Diesel and Diesel Hybrid,OTHER/UNK,Yes,7
+11/1/2018,90001,2014,Battery Electric,OTHER/UNK,Yes,1
+11/2/2018,90001,2014,Flex-Fuel,Type_A,Yes,41
+10/2/2018,90001,2014,Flex-Fuel,Type_C,Yes,15
+10/3/2018,90001,2014,Flex-Fuel,OTHER/UNK,No,2
+10/4/2018,90001,2014,Flex-Fuel,OTHER/UNK,Yes,16
+10/5/2018,90001,2014,Gasoline,Type_G,Yes,15
+10/6/2018,90001,2014,Gasoline,Type_H,Yes,11
+10/7/2018,90001,2014,Gasoline,Type_A,Yes,94
+10/8/2018,90001,2014,Gasoline,Type_B,Yes,48
+10/9/2018,90001,2014,Gasoline,Type_C,Yes,75
+10/10/2018,90001,2014,Gasoline,Type_D,Yes,22
+10/11/2018,90001,2014,Gasoline,Type_J,Yes,141
+10/12/2018,90001,2014,Gasoline,Type_J,Yes,14
+10/13/2018,90001,2014,Gasoline,Type_K,Yes,39
+10/14/2018,90001,2014,Gasoline,Type_L,Yes,74
+10/15/2018,90001,2014,Gasoline,Type_S,Yes,15
+10/16/2018,90001,2014,Gasoline,Type_T,Yes,14
+10/17/2018,90001,2014,Gasoline,Type_M,Yes,12
+10/18/2018,90001,2014,Gasoline,Type_N,Yes,269
+10/19/2018,90001,2014,Gasoline,OTHER/UNK,No,3
+10/20/2018,90001,2014,Gasoline,OTHER/UNK,Yes,46
+10/21/2018,90001,2014,Gasoline,Type_O,Yes,14
+10/22/2018,90001,2014,Gasoline,Type_X,Yes,14
+10/23/2018,90001,2014,Gasoline,Type_Q,Yes,213
+10/24/2018,90001,2014,Gasoline,Type_R,Yes,18
+10/25/2018,90001,2014,Hybrid Gasoline,OTHER/UNK,Yes,17
+10/26/2018,90001,2014,Plug-in Hybrid,OTHER/UNK,Yes,5
+10/27/2018,90001,2015,Diesel and Diesel Hybrid,OTHER/UNK,No,14
+10/28/2018,90001,2015,Diesel and Diesel Hybrid,OTHER/UNK,Yes,11
+10/29/2018,90001,2015,Flex-Fuel,Type_A,Yes,13
+10/30/2018,90001,2015,Flex-Fuel,Type_B,Yes,14
+10/31/2018,90001,2015,Flex-Fuel,Type_C,Yes,16
+11/1/2018,90001,2015,Flex-Fuel,OTHER/UNK,No,2
+11/2/2018,90001,2015,Flex-Fuel,OTHER/UNK,Yes,16
+12/2/2018,90001,2015,Gasoline,Type_G,Yes,19
+12/3/2018,90001,2015,Gasoline,Type_A,Yes,141
+12/4/2018,90001,2015,Gasoline,Type_I,Yes,26
+12/5/2018,90001,2015,Gasoline,Type_B,Yes,65
+12/6/2018,90001,2015,Gasoline,Type_C,Yes,50
+12/7/2018,90001,2015,Gasoline,Type_D,Yes,14
+12/8/2018,90001,2015,Gasoline,Type_J,Yes,208
+12/9/2018,90001,2015,Gasoline,Type_J,Yes,34
+12/10/2018,90001,2015,Gasoline,Type_Y,Yes,19
+12/11/2018,90001,2015,Gasoline,Type_K,Yes,51
+12/12/2018,90001,2015,Gasoline,Type_L,Yes,161
+12/13/2018,90001,2015,Gasoline,Type_M,Yes,14
+12/14/2018,90001,2015,Gasoline,Type_N,Yes,327
+12/15/2018,90001,2015,Gasoline,OTHER/UNK,No,2
+12/16/2018,90001,2015,Gasoline,OTHER/UNK,Yes,57
+12/17/2018,90001,2015,Gasoline,Type_O,Yes,15
+12/18/2018,90001,2015,Gasoline,Type_X,Yes,16
+12/19/2018,90001,2015,Gasoline,Type_Q,Yes,257
+12/20/2018,90001,2015,Gasoline,Type_R,Yes,17
+12/21/2018,90001,2015,Hybrid Gasoline,Type_L,Yes,14
+12/22/2018,90001,2015,Hybrid Gasoline,OTHER/UNK,Yes,7
+12/23/2018,90001,2015,Hybrid Gasoline,Type_Q,Yes,30
+12/24/2018,90001,2015,Plug-in Hybrid,OTHER/UNK,Yes,5
+12/25/2018,90001,2016,Diesel and Diesel Hybrid,OTHER/UNK,No,16
+12/26/2018,90001,2016,Diesel and Diesel Hybrid,OTHER/UNK,Yes,18
+12/27/2018,90001,2016,Battery Electric,OTHER/UNK,Yes,1
+12/28/2018,90001,2016,Flex-Fuel,Type_A,Yes,25
+12/29/2018,90001,2016,Flex-Fuel,Type_B,Yes,13
+12/30/2018,90001,2016,Flex-Fuel,Type_C,Yes,14
+12/31/2018,90001,2016,Flex-Fuel,OTHER/UNK,Yes,16
+1/1/2019,90001,2016,Gasoline,Type_G,Yes,18
+1/2/2019,90001,2016,Gasoline,Type_A,Yes,117
+1/3/2019,90001,2016,Gasoline,Type_I,Yes,17
+1/4/2019,90001,2016,Gasoline,Type_B,Yes,48
+1/5/2019,90001,2016,Gasoline,Type_C,Yes,67
+1/6/2019,90001,2016,Gasoline,Type_J,Yes,273
+1/7/2019,90001,2016,Gasoline,Type_J,Yes,36
+1/8/2019,90001,2016,Gasoline,Type_K,Yes,47
+1/9/2019,90001,2016,Gasoline,Type_L,Yes,236
+1/10/2019,90001,2016,Gasoline,Type_S,Yes,19
+1/11/2019,90001,2016,Gasoline,Type_T,Yes,17
+1/12/2019,90001,2016,Gasoline,Type_N,Yes,279
+1/13/2019,90001,2016,Gasoline,OTHER/UNK,No,3
+1/14/2019,90001,2016,Gasoline,OTHER/UNK,Yes,82
+1/15/2019,90001,2016,Gasoline,Type_O,Yes,13
+1/16/2019,90001,2016,Gasoline,Type_X,Yes,16
+1/17/2019,90001,2016,Gasoline,Type_P,Yes,11
+1/18/2019,90001,2016,Gasoline,Type_Q,Yes,228
+1/19/2019,90001,2016,Hybrid Gasoline,Type_L,Yes,13
+1/20/2019,90001,2016,Hybrid Gasoline,OTHER/UNK,Yes,5
+1/21/2019,90001,2016,Hybrid Gasoline,Type_Q,Yes,13
+1/22/2019,90001,2016,Plug-in Hybrid,OTHER/UNK,Yes,4
+1/23/2019,90001,2017,Diesel and Diesel Hybrid,OTHER/UNK,No,12
+1/24/2019,90001,2017,Diesel and Diesel Hybrid,OTHER/UNK,Yes,12
+1/25/2019,90001,2017,Battery Electric,OTHER/UNK,Yes,4
+1/26/2019,90001,2017,Flex-Fuel,Type_A,Yes,29
+1/27/2019,90001,2017,Flex-Fuel,OTHER/UNK,Yes,28
+1/28/2019,90001,2017,Gasoline,Type_G,Yes,12
+1/29/2019,90001,2017,Gasoline,Type_A,Yes,132
+1/30/2019,90001,2017,Gasoline,Type_B,Yes,42
+1/31/2019,90001,2017,Gasoline,Type_C,Yes,111
+2/1/2019,90001,2017,Gasoline,Type_D,Yes,13
+2/2/2019,90001,2017,Gasoline,Type_J,Yes,260
+2/3/2019,90001,2017,Gasoline,Type_J,Yes,47
+2/4/2019,90001,2017,Gasoline,Type_K,Yes,44
+2/5/2019,90001,2017,Gasoline,Type_L,Yes,124
+2/6/2019,90001,2017,Gasoline,Type_S,Yes,11
+2/7/2019,90001,2017,Gasoline,Type_T,Yes,11
+2/8/2019,90001,2017,Gasoline,Type_M,Yes,15
+2/9/2019,90001,2017,Gasoline,Type_N,Yes,262
+2/10/2019,90001,2017,Gasoline,OTHER/UNK,No,4
+2/11/2019,90001,2017,Gasoline,OTHER/UNK,Yes,46
+2/12/2019,90001,2017,Gasoline,Type_O,Yes,29
+2/13/2019,90001,2017,Gasoline,Type_P,Yes,11
+2/14/2019,90001,2017,Gasoline,Type_Q,Yes,290
+2/15/2019,90001,2017,Gasoline,Type_R,Yes,19
+2/16/2019,90001,2017,Hybrid Gasoline,Type_L,Yes,14
+2/17/2019,90001,2017,Hybrid Gasoline,OTHER/UNK,Yes,11
+2/18/2019,90001,2017,Hybrid Gasoline,Type_Q,Yes,16
+2/19/2019,90001,2017,Plug-in Hybrid,OTHER/UNK,Yes,14
+2/20/2019,90001,2018,Diesel and Diesel Hybrid,OTHER/UNK,No,5
+2/21/2019,90001,2018,Diesel and Diesel Hybrid,OTHER/UNK,Yes,7
+2/22/2019,90001,2018,Battery Electric,OTHER/UNK,Yes,1
+2/23/2019,90001,2018,Flex-Fuel,Type_C,Yes,13
+2/24/2019,90001,2018,Flex-Fuel,OTHER/UNK,No,1
+2/25/2019,90001,2018,Flex-Fuel,OTHER/UNK,Yes,15
+2/26/2019,90001,2018,Gasoline,Type_G,Yes,28
+2/27/2019,90001,2018,Gasoline,Type_A,Yes,117
+2/28/2019,90001,2018,Gasoline,Type_B,Yes,53
+3/1/2019,90001,2018,Gasoline,Type_C,Yes,32
+3/2/2019,90001,2018,Gasoline,Type_J,Yes,209
+3/3/2019,90001,2018,Gasoline,Type_J,Yes,25
+3/4/2019,90001,2018,Gasoline,Type_K,Yes,41
+3/5/2019,90001,2018,Gasoline,Type_L,Yes,115
+3/6/2019,90001,2018,Gasoline,Type_T,Yes,12
+3/7/2019,90001,2018,Gasoline,Type_II,Yes,15
+3/8/2019,90001,2018,Gasoline,Type_N,Yes,155
+12/2/2018,90001,2018,Gasoline,OTHER/UNK,No,1
+12/3/2018,90001,2018,Gasoline,OTHER/UNK,Yes,71
+12/4/2018,90001,2018,Gasoline,Type_P,Yes,13
+12/5/2018,90001,2018,Gasoline,Type_Q,Yes,241
+12/6/2018,90001,2018,Hybrid Gasoline,OTHER/UNK,Yes,19
+12/7/2018,90001,2018,Plug-in Hybrid,OTHER/UNK,Yes,8
+12/8/2018,90001,2019,Gasoline,Type_G,Yes,56
+12/9/2018,90001,2019,Gasoline,Type_L,Yes,14
+12/10/2018,90001,2019,Gasoline,Type_II,Yes,69
+12/11/2018,90001,2019,Gasoline,OTHER/UNK,Yes,19
+12/12/2018,90001,2019,Plug-in Hybrid,OTHER/UNK,Yes,2
+12/13/2018,90001,<2006,Diesel and Diesel Hybrid,Type_A,No,19
+12/14/2018,90001,<2006,Diesel and Diesel Hybrid,Type_A,Yes,13
+12/15/2018,90001,<2006,Diesel and Diesel Hybrid,Type_C,No,37
+12/16/2018,90001,<2006,Diesel and Diesel Hybrid,Type_C,Yes,46
+12/17/2018,90001,<2006,Diesel and Diesel Hybrid,Type_MM,No,41
+12/18/2018,90001,<2006,Diesel and Diesel Hybrid,Type_D,No,17
+12/19/2018,90001,<2006,Diesel and Diesel Hybrid,Type_NN,No,56
+12/20/2018,90001,<2006,Diesel and Diesel Hybrid,Type_DD,No,29
+12/21/2018,90001,<2006,Diesel and Diesel Hybrid,OTHER/UNK,No,55
+12/22/2018,90001,<2006,Diesel and Diesel Hybrid,OTHER/UNK,Yes,33
+12/23/2018,90001,<2006,Diesel and Diesel Hybrid,Type_OO,No,11
+12/24/2018,90001,<2006,Flex-Fuel,Type_A,Yes,102
+12/25/2018,90001,<2006,Flex-Fuel,Type_I,Yes,28
+12/26/2018,90001,<2006,Flex-Fuel,Type_B,Yes,98
+12/27/2018,90001,<2006,Flex-Fuel,Type_C,Yes,173
+12/28/2018,90001,<2006,Flex-Fuel,Type_D,Yes,28
+12/29/2018,90001,<2006,Flex-Fuel,Type_HH,Yes,13
+12/30/2018,90001,<2006,Flex-Fuel,OTHER/UNK,No,1
+12/31/2018,90001,<2006,Flex-Fuel,OTHER/UNK,Yes,13
+1/1/2019,90001,<2006,Gasoline,Type_F,Yes,241
+1/2/2019,90001,<2006,Gasoline,Type_Z,Yes,35
+1/3/2019,90001,<2006,Gasoline,Type_G,Yes,210
+1/4/2019,90001,<2006,Gasoline,Type_AA,Yes,108
+1/5/2019,90001,<2006,Gasoline,Type_H,Yes,208
+1/6/2019,90001,<2006,Gasoline,Type_A,No,52
+1/7/2019,90001,<2006,Gasoline,Type_A,Yes,2529
+1/8/2019,90001,<2006,Gasoline,Type_I,Yes,172
+1/9/2019,90001,<2006,Gasoline,Type_B,Yes,560
+1/10/2019,90001,<2006,Gasoline,Type_C,No,56
+1/11/2019,90001,<2006,Gasoline,Type_C,Yes,2331
+1/12/2019,90001,<2006,Gasoline,Type_BB,Yes,17
+1/13/2019,90001,<2006,Gasoline,Type_D,No,36
+1/14/2019,90001,<2006,Gasoline,Type_D,Yes,703
+1/15/2019,90001,<2006,Gasoline,Type_J,Yes,2042
+1/16/2019,90001,<2006,Gasoline,Type_CC,Yes,19
+1/17/2019,90001,<2006,Gasoline,Type_J,Yes,88
+1/18/2019,90001,<2006,Gasoline,Type_Y,Yes,197
+1/19/2019,90001,<2006,Gasoline,Type_DD,No,17
+1/20/2019,90001,<2006,Gasoline,Type_DD,Yes,43
+1/21/2019,90001,<2006,Gasoline,Type_EE,Yes,26
+1/22/2019,90001,<2006,Gasoline,Type_K,Yes,311
+1/23/2019,90001,<2006,Gasoline,Type_L,Yes,100
+1/24/2019,90001,<2006,Gasoline,Type_FF,Yes,11
+1/25/2019,90001,<2006,Gasoline,Type_S,Yes,209
+1/26/2019,90001,<2006,Gasoline,Type_GG,Yes,144
+1/27/2019,90001,<2006,Gasoline,Type_T,Yes,133
+1/28/2019,90001,<2006,Gasoline,Type_M,Yes,147
+1/29/2019,90001,<2006,Gasoline,Type_HH,Yes,89
+1/30/2019,90001,<2006,Gasoline,Type_II,Yes,22
+1/31/2019,90001,<2006,Gasoline,Type_U,Yes,163
+2/1/2019,90001,<2006,Gasoline,Type_N,Yes,1509
+2/2/2019,90001,<2006,Gasoline,Type_JJ,Yes,53
+2/3/2019,90001,<2006,Gasoline,OTHER/UNK,No,40
+2/4/2019,90001,<2006,Gasoline,OTHER/UNK,Yes,121
+2/5/2019,90001,<2006,Gasoline,Type_E,Yes,37
+2/6/2019,90001,<2006,Gasoline,Type_V,Yes,99
+2/7/2019,90001,<2006,Gasoline,Type_W,Yes,68
+2/8/2019,90001,<2006,Gasoline,Type_X,Yes,59
+2/9/2019,90001,<2006,Gasoline,Type_P,Yes,25
+2/10/2019,90001,<2006,Gasoline,Type_KK,Yes,34
+2/11/2019,90001,<2006,Gasoline,Type_Q,Yes,3178
+2/12/2019,90001,<2006,Gasoline,Type_R,Yes,176
+2/13/2019,90001,<2006,Gasoline,Type_LL,Yes,41
+2/14/2019,90001,<2006,Hybrid Gasoline,Type_J,Yes,22
+2/15/2019,90001,<2006,Hybrid Gasoline,OTHER/UNK,Yes,2
+2/16/2019,90001,<2006,Hybrid Gasoline,Type_Q,Yes,29
+2/17/2019,90001,<2006,Natural Gas,OTHER/UNK,No,1
+2/18/2019,90001,<2006,Natural Gas,OTHER/UNK,Yes,9
+2/19/2019,90001,<2006,Other,OTHER/UNK,Yes,9
+2/20/2019,90002,2006,Diesel and Diesel Hybrid,OTHER/UNK,No,12
+2/21/2019,90002,2006,Diesel and Diesel Hybrid,OTHER/UNK,Yes,8
+2/22/2019,90002,2006,Flex-Fuel,Type_A,Yes,35
+2/23/2019,90002,2006,Flex-Fuel,OTHER/UNK,Yes,25
+2/24/2019,90002,2006,Gasoline,Type_F,Yes,31
+2/25/2019,90002,2006,Gasoline,Type_G,Yes,38
+2/26/2019,90002,2006,Gasoline,Type_H,Yes,19
+2/27/2019,90002,2006,Gasoline,Type_A,Yes,138
+2/28/2019,90002,2006,Gasoline,Type_I,Yes,91
+3/1/2019,90002,2006,Gasoline,Type_B,Yes,96
+3/2/2019,90002,2006,Gasoline,Type_C,Yes,138
+3/3/2019,90002,2006,Gasoline,Type_D,Yes,25
+3/4/2019,90002,2006,Gasoline,Type_J,Yes,169
+3/5/2019,90002,2006,Gasoline,Type_J,Yes,17
+3/6/2019,90002,2006,Gasoline,Type_Y,Yes,39
+3/7/2019,90002,2006,Gasoline,Type_K,Yes,41
+3/8/2019,90002,2006,Gasoline,Type_L,Yes,33
+12/2/2018,90002,2006,Gasoline,Type_FF,Yes,11
+12/3/2018,90002,2006,Gasoline,Type_S,Yes,28
+12/4/2018,90002,2006,Gasoline,Type_M,Yes,23
+12/5/2018,90002,2006,Gasoline,Type_U,Yes,13
+12/6/2018,90002,2006,Gasoline,Type_N,Yes,208
+12/7/2018,90002,2006,Gasoline,OTHER/UNK,No,4
+12/8/2018,90002,2006,Gasoline,OTHER/UNK,Yes,82
+12/9/2018,90002,2006,Gasoline,Type_V,Yes,19
+12/10/2018,90002,2006,Gasoline,Type_X,Yes,68
+12/11/2018,90002,2006,Gasoline,Type_Q,Yes,251
+12/12/2018,90002,2006,Gasoline,Type_R,Yes,20
+12/13/2018,90002,2006,Hybrid Gasoline,Type_J,Yes,13
+12/14/2018,90002,2006,Hybrid Gasoline,OTHER/UNK,Yes,4
+12/15/2018,90002,2006,Hybrid Gasoline,Type_Q,Yes,14
+12/16/2018,90002,2007,Diesel and Diesel Hybrid,OTHER/UNK,No,15
+12/17/2018,90002,2007,Diesel and Diesel Hybrid,OTHER/UNK,Yes,4
+12/18/2018,90002,2007,Flex-Fuel,Type_A,Yes,61
+12/19/2018,90002,2007,Flex-Fuel,Type_D,Yes,13
+12/20/2018,90002,2007,Flex-Fuel,OTHER/UNK,Yes,15
+12/21/2018,90002,2007,Gasoline,Type_F,Yes,15
+12/22/2018,90002,2007,Gasoline,Type_G,Yes,40
+12/23/2018,90002,2007,Gasoline,Type_H,Yes,28
+12/24/2018,90002,2007,Gasoline,Type_A,Yes,148
+12/25/2018,90002,2007,Gasoline,Type_I,Yes,47
+12/26/2018,90002,2007,Gasoline,Type_B,Yes,71
+12/27/2018,90002,2007,Gasoline,Type_C,Yes,107
+12/28/2018,90002,2007,Gasoline,Type_D,Yes,29
+12/29/2018,90002,2007,Gasoline,Type_J,Yes,156
+12/30/2018,90002,2007,Gasoline,Type_J,Yes,22
+12/31/2018,90002,2007,Gasoline,Type_Y,Yes,33
+1/1/2019,90002,2007,Gasoline,Type_K,Yes,31
+1/2/2019,90002,2007,Gasoline,Type_L,Yes,22
+1/3/2019,90002,2007,Gasoline,Type_S,Yes,43
+1/4/2019,90002,2007,Gasoline,Type_T,Yes,19
+1/5/2019,90002,2007,Gasoline,Type_M,Yes,14
+1/6/2019,90002,2007,Gasoline,Type_U,Yes,14
+1/7/2019,90002,2007,Gasoline,Type_N,Yes,147
+1/8/2019,90002,2007,Gasoline,OTHER/UNK,No,6
+1/9/2019,90002,2007,Gasoline,OTHER/UNK,Yes,36
+1/10/2019,90002,2007,Gasoline,Type_V,Yes,18
+1/11/2019,90002,2007,Gasoline,Type_W,Yes,21
+1/12/2019,90002,2007,Gasoline,Type_X,Yes,34
+1/13/2019,90002,2007,Gasoline,Type_Q,Yes,284
+1/14/2019,90002,2007,Gasoline,Type_R,Yes,14
+1/15/2019,90002,2007,Hybrid Gasoline,OTHER/UNK,Yes,15
+1/16/2019,90002,2007,Hybrid Gasoline,Type_Q,Yes,34
+1/17/2019,90002,2008,Diesel and Diesel Hybrid,Type_MM,No,16
+1/18/2019,90002,2008,Diesel and Diesel Hybrid,OTHER/UNK,No,25
+1/19/2019,90002,2008,Diesel and Diesel Hybrid,OTHER/UNK,Yes,4
+1/20/2019,90002,2008,Flex-Fuel,Type_A,Yes,36
+1/21/2019,90002,2008,Flex-Fuel,OTHER/UNK,Yes,17
+1/22/2019,90002,2008,Gasoline,Type_G,Yes,38
+1/23/2019,90002,2008,Gasoline,Type_H,Yes,26
+1/24/2019,90002,2008,Gasoline,Type_A,Yes,97
+1/25/2019,90002,2008,Gasoline,Type_I,Yes,45
+1/26/2019,90002,2008,Gasoline,Type_B,Yes,64
+1/27/2019,90002,2008,Gasoline,Type_C,Yes,77
+1/28/2019,90002,2008,Gasoline,Type_D,Yes,16
+1/29/2019,90002,2008,Gasoline,Type_J,Yes,107
+1/30/2019,90002,2008,Gasoline,Type_J,Yes,12
+1/31/2019,90002,2008,Gasoline,Type_Y,Yes,34
+2/1/2019,90002,2008,Gasoline,Type_K,Yes,21
+2/2/2019,90002,2008,Gasoline,Type_L,Yes,17
+2/3/2019,90002,2008,Gasoline,Type_S,Yes,23
+2/4/2019,90002,2008,Gasoline,Type_M,Yes,18
+2/5/2019,90002,2008,Gasoline,Type_N,Yes,130
+2/6/2019,90002,2008,Gasoline,OTHER/UNK,No,1
+2/7/2019,90002,2008,Gasoline,OTHER/UNK,Yes,68
+2/8/2019,90002,2008,Gasoline,Type_W,Yes,16
+2/9/2019,90002,2008,Gasoline,Type_X,Yes,40
+2/10/2019,90002,2008,Gasoline,Type_Q,Yes,167
+2/11/2019,90002,2008,Gasoline,Type_R,Yes,14
+2/12/2019,90002,2008,Hybrid Gasoline,OTHER/UNK,Yes,16
+2/13/2019,90002,2008,Hybrid Gasoline,Type_Q,Yes,18
+2/14/2019,90002,2009,Diesel and Diesel Hybrid,Type_MM,No,15
+2/15/2019,90002,2009,Diesel and Diesel Hybrid,OTHER/UNK,No,18
+2/16/2019,90002,2009,Diesel and Diesel Hybrid,OTHER/UNK,Yes,1
+2/17/2019,90002,2009,Flex-Fuel,Type_A,Yes,21
+2/18/2019,90002,2009,Flex-Fuel,OTHER/UNK,Yes,13
+2/19/2019,90002,2009,Gasoline,Type_A,Yes,42
+2/20/2019,90002,2009,Gasoline,Type_B,Yes,18
+2/21/2019,90002,2009,Gasoline,Type_C,Yes,25
+2/22/2019,90002,2009,Gasoline,Type_J,Yes,72
+2/23/2019,90002,2009,Gasoline,Type_Y,Yes,13
+2/24/2019,90002,2009,Gasoline,Type_L,Yes,30
+2/25/2019,90002,2009,Gasoline,Type_N,Yes,109
+2/26/2019,90002,2009,Gasoline,OTHER/UNK,Yes,112
+2/27/2019,90002,2009,Gasoline,Type_X,Yes,25
+2/28/2019,90002,2009,Gasoline,Type_Q,Yes,158
+3/1/2019,90002,2009,Gasoline,Type_R,Yes,23
+3/2/2019,90002,2009,Hybrid Gasoline,OTHER/UNK,Yes,15
+3/3/2019,90002,2009,Natural Gas,OTHER/UNK,No,1
+3/4/2019,90002,2010,Diesel and Diesel Hybrid,Type_MM,No,20
+3/5/2019,90002,2010,Diesel and Diesel Hybrid,OTHER/UNK,No,16
+3/6/2019,90002,2010,Diesel and Diesel Hybrid,OTHER/UNK,Yes,2
+3/7/2019,90002,2010,Flex-Fuel,Type_A,Yes,39
+3/8/2019,90002,2010,Flex-Fuel,OTHER/UNK,Yes,20
+12/2/2018,90002,2010,Gasoline,Type_A,Yes,36
+12/3/2018,90002,2010,Gasoline,Type_I,Yes,11
+12/4/2018,90002,2010,Gasoline,Type_B,Yes,58
+12/5/2018,90002,2010,Gasoline,Type_C,Yes,45
+12/6/2018,90002,2010,Gasoline,Type_J,Yes,82
+12/7/2018,90002,2010,Gasoline,Type_J,Yes,12
+12/8/2018,90002,2010,Gasoline,Type_L,Yes,22
+12/9/2018,90002,2010,Gasoline,Type_T,Yes,11
+12/10/2018,90002,2010,Gasoline,Type_N,Yes,83
+12/11/2018,90002,2010,Gasoline,OTHER/UNK,Yes,72
+12/12/2018,90002,2010,Gasoline,Type_X,Yes,11
+12/13/2018,90002,2010,Gasoline,Type_Q,Yes,133
+12/14/2018,90002,2010,Gasoline,Type_R,Yes,16
+12/15/2018,90002,2010,Hybrid Gasoline,OTHER/UNK,Yes,11
+12/16/2018,90002,2010,Hybrid Gasoline,Type_Q,Yes,12
+12/17/2018,90002,2011,Diesel and Diesel Hybrid,Type_MM,No,12
+12/18/2018,90002,2011,Diesel and Diesel Hybrid,OTHER/UNK,No,10
+12/19/2018,90002,2011,Diesel and Diesel Hybrid,OTHER/UNK,Yes,3
+12/20/2018,90002,2011,Battery Electric,OTHER/UNK,Yes,1
+12/21/2018,90002,2011,Flex-Fuel,Type_A,Yes,37
+12/22/2018,90002,2011,Flex-Fuel,Type_C,Yes,18
+12/23/2018,90002,2011,Flex-Fuel,OTHER/UNK,No,1
+12/24/2018,90002,2011,Flex-Fuel,OTHER/UNK,Yes,17
+12/25/2018,90002,2011,Gasoline,Type_G,Yes,26
+12/26/2018,90002,2011,Gasoline,Type_A,Yes,53
+12/27/2018,90002,2011,Gasoline,Type_B,Yes,29
+12/28/2018,90002,2011,Gasoline,Type_C,Yes,35
+12/29/2018,90002,2011,Gasoline,Type_J,Yes,76
+12/30/2018,90002,2011,Gasoline,Type_J,Yes,29
+12/31/2018,90002,2011,Gasoline,Type_Y,Yes,18
+1/1/2019,90002,2011,Gasoline,Type_K,Yes,12
+1/2/2019,90002,2011,Gasoline,Type_L,Yes,32
+1/3/2019,90002,2011,Gasoline,Type_M,Yes,14
+1/4/2019,90002,2011,Gasoline,Type_N,Yes,109
+1/5/2019,90002,2011,Gasoline,OTHER/UNK,Yes,69
+1/6/2019,90002,2011,Gasoline,Type_X,Yes,17
+1/7/2019,90002,2011,Gasoline,Type_Q,Yes,165
+1/8/2019,90002,2011,Gasoline,Type_R,Yes,16
+1/9/2019,90002,2011,Hybrid Gasoline,OTHER/UNK,Yes,5
+1/10/2019,90002,2011,Hybrid Gasoline,Type_Q,Yes,13
+1/11/2019,90002,2011,Natural Gas,OTHER/UNK,No,1
+1/12/2019,90002,2011,Plug-in Hybrid,OTHER/UNK,Yes,1
+1/13/2019,90002,2012,Diesel and Diesel Hybrid,Type_MM,No,19
+1/14/2019,90002,2012,Diesel and Diesel Hybrid,OTHER/UNK,No,14
+1/15/2019,90002,2012,Diesel and Diesel Hybrid,OTHER/UNK,Yes,4
+1/16/2019,90002,2012,Battery Electric,OTHER/UNK,Yes,1
+1/17/2019,90002,2012,Flex-Fuel,Type_A,Yes,30
+1/18/2019,90002,2012,Flex-Fuel,Type_B,Yes,11
+1/19/2019,90002,2012,Flex-Fuel,OTHER/UNK,Yes,25
+1/20/2019,90002,2012,Gasoline,Type_G,Yes,13
+1/21/2019,90002,2012,Gasoline,Type_A,Yes,77
+1/22/2019,90002,2012,Gasoline,Type_I,Yes,16
+1/23/2019,90002,2012,Gasoline,Type_B,Yes,25
+1/24/2019,90002,2012,Gasoline,Type_C,Yes,40
+1/25/2019,90002,2012,Gasoline,Type_J,Yes,123
+1/26/2019,90002,2012,Gasoline,Type_J,Yes,24
+1/27/2019,90002,2012,Gasoline,Type_Y,Yes,13
+1/28/2019,90002,2012,Gasoline,Type_K,Yes,20
+1/29/2019,90002,2012,Gasoline,Type_L,Yes,50
+1/30/2019,90002,2012,Gasoline,Type_M,Yes,12
+1/31/2019,90002,2012,Gasoline,Type_N,Yes,173
+2/1/2019,90002,2012,Gasoline,OTHER/UNK,Yes,56
+2/2/2019,90002,2012,Gasoline,Type_X,Yes,21
+2/3/2019,90002,2012,Gasoline,Type_Q,Yes,167
+2/4/2019,90002,2012,Gasoline,Type_R,Yes,27
+2/5/2019,90002,2012,Hybrid Gasoline,OTHER/UNK,Yes,10
+2/6/2019,90002,2012,Hybrid Gasoline,Type_Q,Yes,12
+2/7/2019,90002,2012,Plug-in Hybrid,OTHER/UNK,Yes,3
+2/8/2019,90002,2013,Diesel and Diesel Hybrid,Type_MM,No,15
+2/9/2019,90002,2013,Diesel and Diesel Hybrid,OTHER/UNK,No,11
+2/10/2019,90002,2013,Diesel and Diesel Hybrid,OTHER/UNK,Yes,1
+2/11/2019,90002,2013,Battery Electric,OTHER/UNK,Yes,3
+2/12/2019,90002,2013,Flex-Fuel,Type_A,Yes,48
+2/13/2019,90002,2013,Flex-Fuel,Type_C,Yes,18
+2/14/2019,90002,2013,Flex-Fuel,OTHER/UNK,Yes,17
+2/15/2019,90002,2013,Gasoline,Type_G,Yes,17
+2/16/2019,90002,2013,Gasoline,Type_A,Yes,88
+2/17/2019,90002,2013,Gasoline,Type_I,Yes,13
+2/18/2019,90002,2013,Gasoline,Type_B,Yes,43
+2/19/2019,90002,2013,Gasoline,Type_C,Yes,63
+2/20/2019,90002,2013,Gasoline,Type_J,Yes,119
+2/21/2019,90002,2013,Gasoline,Type_J,Yes,47
+2/22/2019,90002,2013,Gasoline,Type_Y,Yes,20
+2/23/2019,90002,2013,Gasoline,Type_L,Yes,90
+2/24/2019,90002,2013,Gasoline,Type_M,Yes,12
+2/25/2019,90002,2013,Gasoline,Type_N,Yes,190
+2/26/2019,90002,2013,Gasoline,OTHER/UNK,Yes,72
+2/27/2019,90002,2013,Gasoline,Type_X,Yes,19
+2/28/2019,90002,2013,Gasoline,Type_Q,Yes,162
+3/1/2019,90002,2013,Gasoline,Type_R,Yes,21
+3/2/2019,90002,2013,Hybrid Gasoline,OTHER/UNK,Yes,10
+3/3/2019,90002,2013,Hybrid Gasoline,Type_Q,Yes,20
+3/4/2019,90002,2013,Plug-in Hybrid,OTHER/UNK,Yes,1
+3/5/2019,90002,2014,Diesel and Diesel Hybrid,OTHER/UNK,No,10
+3/6/2019,90002,2014,Diesel and Diesel Hybrid,OTHER/UNK,Yes,2
+3/7/2019,90002,2014,Battery Electric,OTHER/UNK,Yes,1
+3/8/2019,90002,2014,Flex-Fuel,Type_A,Yes,31
+3/1/2019,90002,2014,Flex-Fuel,Type_C,Yes,33
+12/2/2018,90002,2014,Flex-Fuel,OTHER/UNK,No,2
+12/3/2018,90002,2014,Flex-Fuel,OTHER/UNK,Yes,15
+12/4/2018,90002,2014,Gasoline,Type_G,Yes,16
+12/5/2018,90002,2014,Gasoline,Type_A,Yes,80
+12/6/2018,90002,2014,Gasoline,Type_I,Yes,11
+12/7/2018,90002,2014,Gasoline,Type_B,Yes,43
+12/8/2018,90002,2014,Gasoline,Type_C,Yes,55
+12/9/2018,90002,2014,Gasoline,Type_J,Yes,136
+12/10/2018,90002,2014,Gasoline,Type_J,Yes,20
+12/11/2018,90002,2014,Gasoline,Type_K,Yes,27
+12/12/2018,90002,2014,Gasoline,Type_L,Yes,82
+12/13/2018,90002,2014,Gasoline,Type_S,Yes,16
+12/14/2018,90002,2014,Gasoline,Type_T,Yes,18
+12/15/2018,90002,2014,Gasoline,Type_M,Yes,19
+12/16/2018,90002,2014,Gasoline,Type_N,Yes,228
+12/17/2018,90002,2014,Gasoline,OTHER/UNK,No,1
+12/18/2018,90002,2014,Gasoline,OTHER/UNK,Yes,56
+12/19/2018,90002,2014,Gasoline,Type_X,Yes,13
+12/20/2018,90002,2014,Gasoline,Type_Q,Yes,202
+12/21/2018,90002,2014,Gasoline,Type_R,Yes,26
+12/22/2018,90002,2014,Hybrid Gasoline,OTHER/UNK,Yes,13
+12/23/2018,90002,2014,Hybrid Gasoline,Type_Q,Yes,17
+12/24/2018,90002,2014,Plug-in Hybrid,OTHER/UNK,Yes,3
+12/25/2018,90002,2015,Diesel and Diesel Hybrid,OTHER/UNK,No,5
+12/26/2018,90002,2015,Diesel and Diesel Hybrid,OTHER/UNK,Yes,3
+12/27/2018,90002,2015,Battery Electric,OTHER/UNK,Yes,4
+12/28/2018,90002,2015,Flex-Fuel,Type_A,Yes,17
+12/29/2018,90002,2015,Flex-Fuel,Type_B,Yes,11
+12/30/2018,90002,2015,Flex-Fuel,Type_C,Yes,13
+12/31/2018,90002,2015,Flex-Fuel,OTHER/UNK,No,2
+1/1/2019,90002,2015,Flex-Fuel,OTHER/UNK,Yes,3
+1/2/2019,90002,2015,Gasoline,Type_G,Yes,14
+1/3/2019,90002,2015,Gasoline,Type_A,Yes,135
+1/4/2019,90002,2015,Gasoline,Type_I,Yes,37
+1/5/2019,90002,2015,Gasoline,Type_B,Yes,51
+1/6/2019,90002,2015,Gasoline,Type_C,Yes,39
+1/7/2019,90002,2015,Gasoline,Type_D,Yes,11
+1/8/2019,90002,2015,Gasoline,Type_J,Yes,152
+1/9/2019,90002,2015,Gasoline,Type_J,Yes,26
+1/10/2019,90002,2015,Gasoline,Type_Y,Yes,15
+1/11/2019,90002,2015,Gasoline,Type_K,Yes,42
+1/12/2019,90002,2015,Gasoline,Type_L,Yes,168
+1/13/2019,90002,2015,Gasoline,Type_S,Yes,26
+1/14/2019,90002,2015,Gasoline,Type_M,Yes,14
+1/15/2019,90002,2015,Gasoline,Type_U,Yes,13
+1/16/2019,90002,2015,Gasoline,Type_N,Yes,318
+1/17/2019,90002,2015,Gasoline,OTHER/UNK,Yes,57
+1/18/2019,90002,2015,Gasoline,Type_X,Yes,13
+1/19/2019,90002,2015,Gasoline,Type_Q,Yes,261
+1/20/2019,90002,2015,Gasoline,Type_R,Yes,13
+1/21/2019,90002,2015,Hybrid Gasoline,Type_L,Yes,14
+1/22/2019,90002,2015,Hybrid Gasoline,OTHER/UNK,Yes,8
+1/23/2019,90002,2015,Hybrid Gasoline,Type_Q,Yes,31
+1/24/2019,90002,2015,Plug-in Hybrid,OTHER/UNK,Yes,2
+1/25/2019,90002,2016,Diesel and Diesel Hybrid,OTHER/UNK,No,10
+1/26/2019,90002,2016,Diesel and Diesel Hybrid,OTHER/UNK,Yes,4
+1/27/2019,90002,2016,Battery Electric,OTHER/UNK,Yes,4
+1/28/2019,90002,2016,Flex-Fuel,Type_A,Yes,20
+1/29/2019,90002,2016,Flex-Fuel,Type_B,Yes,14
+1/30/2019,90002,2016,Flex-Fuel,Type_C,Yes,22
+1/31/2019,90002,2016,Flex-Fuel,OTHER/UNK,Yes,6
+2/1/2019,90002,2016,Gasoline,Type_G,Yes,11
+2/2/2019,90002,2016,Gasoline,Type_A,Yes,102
+2/3/2019,90002,2016,Gasoline,Type_I,Yes,20
+2/4/2019,90002,2016,Gasoline,Type_B,Yes,58
+2/5/2019,90002,2016,Gasoline,Type_C,Yes,63
+2/6/2019,90002,2016,Gasoline,Type_D,Yes,12
+2/7/2019,90002,2016,Gasoline,Type_J,Yes,193
+2/8/2019,90002,2016,Gasoline,Type_J,Yes,38
+2/9/2019,90002,2016,Gasoline,Type_K,Yes,35
+2/10/2019,90002,2016,Gasoline,Type_L,Yes,241
+2/11/2019,90002,2016,Gasoline,Type_S,Yes,11
+2/12/2019,90002,2016,Gasoline,Type_T,Yes,16
+2/13/2019,90002,2016,Gasoline,Type_M,Yes,11
+2/14/2019,90002,2016,Gasoline,Type_N,Yes,283
+2/15/2019,90002,2016,Gasoline,OTHER/UNK,Yes,36
+2/16/2019,90002,2016,Gasoline,Type_O,Yes,15
+2/17/2019,90002,2016,Gasoline,Type_X,Yes,22
+2/18/2019,90002,2016,Gasoline,Type_Q,Yes,218
+2/19/2019,90002,2016,Gasoline,Type_R,Yes,21
+2/20/2019,90002,2016,Hybrid Gasoline,OTHER/UNK,Yes,20
+2/21/2019,90002,2016,Plug-in Hybrid,OTHER/UNK,Yes,2
+2/22/2019,90002,2017,Diesel and Diesel Hybrid,OTHER/UNK,No,7
+2/23/2019,90002,2017,Diesel and Diesel Hybrid,OTHER/UNK,Yes,6
+2/24/2019,90002,2017,Battery Electric,OTHER/UNK,Yes,4
+2/25/2019,90002,2017,Flex-Fuel,Type_A,Yes,16
+2/26/2019,90002,2017,Flex-Fuel,OTHER/UNK,Yes,19
+2/27/2019,90002,2017,Gasoline,Type_G,Yes,12
+2/28/2019,90002,2017,Gasoline,Type_A,Yes,128
+3/1/2019,90002,2017,Gasoline,Type_B,Yes,38
+3/2/2019,90002,2017,Gasoline,Type_C,Yes,62
+3/3/2019,90002,2017,Gasoline,Type_D,Yes,14
+3/4/2019,90002,2017,Gasoline,Type_J,Yes,270
+3/5/2019,90002,2017,Gasoline,Type_J,Yes,35
+3/6/2019,90002,2017,Gasoline,Type_Y,Yes,11
+3/7/2019,90002,2017,Gasoline,Type_K,Yes,35
+3/8/2019,90002,2017,Gasoline,Type_L,Yes,146
+12/2/2018,90002,2017,Gasoline,Type_S,Yes,12
+12/3/2018,90002,2017,Gasoline,Type_M,Yes,11
+12/4/2018,90002,2017,Gasoline,Type_N,Yes,271
+12/5/2018,90002,2017,Gasoline,OTHER/UNK,No,1
+12/6/2018,90002,2017,Gasoline,OTHER/UNK,Yes,32
+12/7/2018,90002,2017,Gasoline,Type_O,Yes,23
+12/8/2018,90002,2017,Gasoline,Type_P,Yes,13
+12/9/2018,90002,2017,Gasoline,Type_Q,Yes,256
+12/10/2018,90002,2017,Gasoline,Type_R,Yes,14
+12/11/2018,90002,2017,Hybrid Gasoline,Type_L,Yes,13
+12/12/2018,90002,2017,Hybrid Gasoline,OTHER/UNK,Yes,10
+12/13/2018,90002,2017,Hybrid Gasoline,Type_Q,Yes,13
+12/14/2018,90002,2017,Plug-in Hybrid,OTHER/UNK,Yes,11
+12/15/2018,90002,2018,Diesel and Diesel Hybrid,OTHER/UNK,No,2
+12/16/2018,90002,2018,Diesel and Diesel Hybrid,OTHER/UNK,Yes,6
+12/17/2018,90002,2018,Battery Electric,OTHER/UNK,Yes,4
+12/18/2018,90002,2018,Flex-Fuel,OTHER/UNK,Yes,12
+12/19/2018,90002,2018,Gasoline,Type_A,Yes,104
+12/20/2018,90002,2018,Gasoline,Type_B,Yes,54
+12/21/2018,90002,2018,Gasoline,Type_C,Yes,33
+12/22/2018,90002,2018,Gasoline,Type_J,Yes,175
+12/23/2018,90002,2018,Gasoline,Type_J,Yes,27
+12/24/2018,90002,2018,Gasoline,Type_K,Yes,40
+12/25/2018,90002,2018,Gasoline,Type_L,Yes,141
+12/26/2018,90002,2018,Gasoline,Type_S,Yes,15
+12/27/2018,90002,2018,Gasoline,Type_M,Yes,12
+12/28/2018,90002,2018,Gasoline,Type_N,Yes,143
+12/29/2018,90002,2018,Gasoline,OTHER/UNK,Yes,72
+12/30/2018,90002,2018,Gasoline,Type_Q,Yes,266
+12/31/2018,90002,2018,Hybrid Gasoline,OTHER/UNK,Yes,8
+1/1/2019,90002,2018,Hybrid Gasoline,Type_Q,Yes,17
+1/2/2019,90002,2018,Plug-in Hybrid,OTHER/UNK,Yes,4
+1/3/2019,90002,2019,Gasoline,OTHER/UNK,Yes,32
+1/4/2019,90002,<2006,Diesel and Diesel Hybrid,Type_A,No,11
+1/5/2019,90002,<2006,Diesel and Diesel Hybrid,Type_C,No,32
+1/6/2019,90002,<2006,Diesel and Diesel Hybrid,Type_C,Yes,27
+1/7/2019,90002,<2006,Diesel and Diesel Hybrid,Type_MM,No,32
+1/8/2019,90002,<2006,Diesel and Diesel Hybrid,Type_D,No,18
+1/9/2019,90002,<2006,Diesel and Diesel Hybrid,Type_NN,No,20
+1/10/2019,90002,<2006,Diesel and Diesel Hybrid,Type_DD,No,25
+1/11/2019,90002,<2006,Diesel and Diesel Hybrid,OTHER/UNK,No,51
+1/12/2019,90002,<2006,Diesel and Diesel Hybrid,OTHER/UNK,Yes,41
+1/13/2019,90002,<2006,Flex-Fuel,Type_A,Yes,81
+1/14/2019,90002,<2006,Flex-Fuel,Type_I,Yes,25
+1/15/2019,90002,<2006,Flex-Fuel,Type_B,Yes,91
+1/16/2019,90002,<2006,Flex-Fuel,Type_C,Yes,123
+1/17/2019,90002,<2006,Flex-Fuel,Type_D,Yes,22
+1/18/2019,90002,<2006,Flex-Fuel,Type_M,Yes,12
+1/19/2019,90002,<2006,Flex-Fuel,OTHER/UNK,Yes,7
+1/20/2019,90002,<2006,Gasoline,Type_F,Yes,201
+1/21/2019,90002,<2006,Gasoline,Type_Z,Yes,28
+1/22/2019,90002,<2006,Gasoline,Type_G,Yes,195
+1/23/2019,90002,<2006,Gasoline,Type_AA,Yes,114
+1/24/2019,90002,<2006,Gasoline,Type_H,Yes,195
+1/25/2019,90002,<2006,Gasoline,Type_A,No,29
+1/26/2019,90002,<2006,Gasoline,Type_A,Yes,2186
+1/27/2019,90002,<2006,Gasoline,Type_I,Yes,174
+1/28/2019,90002,<2006,Gasoline,Type_B,No,12
+1/29/2019,90002,<2006,Gasoline,Type_B,Yes,507
+1/30/2019,90002,<2006,Gasoline,Type_C,No,60
+1/31/2019,90002,<2006,Gasoline,Type_C,Yes,1864
+2/1/2019,90002,<2006,Gasoline,Type_BB,Yes,17
+2/2/2019,90002,<2006,Gasoline,Type_D,No,23
+2/3/2019,90002,<2006,Gasoline,Type_D,Yes,571
+2/4/2019,90002,<2006,Gasoline,Type_J,Yes,1793
+2/5/2019,90002,<2006,Gasoline,Type_CC,Yes,21
+2/6/2019,90002,<2006,Gasoline,Type_J,Yes,85
+2/7/2019,90002,<2006,Gasoline,Type_Y,Yes,208
+2/8/2019,90002,<2006,Gasoline,Type_DD,Yes,53
+2/9/2019,90002,<2006,Gasoline,Type_EE,Yes,30
+2/10/2019,90002,<2006,Gasoline,Type_K,Yes,224
+2/11/2019,90002,<2006,Gasoline,Type_L,Yes,92
+2/12/2019,90002,<2006,Gasoline,Type_FF,Yes,22
+2/13/2019,90002,<2006,Gasoline,Type_S,Yes,197
+2/14/2019,90002,<2006,Gasoline,Type_GG,Yes,163
+2/15/2019,90002,<2006,Gasoline,Type_T,Yes,134
+2/16/2019,90002,<2006,Gasoline,Type_M,Yes,182
+2/17/2019,90002,<2006,Gasoline,Type_HH,Yes,82
+2/18/2019,90002,<2006,Gasoline,Type_II,Yes,11
+2/19/2019,90002,<2006,Gasoline,Type_U,Yes,162
+2/20/2019,90002,<2006,Gasoline,Type_N,Yes,1240
+2/21/2019,90002,<2006,Gasoline,Type_JJ,Yes,49
+2/22/2019,90002,<2006,Gasoline,OTHER/UNK,No,26
+2/23/2019,90002,<2006,Gasoline,OTHER/UNK,Yes,107
+2/24/2019,90002,<2006,Gasoline,Type_E,Yes,22
+2/25/2019,90002,<2006,Gasoline,Type_V,Yes,121
+2/26/2019,90002,<2006,Gasoline,Type_W,Yes,81
+2/27/2019,90002,<2006,Gasoline,Type_X,Yes,58
+2/28/2019,90002,<2006,Gasoline,Type_P,Yes,24
+3/1/2019,90002,<2006,Gasoline,Type_KK,Yes,17
+3/2/2019,90002,<2006,Gasoline,Type_Q,Yes,2950
+3/3/2019,90002,<2006,Gasoline,Type_R,Yes,171
+3/4/2019,90002,<2006,Gasoline,Type_LL,Yes,47
+3/5/2019,90002,<2006,Hybrid Gasoline,Type_J,Yes,15
+3/6/2019,90002,<2006,Hybrid Gasoline,Type_Q,Yes,16
+3/7/2019,90002,<2006,Natural Gas,OTHER/UNK,Yes,5
+3/8/2019,90002,<2006,Other,OTHER/UNK,Yes,11
+3/9/2019,90003,2006,Diesel and Diesel Hybrid,OTHER/UNK,No,22
+3/10/2019,90003,2006,Diesel and Diesel Hybrid,OTHER/UNK,Yes,14
+3/11/2019,90003,2006,Flex-Fuel,Type_A,Yes,55
+3/12/2019,90003,2006,Flex-Fuel,OTHER/UNK,Yes,20
+3/13/2019,90003,2006,Gasoline,Type_F,Yes,36
+3/14/2019,90003,2006,Gasoline,Type_G,Yes,89
+3/15/2019,90003,2006,Gasoline,Type_AA,Yes,11
+3/16/2019,90003,2006,Gasoline,Type_H,Yes,18
+3/17/2019,90003,2006,Gasoline,Type_A,Yes,162
+3/18/2019,90003,2006,Gasoline,Type_I,Yes,112
+3/19/2019,90003,2006,Gasoline,Type_B,Yes,79
+3/20/2019,90003,2006,Gasoline,Type_C,Yes,186
+3/21/2019,90003,2006,Gasoline,Type_D,Yes,19
+3/22/2019,90003,2006,Gasoline,Type_J,Yes,209
+3/23/2019,90003,2006,Gasoline,Type_J,Yes,26
+3/24/2019,90003,2006,Gasoline,Type_Y,Yes,56
+3/25/2019,90003,2006,Gasoline,Type_K,Yes,40
+3/26/2019,90003,2006,Gasoline,Type_L,Yes,29
+3/27/2019,90003,2006,Gasoline,Type_S,Yes,31
+3/28/2019,90003,2006,Gasoline,Type_GG,Yes,11
+3/29/2019,90003,2006,Gasoline,Type_T,Yes,20
+3/30/2019,90003,2006,Gasoline,Type_M,Yes,42
+3/31/2019,90003,2006,Gasoline,Type_II,Yes,11
+4/1/2019,90003,2006,Gasoline,Type_U,Yes,13
+4/2/2019,90003,2006,Gasoline,Type_N,Yes,277
+4/3/2019,90003,2006,Gasoline,OTHER/UNK,No,2
+4/4/2019,90003,2006,Gasoline,OTHER/UNK,Yes,57
+4/5/2019,90003,2006,Gasoline,Type_V,Yes,24
+4/6/2019,90003,2006,Gasoline,Type_X,Yes,96
+4/7/2019,90003,2006,Gasoline,Type_Q,Yes,365
+4/8/2019,90003,2006,Gasoline,Type_R,Yes,29
+4/9/2019,90003,2006,Hybrid Gasoline,Type_J,Yes,15
+4/10/2019,90003,2006,Hybrid Gasoline,OTHER/UNK,Yes,2
+4/11/2019,90003,2006,Hybrid Gasoline,Type_Q,Yes,17
+4/12/2019,90003,2007,Diesel and Diesel Hybrid,OTHER/UNK,No,13
+4/13/2019,90003,2007,Diesel and Diesel Hybrid,OTHER/UNK,Yes,3
+4/14/2019,90003,2007,Flex-Fuel,Type_A,Yes,86
+4/15/2019,90003,2007,Flex-Fuel,OTHER/UNK,Yes,27
+4/16/2019,90003,2007,Gasoline,Type_F,Yes,18
+4/17/2019,90003,2007,Gasoline,Type_Z,Yes,11
+4/18/2019,90003,2007,Gasoline,Type_G,Yes,60
+4/19/2019,90003,2007,Gasoline,Type_H,Yes,32
+4/20/2019,90003,2007,Gasoline,Type_A,Yes,208
+4/21/2019,90003,2007,Gasoline,Type_I,Yes,86
+4/22/2019,90003,2007,Gasoline,Type_B,Yes,101
+4/23/2019,90003,2007,Gasoline,Type_C,Yes,136
+4/24/2019,90003,2007,Gasoline,Type_D,Yes,53
+4/25/2019,90003,2007,Gasoline,Type_J,Yes,241
+4/26/2019,90003,2007,Gasoline,Type_J,Yes,17
+4/27/2019,90003,2007,Gasoline,Type_Y,Yes,35
+4/28/2019,90003,2007,Gasoline,Type_K,Yes,26
+4/29/2019,90003,2007,Gasoline,Type_L,Yes,26
+4/30/2019,90003,2007,Gasoline,Type_S,Yes,49
+5/1/2019,90003,2007,Gasoline,Type_GG,Yes,13
+5/2/2019,90003,2007,Gasoline,Type_T,Yes,32
+5/3/2019,90003,2007,Gasoline,Type_M,Yes,19
+5/4/2019,90003,2007,Gasoline,Type_U,Yes,12
+5/5/2019,90003,2007,Gasoline,Type_N,Yes,216
+5/6/2019,90003,2007,Gasoline,OTHER/UNK,No,8
+5/7/2019,90003,2007,Gasoline,OTHER/UNK,Yes,37
+5/8/2019,90003,2007,Gasoline,Type_V,Yes,20
+5/9/2019,90003,2007,Gasoline,Type_W,Yes,25
+5/10/2019,90003,2007,Gasoline,Type_X,Yes,43
+5/11/2019,90003,2007,Gasoline,Type_Q,Yes,444
+5/12/2019,90003,2007,Gasoline,Type_R,Yes,19
+5/13/2019,90003,2007,Hybrid Gasoline,Type_J,Yes,13
+5/14/2019,90003,2007,Hybrid Gasoline,OTHER/UNK,Yes,10
+5/15/2019,90003,2007,Hybrid Gasoline,Type_Q,Yes,37
+5/16/2019,90003,2008,Diesel and Diesel Hybrid,Type_MM,No,17
+5/17/2019,90003,2008,Diesel and Diesel Hybrid,OTHER/UNK,No,22
+5/18/2019,90003,2008,Diesel and Diesel Hybrid,OTHER/UNK,Yes,9
+5/19/2019,90003,2008,Flex-Fuel,Type_A,Yes,45
+5/20/2019,90003,2008,Flex-Fuel,Type_I,Yes,11
+5/21/2019,90003,2008,Flex-Fuel,OTHER/UNK,Yes,8
+5/22/2019,90003,2008,Gasoline,Type_F,Yes,11
+5/23/2019,90003,2008,Gasoline,Type_Z,Yes,13
+5/24/2019,90003,2008,Gasoline,Type_G,Yes,52
+5/25/2019,90003,2008,Gasoline,Type_H,Yes,30
+5/26/2019,90003,2008,Gasoline,Type_A,Yes,93
+5/27/2019,90003,2008,Gasoline,Type_I,Yes,37
+5/28/2019,90003,2008,Gasoline,Type_B,Yes,85
+5/29/2019,90003,2008,Gasoline,Type_C,Yes,94
+5/30/2019,90003,2008,Gasoline,Type_D,Yes,15
+5/31/2019,90003,2008,Gasoline,Type_J,Yes,195
+6/1/2019,90003,2008,Gasoline,Type_J,Yes,15
+6/2/2019,90003,2008,Gasoline,Type_Y,Yes,45
+6/3/2019,90003,2008,Gasoline,Type_K,Yes,31
+6/4/2019,90003,2008,Gasoline,Type_L,Yes,24
+6/5/2019,90003,2008,Gasoline,Type_S,Yes,29
+6/6/2019,90003,2008,Gasoline,Type_T,Yes,20
+6/7/2019,90003,2008,Gasoline,Type_M,Yes,35
+6/8/2019,90003,2008,Gasoline,Type_N,Yes,179
+6/9/2019,90003,2008,Gasoline,OTHER/UNK,No,1
+6/10/2019,90003,2008,Gasoline,OTHER/UNK,Yes,53
+6/11/2019,90003,2008,Gasoline,Type_V,Yes,12
+6/12/2019,90003,2008,Gasoline,Type_W,Yes,17
+6/13/2019,90003,2008,Gasoline,Type_X,Yes,60
+6/14/2019,90003,2008,Gasoline,Type_Q,Yes,241
+6/15/2019,90003,2008,Gasoline,Type_R,Yes,28
+6/16/2019,90003,2008,Hybrid Gasoline,OTHER/UNK,Yes,22
+6/17/2019,90003,2008,Hybrid Gasoline,Type_Q,Yes,33
+6/18/2019,90003,2008,Natural Gas,OTHER/UNK,Yes,1
+6/19/2019,90003,2009,Diesel and Diesel Hybrid,Type_MM,No,33
+6/20/2019,90003,2009,Diesel and Diesel Hybrid,OTHER/UNK,No,23
+6/21/2019,90003,2009,Diesel and Diesel Hybrid,OTHER/UNK,Yes,1
+6/22/2019,90003,2009,Flex-Fuel,Type_A,Yes,22
+6/23/2019,90003,2009,Flex-Fuel,Type_C,Yes,15
+6/24/2019,90003,2009,Flex-Fuel,OTHER/UNK,No,1
+6/25/2019,90003,2009,Flex-Fuel,OTHER/UNK,Yes,14
+6/26/2019,90003,2009,Gasoline,Type_F,Yes,12
+6/27/2019,90003,2009,Gasoline,Type_G,Yes,27
+6/28/2019,90003,2009,Gasoline,Type_A,Yes,61
+6/29/2019,90003,2009,Gasoline,Type_B,Yes,29
+6/30/2019,90003,2009,Gasoline,Type_C,Yes,48
+7/1/2019,90003,2009,Gasoline,Type_J,Yes,141
+7/2/2019,90003,2009,Gasoline,Type_J,Yes,11
+7/3/2019,90003,2009,Gasoline,Type_Y,Yes,20
+7/4/2019,90003,2009,Gasoline,Type_L,Yes,27
+3/8/2019,90003,2009,Gasoline,Type_S,Yes,13
+3/9/2019,90003,2009,Gasoline,Type_T,Yes,12
+3/10/2019,90003,2009,Gasoline,Type_M,Yes,18
+3/11/2019,90003,2009,Gasoline,Type_N,Yes,125
+3/12/2019,90003,2009,Gasoline,OTHER/UNK,Yes,65
+3/13/2019,90003,2009,Gasoline,Type_X,Yes,25
+3/14/2019,90003,2009,Gasoline,Type_Q,Yes,235
+3/15/2019,90003,2009,Gasoline,Type_R,Yes,17
+3/16/2019,90003,2009,Hybrid Gasoline,OTHER/UNK,Yes,13
+3/17/2019,90003,2009,Hybrid Gasoline,Type_Q,Yes,12
+3/18/2019,90003,2009,Natural Gas,OTHER/UNK,No,4
+3/19/2019,90003,2009,Natural Gas,OTHER/UNK,Yes,1
+3/20/2019,90003,2010,Diesel and Diesel Hybrid,Type_MM,No,14
+3/21/2019,90003,2010,Diesel and Diesel Hybrid,OTHER/UNK,No,20
+3/22/2019,90003,2010,Diesel and Diesel Hybrid,OTHER/UNK,Yes,2
+3/23/2019,90003,2010,Flex-Fuel,Type_A,Yes,24
+3/24/2019,90003,2010,Flex-Fuel,Type_C,Yes,17
+3/25/2019,90003,2010,Flex-Fuel,OTHER/UNK,No,1
+3/26/2019,90003,2010,Flex-Fuel,OTHER/UNK,Yes,19
+3/27/2019,90003,2010,Gasoline,Type_F,Yes,15
+3/28/2019,90003,2010,Gasoline,Type_G,Yes,11
+3/29/2019,90003,2010,Gasoline,Type_A,Yes,64
+3/30/2019,90003,2010,Gasoline,Type_I,Yes,16
+3/31/2019,90003,2010,Gasoline,Type_B,Yes,59
+4/1/2019,90003,2010,Gasoline,Type_C,Yes,48
+4/2/2019,90003,2010,Gasoline,Type_J,Yes,124
+4/3/2019,90003,2010,Gasoline,Type_J,Yes,21
+4/4/2019,90003,2010,Gasoline,Type_Y,Yes,14
+4/5/2019,90003,2010,Gasoline,Type_L,Yes,21
+4/6/2019,90003,2010,Gasoline,Type_S,Yes,17
+4/7/2019,90003,2010,Gasoline,Type_T,Yes,27
+4/8/2019,90003,2010,Gasoline,Type_M,Yes,25
+4/9/2019,90003,2010,Gasoline,Type_N,Yes,105
+4/10/2019,90003,2010,Gasoline,OTHER/UNK,Yes,59
+4/11/2019,90003,2010,Gasoline,Type_X,Yes,23
+4/12/2019,90003,2010,Gasoline,Type_Q,Yes,205
+4/13/2019,90003,2010,Gasoline,Type_R,Yes,12
+4/14/2019,90003,2010,Hybrid Gasoline,OTHER/UNK,Yes,18
+4/15/2019,90003,2010,Hybrid Gasoline,Type_Q,Yes,21
+4/16/2019,90003,2010,Natural Gas,OTHER/UNK,Yes,1
+4/17/2019,90003,2011,Diesel and Diesel Hybrid,Type_MM,No,11
+4/18/2019,90003,2011,Diesel and Diesel Hybrid,OTHER/UNK,No,23
+4/19/2019,90003,2011,Diesel and Diesel Hybrid,OTHER/UNK,Yes,2
+4/20/2019,90003,2011,Flex-Fuel,Type_A,Yes,62
+4/21/2019,na,2011,Flex-Fuel,Type_C,Yes,19
+4/22/2019,90003,2011,Flex-Fuel,OTHER/UNK,Yes,18
+4/23/2019,90003,2011,Gasoline,Type_G,--,25
+4/24/2019,90003,2011,Gasoline,Type_A,Yes,48
+4/25/2019,90003,2011,Gasoline,Type_B,Yes,32
+4/26/2019,90003,2011,N/A,Type_C,Yes,48
+4/27/2019,90003,2011,Gasoline,Type_J,Yes,95
+4/28/2019,90003,2011,Gasoline,Type_J,Yes,24
+4/29/2019,90003,2011,Gasoline,Type_Y,Yes,18
+4/30/2019,90003,2011,Gasoline,Type_K,Yes,12
+5/1/2019,90003,2011,Gasoline,Type_L,Yes,42
+5/2/2019,90003,2011,Gasoline,Type_S,Yes,14
+5/3/2019,90003,2011,Gasoline,Type_M,Yes,16
+5/4/2019,90003,2011,Gasoline,Type_N,Yes,147
+5/5/2019,90003,2011,Gasoline,OTHER/UNK,No,1
+5/6/2019,90003,2011,Gasoline,OTHER/UNK,Yes,71
+5/7/2019,90003,2011,Gasoline,Type_X,Yes,18
+5/8/2019,90003,2011,Gasoline,Type_Q,Yes,226
+5/9/2019,90003,2011,Gasoline,Type_R,Yes,14
+5/10/2019,90003,2011,Hybrid Gasoline,OTHER/UNK,Yes,9
+5/11/2019,90003,2011,Hybrid Gasoline,Type_Q,Yes,18
+5/12/2019,90003,2011,Plug-in Hybrid,OTHER/UNK,Yes,1
+5/13/2019,90003,2012,Diesel and Diesel Hybrid,Type_MM,No,20
+5/14/2019,90003,2012,Diesel and Diesel Hybrid,OTHER/UNK,No,18
+5/15/2019,90003,2012,Diesel and Diesel Hybrid,OTHER/UNK,Yes,2
+5/16/2019,90003,2012,Diesel and Diesel Hybrid,Type_OO,No,12
+5/17/2019,90003,2012,Battery Electric,OTHER/UNK,Yes,3
+5/18/2019,90003,2012,Flex-Fuel,Type_A,Yes,43
+5/19/2019,90003,2012,Flex-Fuel,Type_C,Yes,14
+5/20/2019,90003,2012,Flex-Fuel,OTHER/UNK,No,2
+5/21/2019,90003,2012,Flex-Fuel,OTHER/UNK,Yes,25
+5/22/2019,90003,2012,Gasoline,Type_G,Yes,15
+5/23/2019,90003,2012,Gasoline,Type_AA,Yes,12
+5/24/2019,90003,2012,Gasoline,Type_A,Yes,75
+5/25/2019,90003,2012,Gasoline,Type_I,Yes,17
+5/26/2019,90003,2012,Gasoline,Type_B,Yes,38
+5/27/2019,90003,2012,Gasoline,Type_C,Yes,59
+5/28/2019,90003,2012,Gasoline,Type_J,Yes,181
+5/29/2019,90003,2012,Gasoline,Type_J,Yes,37
+5/30/2019,90003,2012,Gasoline,Type_Y,Yes,13
+5/31/2019,90003,2012,Gasoline,Type_K,Yes,27
+6/1/2019,90003,2012,Gasoline,Type_L,Yes,70
+6/2/2019,90003,2012,Gasoline,Type_M,Yes,19
+6/3/2019,90003,2012,Gasoline,Type_N,Yes,208
+6/4/2019,90003,2012,Gasoline,OTHER/UNK,Yes,66
+6/5/2019,90003,2012,Gasoline,Type_X,Yes,31
+6/6/2019,90003,2012,Gasoline,Type_Q,Yes,206
+6/7/2019,90003,2012,Gasoline,Type_R,Yes,26
+6/8/2019,90003,2012,Hybrid Gasoline,OTHER/UNK,Yes,4
+6/9/2019,90003,2012,Hybrid Gasoline,Type_Q,Yes,25
+6/10/2019,90003,2012,Natural Gas,OTHER/UNK,Yes,1
+6/11/2019,90003,2012,Plug-in Hybrid,OTHER/UNK,Yes,3
