@@ -1,12 +1,10 @@
-runtime: python27
-api_version: 1
-threadsafe: true
+runtime: python39
 
 handlers:
 - url: /
-  script: main.app
+  script: auto
 - url: /.*
-  script: main.app
+  script: auto
   login: required
 
 env_variables:

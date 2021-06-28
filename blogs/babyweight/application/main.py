@@ -26,12 +26,11 @@ from flask import url_for
 from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
-from google.appengine.api import app_identity
-
 
 credentials = GoogleCredentials.get_application_default()
-api = discovery.build('ml', 'v1', credentials=credentials)
-project = app_identity.get_application_id()
+api = discovery.build('ml', 'v1',
+        credentials=credentials, cache_discovery=False)
+project = os.environ['GOOGLE_CLOUD_PROJECT']
 model_name = os.getenv('MODEL_NAME', 'babyweight')
 
 
@@ -42,7 +41,7 @@ def get_prediction(features):
   input_data = {'instances': [features]}
   parent = 'projects/%s/models/%s' % (project, model_name)
   prediction = api.projects().predict(body=input_data, name=parent).execute()
-  return prediction['predictions'][0]['predictions'][0]
+  return prediction['predictions'][0]['weight'][0]
 
 
 @app.route('/')

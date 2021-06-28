@@ -36,7 +36,19 @@ gcloud beta container clusters create ${C1_NAME} \
     --subnetwork=default \
     --scopes ${C1_SCOPE}
 
+
 echo "Registering the gke cluster..."
-gcloud container hub memberships register ${C1_NAME}-connect \
-   --gke-cluster=${C1_ZONE}/${C1_NAME}  \
-   --enable-workload-identity
+for (( i=1; i<=4; i++))
+do
+  res=$(gcloud container hub memberships register ${C1_NAME}-connect --gke-cluster=${C1_ZONE}/${C1_NAME} --enable-workload-identity 2>&1)
+  g1=$(echo $res | grep "PERMISSION_DENIED: hub default service account does not have access to the GKE cluster project for")
+  g2=$(echo $res | grep -c "PERMISSION_DENIED: hub default service account does not have access to the GKE cluster project for")
+  if [[ "$g2" == "0" ]]; then
+    echo "Cluster registered!"
+    break;
+  fi
+    echo "Permissions problem, waiting and retrying"
+    sleep 60
+done
+
+# should add error checking
