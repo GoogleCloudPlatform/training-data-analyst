@@ -1,0 +1,6 @@
+popdensity.csv
+popdensity_geo.json.gz
+*.asc
+*.prj
+_readme.txt
+gpw_*readme.txt

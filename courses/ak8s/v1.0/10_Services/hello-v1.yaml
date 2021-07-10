@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: hello-v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      run: hello-v1
+  template:
+    metadata:
+      labels:
+        run: hello-v1
+        name: hello-v1
+    spec:
+      containers:
+      - image: gcr.io/google-samples/hello-app:1.0
+        name: hello-v1
+        ports:
+        - containerPort: 8080
+          protocol: TCP

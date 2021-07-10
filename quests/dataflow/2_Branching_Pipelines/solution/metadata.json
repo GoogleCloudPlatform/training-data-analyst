@@ -1,0 +1,30 @@
+{
+  "name": "My Branching Pipeline",
+  "description": "A branching pipeline that writes raw to GCS Coldline, and filtered data to BQ",
+  "parameters": [
+    {
+      "name": "inputPath",
+      "label": "Input file path.",
+      "helpText": "Path to events.json file.",
+      "regexes": [
+        ".*\\.json"
+      ]
+    },
+    {
+      "name": "outputPath",
+      "label": "Output file location",
+      "helpText": "GCS Coldline Bucket location for raw data",
+      "regexes": [
+        "gs:\\/\\/[a-zA-z0-9\\-\\_\\/]+"
+      ]
+    },
+    {
+      "name": "tableName",
+      "label": "BigQuery output table",
+      "helpText": "BigQuery table spec to write to, in the form 'project:dataset.table'.",
+      "regexes": [
+        "[^:]+:[^.]+[.].+"
+      ]
+    }
+  ]
+}

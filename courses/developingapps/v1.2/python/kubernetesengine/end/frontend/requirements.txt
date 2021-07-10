@@ -1,0 +1,10 @@
+Flask>=1.1.2
+google-cloud>=0.34.0
+google-cloud-core>=1.4.3
+google-cloud-pubsub>=2.1.0
+google-cloud-datastore>=1.15.3
+google-cloud-storage>=1.32.0
+gunicorn>=19.7.1
+grpcio>=1.33.1
+grpcio-gcp>=0.2.2
+grpcio-tools>=1.33.1

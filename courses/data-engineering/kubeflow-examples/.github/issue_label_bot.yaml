@@ -1,0 +1,5 @@
+# for https://mlbot.net which is a GitHub App that uses ML to label issues, run on K8s and Kubeflow
+label-alias:
+  bug: 'kind/bug'
+  feature_request: 'kind/feature'
+  question: 'kind/question'

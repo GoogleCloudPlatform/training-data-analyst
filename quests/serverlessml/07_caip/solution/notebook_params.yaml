@@ -1,0 +1,11 @@
+# These values will replace the cell tagged "parameters" in the Jupyter notebook
+# Unlike a Python notebook cell, you can not do compute in this configuration file.
+# so, on os.path.join,  1000 * 5, etc.  Values have to to be all strings and integers
+DATADIR: gs://cloud-training-demos-ml/quests/serverlessml/data
+OUTDIR: gs://cloud-training-demos-ml/quests/serverlessml/
+EXPORT_DIR: gs://cloud-training-demos-ml/quests/serverlessml/export/savedmodel
+NBUCKETS: 10  # for feature crossing
+TRAIN_BATCH_SIZE: 32
+NUM_TRAIN_EXAMPLES: 5000000 # remember the training dataset repeats, so this will wrap around
+NUM_EVALS: 5  # evaluate this many times
+NUM_EVAL_EXAMPLES: 100000 # enough to get a reasonable sample, but no so much that it slows down

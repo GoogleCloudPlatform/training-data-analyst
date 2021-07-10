@@ -1,0 +1,63 @@
+
+Test/Dev setup process for GCP-GKE-Monitor-Test
+
+
+
+If you wish to run the container directly in GKE:
+========================================================================
+Steps to prepare a new GCP project (Qwiklabs) for "gcp-gke-monitor-test"
+========================================================================
+
+=== Basic GKE Build ===
+export my_zone=us-central1-a
+export my_cluster=standard-cluster-1
+source <(kubectl completion bash)
+gcloud container clusters create $my_cluster --num-nodes "3" --enable-stackdriver-kubernetes --enable-ip-alias --zone $my_zone
+
+=== Hello-v2 Deployment ===
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatformTraining/training-data-analyst/master/courses/ak8s/17_Stackdriver/hello-v2.yaml
+kubectl get deployments
+
+=== GCP-GKE-Monitor-Test Manifest (Deployment and Service) ===
+kubectl apply -f https://raw.githubusercontent.com/brianeiler/gcp-gke-monitor-test/master/gcp-gke-monitor-test.yaml
+kubectl get deployments
+kubectl get services
+
+=== Custom-Metrics-Stackdriver-Adapter ===
+kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-admin --user $(gcloud config get-value account)
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/k8s-stackdriver/master/custom-metrics-stackdriver-adapter/deploy/production/adapter_new_resource_model.yaml
+kubectl get deployments -n custom-metrics
+
+
+
+If you would rather run the code outside of a container on a GCE Linux machine:
+========================================================================
+Steps to prepare a new Debian/Ubuntu Linux machine for test-dev
+========================================================================
+sudo apt update
+sudo apt install -y git
+curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+sudo apt-get install -y nodejs
+npm install -S body-parser
+npm install -S googleapis
+npm install -S @google-cloud/monitoring
+npm install -S express
+npm install -S nanotimer
+git clone https://github.com/brianeiler/gcp-gke-monitor-test.git
+cd gcp-gke-monitor-test
+npm start
+
+
+
+If you wish to run the code on a machine not connected to GCP at all:
+========================================================================
+Dry Run Mode
+========================================================================
+Before executing "npm start" or "node server.js", you can set an environment variable of "DRYRUN=true".
+This will prevent all the application functions from attempting to communicate to GCP.
+You can use this mode to experiment with console logging to stdOut.
+
+In Linux, you can also prefix commands with environment variables like so:
+
+"env DRYRUN=true node server.js"
+

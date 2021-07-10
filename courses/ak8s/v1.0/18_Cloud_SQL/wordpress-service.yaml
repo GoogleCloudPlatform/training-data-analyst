@@ -1,0 +1,15 @@
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "wordpress-service"
+  namespace: "default"
+  labels:
+    app: "wordpress"
+spec:
+  ports:
+  - protocol: "TCP"
+    port: 80
+  selector:
+    app: "wordpress"
+  type: "LoadBalancer"
+  loadBalancerIP: ""

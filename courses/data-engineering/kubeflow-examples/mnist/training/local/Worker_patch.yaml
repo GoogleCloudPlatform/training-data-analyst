@@ -1,0 +1,11 @@
+- op: add
+  path: /spec/tfReplicaSpecs/Worker/template/spec/containers/0/volumeMounts
+  value:
+    - mountPath: $(pvcMountPath)
+      name: local-storage
+- op: add
+  path: /spec/tfReplicaSpecs/Worker/template/spec/volumes
+  value:
+    - name: local-storage
+      persistentVolumeClaim:
+        claimName: $(pvcName)

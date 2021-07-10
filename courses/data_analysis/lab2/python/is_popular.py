@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Copyright Google Inc. 2016
@@ -48,11 +48,6 @@ def packageUse(line, keyword):
    for p in packages:
       yield (p, 1)
 
-def by_value(kv1, kv2):
-   key1, value1 = kv1
-   key2, value2 = kv2
-   return value1 < value2
-
 if __name__ == '__main__':
    parser = argparse.ArgumentParser(description='Find the most used Java packages')
    parser.add_argument('--output_prefix', default='/tmp/output', help='Output prefix')
@@ -71,9 +66,8 @@ if __name__ == '__main__':
       | 'GetImports' >> beam.FlatMap(lambda line: startsWith(line, keyword))
       | 'PackageUse' >> beam.FlatMap(lambda line: packageUse(line, keyword))
       | 'TotalUse' >> beam.CombinePerKey(sum)
-      | 'Top_5' >> beam.transforms.combiners.Top.Of(5, by_value)
+      | 'Top_5' >> beam.transforms.combiners.Top.Of(5, key=lambda kv: kv[1])
       | 'write' >> beam.io.WriteToText(output_prefix)
    )
 
    p.run().wait_until_finish()
-

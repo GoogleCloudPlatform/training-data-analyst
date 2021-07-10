@@ -1,0 +1,86 @@
+<html>
+<head>
+  <title>GCP-GKE-Monitor-Test</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <script type='text/javascript' src='/scripts/client.js'></script>
+</head>
+<body onload="loaded()">
+
+<div style="margin:50px;">
+  <div class="jumbotron"  style="padding:40px;">
+	<h1>Generate CPU Load</h1>
+	<p>The Generate CPU Load function will place a load on a single core CPU by performing math operations in a loop.</p>
+
+	<form action="/StartCPU" method="POST">
+		<input id="btnStartCPU" type="submit" value="Start CPU Load"/>
+	</form>
+
+	<form action="/StopCPU" method="POST">
+		<input id="btnStopCPU" type="submit" value="Stop CPU Load"/>
+	</form>
+	<span id="lblCPUStatus">Test Not started</span>
+  </div>
+</div>
+
+<div style="margin:50px;">
+  <div class="jumbotron"  style="padding:40px;">
+	<h1>Custom Metrics</h1>
+	<p>The Custom Metrics function will increment a counter which is then exposed to Stackdriver Monitoring. In this example, the counter represents the number of active users in an application. You can increase or decrease the number of active users; however the value is only reported to Stackdriver <b> once per minute </b>.</p>
+	<p>Click the <b>Start Monitoring</b> button to create the Stackdriver metric descriptor. This button will also trigger the test utility to start exporting the timeSeries data (the custom metric values) to Stackdriver.</p>
+	<form action="/StartMonitoring" method="POST">
+		<input id="btnStartMonitoring" type="submit" value="Start Monitoring"/>
+	</form>
+	<form action="/IncreaseUsers" method="POST">
+		<input id="btnIncreaseUserCount" type="submit" value="Increase Users Counter"/>
+	</form>
+	<form action="/DecreaseUsers" method="POST">
+		<input id="btnDecreaseUserCount" type="submit" value="Decrease Users Counter"/>
+	</form>
+	<span id="lblCustomMetricStatus">Metrics status</span>
+	<br>
+	<span id="lblCurrentUserCount">Current User count</span>
+  </div>
+</div>
+	
+<div style="margin:50px;">
+  <div class="jumbotron"  style="padding:40px;">
+	<h1>Log Test</h1>
+	<p>The Log Test function will generate a log message of the type selected, and then send it to the application's standard output device (stdout).</p>
+	<form action="/SendLogCritical" method="POST">
+		<input type="submit" value="Generate Critical Log Entry"/>
+	</form>
+	<form action="/SendLogError" method="POST">
+		<input type="submit" value="Generate Error Log Entry"/>
+	</form>
+	<form action="/SendLogWarning" method="POST">
+		<input type="submit" value="Generate Warning Log Entry"/>
+	</form>
+	<form action="/SendLogInformational" method="POST">
+		<input type="submit" value="Generate Informational Log Entry"/>
+	</form>
+	<form action="/EnableDebug" method="POST">
+		<input id="btnEnableDebugLogging" type="submit" value="Enable Debug Logging"/>
+	</form>
+	<form action="/DisableDebug" method="POST">
+		<input id="btnDisableDebugLogging" type="submit" value="Disable Debug Logging"/>
+	</form>
+	<span id="lblDebugLoggingStatus">Current User count</span>
+  </div>
+</div>
+
+<div style="margin:50px;">
+  <div class="jumbotron"  style="padding:40px;">
+	<h1>Crash the Pod</h1>
+	<p>This button will invoke a function that has an unhandled error, which causes the pod to crash and restart.</p>
+	<p>When you click the button, your browser will return an error. Wait a 30 seconds while Kubernetes spawns a replacement container, then refresh the page.</p>
+	<form action="/CrashThePod" method="POST">
+		<input type="submit" value="Crash this Pod"/>
+	</form>
+  </div>
+</div>
+Version: gcp-gke-monitor-test:1.2.0
+</body>
+</html>

@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    getambassador.io/config: |-
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name: tfserving-predict-mapping-mnist
+      prefix: /tfserving/models/mnist
+      rewrite: /v1/models/mnist:predict
+      method: POST
+      service: mnist-service.kubeflow:8500
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name: tfserving-predict-mapping-mnist-get
+      prefix: /tfserving/models/mnist
+      rewrite: /v1/models/mnist
+      method: GET
+      service: mnist-service.kubeflow:8500
+    prometheus.io/path: /monitoring/prometheus/metrics
+    prometheus.io/port: "8500"
+    prometheus.io/scrape: "true"
+  labels:
+    app: mnist
+  name: $(svcName)
+  namespace: kubeflow
+spec:
+  ports:
+  - name: grpc-tf-serving
+    port: 9000
+    targetPort: 9000
+  - name: http-tf-serving
+    port: 8500
+    targetPort: 8500
+  selector:
+    app: mnist
+  type: ClusterIP

@@ -1,0 +1,9 @@
+{
+  "name": "answer-function",
+  "version": "0.0.1",
+  "dependencies": {
+    "@google-cloud/spanner": "^4.1.0"
+  }
+}
+
+

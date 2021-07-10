@@ -1,0 +1,74 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+bases:
+- ../base
+
+configurations:
+- params.yaml
+
+vars:
+- fieldref:
+    fieldPath: data.s3Enable
+  name: s3Enable
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: mnist-map-serving
+- fieldref:
+    fieldPath: data.S3_ENDPOINT
+  name: S3_ENDPOINT
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: mnist-map-serving
+- fieldref:
+    fieldPath: data.AWS_REGION
+  name: AWS_REGION
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: mnist-map-serving
+- fieldref:
+    fieldPath: data.S3_USE_HTTPS
+  name: S3_USE_HTTPS
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: mnist-map-serving
+- fieldref:
+    fieldPath: data.S3_VERIFY_SSL
+  name: S3_VERIFY_SSL
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: mnist-map-serving
+- fieldref:
+    fieldPath: metadata.name
+  name: awsSecretName
+  objref:
+    apiVersion: v1
+    kind: Secret
+    name: aws-creds
+- fieldref:
+    fieldPath: data.AWS_ACCESS_KEY_ID
+  name: AWS_ACCESS_KEY_ID
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: mnist-map-serving
+- fieldref:
+    fieldPath: data.AWS_SECRET_ACCESS_KEY
+  name: AWS_SECRET_ACCESS_KEY
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: mnist-map-serving
+
+patchesJson6902:
+- path: deployment_patch.yaml
+  target:
+    group: extensions
+    kind: Deployment
+    name: $(svcName)
+    version: v1beta1

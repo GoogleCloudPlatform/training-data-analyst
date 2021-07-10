@@ -1,0 +1,787 @@
+[
+  {
+    "type": "INTEGER",
+     "name": "zip_code",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "STRING",
+     "name": "state",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "STRING",
+     "name": "acct_company_name",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "STRING",
+     "name": "city",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "STRING",
+     "name": "acct_name",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "STRING",
+     "name": "acct_org_name",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "STRING",
+     "name": "address",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "DATE",
+     "name": "date",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "STRING",
+     "name": "country",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "STRING",
+     "name": "acct_group_name",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "acct_number",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_90",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_91",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "product_number",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_10",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_98",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_11",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_99",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_96",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_100",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_97",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_101",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_94",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_102",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_95",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_103",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_92",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_104",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_93",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_105",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_18",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_19",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_16",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_17",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_14",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_15",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_12",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_13",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_106",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_107",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_108",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_109",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_21",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_22",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_110",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_111",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_20",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_112",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_113",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_114",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_115",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_116",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_29",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_27",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_28",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_25",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_26",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_23",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_24",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "num6",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_117",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_118",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_119",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_num1",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_3",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_76",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_120",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_4",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_77",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_121",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_5",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_74",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_122",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_6",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_75",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_123",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_72",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_124",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_73",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_125",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_1",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_70",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_126",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_2",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_71",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_127",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "num1",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "num5",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "num3",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_78",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "num2",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_79",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_128",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_80",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_129",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_7",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_8",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_9",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_87",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_131",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_88",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_132",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_85",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_133",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_86",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_134",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_83",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_135",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_84",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_136",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_81",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_82",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_89",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_130",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_54",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_55",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_52",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_53",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_50",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_51",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_58",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_59",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_56",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_57",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_65",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_66",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_63",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_64",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_61",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_62",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_60",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_69",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_67",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_68",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "STRING",
+     "name": "foo",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_32",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_33",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_30",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_31",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_38",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_39",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_36",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_37",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_34",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_35",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "quantity",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_43",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_44",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_41",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_42",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_40",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_49",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_47",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_48",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_45",
+     "mode": "NULLABLE"
+  },
+   {
+    "type": "INTEGER",
+     "name": "col_number_46",
+     "mode": "NULLABLE"
+  }
+]

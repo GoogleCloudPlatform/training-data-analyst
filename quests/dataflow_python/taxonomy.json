@@ -1,0 +1,33 @@
+{"name": "home.html",
+  "children":
+    [{"name": "archea.html",
+      "children": [
+        {"name": "archaea.html"}]},
+      {"name" : "bacteria.html",
+      "children" : [
+        {"name": "bacteria.html"}
+      ]},
+      {"name" : "eucharya.html",
+      "children":  [
+        {"name" :  "protozoa.html",
+        "children" :  [
+          {"name" :  "amoebozoa.html"}
+        ]},
+        {"name" :  "chromista.html",
+        "children" :  [
+          {"name" :  "cryptista.html"}
+        ]},
+        {"name" : "plantae.html",
+        "children" :  [
+          {"name" :  "coniferophyta.html"}
+        ]},
+        {"name" : "fungi.html",
+        "children" :  [
+          {"name" : "blastocladiomycota.html"}
+        ]},
+        {"name" :  "animalia.html",
+        "children" :  [
+          {"name" :  "acanthocephala.html"}
+        ]}
+      ]}
+    ]}

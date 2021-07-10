@@ -1,0 +1,10 @@
+{
+  "name": "sample-pubsub",
+  "version": "0.0.1",
+  "dependencies": {
+    "@google-cloud/spanner": "^4.1.0",
+    "@google-cloud/language": "^3.3.0"
+  }
+}
+
+

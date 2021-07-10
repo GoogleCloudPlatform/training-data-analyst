@@ -1,0 +1,8 @@
+{
+  "extends": [
+    "config:base"
+  ],
+  "ignorePaths": [
+    "optional-kubernetes-engine"
+  ]
+}

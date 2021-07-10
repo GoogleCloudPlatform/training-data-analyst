@@ -1,0 +1,7 @@
+varReference:
+- path: spec/template/spec/containers/env/value
+  kind: Deployment
+- path: metadata/name
+  kind: Service
+- path: metadata/name
+  kind: Deployment

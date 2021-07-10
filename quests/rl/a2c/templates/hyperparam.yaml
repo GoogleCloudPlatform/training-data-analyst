@@ -1,0 +1,40 @@
+# Creating a .yaml File
+trainingInput:
+  scaleTier: BASIC_GPU
+  hyperparameters:
+    maxTrials: 50
+    maxParallelTrials: 30
+    enableTrialEarlyStopping: False
+    goal: MAXIMIZE
+    hyperparameterMetricTag: avg_reward
+    params:
+    - parameterName: learning_rate
+      type: DOUBLE
+      minValue: 0.0
+      maxValue: 0.01
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: critic_weight
+      type: DOUBLE
+      minValue: 0.0
+      maxValue: 1.0
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: hidden_neurons
+      type: INTEGER
+      minValue: 10
+      maxValue: 1000
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: batch_size
+      type: INTEGER
+      minValue: 10
+      maxValue: 256
+      scaleType: UNIT_LOG_SCALE
+    - parameterName: gamma
+      type: DOUBLE
+      minValue: 0.8
+      maxValue: 1.0
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: entropy
+      type: DOUBLE
+      minValue: 0.0
+      maxValue: 0.1
+      scaleType: UNIT_LINEAR_SCALE

@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- guestbook-frontend-deployment.yaml
+- guestbook-service-deployment.yaml
+secretGenerator:
+- files:
+  - service-account.json
+  name: guestbook-service-account
+  type: Opaque

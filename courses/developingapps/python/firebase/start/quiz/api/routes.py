@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import api
+from quiz.api import api
 
 from flask import request, Blueprint
 
@@ -40,4 +40,4 @@ API endpoint for feedback
 @api_blueprint.route('/quizzes/feedback/<quiz_name>', methods=['POST'])
 def feedback_method(quiz_name):
     feedback = request.get_json()
-    return 
+    return

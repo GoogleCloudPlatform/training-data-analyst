@@ -71,16 +71,12 @@ def packageUse(record, keyword):
          for p in packages:
            yield (p, 1)
 
-def by_value(kv1, kv2):
-   key1, value1 = kv1
-   key2, value2 = kv2
-   return value1 < value2
-
 def is_popular(pcoll):
  return (pcoll
     | 'PackageUse' >> beam.FlatMap(lambda rowdict: packageUse(rowdict['content'], 'import'))
     | 'TotalUse' >> beam.CombinePerKey(sum)
-    | 'Top_NNN' >> beam.transforms.combiners.Top.Of(TOPN, by_value) )
+    | 'Top_NNN' >> beam.transforms.combiners.Top.Of(TOPN, key=lambda kv: kv[1]) )
+
 
 
 def packageHelp(record, keyword):
@@ -156,6 +152,7 @@ def run():
     '--staging_location=gs://{0}/staging/'.format(bucket),
     '--temp_location=gs://{0}/staging/'.format(bucket),
     '--runner={0}'.format(runner),
+    '--region=us-central1',
     '--max_num_workers=5'
     ]
 

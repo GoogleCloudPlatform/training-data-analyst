@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dns-demo
+spec:
+  selector:
+    name: dns-demo
+  clusterIP: None
+  ports:
+  - name: dns-demo
+    port: 1234
+    targetPort: 1234
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dns-demo-1
+  labels:
+    name: dns-demo
+spec:
+  hostname: dns-demo-1
+  subdomain: dns-demo
+  containers:
+  - name: nginx
+    image: nginx
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dns-demo-2
+  labels:
+    name: dns-demo
+spec:
+  hostname: dns-demo-2
+  subdomain: dns-demo
+  containers:
+  - name: nginx
+    image: nginx

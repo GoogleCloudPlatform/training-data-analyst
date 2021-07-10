@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  gcp-gke-monitor-test:
+    build: .
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 8080:8080
+      - 9229:9229
+    command: npm start

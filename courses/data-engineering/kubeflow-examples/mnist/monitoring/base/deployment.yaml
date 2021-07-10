@@ -1,0 +1,30 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: tensorboard-tb
+  namespace: kubeflow
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        app: tensorboard
+        tb-job: tensorboard
+      name: tensorboard
+      namespace: kubeflow
+    spec:
+      serviceAccount: default-editor
+      containers:
+      - command:
+        - /usr/local/bin/tensorboard
+        - --logdir=$(logDir)
+        - --port=80
+        env:
+        - name: logDir
+          value: $(logDir)
+        image: tensorflow/tensorflow:1.11.0
+        name: tensorboard
+        ports:
+        - containerPort: 80

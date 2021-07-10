@@ -1,0 +1,5 @@
+## Integrated Gradients
+
+This long-form tutorial demonstrates how to implement **Integrated Gradients (IG)**, an explainable AI technique described in the paper [Axiomatic Attribution for Deep Networks](https://arxiv.org/abs/1703.01365). IG aims to explain the functional relationship between a model's predictions in terms of its features. It has many use cases including understanding feature importances, identifying data skew, and debugging model performance. IG is an increasingly popular interpretability technique due to its broad applicability to any differentiable model, ease of implementation, theoretical justifications, and computational efficiency relative to alternative approaches that allows it to scale to large networks and feature spaces such as images.
+
+See the above [notebook](./integrated_gradients.ipynb) for a detailed walk through of IG's implementation in Tensorflow 2.x, applied machine learning use cases, and discussion of its properties and limitations. A shorter version is also available on Tensorflow.org.

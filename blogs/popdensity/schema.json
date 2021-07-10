@@ -1,0 +1,44 @@
+[
+  {
+    "description": "year that grid represents",
+    "mode": "REQUIRED",
+    "name": "year",
+    "type": "INTEGER"
+  },
+  {
+    "description": "row number within tile",
+    "mode": "REQUIRED",
+    "name": "rowno",
+    "type": "INTEGER"
+  },
+  {
+    "description": "column number within tile",
+    "mode": "REQUIRED",
+    "name": "colno",
+    "type": "INTEGER"
+  },
+  {
+    "description": "tile",
+    "mode": "REQUIRED",
+    "name": "tile",
+    "type": "STRING"
+  },
+  {
+    "description": "centroid location",
+    "mode": "REQUIRED",
+    "name": "location",
+    "type": "GEOGRAPHY"
+  },
+  {
+    "description": "polygon representing boundary of rectangle",
+    "mode": "REQUIRED",
+    "name": "bounds",
+    "type": "GEOGRAPHY"
+  },
+  {
+    "description": "population density (persons per sq km)",
+    "mode": "REQUIRED",
+    "name": "population_density",
+    "type": "FLOAT"
+  }
+]

@@ -1,0 +1,46 @@
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: S3_ENDPOINT
+    value: $(S3_ENDPOINT)
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: AWS_ENDPOINT_URL
+    value: $(AWS_ENDPOINT_URL)
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: AWS_REGION
+    value: $(AWS_REGION)
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: BUCKET_NAME
+    value: $(BUCKET_NAME)
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: S3_USE_HTTPS
+    value: $(S3_USE_HTTPS)
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: S3_VERIFY_SSL
+    value: $(S3_VERIFY_SSL)
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: AWS_ACCESS_KEY_ID
+    valueFrom:
+      secretKeyRef:
+        key: $(awsAccessKeyIDName)
+        name: $(awsSecretName)
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: AWS_SECRET_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        key: $(awsSecretAccessKeyName)
+        name: $(awsSecretName)

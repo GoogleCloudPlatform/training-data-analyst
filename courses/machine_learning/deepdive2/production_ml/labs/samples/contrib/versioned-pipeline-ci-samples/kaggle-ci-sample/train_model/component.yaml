@@ -1,0 +1,17 @@
+name: train model
+description: train and test
+inputs:
+  - {name: train_file, type: string}
+  - {name: test_file, type: string}
+  - {name: bucket_name, type: string}
+outputs:
+  - {name: result, type: string}
+implementation:
+  container:
+    image: train_image_location
+    command: ['python', 'train.py']
+    args: ['--train_file', {inputValue: train_file},
+           '--test_file', {inputValue: test_file},
+           '--bucket_name', {inputValue: bucket_name}]
+    fileOutputs: 
+      result: /result_path.txt

@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- deployment.yaml
+- mnist-deploy-config.yaml
+- service.yaml
+
+namespace: kubeflow
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configurations:
+- params.yaml
+
+vars:
+- fieldref:
+    fieldPath: data.name
+  name: svcName
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: mnist-map-serving
+- fieldref:
+    fieldPath: data.modelBasePath
+  name: modelBasePath
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: mnist-map-serving

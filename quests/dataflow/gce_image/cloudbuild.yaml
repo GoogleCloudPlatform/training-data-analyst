@@ -1,0 +1,16 @@
+steps:
+  - name: 'gcr.io/qwiklabs-resources/packer'
+    args:
+    - build
+    - -var
+    - image_name=$_IMAGE_NAME
+    - -force
+    - packer.json
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+    - compute
+    - images
+    - add-iam-policy-binding
+    - $_IMAGE_NAME
+    - --member=allAuthenticatedUsers
+    - --role=roles/compute.imageUser

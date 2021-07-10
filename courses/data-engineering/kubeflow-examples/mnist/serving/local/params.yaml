@@ -1,0 +1,5 @@
+varReference:
+- path: spec/template/spec/volumes/persistentVolumeClaim/claimName
+  kind: Deployment
+- path: spec/template/spec/containers/volumeMounts/mountPath
+  kind: TFJob

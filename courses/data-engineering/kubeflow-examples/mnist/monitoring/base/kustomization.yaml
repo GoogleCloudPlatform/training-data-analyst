@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- deployment.yaml
+- service.yaml
+
+namespace: kubeflow
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configurations:
+- params.yaml
+
+vars:
+- fieldref:
+    fieldPath: data.logDir
+  name: logDir
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: mnist-map-monitoring

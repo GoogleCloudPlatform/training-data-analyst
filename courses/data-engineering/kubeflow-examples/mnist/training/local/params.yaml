@@ -1,0 +1,15 @@
+varReference:
+- path: metadata/name
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Chief/template/spec/volumes/persistentVolumeClaim/claimName
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Worker/template/spec/volumes/persistentVolumeClaim/claimName
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Ps/template/spec/volumes/persistentVolumeClaim/claimName
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Chief/template/spec/containers/volumeMounts/mountPath
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Worker/template/spec/containers/volumeMounts/mountPath
+  kind: TFJob
+- path: spec/tfReplicaSpecs/Ps/template/spec/containers/volumeMounts/mountPath
+  kind: TFJob
