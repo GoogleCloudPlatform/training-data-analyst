@@ -1,6 +1,6 @@
 # Vertex AI: Qwikstart
 
-In this lab, you will walk through an introductory, end-to-end experience of training and serving a custom TensorFlow model on Vertex AI.
+In this lab, you will walk through an introductory, end-to-end training and deployment workflow for a custom TensorFlow model on Vertex AI.
 
 ## Learning objectives
 
@@ -13,4 +13,6 @@ In this lab, you will walk through an introductory, end-to-end experience of tra
 * Request an online prediction and see the response.
 
 ## Setup
+
+Enable APIs
 
