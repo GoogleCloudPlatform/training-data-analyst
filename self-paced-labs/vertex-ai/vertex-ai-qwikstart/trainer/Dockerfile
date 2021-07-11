@@ -12,3 +12,4 @@ COPY task.py /root/task.py
 
 # Sets up the entry point to invoke the trainer.
 ENTRYPOINT ["python3", "task.py"]
+
