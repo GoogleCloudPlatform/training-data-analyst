@@ -1,0 +1,4 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'gcr.io/dougkelly-vertex-demos/online-retail-clv', '.' ]
+images: ['gcr.io/dougkelly-vertex-demos/online-retail-clv']
