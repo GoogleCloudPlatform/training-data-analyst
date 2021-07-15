@@ -52,11 +52,11 @@ SELECT
   features.customer_id,
   features.customer_country,
   features.n_purchases, -- frequency
-  features.avg_purchase_size,
-  features.avg_purchase_revenue,
+  features.avg_purchase_size, --monetary
+  features.avg_purchase_revenue, --monetary
   features.customer_age,
   features.days_since_last_purchase, --recency
-  label.target_monetary_value_3M, --monetary
+  label.target_monetary_value_3M, --target
   CASE 
     WHEN MOD(ABS(FARM_FINGERPRINT(CAST(features.customer_id AS STRING))), 10) < 8
       THEN 'TRAIN'

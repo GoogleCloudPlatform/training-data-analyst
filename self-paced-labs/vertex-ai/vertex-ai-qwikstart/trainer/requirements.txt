@@ -1,8 +1,0 @@
-google-cloud-bigquery==1.28.0
-google-cloud-bigquery-storage==1.1.0
-google-cloud-aiplatform==1.0.0
-google-cloud-aiplatform[tensorboard]
-tensorflow-io==0.16.0
-tensorflow==2.3.3
-explainable-ai-sdk==1.3.0
-pyarrow
