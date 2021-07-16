@@ -38,17 +38,17 @@ gcloud config set project $PROJECT_ID
 
 ```
 gcloud services enable \
-compute.googleapis.com \
-iam.googleapis.com \
-iamcredentials.googleapis.com \
-monitoring.googleapis.com \
-logging.googleapis.com \
-notebooks.googleapis.com \
-aiplatform.googleapis.com \
-bigquery.googleapis.com \
-artifactregistry.googleapis.com \
-cloudbuild.googleapis.com \
-container.googleapis.com
+  compute.googleapis.com \
+  iam.googleapis.com \
+  iamcredentials.googleapis.com \
+  monitoring.googleapis.com \
+  logging.googleapis.com \
+  notebooks.googleapis.com \
+  aiplatform.googleapis.com \
+  bigquery.googleapis.com \
+  artifactregistry.googleapis.com \
+  cloudbuild.googleapis.com \
+  container.googleapis.com
 ```
 
 ### 2. Creating a Vertex Notebooks instance
