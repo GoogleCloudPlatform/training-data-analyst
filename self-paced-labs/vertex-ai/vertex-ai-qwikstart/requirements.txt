@@ -1,4 +1,5 @@
-google-cloud-aiplatform[tensorboard]
+google-cloud-aiplatform[tensorboard]>1.0.0
+six==1.15.0
 wget
 xlrd
 openpyxl
