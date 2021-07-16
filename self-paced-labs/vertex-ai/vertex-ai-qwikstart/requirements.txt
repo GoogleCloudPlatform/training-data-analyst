@@ -1,0 +1,4 @@
+google-cloud-aiplatform[tensorboard]
+wget
+xlrd
+openpyxl
