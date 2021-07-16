@@ -1,4 +1,4 @@
-# Vertex AI: Qwikstart
+# Vertex AI: Qwik Start
 
 In this lab, you will use [BigQuery](https://cloud.google.com/bigquery) for data processing and exploratory data analysis and the [Vertex AI](https://cloud.google.com/vertex-ai) platform to train and deploy a custom TensorFlow Regressor model to predict customer lifetime value (CLV). The goal of the lab is to introduce to Vertex AI through a high value real world use case - predictive CLV. You will start with a local BigQuery and TensorFlow workflow you may already be familiar with and progress toward training and deploying your model in the cloud with Vertex AI as well as retrieving predictions and explanations from your model.
 
