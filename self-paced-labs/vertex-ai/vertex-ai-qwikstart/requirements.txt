@@ -1,5 +1,5 @@
-google-cloud-aiplatform[tensorboard]>1.0.0
+google-cloud-aiplatform[tensorboard]==1.0.0
 six==1.15.0
-wget
-xlrd
-openpyxl
+wget==3.2
+xlrd==2.0.1
+openpyxl==3.0.7
