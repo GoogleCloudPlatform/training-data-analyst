@@ -21,6 +21,7 @@ Vertex AI is Google Cloud's next generation, unified platform for machine learni
 ### 1. Enable Cloud Services utilized in the lab environment:
 
 #### 1.1 Launch [Cloud Shell](https://cloud.google.com/shell/docs/launching-cloud-shell)
+
 #### 1.2 Set your Project ID
 
 Confirm that you see the desired project ID returned below:
@@ -51,7 +52,56 @@ gcloud services enable \
   container.googleapis.com
 ```
 
-### 2. Creating a Vertex Notebooks instance
+### 2. Create Vertex AI custom service account for Vertex Tensorboard experiment tracking
+
+#### 2.1 Create custom service account
+```
+SERVICE_ACCOUNT_ID=vertex-custom-training-sa
+gcloud iam service-accounts create $SERVICE_ACCOUNT_ID  \
+    --description="A custom service account for Vertex custom training with Tensorboard" \
+    --display-name="Vertex AI Custom Training"
+```
+
+#### 2.2. Grant it access to GCS for writing and retrieving Tensorboard logs
+```
+PROJECT_ID=$(gcloud config get-value core/project)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member=serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com \
+    --role="roles/storage.admin"
+```
+
+#### 2.3. Grant it access to your BigQuery data source to read data into your TensorFlow model
+```
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member=serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com \
+    --role="roles/bigquery.admin"
+```
+
+#### 2.4. Grant it access to Vertex AI for running model training, deployment, and explanation jobs.
+```
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member=serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com \
+    --role="roles/aiplatform.user"
+```
+
+#### 2.5. Allow the Vertex Custom Code Service Agent SA to use your custom service account
+```
+# Grab your custom SA email.
+CUSTOM_SA_EMAIL="${SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceaccount.com"
+
+# Retrieve Vertex SA.
+VERTEX_SA=$(gcloud projects get-iam-policy $PROJECT_ID \
+    --flatten="bindings[].members" --format="table(bindings.members)" \
+    --filter="bindings.role:roles/aiplatform.customCodeServiceAgent" | \
+    grep "serviceAccount:" | head -n1)
+
+# Give Vertex SA admin rights over your custom service account.
+gcloud --project=$PROJECT_ID iam service-accounts add-iam-policy-binding \
+    --role roles/iam.serviceAccountAdmin \
+    --member $VERTEX_SA $CUSTOM_SA_EMAIL
+```
+
+### 3. Creating a Vertex Notebooks instance
 
 An instance of **Vertex Notebooks** is used as a primary lab environment.
 
@@ -59,20 +109,28 @@ To provision the instance follow the [Create an new notebook instance](https://c
 
 After the instance is created, you can connect to [JupyterLab](https://jupyter.org/) IDE by clicking the *OPEN JUPYTERLAB* link in the [Vertex AI Notebooks Console](https://console.cloud.google.com/vertex-ai/notebooks/instances).
 
-In the **JupyterLab**, open a terminal and clone this repository in the `home` folder.
+
+### 4. Clone the lab repository
+
+In your **JupyterLab** instance, open a terminal and clone this repository in the `home` folder.
 ```
 cd
 git clone https://github.com/GoogleCloudPlatform/training-data-analyst.git
 ```
 
-Navigate to the lab folder.
-```
-cd training-data-analyst/tree/master/self-paced-labs/vertex-ai/vertex-ai-qwikstart
-```
+### 5. Install the lab dependencies
 
-Install the required lab packages.
-```
+Run the following in the **JupyterLab** terminal to go to the `training-data-analyst/self-paced-labs/vertex-ai/vertex-ai-qwikstart` folder, then pip install `requirements.txt` to install lab dependencies:
+
+```bash
+cd training-data-analyst/self-paced-labs/vertex-ai/vertex-ai-qwikstart
 pip install -U -r requirements.txt
 ```
 
-Open `lab_exercise.ipynb` to complete the lab. Happy coding!
+### 6. Navigate to lab notebook
+
+In your **JupyterLab** instance, navigate to __training-data-analyst__ > __self-paced-labs__ > __vertex-ai__ > __vertex-ai-qwikstart__, and open __lab_exercise.ipynb__.
+
+Open `lab_exercise.ipynb` to complete the lab. 
+
+Happy coding!
