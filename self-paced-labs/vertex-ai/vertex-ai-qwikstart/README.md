@@ -1,6 +1,6 @@
 # Vertex AI: Qwik Start
 
-In this lab, you will use [BigQuery](https://cloud.google.com/bigquery) for data processing and exploratory data analysis and the [Vertex AI](https://cloud.google.com/vertex-ai) platform to train and deploy a custom TensorFlow Regressor model to predict customer lifetime value (CLV). The goal of the lab is to introduce to Vertex AI through a high value real world use case - predictive CLV. You will start with a local BigQuery and TensorFlow workflow you may already be familiar with and progress toward training and deploying your model in the cloud with Vertex AI as well as retrieving predictions and explanations from your model.
+In this lab, you will use [BigQuery](https://cloud.google.com/bigquery) for data processing and exploratory data analysis and the [Vertex AI](https://cloud.google.com/vertex-ai) platform to train and deploy a custom TensorFlow Regressor model to predict customer lifetime value (CLV). The goal of the lab is to introduce Vertex AI through a high value real world use case - predictive CLV. You will start with a local BigQuery and TensorFlow workflow you may already be familiar with and progress toward training and deploying your model in the cloud with Vertex AI as well as retrieving predictions and explanations from your model.
 
 ![Vertex AI](./images/vertex-ai-overview.png "Vertex AI Overview")
 
@@ -54,7 +54,7 @@ gcloud services enable \
 
 ### 2. Create Vertex AI custom service account for Vertex Tensorboard experiment tracking
 
-#### 2.1 Create custom service account
+#### 2.1. Create custom service account
 ```
 SERVICE_ACCOUNT_ID=vertex-custom-training-sa
 gcloud iam service-accounts create $SERVICE_ACCOUNT_ID  \
@@ -77,28 +77,11 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
     --role="roles/bigquery.admin"
 ```
 
-#### 2.4. Grant it access to Vertex AI for running model training, deployment, and explanation jobs.
+#### 2.4. Grant it access to Vertex AI for running model training, deployment, and explanation jobs
 ```
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member=serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com \
     --role="roles/aiplatform.user"
-```
-
-#### 2.5. Allow the Vertex Custom Code Service Agent SA to use your custom service account
-```
-# Grab your custom SA email.
-CUSTOM_SA_EMAIL="${SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceaccount.com"
-
-# Retrieve Vertex SA.
-VERTEX_SA=$(gcloud projects get-iam-policy $PROJECT_ID \
-    --flatten="bindings[].members" --format="table(bindings.members)" \
-    --filter="bindings.role:roles/aiplatform.customCodeServiceAgent" | \
-    grep "serviceAccount:" | head -n1)
-
-# Give Vertex SA admin rights over your custom service account.
-gcloud --project=$PROJECT_ID iam service-accounts add-iam-policy-binding \
-    --role roles/iam.serviceAccountAdmin \
-    --member $VERTEX_SA $CUSTOM_SA_EMAIL
 ```
 
 ### 3. Creating a Vertex Notebooks instance
