@@ -1,0 +1,12 @@
+Flask>=2.0.1
+google-auth>=1.33.0
+google-cloud>=0.34.0
+google-cloud-core>=1.7.1
+google-cloud-pubsub>=2.6.1
+google-cloud-datastore>=2.1.4
+google-cloud-spanner>=3.6.0
+google-cloud-storage>=1.41.0
+google-cloud-language>=2.2.0
+grpcio>=1.38.1
+grpcio-gcp>=0.2.2
+grpcio-tools>=1.38.1
