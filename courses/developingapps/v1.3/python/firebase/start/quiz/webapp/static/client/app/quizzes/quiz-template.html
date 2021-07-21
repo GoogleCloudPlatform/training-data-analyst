@@ -1,0 +1,103 @@
+<!--
+Copyright 2017, Google, Inc.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<div class='row'>
+    <div class='col-xs-12' ng-hide='qc.gameOver || qc.questions.length == 0'>
+        <div class='thumbnail' ng-switch='qc.question.imageUrl.substring(qc.question.imageUrl.lastIndexOf("."))'>
+            <div ng-switch-when='.png'>
+                <img class='img-responsive' ng-src='{{qc.question.imageUrl}}'>
+            </div>
+            <div ng-switch-when='.mov'>
+                <video class='img-responsive' ng-src='{{qc.question.imageUrl}}' controls></video>
+            </div>
+            <div class='caption'>
+                <h3>{{qc.question.title}}</h3>
+                <div class='form-group'>
+                    <div class='input-group'>
+                        <span class='input-group-addon'>
+                            <input type='radio' ng-model='qc.selectedAnswer' value='1'>
+                        </span>
+                        <input class='form-control' readonly ng-model='qc.question.answer1'>
+                    </div>
+                </div>
+                <div class='form-group'>
+                    <div class='input-group'>
+                        <span class='input-group-addon'>
+                            <input type='radio' ng-model='qc.selectedAnswer' value='2'>
+                        </span>
+                        <input class='form-control' readonly ng-model='qc.question.answer2'>
+                    </div>
+                </div>
+                <div class='form-group'>
+                    <div class='input-group'>
+                        <span class='input-group-addon'>
+                            <input type='radio' ng-model='qc.selectedAnswer' value='3'>
+                        </span>
+                        <input class='form-control' readonly ng-model='qc.question.answer3'>
+                    </div>
+                </div>
+                <div class='form-group'>
+                    <div class='input-group'>
+                        <span class='input-group-addon'>
+                            <input type='radio' ng-model='qc.selectedAnswer' value='4'>
+                        </span>
+                        <input class='form-control' readonly ng-model='qc.question.answer4'>
+                    </div>
+                </div>
+                <button class='btn btn-primary btn-block' ng-click='qc.selectAnswer()'>Submit Answer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class='col-xs-12' ng-show='qc.questions.length == 0'>
+        <div class='thumbnail'>
+            <div class='caption'>
+                <h3>No Questions on {{qc.quizName}}</h3>
+                <h4>There aren't any questions in this quiz, please try another</h4>
+            </div>
+        </div>
+    </div>
+
+
+    <div class='col-xs-12' ng-show='qc.gameOver'>
+        <div class='thumbnail'>
+            <div class='caption'>
+                <h3>Game Over</h3>
+                <h4>You scored {{qc.correct}} out of {{qc.total}}</h4>
+                <h4>What did you think?</h4>
+                <p>Please let us know how you found the quiz!</p>
+                <div class='form-group'>
+                    <select class='form-control' ng-model='qc.rating'>
+                        <option value='-1'>Rate this Quiz</option>
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                     </select>
+                </div>
+                <div class='form-group'>
+                    <textarea class='form-control' ng-model='qc.feedback'></textarea>
+                </div>
+
+                <div class='form-group'>
+                    <button class='btn btn-primary btn-block' ng-click='qc.sendFeedback()'>Send Feedback</button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+
+</div>
