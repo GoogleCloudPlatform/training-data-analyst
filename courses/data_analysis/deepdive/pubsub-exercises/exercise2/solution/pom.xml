@@ -23,7 +23,7 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-pubsub</artifactId>
-      <version>1.108.3</version>
+      <version>1.113.1</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/joda-time/joda-time -->
     <dependency>

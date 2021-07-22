@@ -1,0 +1,75 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    getambassador.io/config: |-
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name: trtisserving-predict-mapping-TRTSERVER_NAME
+      grpc: True
+      prefix: /
+      rewrite: /
+      service: TRTSERVER_NAME.KUBEFLOW_NAMESPACE:8001
+  labels:
+    app: TRTSERVER_NAME
+  name: TRTSERVER_NAME
+  namespace: KUBEFLOW_NAMESPACE
+spec:
+  ports:
+  - name: grpc-trtis-serving
+    port: 8001
+    targetPort: 8001
+  - name: http-trtis-serving
+    port: 8000
+    targetPort: 8000
+  - name: prometheus-metrics
+    port: 8002
+    targetPort: 8002
+  selector:
+    app: TRTSERVER_NAME
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: TRTSERVER_NAME
+  name: TRTSERVER_NAME
+  namespace: KUBEFLOW_NAMESPACE
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: TRTSERVER_NAME
+        version: v1
+    spec:
+      containers:
+      - image: nvcr.io/nvidia/tensorrtserver:19.03-py3
+        command: ["/bin/sh", "-c"]
+        args: ["trtserver --model-store=MODEL_PATH"]
+        imagePullPolicy: IfNotPresent
+        name: TRTSERVER_NAME
+        ports:
+        - containerPort: 9000
+        - containerPort: 8000
+        - containerPort: 8001
+        - containerPort: 8002
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4Gi
+            nvidia.com/gpu: 1
+          requests:
+            cpu: "2"
+            memory: 4Gi
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: persistent-data-store
+          mountPath: /mnt/workspace
+      volumes:
+      - name: persistent-data-store
+        persistentVolumeClaim:
+          claimName: nvidia-workspace-read-claim

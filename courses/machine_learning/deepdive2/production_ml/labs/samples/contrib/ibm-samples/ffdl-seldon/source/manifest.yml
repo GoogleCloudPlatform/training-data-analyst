@@ -1,0 +1,52 @@
+# name: Replace with any name for your model
+# description: Replace with any description for your model
+# version: Replace with any version of your model
+# gpus: Replace with the number of gpus to be used in
+#       training your model
+# cpus: Replace with the number of cpus to be used in
+#       training your model
+# learners: Replace with the number of learner nodes to be used
+# memory: Replace with the amount of memory to be
+#         dedicated to training your model
+name: Pytorch gender_classification model
+description: Pytorch gender_classification model
+version: "1.0"
+gpus: 0
+cpus: 2
+learners: 1
+memory: 4Gb
+
+# Object stores that allow the system to retrieve training data.
+# id: The data_store id
+# type: The type of data_store
+# training_data: container: Replace with the name of the bucket at which
+#                           you stored the fashion MNIST dataset
+# training_results: container: Replace with the name of the bucket where
+#                              the resulting model should be saved to
+# connection: type: The type of connection
+# connection: auth_url: Replace with your Cloud Object Storage Endpoint url
+#                       for IBM Cloud
+# connection: user_name: Replace with the access_key_id found in the service
+#                        credentials tab on IBM Cloud
+# connection: password: Replace with the secret_access_key found in service
+#                       credentials tab on IBM Cloud
+data_stores:
+  - id: test-datastore
+    type: mount_cos
+    training_data:
+      container: gender-data
+    training_results:
+      container: gender-result
+    connection:
+      # Update the object storage credentials below
+      auth_url: http://s3-api.us-geo.objectstorage.softlayer.net
+      user_name: xxxxxx
+      password: xxxxxxxxx
+
+# name:    The name of the Deep Learning framework that will be used
+# version: The version of the framework to be used
+# command: The command to initiate training
+framework:
+  name: pytorch
+  version: "latest"
+  command: tar -xzvf $DATA_DIR/UTKFace.tar.gz -C / --owner root --group root --no-same-owner 2>&1 > dummy.log; pip install torchsummary Pillow pandas; python -u gender_classification.py --data_dir /UTKFace/ --result_path $RESULT_DIR/model.pt --label_dir $RESULT_DIR
