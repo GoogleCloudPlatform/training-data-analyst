@@ -33,9 +33,9 @@ _CI_I_AM_A_TEST_ROBOT="${_CI_I_AM_A_TEST_ROBOT:=0}"
 ### Internal variables ###
 MAJOR="${MAJOR:=1}"; readonly MAJOR;
 MINOR="${MINOR:=9}"; readonly MINOR;
-POINT="${POINT:=3}"; readonly POINT;
+POINT="${POINT:=6}"; readonly POINT;
 REV="${REV:=2}"; readonly REV;
-CONFIG_VER="${CONFIG_VER:="4"}"; readonly CONFIG_VER;
+CONFIG_VER="${CONFIG_VER:="1"}"; readonly CONFIG_VER;
 K8S_MINOR=0
 
 ### File related constants ###
@@ -62,6 +62,7 @@ GCE_NETWORK_NAME=""
 GCLOUD_USER_OR_SA=""
 KPT_URL=""
 KUBECONFIG=""
+CONTEXT=""
 APATH=""
 AKUBECTL=""
 AKPT=""
@@ -73,6 +74,7 @@ RELEASE_LINE=""
 PREVIOUS_RELEASE_LINE=""
 KPT_BRANCH=""
 NAMESPACE_EXISTS=0
+KUBECONFIG_SUPPLIED=0
 
 ### Option variables ###
 PROJECT_ID="${PROJECT_ID:=}"
@@ -80,6 +82,8 @@ CLUSTER_NAME="${CLUSTER_NAME:=}"
 CLUSTER_LOCATION="${CLUSTER_LOCATION:=}"
 MODE="${MODE:=}"
 CA="${CA:=}"
+KUBECONFIG="${KUBECONFIG_FILE:=}"
+CONTEXT="${CONTEXT:=}"
 
 CUSTOM_OVERLAY=""
 OPTIONAL_OVERLAY=""
@@ -109,17 +113,19 @@ ONLY_VALIDATE="${ONLY_VALIDATE:=0}"
 ONLY_ENABLE="${ONLY_ENABLE:=0}"
 VERBOSE="${VERBOSE:=0}"
 MANAGED="${MANAGED:=0}"
-MANAGED_SERVICE_ACCOUNT=""
 
 PRINT_HELP=0
 PRINT_VERSION=0
 CUSTOM_CA=0
 USE_HUB_WIP=0
+USE_MCP_CNI=0
 USE_VM=0
 ENVIRON_PROJECT_ID=""
 HUB_MEMBERSHIP_ID=""
 WI_ENABLED=0
 CUSTOM_REVISION=0
+NETWORK_POLICY_ENABLED=0
+HAS_TS=0
 
 main() {
   init
@@ -145,6 +151,10 @@ main() {
   if should_validate || can_modify_at_all; then
     local_iam_user > /dev/null
     validate_gcp_resources
+  fi
+
+  if needs_asm && needs_kpt; then
+    download_kpt
   fi
 
   if needs_asm && ! necessary_files_exist; then
@@ -177,25 +187,27 @@ main() {
     if can_modify_gcp_components; then
       enable_workload_identity
       enable_stackdriver_kubernetes
+      if is_mcp_cni; then
+        enable_network_policy
+      fi
     else
       exit_if_no_workload_identity
       exit_if_stackdriver_not_enabled
+      if is_mcp_cni; then
+        exit_if_no_network_policy
+      fi
     fi
     if can_modify_gcp_iam_roles; then
       bind_user_to_iam_policy "roles/meshconfig.admin" "$(local_iam_user)"
     fi
     if can_modify_at_all; then
-      MANAGED_SERVICE_JSON="$(init_meshconfig_managed)"
-      MANAGED_SERVICE_ACCOUNT="$(echo "${MANAGED_SERVICE_JSON}" | jq -r .serviceAccount)"
-      if [[ -z "${MANAGED_SERVICE_JSON}" || "${MANAGED_SERVICE_ACCOUNT}" == "null" ]]; then
+      if ! init_meshconfig_managed; then
         fatal "Couldn't initialize meshconfig, do you have the required permission resourcemanager.projects.setIamPolicy?"
       fi
-      unset MANAGED_SERVICE_JSON
-      bind_user_to_iam_policy "$(required_iam_roles_mcp_sa)" "$(iam_user)"
     fi
   else
     if can_modify_gcp_iam_roles; then
-      bind_user_to_iam_policy "$(required_iam_roles)" "$(iam_user)"
+      bind_user_to_iam_policy "$(required_iam_roles)" "$(local_iam_user)"
     elif should_validate; then
       exit_if_out_of_iam_policy
     fi
@@ -295,6 +307,10 @@ init() {
     *);;
   esac
 
+  if hash ts 2>/dev/null; then
+    HAS_TS=1
+  fi
+
   if [[ "${POINT}" == "alpha" ]]; then
     RELEASE="${MAJOR}.${MINOR}-alpha.${REV}"
     REVISION_LABEL="${_CI_REVISION_PREFIX}asm-${MAJOR}${MINOR}${POINT}"
@@ -318,6 +334,7 @@ init() {
   BETA_CRD_MANIFEST="${OPTIONS_DIRECTORY}/v1beta1-crds.yaml"; readonly BETA_CRD_MANIFEST;
   MANAGED_MANIFEST="${OPTIONS_DIRECTORY}/managed-control-plane.yaml"; readonly MANAGED_MANIFEST;
   MANAGED_WEBHOOKS="${OPTIONS_DIRECTORY}/managed-control-plane-webhooks.yaml"; readonly MANAGED_WEBHOOKS;
+  MANAGED_CNI="${OPTIONS_DIRECTORY}/cni-managed.yaml"; readonly MANAGED_CNI;
   EXPOSE_ISTIOD_SERVICE="${PACKAGE_DIRECTORY}/expansion/expose-istiod.yaml"; readonly EXPOSE_ISTIOD_SERVICE;
   CANONICAL_CONTROLLER_MANIFEST="asm/canonical-service/controller.yaml"; readonly CANONICAL_CONTROLLER_MANIFEST;
 
@@ -341,6 +358,7 @@ run() {
     "${@}" 2>/dev/null
     return "$?"
   fi
+
   info "Running: '${*}'"
   info "-------------"
   local RETVAL
@@ -357,7 +375,7 @@ gcloud() {
 }
 
 kubectl() {
-  run "${AKUBECTL}" "${@}"
+  run "${AKUBECTL}" --kubeconfig "${KUBECONFIG}" "${@}"
 }
 
 kpt() {
@@ -394,6 +412,8 @@ retry() {
     warn "Failed, retrying...($((i+1)) of ${MAX_TRIES})"
     sleep 2
   done
+  local CMD="'$*'"
+  warn "Command $CMD failed."
   false
 }
 
@@ -424,10 +444,12 @@ strip_trailing_commas() {
 }
 
 configure_kubectl(){
-  info "Fetching/writing GCP credentials to kubeconfig file..."
-  retry 2 gcloud container clusters get-credentials "${CLUSTER_NAME}" \
-    --project="${PROJECT_ID}" \
-    --zone="${CLUSTER_LOCATION}"
+  if [[ "${KUBECONFIG_SUPPLIED}" -eq 0 ]]; then
+    info "Fetching/writing GCP credentials to kubeconfig file..."
+    KUBECONFIG="${KUBECONFIG}" retry 2 gcloud container clusters get-credentials "${CLUSTER_NAME}" \
+      --project="${PROJECT_ID}" \
+      --zone="${CLUSTER_LOCATION}"
+  fi
 
   if ! hash nc 2>/dev/null; then
      warn "nc not found, skipping k8s connection verification"
@@ -437,7 +459,8 @@ configure_kubectl(){
 
   info "Verifying connectivity (10s)..."
   local ADDR
-  ADDR="$(kubectl config view --minify=true -ojson | jq .clusters[0].cluster.server -r)"
+  ADDR="$(kubectl config view --minify=true -ojson | \
+    jq .clusters[0].cluster.server -r)"
 
   local RETVAL; RETVAL=0;
   run nc -zvw 10 "${ADDR:8:${#ADDR}}" 443 || RETVAL=$?
@@ -448,7 +471,8 @@ If this is a private cluster, verify that the correct firewall rules are applied
 https://cloud.google.com/service-mesh/docs/gke-install-overview#requirements
 EOF
   fi
-  info "kubeconfig set to ${PROJECT_ID}/${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
+  info "kubeconfig set to ${KUBECONFIG}"
+  info "context set to $(kubectl config current-context)"
 }
 
 warn() {
@@ -465,7 +489,11 @@ error() {
 }
 
 info() {
-  echo "${SCRIPT_NAME}: ${1}" >&2
+  if [[ "${VERBOSE}" -eq 1 && "${HAS_TS}" -eq 1 ]]; then
+    echo "${SCRIPT_NAME}: ${1}" | TZ=utc ts '%Y-%m-%dT%.T' >&2
+  else
+    echo "${SCRIPT_NAME}: ${1}" >&2
+  fi
 }
 
 fatal() {
@@ -485,6 +513,10 @@ starline() {
 
 is_managed() {
   if [[ "${MANAGED}" -ne 1 ]]; then false; fi
+}
+
+is_mcp_cni() {
+  if [[ "${USE_MCP_CNI}" -ne 1 ]]; then false; fi
 }
 
 is_sa() {
@@ -578,6 +610,20 @@ needs_asm() {
   fi
 }
 
+needs_kpt() {
+  if [[ -z "${AKPT}" ]]; then return; fi
+  KPT_VER="$(kpt version)"
+  if [[ "${KPT_VER:0:1}" != "0" ]]; then return; fi
+  false
+}
+
+add_trust_domain_alias() {
+  if [[ "${TRUST_DOMAIN_ALIASES}" == *${1}* ]]; then
+    return
+  fi
+  TRUST_DOMAIN_ALIASES="${TRUST_DOMAIN_ALIASES} ${1}"
+}
+
 enable_common_message() {
   echo "Alternatively, use --enable_all|-e to allow this tool to handle all dependencies."
 }
@@ -603,6 +649,8 @@ OPTIONS:
   -l|--cluster_location  <LOCATION>
   -n|--cluster_name      <NAME>
   -p|--project_id        <ID>
+  --kc|--kubeconfig      <KUBECONFIG_FILE>
+  --ctx|--context        <CONTEXT>
   -m|--mode              <MODE>
   -c|--ca                <CA>
 
@@ -655,6 +703,11 @@ OPTIONS:
   -l|--cluster_location  <LOCATION>   The GCP location of the target cluster.
   -n|--cluster_name      <NAME>       The name of the target cluster.
   -p|--project_id        <ID>         The GCP project ID.
+  --kc|--kubeconfig      <KUBECONFIG> Path to the kubeconfig file to use for CLI requests.
+                                      Required if not supplying --cluster_location,
+                                      --cluster_name, --project_id in order to locate
+                                      and connect to the intended cluster.
+  --ctx|--context        <CONTEXT>    The name of the kubeconfig context to use.
   -m|--mode              <MODE>       The type of installation to perform.
                                       Passing --mode install will attempt a
                                       new ASM installation. Passing --mode
@@ -768,6 +821,13 @@ the certificate authority:
       -p my_project \\
       -l us-central1-c \\
       -m install
+
+  or
+
+  $> ${SCRIPT_NAME} \\
+      --kubeconfig kubeconfig_file \\
+      --context kube context \\
+      -m install
 EOF
 }
 
@@ -799,6 +859,17 @@ parse_args() {
         CLUSTER_NAME="${2}"
         shift 2
         ;;
+      --kc | --kubeconfig)
+        arg_required "${@}"
+        KUBECONFIG="${2}"
+        KUBECONFIG_SUPPLIED=1
+        shift 2
+        ;;
+      --ctx | --context)
+        arg_required "${@}"
+        CONTEXT="${2}"
+        shift 2
+        ;;
       -p | --project_id | --project-id)
         arg_required "${@}"
         PROJECT_ID="${2}"
@@ -821,6 +892,13 @@ parse_args() {
         ;;
       -o | --option)
         arg_required "${@}"
+
+        if [[ "${2}" == "cni-managed" ]]; then
+          USE_MCP_CNI=1
+          shift 2
+          continue
+        fi
+
         OPTIONAL_OVERLAY="${2},${OPTIONAL_OVERLAY}"
         if [[ "${2}" == "hub-meshca" ]]; then
           USE_HUB_WIP=1
@@ -1008,13 +1086,55 @@ validate_args() {
       MISSING_ARGS=1
       warn "Missing value for ${REQUIRED_ARG}"
     fi
-    readonly "${REQUIRED_ARG}"
   done <<EOF
-CLUSTER_LOCATION
-CLUSTER_NAME
-PROJECT_ID
 MODE
 EOF
+
+  local CLUSTER_DETAIL_SUPPLIED=0
+  local CLUSTER_DETAIL_VALID=1
+  while read -r REQUIRED_ARG; do
+    if [[ -z "${!REQUIRED_ARG}" ]]; then
+      CLUSTER_DETAIL_VALID=0
+    else
+      CLUSTER_DETAIL_SUPPLIED=1 # gke cluster param usage intended
+    fi
+  done <<EOF
+PROJECT_ID
+CLUSTER_LOCATION
+CLUSTER_NAME
+EOF
+
+  # Script will not infer the intent between the 2 use cases in case both values are provided
+  if [[ "${CLUSTER_DETAIL_SUPPLIED}" -eq 1 && "${KUBECONFIG_SUPPLIED}" -eq 1 ]]; then
+    fatal_with_usage "Incompatible arguments. Kubeconfig cannot be used in conjuntion with [--cluster_location|--cluster_name|--project_id]."
+  fi
+
+  if [[ "${CLUSTER_DETAIL_SUPPLIED}" -eq 1 && "${CLUSTER_DETAIL_VALID}" -eq 0 ]]; then
+    MISSING_ARGS=1
+    warn "Missing one or more required options for [CLUSTER_LOCATION|CLUSTER_NAME|PROJECT_ID]"
+  fi
+
+  if [[ "${CLUSTER_DETAIL_SUPPLIED}" -eq 0 && "${KUBECONFIG_SUPPLIED}" -eq 0 ]]; then
+    MISSING_ARGS=1
+    warn "At least one of the following is required: 1) --kubeconfig or 2) --cluster_location, --cluster_name, --project_id"
+  fi
+
+  if [[ "${KUBECONFIG_SUPPLIED}" -eq 1 && -z "${CONTEXT}" ]]; then
+    # set CONTEXT to current-context in the KUBECONFIG
+    # or fail-fast if current-context doesn't exist
+    CONTEXT="$(kubectl config current-context)"
+    if [[ -z "${CONTEXT}" ]]; then
+      MISSING_ARGS=1
+      warn "Missing current-context in the KUBECONFIG. Please provide context with --context flag or set a current-context in the KUBECONFIG"
+    fi
+  fi
+
+  if [[ "${KUBECONFIG_SUPPLIED}" -eq 1 ]]; then
+    info "Reading cluster information for ${CONTEXT}"
+    IFS="_" read -r _ PROJECT_ID CLUSTER_LOCATION CLUSTER_NAME <<EOF
+${CONTEXT}
+EOF
+  fi
 
   if [[ "${MODE}" != "upgrade" ]]; then
     case "${CA}" in
@@ -1255,10 +1375,17 @@ set_up_local_workspace() {
       fatal "${OUTPUT_DIR} exists and is not a directory, please specify another directory."
     fi
   fi
+
+  if [[ -x "${OUTPUT_DIR}/kpt" ]]; then AKPT="$(apath -f "${OUTPUT_DIR}/kpt")"; fi
+
   pushd "$OUTPUT_DIR" > /dev/null
 
-  KUBECONFIG="asm_kubeconfig"
-  export KUBECONFIG
+
+  if [[ "${KUBECONFIG_SUPPLIED}" -eq 0 ]]; then
+    KUBECONFIG="asm_kubeconfig"
+  fi
+
+  info "Using ${KUBECONFIG} as the kubeconfig..."
 }
 
 ### Environment validation functions ###
@@ -1334,7 +1461,6 @@ $AGCLOUD
 grep
 jq
 $AKUBECTL
-$AKPT
 sed
 tr
 head
@@ -1348,7 +1474,6 @@ EOF
   done <<EOF
 AKUBECTL
 AGCLOUD
-AKPT
 EOF
 
   if [[ "${CUSTOM_CA}" -eq 1 ]]; then
@@ -1374,6 +1499,23 @@ EOF
   if [[ "$(uname -m)" != "x86_64" ]]; then
     fatal "Installation is only supported on x86_64."
   fi
+}
+
+download_kpt() {
+  local OS
+
+  case "$(uname)" in
+    Linux ) OS="linux_amd64";;
+    Darwin) OS="darwin_arm64";;
+    *     ) fatal "$(uname) is not a supported OS.";;
+  esac
+
+  local KPT_TGZ
+  KPT_TGZ="https://github.com/GoogleContainerTools/kpt/releases/download/v0.39.3/kpt_${OS}-0.39.3.tar.gz"
+
+  info "Downloading kpt.."
+  curl -L "${KPT_TGZ}" | tar xz
+  AKPT="$(apath -f kpt)"
 }
 
 download_asm() {
@@ -1471,7 +1613,6 @@ EOF
 validate_cluster() {
   local RESULT; RESULT=""
 
-  info "Confirming cluster information for ${PROJECT_ID}/${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
   RESULT="$(gcloud container clusters list \
     --project="${PROJECT_ID}" \
     --filter="name = ${CLUSTER_NAME} AND location = ${CLUSTER_LOCATION}" \
@@ -1732,12 +1873,12 @@ EOF
 }
 
 exit_if_out_of_iam_policy() {
-  local GCLOUD_MEMBER; GCLOUD_MEMBER="$(iam_user)";
+  local GCLOUD_MEMBER; GCLOUD_MEMBER="$(local_iam_user)";
   local MEMBER_ROLES
   MEMBER_ROLES="$(gcloud projects \
     get-iam-policy "${PROJECT_ID}" \
     --flatten='bindings[].members' \
-    --filter="bindings.members:$(iam_user)" \
+    --filter="bindings.members:$(local_iam_user)" \
     --format='value(bindings.role)')"
 
   if [[ "${MEMBER_ROLES}" = *"roles/owner"* ]]; then
@@ -1760,15 +1901,6 @@ them on your behalf.
 $(enable_common_message)
 EOF
   fi
-}
-
-iam_user() {
-  if ! is_managed; then
-    local_iam_user
-    return
-  fi
-
-  echo "serviceAccount:${MANAGED_SERVICE_ACCOUNT}"
 }
 
 local_iam_user() {
@@ -1803,6 +1935,9 @@ required_iam_roles_mcp_sa() {
 roles/serviceusage.serviceUsageConsumer
 roles/container.admin
 roles/monitoring.metricWriter
+roles/logging.logWriter
+roles/gkehub.gatewayAdmin
+roles/gkehub.viewer
 EOF
 }
 
@@ -2098,6 +2233,20 @@ is_workload_identity_enabled() {
   if [[ "${ENABLED}" = 'null' ]]; then false; else WI_ENABLED=1; fi
 }
 
+is_network_policy_enabled() {
+  if [[ "${NETWORK_POLICY_ENABLED}" -eq 1 ]]; then return; fi
+
+  local ENABLED
+  ENABLED="$(gcloud container clusters describe \
+    --project="${PROJECT_ID}" \
+    --region "${CLUSTER_LOCATION}" \
+    "${CLUSTER_NAME}" \
+    --format=json | \
+    jq .networkPolicy.enabled)"
+
+  if [[ "${ENABLED}" = 'false' ]]; then false; else NETWORK_POLICY_ENABLED=1; fi
+}
+
 is_membership_crd_installed() {
   if ! kubectl api-resources --api-group=hub.gke.io | grep -q memberships; then
     false
@@ -2114,7 +2263,23 @@ populate_environ_info() {
   if [[ -n "${ENVIRON_PROJECT_ID}" && -n "${HUB_MEMBERSHIP_ID}" ]]; then return; fi
   if ! is_membership_crd_installed; then return; fi
   HUB_MEMBERSHIP_ID="$(kubectl get memberships.hub.gke.io membership -o=json | jq .spec.owner.id | sed 's/^\"\/\/gkehub.googleapis.com\/projects\/\(.*\)\/locations\/global\/memberships\/\(.*\)\"$/\2/g')"
-  ENVIRON_PROJECT_ID="$(kubectl get memberships.hub.gke.io membership -o=json | jq .spec.workload_identity_pool | sed 's/^\"\(.*\).\(svc\|hub\).id.goog\"$/\1/g')"
+  ENVIRON_PROJECT_ID="$(kubectl get memberships.hub.gke.io membership -o=json | jq .spec.workload_identity_pool | sed -E 's/^\"(.*)\.(svc|hub)\.id\.goog\"$/\1/')"
+}
+
+enable_network_policy(){
+  if is_network_policy_enabled; then return; fi
+  info "Enabling Network Policy on ${CLUSTER_LOCATION}/${CLUSTER_NAME}..."
+  info "(This could take awhile, up to 10 minutes)"
+  retry 2 gcloud container clusters update "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --zone="${CLUSTER_LOCATION}" \
+    --update-addons=NetworkPolicy=ENABLED
+
+  retry 2 gcloud container clusters update "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --zone="${CLUSTER_LOCATION}" \
+    --quiet \
+    --enable-network-policy
 }
 
 enable_workload_identity(){
@@ -2131,6 +2296,17 @@ exit_if_no_workload_identity() {
   if ! is_workload_identity_enabled; then
     { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
 Workload identity is not enabled on ${CLUSTER_NAME}. Please enable it and
+retry, or run the script with the '--enable_gcp_components' flag to allow
+the script to enable it on your behalf.
+$(enable_common_message)
+EOF
+  fi
+}
+
+exit_if_no_network_policy() {
+  if ! is_network_policy_enabled; then
+    { read -r -d '' MSG; fatal "${MSG}"; } <<EOF || true
+Network Policy is not enabled on ${CLUSTER_NAME}. Please enable it and
 retry, or run the script with the '--enable_gcp_components' flag to allow
 the script to enable it on your behalf.
 $(enable_common_message)
@@ -2350,6 +2526,10 @@ EOF
 $(scrape_managed_urls)
 EOF
 
+    if [[ -z "${VALIDATION_URL}" ]] || [[ -z "${CLOUDRUN_ADDR}" ]]; then
+      fatal "Failed to read configuration to install components for managed control plane!"
+    fi
+
     kpt cfg set asm anthos.servicemesh.controlplane.validation-url "${VALIDATION_URL}"
     kpt cfg set asm anthos.servicemesh.managed-controlplane.cloudrun-addr "${CLOUDRUN_ADDR}"
   fi
@@ -2477,6 +2657,31 @@ expose_istiod() {
 }
 
 start_managed_control_plane() {
+  info "Configuring base installation for managed control plane..."
+  run kubectl apply --overwrite=true -f "${BASE_REL_PATH}"
+
+  local ASM_OPTS
+  ASM_OPTS="$(kubectl -n istio-system \
+    get --ignore-not-found cm asm-options \
+    -o jsonpath='{.data.ASM_OPTS}' || true)"
+
+  local CNI; CNI="off"
+  if [[ "${USE_MCP_CNI}" -eq 1 ]]; then CNI="on"; fi
+
+  if [[ -z "${ASM_OPTS}" || "${ASM_OPTS}" != *"CNI=${CNI}"* ]]; then
+    info "Configuring control plane options..."
+    run kubectl apply --overwrite=true -f - <<EOF
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: asm-options
+  namespace: istio-system
+data:
+  ASM_OPTS: "CNI=${CNI}"
+EOF
+  fi
+
   local CR_IMAGE_JSON; CR_IMAGE_JSON="";
   if [[ -n "${_CI_CLOUDRUN_IMAGE_HUB}" ]]; then
     CR_IMAGE_JSON=$(cat <<EOF
@@ -2484,6 +2689,7 @@ start_managed_control_plane() {
 EOF
 )
   fi
+  info "Provisioning managed control plane..."
   retry 2 run curl --request POST \
     "https://meshconfig.googleapis.com/v1alpha1/projects/${PROJECT_ID}/locations/${CLUSTER_LOCATION}/clusters/${CLUSTER_NAME}:runIstiod" \
     --data "${CR_IMAGE_JSON}" \
@@ -2504,8 +2710,10 @@ scrape_managed_urls() {
 }
 
 install_managed_components() {
-  info "Configuring base installation for managed control plane..."
-  kubectl apply --overwrite=true -f "${BASE_REL_PATH}"
+  if [[ "${USE_MCP_CNI}" -eq 1 ]]; then
+    info "Installing CNI into the cluster..."
+    kubectl apply -f "${MANAGED_CNI}"
+  fi
 
   info "Configuring ASM managed control plane validating webhook config..."
   kubectl apply -f "${MANAGED_WEBHOOKS}"
