@@ -1,0 +1,8 @@
+Flask>=2.0.1
+google-cloud>=0.34.0
+google-cloud-core>=1.7.1
+google-cloud-pubsub>=2.6.1
+google-cloud-datastore>=2.1.4
+google-cloud-spanner>=3.6.0
+google-cloud-storage>=1.41.0
+gunicorn>=20.1.0
