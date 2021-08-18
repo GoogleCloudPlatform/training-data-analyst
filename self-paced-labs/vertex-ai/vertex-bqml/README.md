@@ -1,13 +1,16 @@
 # Deploy a BQML customer churn classifier to Vertex AI for online prediction
 
-In this lab, you will train, evaluate, and explain a BQML model for predicting customer churn. You will then deploy it to Vertex AI for serving online predictions.
+In this lab, you will train, evaluate, explain, and generate batch and online predictions with a BigQuery ML XGBoost model. You will use a Google Analytics 4 dataset from a real mobile application, Flood it!, to determine the likelihood of users returning to the application. You will generate batch predictions with your BigQuery ML model as well as export and deploy it to Vertex AI for online predictions.
 
 ## Learning objectives
 
-* Train a BQML classifier to predict customer churn.
-* Evaluate the performance of a BQML classifier.
-* Explain your model with BQML Explainable AI.
-* Export a BQML model to Vertex AI for online predictions.
+* Explore and preprocess a [Google Analytics 4](https://support.google.com/analytics/answer/7029846) data sample in [BigQuery]() for machine learning.  
+* Train a [BigQuery ML (BQML)](https://cloud.google.com/bigquery-ml) [XGBoost](https://xgboost.readthedocs.io/en/latest/) classifier to predict user churn on a mobile gaming application.
+* Evaluate the performance of a BQML XGBoost classifier.
+* Explain your XGBoost model with [BQML Explainable AI](https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-xai-overview) global feature attributions.
+* Generate batch predictions with your BQML XGBoost model.
+* Export a BQML XGBoost model to a [Google Cloud Storage](https://cloud.google.com/storage).
+* Upload and deploy a BQML XGBoost model to a [Vertex AI Prediction](https://cloud.google.com/vertex-ai/docs/predictions/getting-predictions) Endpoint for online predictions.
 
 ## Setup
 
