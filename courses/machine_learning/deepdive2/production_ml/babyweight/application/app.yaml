@@ -1,0 +1,11 @@
+runtime: python39
+
+handlers:
+- url: /
+  script: auto
+- url: /.*
+  script: auto
+  login: required
+
+env_variables:
+  MODEL_NAME: 'babyweight'
