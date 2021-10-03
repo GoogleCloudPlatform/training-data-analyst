@@ -1,0 +1,2 @@
+tensorflow-text==2.6.0
+tf-models-official==2.6.0
