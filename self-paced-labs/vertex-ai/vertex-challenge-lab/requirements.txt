@@ -1,2 +1,6 @@
-tensorflow-text==2.6.0
-tf-models-official==2.6.0
+google-cloud-aiplatform[tensorboard]==1.5.0
+tensorflow-text==2.5.0
+tf-models-official==2.5.0
+tensorflow==2.5
+kfp==1.7.2
+google_cloud_pipeline_components==0.1.7
