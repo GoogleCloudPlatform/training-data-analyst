@@ -1,7 +1,8 @@
 # Specifies base image and tag.
-# https://cloud.google.com/vertex-ai/docs/general/deep-learning
-# https://cloud.google.com/deep-learning-containers/docs/choosing-container
-FROM gcr.io/deeplearning-platform-release/base-cpu
+# https://cloud.google.com/vertex-ai/docs/training/pre-built-containers
+FROM us-docker.pkg.dev/vertex-ai/training/tf-cpu.2-5:latest
+# gcr.io/deeplearning-platform-release/base-cpu
+# us-docker.pkg.dev/vertex-ai/training/tf-cpu.2-5:latest
 
 # Sets the container working directory.
 WORKDIR /root
