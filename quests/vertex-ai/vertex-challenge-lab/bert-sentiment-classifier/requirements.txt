@@ -1,0 +1,3 @@
+tf-models-official==2.5.0
+tensorflow-text==2.5.0
+tensorflow-hub==0.12.0
