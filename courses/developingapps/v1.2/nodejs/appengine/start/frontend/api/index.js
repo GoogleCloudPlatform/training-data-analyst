@@ -14,7 +14,6 @@
 'use strict';
 
 const express = require('express');
-const bodyParser = require('body-parser');
 
 const model = require('../gcp/datastore');
 const publisher = require('../gcp/pubsub');
@@ -22,7 +21,8 @@ const publisher = require('../gcp/pubsub');
 const router = express.Router();
 
 // Automatically parse request body as JSON
-router.use(bodyParser.json());
+router.use(express.json());
+router.use(express.urlencoded({extended: true}));
 
 /**
  * GET /api/quizzes/:quiz

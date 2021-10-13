@@ -37,8 +37,14 @@ gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CR
 echo "Enabling Cloud Functions API"
 gcloud services enable cloudfunctions.googleapis.com
 
+echo "Enabling Cloud Build API"
+gcloud services enable cloudbuild.googleapis.com
+
+echo "Enabling App Engine API"
+gcloud services enable appengine.googleapis.com
+
 echo "Creating Cloud Function"
-gcloud functions deploy process-feedback --runtime nodejs10 --allow-unauthenticated --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+gcloud functions deploy process-feedback --runtime nodejs12 --allow-unauthenticated --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 
 echo "Deploying to App Engine"
 sed -i -e "s/\[GCLOUD_PROJECT\]/$DEVSHELL_PROJECT_ID/g" ./src/main/appengine/app.yaml

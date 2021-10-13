@@ -1,0 +1,5 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/dougkelly-vertex-demos/online-retail-clv/dnn-regressor:latest', '.' ]
+images: 
+- 'us-central1-docker.pkg.dev/dougkelly-vertex-demos/online-retail-clv/dnn-regressor:latest'
