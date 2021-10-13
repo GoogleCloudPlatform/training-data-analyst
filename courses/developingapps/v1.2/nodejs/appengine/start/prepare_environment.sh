@@ -15,6 +15,15 @@ echo "Exporting GCLOUD_PROJECT and GCLOUD_BUCKET"
 export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID
 export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media
 
+echo "Enabling App Engine Flex API"
+gcloud services enable appengineflex.googleapis.com
+
+echo "Enabling Cloud Functions API"
+gcloud services enable cloudfunctions.googleapis.com
+
+echo "Enabling Cloud Build API"
+gcloud services enable cloudbuild.googleapis.com
+
 echo "Creating App Engine app"
 gcloud app create --region "us-central"
 
@@ -34,15 +43,6 @@ gcloud pubsub topics create feedback
 echo "Creating Cloud Spanner Instance, Database, and Table"
 gcloud spanner instances create quiz-instance --config=regional-us-central1 --description="Quiz instance" --nodes=1
 gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CREATE TABLE Feedback ( feedbackId STRING(100) NOT NULL, email STRING(100), quiz STRING(20), feedback STRING(MAX), rating INT64, score FLOAT64, timestamp INT64 ) PRIMARY KEY (feedbackId);"
-
-echo "Enabling Cloud Functions API"
-gcloud services enable cloudfunctions.googleapis.com
-
-echo "Enabling Cloud Build API"
-gcloud services enable cloudbuild.googleapis.com
-
-echo "Enabling App Engine API"
-gcloud services enable appengine.googleapis.com
 
 echo "Creating Cloud Function"
 gcloud functions deploy process-feedback --runtime nodejs12 --allow-unauthenticated --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
