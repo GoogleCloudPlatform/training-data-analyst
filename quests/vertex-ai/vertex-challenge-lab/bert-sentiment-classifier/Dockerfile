@@ -11,7 +11,8 @@ COPY requirements.txt .
 # Installs additional packages.
 RUN pip3 install -U -r requirements.txt
 
-# b/203105209 Removes unneeded file from vertex training TF2.5 CPU image that can cause training job failures.
+# b/203105209 Removes unneeded file from TF2.5 CPU image for python_module CustomJob training. 
+# Will be removed on subsequent public Vertex images.
 RUN rm -rf /var/sitecustomize/sitecustomize.py
 
 # Copies the trainer code to the docker image.
