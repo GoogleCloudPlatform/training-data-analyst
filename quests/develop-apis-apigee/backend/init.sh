@@ -1,5 +1,4 @@
-#GOOGLE_PROJECT_ID=# YOUR GCP PROJECT ID GOES HERE
-GOOGLE_PROJECT_ID=simplebank-backend
+GOOGLE_PROJECT_ID=# YOUR GCP PROJECT ID GOES HERE
 REGION=us-central1
 
 # create service account for Cloud Run service
