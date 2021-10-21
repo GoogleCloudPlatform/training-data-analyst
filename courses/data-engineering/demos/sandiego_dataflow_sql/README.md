@@ -40,6 +40,8 @@ Minimize (but do not close!) the Cloud Shell terminal and leave the stream simul
 
 ## Creating Dataflow Pub/Sub Source and Schema
 
+**Note:** You must access the BigQuery console at [https://console.corp.google.com/bigquery?qe=df](https://console.corp.google.com/bigquery?qe=df) for this demo.
+
 Next we need to create our Pub/Sub data source for Dataflow SQL and assign a schema to the incoming data. Dataflow will use this schema to assign a Beam schema to our data for processing.
 
 Go to the BigQuery console, and click **More > Query Settings** under the Query Editor. Choose "Cloud Dataflow engine" as the query engine. This will submit our jobs to Dataflow once we are ready
