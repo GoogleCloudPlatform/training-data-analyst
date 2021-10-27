@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package simplebank;
+
+service SimpleBank {
+	rpc CheckStatus(CheckStatusRequest) returns (CheckStatusResponse);
+	rpc RetrieveCustomer(RetrieveCustomerRequest) returns (Customer);
+	rpc RetrieveAllCustomers(RetrieveAllCustomersRequest) returns (CustomerList);
+	rpc CreateCustomer(Customer) returns (Customer);
+	rpc UpdateCustomer(Customer) returns (Customer);
+	rpc CreateAtm(Atm) returns (Atm);
+	rpc RetrieveAtm(RetrieveAtmRequest) returns (Atm);
+	rpc RetrieveAllAtms(RetrieveAllAtmsRequest) returns (AtmList);
+	/*
+	rpc CreateAtm(Atm) returns (Atm);
+	rpc RetrieveAtm(RetrieveAtmRequest) returns (Atm);
+	rpc RetrieveAllAtms(RetrieveAllAtmsRequest) returns (AtmList);
+	rpc CreateAccount(Account) returns (Account);
+	rpc RetrieveAccount(RetrieveAccountRequest) returns (Account);
+	rpc RetrieveAllAccounts(RetrieveAllAccountsRequest) returns (AccountList);
+	rpc UpdateAccount(Account) returns (Account);
+	rpc CreateTransaction(Transaction) returns (Transaction);
+	*/
+}
+
+message CheckStatusRequest {
+};
+
+message CheckStatusResponse {
+	string serviceVersion = 1;
+
+	enum Status {
+		DOWN = 0;
+		UP = 1;
+	}
+	Status status = 2;
+};
+
+message Customer {
+	string email = 1;
+	string firstName = 2; /* optional, max length 50 */
+	string lastName = 3; /* optional, max length 50 */
+};
+
+message RetrieveCustomerRequest {
+	string email = 1;
+};
+
+message RetrieveAllCustomersRequest {
+};
+
+message CustomerList {
+	repeated Customer customerList = 1;
+};
+
+message Location {
+	double latitude = 1; /* -90 <= latitude <= 90 */
+	double longitude = 2; /* -90 <= longitude <= 90 */
+}
+
+message Atm {
+	string name = 1; /* max length 50 */
+	Location location = 2;
+	string description = 3; /* optional, max length 200 */
+};
+
+message RetrieveAtmRequest {
+	string name = 1;
+};
+
+message RetrieveAllAtmsRequest {
+};
+
+message AtmList {
+	repeated Atm atmList = 1;
+};
+
+// customerEmail and name are required
+// balance defaults to 0
+// overdraftAllowed defaults to false
+message Account {
+	string customerEmail = 1;
+	string name = 2; /* max length 50 */
+	double balance = 3; /* defaults to 0 */
+	bool overdraftAllowed = 4; /* defaults to false */
+};
+
+message RetrieveAccountRequest {
+	string customerEmail = 1;
+	string name = 2;
+};
+
+message RetrieveAllAccountsRequest {
+	string customerEmail = 1;
+};
+
+message AccountList {
+	repeated Account accountList = 1;
+};
+
+// customerEmail, accountName, transactionType, and amount are required
+// toCustomerEmail and toAccountName are required if transaction type is TRANSFER
+message Transaction {
+	string customerEmail = 2;
+	string accountName = 3; /* max length 50 */
+	enum TransactionType {
+		DEPOSIT = 0;
+		WITHDRAWAL = 1;
+		TRANSFER = 2;
+	}
+	TransactionType transactionType = 4;
+	double amount = 5; /* amount > 0 */
+	string toCustomerEmail = 6; /* only used for TRANSFER */
+	string toAccountName = 7; /* only used for TRANSFER */
+}

@@ -3,7 +3,11 @@ const validate = require("express-jsonschema").validate;
 const bodyParser = require("body-parser");
 
 const app = express();
-app.use(express.json());
+app.use(express.json({
+    type: function() {
+        return true;
+    }
+}));
 
 const admin = require("firebase-admin");
 
@@ -96,8 +100,8 @@ const newAtmSchema = {
         },
         longitude: {
             type: 'number',
-            maxValue: 90,
-            minValue: -90,
+            maxValue: 180,
+            minValue: -180,
         },
     },
     additionalProperties: false,
@@ -118,8 +122,8 @@ const updateAtmSchema = {
         },
         longitude: {
             type: 'number',
-            maxValue: 90,
-            minValue: -90,
+            maxValue: 180,
+            minValue: -180,
         },
     },
     additionalProperties: false,
@@ -200,17 +204,6 @@ async function getByPath(path, res) {
         return res.json(doc.data());
     }
 }
-
-/*
-async function getAll(collectionName, res) {
-    var snapshot = await db.collection(collectionName).get();
-    var docArray = [];
-    snapshot.forEach(doc => {
-        docArray.push(doc.data());
-    });
-    res.json(docArray);
-}
-*/
 
 async function getAllByPath(path, res) {
     var snapshot = await db.collection(path).get();
