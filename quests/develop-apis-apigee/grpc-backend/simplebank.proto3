@@ -1,4 +1,4 @@
-syntax = "proto2";
+syntax = "proto3";
 
 package simplebank;
 
@@ -23,24 +23,24 @@ message CheckStatusRequest {
 };
 
 message CheckStatusResponse {
-	required string serviceVersion = 1;
+	string serviceVersion = 1;
 
 	enum Status {
 		UNKNOWN = 0; /* used because zero values do not show up in the protobuf */
 		DOWN = 1;
 		UP = 2;
 	}
-	required Status status = 2;
+	Status status = 2;
 };
 
 message Customer {
-	required string email = 1;
-	optional string firstName = 2; /* optional, max length 50 */
-	optional string lastName = 3; /* optional, max length 50 */
+	string email = 1;
+	string firstName = 2; /* optional, max length 50 */
+	string lastName = 3; /* optional, max length 50 */
 };
 
 message RetrieveCustomerRequest {
-	required string email = 1;
+	string email = 1;
 };
 
 message RetrieveAllCustomersRequest {
@@ -52,18 +52,18 @@ message CustomerList {
 
 /* proto3 protobufs do not show zero values, so a missing latitude or longitude should be treated as a zero */
 message Location {
-	required double latitude = 1; /* -90 <= latitude <= 90 */
-	required double longitude = 2; /* -180 <= longitude <= 180 */
+	double latitude = 1; /* -90 <= latitude <= 90 */
+	double longitude = 2; /* -180 <= longitude <= 180 */
 }
 
 message Atm {
-	required string name = 1; /* max length 50 */
-	required Location location = 2;
-	optional string description = 3; /* optional, max length 200 */
+	string name = 1; /* max length 50 */
+	Location location = 2;
+	string description = 3; /* optional, max length 200 */
 };
 
 message RetrieveAtmRequest {
-	required string name = 1;
+	string name = 1;
 };
 
 message RetrieveAllAtmsRequest {
@@ -77,19 +77,19 @@ message AtmList {
 // balance defaults to 0
 // overdraftAllowed defaults to false
 message Account {
-	required string customerEmail = 1;
-	required string name = 2; /* max length 50 */
-	optional double balance = 3; /* defaults to 0 */
-	optional bool overdraftAllowed = 4; /* defaults to false */
+	string customerEmail = 1;
+	string name = 2; /* max length 50 */
+	double balance = 3; /* defaults to 0 */
+	bool overdraftAllowed = 4; /* defaults to false */
 };
 
 message RetrieveAccountRequest {
-	required string customerEmail = 1;
-	required string name = 2;
+	string customerEmail = 1;
+	string name = 2;
 };
 
 message RetrieveAllAccountsRequest {
-	required string customerEmail = 1;
+	string customerEmail = 1;
 };
 
 message AccountList {
@@ -99,21 +99,21 @@ message AccountList {
 // customerEmail, accountName, transactionType, and amount are required
 // toCustomerEmail and toAccountName are required if transaction type is TRANSFER
 message Transaction {
-	required string customerEmail = 1;
-	required string accountName = 2; /* max length 50 */
+	string customerEmail = 1;
+	string accountName = 2; /* max length 50 */
 	enum TransactionType {
 		NONE = 0; /* used because zero values do not show up in the protobuf */
 		DEPOSIT = 1;
 		WITHDRAWAL = 2;
 		TRANSFER = 3;
 	}
-	required TransactionType transactionType = 3;
-	required double amount = 4; /* amount > 0 */
-	optional string toCustomerEmail = 5; /* only used for TRANSFER */
-	optional string toAccountName = 6; /* only used for TRANSFER */
-	optional string id = 7; /* created when transaction is saved */
-	optional bool success = 8; /* created when transaction is saved */
-	optional string failureMessage = 9; /* created when transaction is saved */
+	TransactionType transactionType = 3;
+	double amount = 4; /* amount > 0 */
+	string toCustomerEmail = 5; /* only used for TRANSFER */
+	string toAccountName = 6; /* only used for TRANSFER */
+	string id = 7; /* created when transaction is saved */
+	bool success = 8; /* created when transaction is saved */
+	string failureMessage = 9; /* created when transaction is saved */
 }
 
 message RetrieveTransactionRequest {
