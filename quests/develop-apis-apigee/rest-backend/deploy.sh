@@ -24,5 +24,5 @@ gcloud run deploy simplebank-rest \
   --max-instances=1 \
   --region=${REGION} \
   --no-allow-unauthenticated \
-  --service-account=simplebank@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com \
+  --service-account=simplebank-rest@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com \
   --project=${GOOGLE_PROJECT_ID}
