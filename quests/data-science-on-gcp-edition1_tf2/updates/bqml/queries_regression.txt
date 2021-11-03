@@ -1,0 +1,36 @@
+#standardsql
+CREATE OR REPLACE MODEL flights.arrdelay
+OPTIONS
+  (model_type='linear_reg', input_label_cols=['arr_delay']) AS
+SELECT
+  arr_delay,
+  carrier,
+  origin,
+  dest,
+  dep_delay,
+  taxi_out,
+  distance
+FROM
+  `cloud-training-demos.flights.tzcorr`
+WHERE
+  arr_delay IS NOT NULL
+
+
+#standardsql
+SELECT * FROM ML.PREDICT(MODEL flights.arrdelay,
+(
+SELECT
+  carrier,
+  origin,
+  dest,
+  dep_delay,
+  taxi_out,
+  distance,
+  arr_delay AS actual_arr_delay
+FROM
+  `cloud-training-demos.flights.tzcorr`
+WHERE
+  arr_delay IS NOT NULL
+LIMIT 10))
+
+
