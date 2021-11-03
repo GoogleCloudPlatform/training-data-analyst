@@ -34,7 +34,7 @@ function isValidTransactionType(input) {
     return false;
 }
 
-const EMAIL_PATTERN = '[^@\s]+@[^@\s\.]+\.[^@\.\s]+';
+const EMAIL_PATTERN = '[^@\\s]+@[^@\\s\\.]+\\.[^@\\.\\s]+';
 const ATM_NAME_PATTERN = '[A-Za-z][A-Za-z0-9]*(-[A-Za-z0-9]+)*';
 const ACCOUNT_NAME_PATTERN = '[A-Za-z][A-Za-z0-9]*(-[A-Za-z0-9]+)*';
 

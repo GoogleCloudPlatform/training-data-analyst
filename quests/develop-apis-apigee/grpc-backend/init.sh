@@ -1,6 +1,11 @@
-GOOGLE_PROJECT_ID=REPLACETHIS
-GOOGLE_PROJECT_ID=simplebank-backend
-REGION=us-central1
+# retrieve GOOGLE_PROJECT_ID
+MYDIR="$(dirname "$0")"
+source "${MYDIR}/config.sh"
+
+if [[ -z "${GOOGLE_PROJECT_ID}" ]]; then
+  echo "GOOGLE_PROJECT_ID not set"
+  exit 1
+fi
 
 # enable Cloud Run APIs
 gcloud services enable run.googleapis.com

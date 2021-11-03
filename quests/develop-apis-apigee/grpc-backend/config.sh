@@ -1,0 +1,3 @@
+export GOOGLE_PROJECT_ID=${GOOGLE_CLOUD_PROJECT}
+export REGION=us-central1
+echo "configuration: GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID}, REGION=${REGION}"
