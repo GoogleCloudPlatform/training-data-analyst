@@ -199,7 +199,7 @@ app.listen(port, () => {
 });
 
 app.get('/_status', async (req, res) => {
-    res.json({status: 'API up', ver: backendVer});
+    res.json({serviceName: "simplebank-rest", status: 'API up', ver: backendVer});
 });
 
 async function getByPath(path, res) {
@@ -246,6 +246,7 @@ app.post('/customers', validate({body: newCustomerSchema}), async (req, res) => 
         // success
         return res.json(data);
     }).catch((err) => {
+        console.log(err);
         // failure
         res.status(400);
 

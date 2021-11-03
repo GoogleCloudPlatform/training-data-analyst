@@ -54,11 +54,12 @@ const MIN_LONGITUDE = -180.0;
 const MAX_LONGITUDE = 180.0;
 
 const db = admin.firestore();
-const BACKENDVER = "1.0.0";
+const BACKENDVER = "2.0.0";
 
 function checkStatus(call, callback) {
 	let result;
 	result = {
+		serviceName: "simplebank-grpc",
 		serviceVersion: BACKENDVER,
 		status: "UP"
 	};

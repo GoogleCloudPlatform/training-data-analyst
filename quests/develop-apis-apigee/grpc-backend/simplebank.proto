@@ -23,14 +23,15 @@ message CheckStatusRequest {
 };
 
 message CheckStatusResponse {
-	required string serviceVersion = 1;
+	required string serviceName = 1;
+	required string serviceVersion = 2;
 
 	enum Status {
 		UNKNOWN = 0; /* used because zero values do not show up in the protobuf */
 		DOWN = 1;
 		UP = 2;
 	}
-	required Status status = 2;
+	required Status status = 3;
 };
 
 message Customer {
