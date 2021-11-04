@@ -1,4 +1,13 @@
-SVCHOST=$(gcloud run services describe simplebank-rest --platform managed --region us-east1 --format 'value(status.url)')
+# retrieve CLOUDRUN_REGION
+MYDIR="$(dirname "$0")"
+source "${MYDIR}/config.sh"
+
+if [[ -z "${CLOUDRUN_REGION}" ]]; then
+  echo "CLOUDRUN_REGION not set"
+  exit 1
+fi
+
+SVCHOST="$(gcloud run services describe simplebank-rest --platform managed --region ${CLOUDRUN_REGION} --format 'value(status.url)')"
 echo $SVCHOST
 
 # ATMS
