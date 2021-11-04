@@ -1,4 +1,4 @@
-SVCHOST=$(gcloud run services describe simplebank-rest --platform managed --region us-central1 --format 'value(status.url)')
+SVCHOST=$(gcloud run services describe simplebank-rest --platform managed --region us-east1 --format 'value(status.url)')
 echo $SVCHOST
 
 # ATMS
