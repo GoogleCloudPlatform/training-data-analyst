@@ -12,6 +12,6 @@
   "dependencies": {
     "express": "^4.17.1",
     "express-jsonschema": "^1.1.6",
-    "firebase-admin": "^9.11.1"
+    "firebase-admin": "^10.0.0"
   }
 }

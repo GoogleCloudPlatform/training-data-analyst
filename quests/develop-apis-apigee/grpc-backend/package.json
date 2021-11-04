@@ -11,6 +11,6 @@
 		"@grpc/grpc-js": "^1.1.0",
 		"yargs": "^15.1.0",
 		"lodash": "^4.17.21",
-		"firebase-admin": "^9.11.1"
+		"firebase-admin": "^10.0.0"
 	}
 }

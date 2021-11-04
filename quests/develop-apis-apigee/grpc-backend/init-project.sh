@@ -1,8 +1,8 @@
-# retrieve REGION
+# retrieve APP_REGION
 MYDIR="$(dirname "$0")"
 source "${MYDIR}/config.sh"
 
-if [[ -z "${REGION}" ]]; then
+if [[ -z "${APP_REGION}" ]]; then
   echo "REGION not set"
   exit 1
 fi
@@ -11,7 +11,7 @@ fi
 gcloud services enable run.googleapis.com
 
 # create app engine app (prerequisite for Firestore in Native mode)
-gcloud app create --region=${REGION}
+gcloud app create --region=${APP_REGION}
 
 # create Firestore in Native mode database
-gcloud firestore databases create --region=${REGION}
+gcloud firestore databases create --region=${APP_REGION}
