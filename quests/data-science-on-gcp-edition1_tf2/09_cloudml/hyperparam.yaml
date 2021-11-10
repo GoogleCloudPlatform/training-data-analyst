@@ -1,0 +1,22 @@
+trainingInput:
+  scaleTier: CUSTOM
+  masterType: n1-highmem-2
+  hyperparameters:
+    goal: MINIMIZE
+    hyperparameterMetricTag: rmse
+    maxTrials: 15
+    maxParallelTrials: 3
+    params:
+    - parameterName: train_batch_size
+      type: INTEGER
+      minValue: 16
+      maxValue: 512
+      scaleType: UNIT_LOG_SCALE
+    - parameterName: nbuckets
+      type: INTEGER
+      minValue: 5
+      maxValue: 10
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: dnn_hidden_units
+      type: CATEGORICAL
+      categoricalValues: ["64,16", "64,16,4", "64,64,64,8", "256,64,16"]       

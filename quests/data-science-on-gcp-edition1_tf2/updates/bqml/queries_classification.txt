@@ -1,0 +1,34 @@
+#standardsql
+CREATE OR REPLACE MODEL flights.ontime
+OPTIONS
+  (model_type='logistic_reg', input_label_cols=['on_time']) AS
+SELECT
+  IF(arr_delay < 15, 1, 0) AS on_time,
+  carrier,
+  origin,
+  dest,
+  dep_delay,
+  taxi_out,
+  distance
+FROM
+  `cloud-training-demos.flights.tzcorr`
+WHERE
+  arr_delay IS NOT NULL
+
+#standardsql
+SELECT * FROM ML.EVALUATE(MODEL flights.ontime,
+(
+SELECT
+  IF(arr_delay < 15, 1, 0) AS on_time,
+  carrier,
+  origin,
+  dest,
+  dep_delay,
+  taxi_out,
+  distance
+FROM
+  `cloud-training-demos.flights.tzcorr`
+WHERE
+  arr_delay IS NOT NULL
+))
+
