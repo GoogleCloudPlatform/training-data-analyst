@@ -7,12 +7,18 @@ if [[ -z "${GOOGLE_PROJECT_ID}" ]]; then
   exit 1
 fi
 
+SVCACCT_NAME="simplebank-grpc"
+SVCACCT_EMAIL="${SVCACCT_NAME}@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com"
+SVCACCT_ROLE="roles/datastore.user"
+
 # create service account for Cloud Run service
-gcloud iam service-accounts create simplebank-grpc \
+echo "creating Cloud Run service account: ${SVCACCT_EMAIL}"
+gcloud iam service-accounts create ${SVCACCT_NAME} \
   --display-name="Simplebank(gRPC) service account" \
   --project=${GOOGLE_PROJECT_ID}
 
-# add permission to access firestore (datastore in firestore mode)
+# add permission to access Firestore
+echo "adding role ${SVCACCT_ROLE} for Firestore access"
 gcloud projects add-iam-policy-binding ${GOOGLE_PROJECT_ID} \
-  --member="serviceAccount:simplebank-grpc@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com" \
-  --role="roles/datastore.user"
+  --member="serviceAccount:${SVCACCT_EMAIL}" \
+  --role=${SVCACCT_ROLE}
