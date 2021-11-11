@@ -88,6 +88,8 @@ async function getAllByPath(path) {
     return docArray;
 }
 
+// ERROR RESPONSES
+
 function invalidArg(message) {
 	return {
 		code: grpc.status.INVALID_ARGUMENT,

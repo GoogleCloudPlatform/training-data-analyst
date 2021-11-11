@@ -17,8 +17,8 @@ gcloud iam service-accounts create apigee-internal-access \
   --display-name="Service account for internal access by Apigee proxies" \
   --project=${GOOGLE_PROJECT_ID}
 
-# add permission to invoke REST service
-gcloud run services add-iam-policy-binding simplebank-rest \
+# add permission to invoke gRPC service
+gcloud run services add-iam-policy-binding simplebank-grpc \
   --member="serviceAccount:apigee-internal-access@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/run.invoker" --region=${CLOUDRUN_REGION} \
   --project=${GOOGLE_PROJECT_ID}
