@@ -1,0 +1,129 @@
+syntax = "proto2";
+
+package simplebank;
+
+service SimpleBank {
+	rpc CheckStatus(CheckStatusRequest) returns (CheckStatusResponse);
+	rpc RetrieveCustomer(RetrieveCustomerRequest) returns (Customer);
+	rpc RetrieveAllCustomers(RetrieveAllCustomersRequest) returns (CustomerList);
+	rpc CreateCustomer(Customer) returns (Customer);
+	rpc UpdateCustomer(Customer) returns (Customer);
+	rpc RetrieveAtm(RetrieveAtmRequest) returns (Atm);
+	rpc RetrieveAllAtms(RetrieveAllAtmsRequest) returns (AtmList);
+	rpc CreateAtm(Atm) returns (Atm);
+	rpc RetrieveAccount(RetrieveAccountRequest) returns (Account);
+	rpc RetrieveAllAccounts(RetrieveAllAccountsRequest) returns (AccountList);
+	rpc CreateAccount(Account) returns (Account);
+	rpc RetrieveTransaction(RetrieveTransactionRequest) returns (Transaction);
+	rpc RetrieveAllTransactions(RetrieveAllTransactionsRequest) returns (TransactionList);
+	rpc CreateTransaction(Transaction) returns (Transaction);
+}
+
+message CheckStatusRequest {
+};
+
+message CheckStatusResponse {
+	required string serviceName = 1;
+	required string serviceVersion = 2;
+
+	enum Status {
+		UNKNOWN = 0; /* used because zero values do not show up in the protobuf */
+		DOWN = 1;
+		UP = 2;
+	}
+	required Status status = 3;
+};
+
+message Customer {
+	required string email = 1;
+	optional string firstName = 2; /* optional, max length 50 */
+	optional string lastName = 3; /* optional, max length 50 */
+};
+
+message RetrieveCustomerRequest {
+	required string email = 1;
+};
+
+message RetrieveAllCustomersRequest {
+};
+
+message CustomerList {
+	repeated Customer customerList = 1;
+};
+
+/* proto3 protobufs do not show zero values, so a missing latitude or longitude should be treated as a zero */
+message Location {
+	required double latitude = 1; /* -90 <= latitude <= 90 */
+	required double longitude = 2; /* -180 <= longitude <= 180 */
+}
+
+message Atm {
+	required string name = 1; /* max length 50 */
+	required Location location = 2;
+	optional string description = 3; /* optional, max length 200 */
+};
+
+message RetrieveAtmRequest {
+	required string name = 1;
+};
+
+message RetrieveAllAtmsRequest {
+};
+
+message AtmList {
+	repeated Atm atmList = 1;
+};
+
+// customerEmail and name are required
+// balance defaults to 0
+// overdraftAllowed defaults to false
+message Account {
+	required string customerEmail = 1;
+	required string name = 2; /* max length 50 */
+	optional double balance = 3; /* defaults to 0 */
+	optional bool overdraftAllowed = 4; /* defaults to false */
+};
+
+message RetrieveAccountRequest {
+	required string customerEmail = 1;
+	required string name = 2;
+};
+
+message RetrieveAllAccountsRequest {
+	required string customerEmail = 1;
+};
+
+message AccountList {
+	repeated Account accountList = 1;
+};
+
+// customerEmail, accountName, transactionType, and amount are required
+// toCustomerEmail and toAccountName are required if transaction type is TRANSFER
+message Transaction {
+	required string customerEmail = 1;
+	required string accountName = 2; /* max length 50 */
+	enum TransactionType {
+		NONE = 0; /* used because zero values do not show up in the protobuf */
+		DEPOSIT = 1;
+		WITHDRAWAL = 2;
+		TRANSFER = 3;
+	}
+	required TransactionType transactionType = 3;
+	required double amount = 4; /* amount > 0 */
+	optional string toCustomerEmail = 5; /* only used for TRANSFER */
+	optional string toAccountName = 6; /* only used for TRANSFER */
+	optional string id = 7; /* created when transaction is saved */
+	optional bool success = 8; /* created when transaction is saved */
+	optional string failureMessage = 9; /* created when transaction is saved */
+}
+
+message RetrieveTransactionRequest {
+	required string id = 1;
+};
+
+message RetrieveAllTransactionsRequest {
+};
+
+message TransactionList {
+	repeated Transaction transactionList = 1;
+};

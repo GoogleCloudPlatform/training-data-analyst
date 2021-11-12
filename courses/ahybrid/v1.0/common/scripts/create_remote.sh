@@ -26,6 +26,8 @@ done
 
 export KOPS_FEATURE_FLAGS=AlphaAllowGCE
 
+export K8S_VERSION="1.20.10"
+
 echo "Creating the remote cluster..."
 kops create cluster \
 --name=$C2_FULLNAME \
@@ -35,6 +37,7 @@ kops create cluster \
 --node-count=$NODE_COUNT \
 --node-size=$NODE_SIZE \
 --admin-access=$INSTANCE_CIDR \
+--kubernetes-version=$K8S_VERSION \
 --yes
 
 for (( c=1; c<=40; c++))
