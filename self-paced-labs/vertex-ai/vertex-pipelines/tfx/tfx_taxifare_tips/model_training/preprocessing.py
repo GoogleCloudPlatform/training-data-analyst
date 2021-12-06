@@ -3,7 +3,7 @@
 import tensorflow as tf
 import tensorflow_transform as tft
 
-import features
+from tfx_taxifare_tips.model_training import features
 
 
 def preprocessing_fn(inputs):

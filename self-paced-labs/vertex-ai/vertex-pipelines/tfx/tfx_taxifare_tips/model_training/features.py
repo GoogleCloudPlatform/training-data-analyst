@@ -39,3 +39,15 @@ ONEHOT_CATEGORICAL_FEATURE_NAMES = ["payment_type", "trip_day_of_week"]
 def transformed_name(key: str) -> str:
     """Generate the name of the transformed feature from original name."""
     return f"{key}_xf"
+
+
+def original_name(key: str) -> str:
+    """Generate the name of the original feature from transformed name."""
+    return key.replace("_xf", "")
+
+
+def categorical_feature_names() -> list:
+    """Get a list of categorical feature names."""
+    return (
+        list(EMBEDDING_CATEGORICAL_FEATURES.keys()) + ONEHOT_CATEGORICAL_FEATURE_NAMES
+    )

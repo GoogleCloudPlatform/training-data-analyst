@@ -1,0 +1,204 @@
+feature {
+  name: "trip_month"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "trip_day"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "trip_day_of_week"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "trip_hour"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "trip_seconds"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "trip_miles"
+  type: FLOAT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "payment_type"
+  type: BYTES
+  domain: "payment_type"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "pickup_grid"
+  type: BYTES
+  domain: "pickup_grid"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "dropoff_grid"
+  type: BYTES
+  domain: "dropoff_grid"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "euclidean"
+  type: FLOAT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "loc_cross"
+  type: BYTES
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "tip_bin"
+  type: INT
+  bool_domain {
+  }
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+string_domain {
+  name: "payment_type"
+  value: "Cash"
+  value: "Credit Card"
+  value: "Dispute"
+  value: "Mobile"
+  value: "No Charge"
+  value: "Prcard"
+  value: "Prepaid"
+  value: "Unknown"
+}
+string_domain {
+  name: "pickup_grid"
+  value: "POINT(-87.5 41.7)"
+  value: "POINT(-87.6 41.7)"
+  value: "POINT(-87.6 41.8)"
+  value: "POINT(-87.6 41.9)"
+  value: "POINT(-87.6 42)"
+  value: "POINT(-87.7 41.7)"
+  value: "POINT(-87.7 41.8)"
+  value: "POINT(-87.7 41.9)"
+  value: "POINT(-87.7 42)"
+  value: "POINT(-87.8 41.8)"
+  value: "POINT(-87.8 41.9)"
+  value: "POINT(-87.8 42)"
+  value: "POINT(-87.9 42)"
+}
+string_domain {
+  name: "dropoff_grid"
+  value: "POINT(-87.5 41.7)"
+  value: "POINT(-87.6 41.7)"
+  value: "POINT(-87.6 41.8)"
+  value: "POINT(-87.6 41.9)"
+  value: "POINT(-87.6 42)"
+  value: "POINT(-87.7 41.7)"
+  value: "POINT(-87.7 41.8)"
+  value: "POINT(-87.7 41.9)"
+  value: "POINT(-87.7 42)"
+  value: "POINT(-87.8 41.8)"
+  value: "POINT(-87.8 41.9)"
+  value: "POINT(-87.8 42)"
+  value: "POINT(-87.9 42)"
+}
