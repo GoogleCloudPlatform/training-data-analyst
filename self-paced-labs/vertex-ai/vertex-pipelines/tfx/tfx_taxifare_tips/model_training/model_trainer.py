@@ -1,5 +1,4 @@
 """Train and evaluate the model."""
-
 import logging
 import tensorflow as tf
 import tensorflow_transform as tft
@@ -8,36 +7,47 @@ from tfx_taxifare_tips.model_training import model_input
 from tfx_taxifare_tips.model_training import model
 
 
-def train(train_data_dir, eval_data_dir, tft_output_dir, hyperparameters, log_dir):
+def train(
+    data_accessor,
+    train_data_dir,
+    eval_data_dir,
+    tft_output_dir,
+    log_dir,
+    hyperparameters,
+):
     """
     Args:
+      data_accessor:
       train_data_dir:
       eval_data_dir:
       tft_output_dir:
-      hyperparameters:
       log_dir:
+      hyperparameters:
     Returns:
       classifer:
     """
 
     logging.info("Loading tft output from %s", tft_output_dir)
     tft_output = tft.TFTransformOutput(tft_output_dir)
-    transformed_feature_spec = tft_output.transformed_feature_spec()
+    schema = tft_output.transformed_metadata.schema
 
     train_dataset = model_input.get_dataset(
-        train_data_dir,
-        transformed_feature_spec,
-        hyperparameters["batch_size"],
+        file_pattern=train_data_dir,
+        data_accessor=data_accessor,
+        schema=schema,
+        batch_size=hyperparameters["batch_size"],
     )
 
     eval_dataset = model_input.get_dataset(
-        eval_data_dir,
-        transformed_feature_spec,
-        hyperparameters["batch_size"],
+        file_pattern=eval_data_dir,
+        data_accessor=data_accessor,
+        schema=schema,
+        batch_size=hyperparameters["batch_size"],
     )
 
-    classifier = model.build_binary_classifier(hyperparameters=hyperparameters,
-                                               tft_output=tft_output)
+    classifier = model.build_binary_classifier(
+        hyperparameters=hyperparameters, tft_output=tft_output
+    )
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=hyperparameters["learning_rate"])
     loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)
@@ -47,9 +57,7 @@ def train(train_data_dir, eval_data_dir, tft_output_dir, hyperparameters, log_di
 
     classifier.summary(print_fn=logging.info)
 
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(
-        log_dir=log_dir, update_freq="batch"
-    )
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
 
     early_stopping_callback = tf.keras.callbacks.EarlyStopping(
         monitor="val_loss", patience=2, restore_best_weights=True
@@ -60,17 +68,18 @@ def train(train_data_dir, eval_data_dir, tft_output_dir, hyperparameters, log_di
         train_dataset,
         epochs=hyperparameters["num_epochs"],
         validation_data=eval_dataset,
-        callbacks=[early_stopping_callback, tensorboard_callback],
+        callbacks=[tensorboard_callback, early_stopping_callback],
     )
     logging.info("Model training completed.")
 
     return classifier
 
 
-def evaluate(classifier, eval_data_dir, tft_output_dir, hyperparameters):
+def evaluate(classifier, data_accessor, eval_data_dir, tft_output_dir, hyperparameters):
     """
     Args:
-      classifier;
+      classifier:
+      data_accessor:
       eval_data_dir:
       tft_output_dir:
       hyperparameters:
@@ -79,13 +88,14 @@ def evaluate(classifier, eval_data_dir, tft_output_dir, hyperparameters):
     """
     logging.info("Loading tft output from %s", tft_output_dir)
     tft_output = tft.TFTransformOutput(tft_output_dir)
-    transformed_feature_spec = tft_output.transformed_feature_spec()
+    schema = tft_output.transformed_metadata.schema
 
     logging.info("Model evaluation started...")
     eval_dataset = model_input.get_dataset(
-        eval_data_dir,
-        transformed_feature_spec,
-        hyperparameters["batch_size"],
+        file_pattern=eval_data_dir,
+        data_accessor=data_accessor,
+        schema=schema,
+        batch_size=hyperparameters["batch_size"],
     )
 
     evaluation_metrics = classifier.evaluate(eval_dataset)

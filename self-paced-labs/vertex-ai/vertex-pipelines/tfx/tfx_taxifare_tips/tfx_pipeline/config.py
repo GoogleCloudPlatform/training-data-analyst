@@ -7,14 +7,11 @@ GOOGLE_CLOUD_PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT_ID", "")
 GOOGLE_CLOUD_REGION = os.getenv("GOOGLE_CLOUD_REGION", "")
 GCS_LOCATION = os.getenv("GCS_LOCATION", "")
 
-ARTIFACT_STORE_URI = os.path.join(GCS_LOCATION, "tfx_artifacts")
-MODEL_REGISTRY_URI = os.getenv(
-    "MODEL_REGISTRY_URI",
-    os.path.join(GCS_LOCATION, "model_registry"),
-)
+ARTIFACT_STORE_URI = os.path.join(GCS_LOCATION, "tfx-artifacts")
+MODEL_REGISTRY_URI = os.path.join(GCS_LOCATION, "model-registry")
 
 DATASET_DISPLAY_NAME = os.getenv("DATASET_DISPLAY_NAME", "chicago-taxifare-tips")
-MODEL_DISPLAY_NAME = os.getenv("MODEL_DISPLAY_NAME", f"{BQ_DATASET_NAME}-classifier")
+MODEL_DISPLAY_NAME = os.getenv("MODEL_DISPLAY_NAME", f"{DATASET_DISPLAY_NAME}-classifier")
 PIPELINE_NAME = os.getenv("PIPELINE_NAME", f"{MODEL_DISPLAY_NAME}-train-pipeline")
 
 ML_USE_COLUMN = "ml_use"
@@ -45,15 +42,13 @@ BEAM_DATAFLOW_PIPELINE_ARGS = [
     f"--runner={BEAM_RUNNER}",
 ]
 
-TRAINING_RUNNER = os.getenv("TRAINING_RUNNER", "local")
+TRAINING_RUNNER = os.getenv("TRAINING_RUNNER", "vertex")
 VERTEX_TRAINING_ARGS = {
     "project": GOOGLE_CLOUD_PROJECT_ID,
     "worker_pool_specs": [
         {
             "machine_spec": {
                 "machine_type": "n1-standard-4",
-                #             'accelerator_type': 'NVIDIA_TESLA_K80',
-                #             'accelerator_count': 1
             },
             "replica_count": 1,
             "container_spec": {
@@ -62,6 +57,7 @@ VERTEX_TRAINING_ARGS = {
         }
     ],
 }
+
 VERTEX_TRAINING_CONFIG = {
     tfx.extensions.google_cloud_ai_platform.ENABLE_UCAIP_KEY: True,
     tfx.extensions.google_cloud_ai_platform.UCAIP_REGION_KEY: GOOGLE_CLOUD_REGION,

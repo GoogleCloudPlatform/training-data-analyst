@@ -3,10 +3,9 @@
 from typing import List
 
 import tensorflow as tf
-import tensorflow_transform as tft
-
 from tfx import v1 as tfx
 from tfx_bsl.public import tfxio
+from tensorflow_metadata.proto.v0 import schema_pb2
 
 from tfx_taxifare_tips.model_training import features
 
@@ -14,7 +13,7 @@ from tfx_taxifare_tips.model_training import features
 def get_dataset(
     file_pattern: List[str],
     data_accessor: tfx.components.DataAccessor,
-    tf_transform_output: tft.TFTransformOutput,
+    schema: schema_pb2.Schema,
     batch_size: int = 200,
 ) -> tf.data.Dataset:
     """Generates features and label for training.
@@ -33,7 +32,7 @@ def get_dataset(
         tfxio.TensorFlowDatasetOptions(
             batch_size=batch_size, label_key=features.TARGET_FEATURE_NAME
         ),
-        tf_transform_output.transformed_metadata.schema,
+        schema=schema,
     ).repeat()
 
     return dataset

@@ -35,16 +35,18 @@ def run_fn(fn_args: tfx.components.FnArgs):
 
     logging.info("Model Runner executing model trainer...")
     classifier = model_trainer.train(
+        data_accessor=fn_args.data_accessor,
         train_data_dir=fn_args.train_files,
         eval_data_dir=fn_args.eval_files,
         tft_output_dir=fn_args.transform_output,
-        hyperparameters=hyperparameters,
         log_dir=log_dir,
+        hyperparameters=hyperparameters,
     )
 
     logging.info("Model Runner executing model evaluation...")
     classifier = model_trainer.evaluate(
         classifier=classifier,
+        data_accessor=fn_args.data_accessor,
         eval_data_dir=fn_args.eval_files,
         tft_output_dir=fn_args.transform_output,
         hyperparameters=hyperparameters,

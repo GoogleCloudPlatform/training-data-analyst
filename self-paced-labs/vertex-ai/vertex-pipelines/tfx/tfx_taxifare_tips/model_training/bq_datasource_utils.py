@@ -29,7 +29,7 @@ def _get_source_query(bq_dataset_name, bq_table_name, ml_use, limit=None):
         query += f""",
         tip_bin
     FROM {bq_dataset_name}.{bq_table_name} 
-    WHERE ML_use = '{ml_use}'
+    WHERE ml_use = '{ml_use}'
     """
     else:
         query += f"""
