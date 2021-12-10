@@ -6,7 +6,6 @@ import tensorflow as tf
 import tensorflow_transform as tft
 import tensorflow_data_validation as tfdv
 from tensorflow_transform.tf_metadata import schema_utils
-import tensorflow.keras as keras
 
 from tfx_taxifare_tips.model_training import features
 
@@ -27,7 +26,7 @@ def _get_serve_tf_examples_fn(classifier, tft_output, raw_feature_spec):
 
         transformed_features = classifier.tft_layer(parsed_features)
         logits = classifier(transformed_features)
-        probabilities = keras.activations.sigmoid(logits)
+        probabilities = tf.keras.activations.sigmoid(logits)
         return {"probabilities": probabilities}
 
     return serve_tf_examples_fn
@@ -44,7 +43,7 @@ def _get_serve_features_fn(classifier, tft_output):
 
         transformed_features = classifier.tft_layer(raw_features)
         logits = classifier(transformed_features)
-        neg_probabilities = keras.activations.sigmoid(logits)
+        neg_probabilities = tf.keras.activations.sigmoid(logits)
         pos_probabilities = 1 - neg_probabilities
         probabilities = tf.concat([neg_probabilities, pos_probabilities], -1)
         batch_size = tf.shape(probabilities)[0]

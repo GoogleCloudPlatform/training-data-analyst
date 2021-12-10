@@ -1,18 +1,20 @@
 """Pipeline definition code."""
 import os
+import sys
 import logging
 from typing import Text
+
 import tensorflow_model_analysis as tfma
 from tfx.proto import example_gen_pb2, transform_pb2, pusher_pb2
-from tfx.types import Channel, standard_artifacts
-from tfx.v1.dsl import Pipeline
+from tfx.v1.types.standard_artifacts import Model, ModelBlessing, Schema
 from tfx.v1.extensions.google_cloud_big_query import BigQueryExampleGen
 from tfx.v1.extensions.google_cloud_ai_platform import Trainer as VertexTrainer
-from tfx.dsl.components.common.importer import Importer
-from tfx.dsl.components.common.resolver import Resolver
-from tfx.dsl.experimental import latest_blessed_model_resolver
+from tfx.v1.dsl import Pipeline, Importer, Resolver, Channel
+from tfx.v1.dsl.experimental import LatestBlessedModelStrategy
 from tfx.v1.components import (
     StatisticsGen,
+    # SchemaGen,
+    # ImportSchemaGen,
     ExampleValidator,
     Transform,
     Evaluator,
@@ -22,7 +24,13 @@ from tfx.v1.components import (
 from tfx_taxifare_tips.tfx_pipeline import config
 from tfx_taxifare_tips.model_training import features, bq_datasource_utils
 
-RAW_SCHEMA_DIR = "tfx_taxifare_tips/raw_schema"
+SCRIPT_DIR = os.path.dirname(
+    os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__)))
+)
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, "..")))
+
+
+SCHEMA_DIR = "tfx_taxifare_tips/raw_schema"
 TRANSFORM_MODULE_FILE = "tfx_taxifare_tips/model_training/preprocessing.py"
 TRAIN_MODULE_FILE = "tfx_taxifare_tips/model_training/model_runner.py"
 
@@ -44,7 +52,7 @@ def create_pipeline(pipeline_name: Text, pipeline_root: Text):
     train_sql_query = bq_datasource_utils.get_training_source_query(
         config.GOOGLE_CLOUD_PROJECT_ID,
         config.GOOGLE_CLOUD_REGION,
-        config.BQ_DATASET_NAME,
+        config.DATASET_DISPLAY_NAME,
         ml_use="UNASSIGNED",
         limit=int(config.TRAIN_LIMIT),
     )
@@ -73,7 +81,7 @@ def create_pipeline(pipeline_name: Text, pipeline_root: Text):
     test_sql_query = bq_datasource_utils.get_training_source_query(
         config.GOOGLE_CLOUD_PROJECT_ID,
         config.GOOGLE_CLOUD_REGION,
-        config.BQ_DATASET_NAME,
+        config.DATASET_DISPLAY_NAME,
         ml_use="TEST",
         limit=int(config.TEST_LIMIT),
     )
@@ -95,14 +103,21 @@ def create_pipeline(pipeline_name: Text, pipeline_root: Text):
 
     # Schema importer.
     schema_importer = Importer(
-        source_uri=RAW_SCHEMA_DIR,
-        artifact_type=standard_artifacts.Schema,
+        source_uri=SCHEMA_DIR,
+        artifact_type=Schema,
     ).with_id("SchemaImporter")
+
+    # schema_importer = ImportSchemaGen(schema_file=SCHEMA_FILE).with_id("SchemaImporter")
 
     # Generate dataset statistics.
     statistics_gen = StatisticsGen(
         examples=train_example_gen.outputs["examples"]
     ).with_id("StatisticsGen")
+
+    # Generate data schema file.
+    # schema_gen = SchemaGen(
+    #     statistics=statistics_gen.outputs["statistics"], infer_feature_shape=True
+    # )
 
     # Example validation.
     example_validator = ExampleValidator(
@@ -129,16 +144,15 @@ def create_pipeline(pipeline_name: Text, pipeline_root: Text):
     trainer = VertexTrainer(
         module_file=TRAIN_MODULE_FILE,
         examples=transform.outputs["transformed_examples"],
-        schema=schema_importer.outputs["result"],
         transform_graph=transform.outputs["transform_graph"],
         custom_config=config.VERTEX_TRAINING_CONFIG,
     ).with_id("ModelTrainer")
 
     # Get the latest blessed model (baseline) for model validation.
     baseline_model_resolver = Resolver(
-        strategy_class=latest_blessed_model_resolver.LatestBlessedModelResolver,
-        model=Channel(type=standard_artifacts.Model),
-        model_blessing=Channel(type=standard_artifacts.ModelBlessing),
+        strategy_class=LatestBlessedModelStrategy,
+        model=Channel(type=Model),
+        model_blessing=Channel(type=ModelBlessing),
     ).with_id("BaselineModelResolver")
 
     # Prepare evaluation config.
@@ -204,7 +218,10 @@ def create_pipeline(pipeline_name: Text, pipeline_root: Text):
 
     pipeline_components = [
         train_example_gen,
+        test_example_gen,
+        schema_importer,
         statistics_gen,
+        # schema_gen,
         example_validator,
         transform,
         trainer,
