@@ -275,11 +275,15 @@ app.put('/customers/:id', validate({body: updateCustomerSchema}), async (req, re
            statusText: 'InvalidData',
            messages: [ "firstName or lastName must be updated." ]
         };
-        return res.json()
+        return res.json(responseData);
     }
 
     const path = `customers/${req.params.id}`;
     const docRef = db.doc(path);
+    var data = {
+        firstName: req.body.firstName ? req.body.firstName : undefined,
+        lastName: req.body.lastName ? req.body.lastName : undefined
+    };
     await docRef.update(data).then((result) => {
         // success
         return res.json(data);
@@ -342,11 +346,16 @@ app.put('/atms/:id', validate({body: updateAtmSchema}), async (req, res) => {
            statusText: 'InvalidData',
            messages: [ "description, latitude, or longitude must be updated." ]
         };
-        return res.json()
+        return res.json(responseData);
     }
 
     const path = `atms/${req.params.id}`;
     const docRef = db.doc(path);
+    var data = {
+        description: req.body.description ? req.body.description : undefined,
+        latitude: req.body.latitude ? req.body.latitude : undefined,
+        longitude: req.body.longitude ? req.body.longitude : undefined
+    };
     await docRef.update(data).then((result) => {
         // success
         return res.json(data);
