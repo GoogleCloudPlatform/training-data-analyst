@@ -202,11 +202,18 @@ app.get('/_status', async (req, res) => {
     res.json({serviceName: "simplebank-rest", status: 'API up', ver: backendVer});
 });
 
-async function getByPath(path, res) {
+async function getByPath(path, res, notFoundError) {
     var docRef = db.doc(path);
     var doc = await docRef.get();
     if (!doc.exists) {
-        return res.json({});
+        res.status(404);
+
+        var responseData = {
+           statusText: 'NotFound',
+           messages: [ notFoundError ]
+        };
+
+        return res.json(responseData);
     }
     else {
         return res.json(doc.data());
@@ -224,7 +231,7 @@ async function getAllByPath(path, res) {
 
 app.get('/customers/:id', async (req, res) => {
     const path = `customers/${req.params.id}`;
-    await getByPath(path, res);
+    await getByPath(path, res, "Customer with specified email does not exist.");
 });
 
 app.get('/customers', async (req, res) => {
@@ -291,7 +298,7 @@ app.put('/customers/:id', validate({body: updateCustomerSchema}), async (req, re
 
 app.get('/atms/:id', async (req, res) => {
     const path = `atms/${req.params.id}`;
-    await getByPath(path, res);
+    await getByPath(path, res, "ATM with specified name does not exist.");
 });
 
 app.get('/atms', async (req, res) => {
@@ -358,7 +365,7 @@ app.put('/atms/:id', validate({body: updateAtmSchema}), async (req, res) => {
 
 app.get('/customers/:customerEmail/accounts/:accountId', async (req, res) => {
     const path = `customers/${req.params.customerEmail}/accounts/${req.params.accountId}`
-    await getByPath(path, res);
+    await getByPath(path, res, "Account with specified name does not exist for specified customer.");
 });
 
 app.get('/customers/:customerEmail/accounts', async (req, res) => {
@@ -442,7 +449,7 @@ app.post('/customers/:customerEmail/accounts', validate({body: newAccountSchema}
 
 app.get('/transactions/:id', async (req, res) => {
     const path = `transactions/${req.params.id}`;
-    await getByPath(path, res);
+    await getByPath(path, res, "Transaction with specified ID does not exist.");
 });
 
 app.get('/transactions', async (req, res) => {
