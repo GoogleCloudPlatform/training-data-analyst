@@ -191,6 +191,7 @@ var newTransactionSchema = {
 // cannot update transactions
 
 const db = admin.firestore();
+db.settings({ ignoreUndefinedProperties: true });
 const backendVer = "1.0.0";
 
 const port = process.env.PORT || 8080;
