@@ -89,7 +89,7 @@ def build_text_classifier(hparams, optimizer):
     # For the fine-tuning you are going to use the `pooled_output` array which represents 
     # each input sequence as a whole. The shape is [batch_size, H]. 
     # You can think of this as an embedding for the entire movie review.
-    classifier = outputs["pooled_output"]
+    classifier = outputs['pooled_output']
     # Add dropout to prevent overfitting during model fine-tuning.
     classifier = tf.keras.layers.Dropout(hparams['dropout'], name='dropout')(classifier)
     classifier = tf.keras.layers.Dense(1, activation=None, name='classifier')(classifier)
