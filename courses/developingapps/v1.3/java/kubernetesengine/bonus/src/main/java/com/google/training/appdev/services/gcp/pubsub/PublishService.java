@@ -41,10 +41,10 @@ import java.io.IOException;
 public class PublishService {
     private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
     private static final String FEEDBACK_TOPIC_NAME = "feedback";
-    private static final String ANSWER_TOPIC_NAME = "answers";
+    public static final String ANSWER_TOPIC_NAME = "answers";
 
     public void publishFeedback(Feedback feedback) throws Exception {
-        Object mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
         String feedbackMessage = mapper.writeValueAsString(feedback);
         publishMessage(feedbackMessage, FEEDBACK_TOPIC_NAME);
     }
@@ -52,7 +52,7 @@ public class PublishService {
     public void publishAnswers(List<Answer> answers, String quiz) throws Exception {
         for(Answer answer : answers){
             answer.setQuiz(quiz);
-            Object mapper = new ObjectMapper();
+            ObjectMapper mapper = new ObjectMapper();
             String feedbackMessage = mapper.writeValueAsString(answer);
             publishMessage(feedbackMessage, ANSWER_TOPIC_NAME);
         }
