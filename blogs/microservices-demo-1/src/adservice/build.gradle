@@ -29,7 +29,6 @@ def opencensusVersion = "0.30.0" // LATEST_OPENCENSUS_RELEASE_VERSION
 def grpcVersion = "1.15.0" // CURRENT_GRPC_VERSION
 def jacksonVersion = "2.9.6"
 def prometheusVersion = "0.3.0"
-def log4j2Version = "2.17.0"
 
 tasks.withType(JavaCompile) {
     sourceCompatibility = '1.8'
@@ -55,7 +54,7 @@ dependencies {
                 "io.grpc:grpc-netty:${grpcVersion}",
                 "io.grpc:grpc-services:${grpcVersion}",
                 "io.prometheus:simpleclient_httpserver:${prometheusVersion}",
-                "org.apache.logging.log4j:log4j-core:${log4j2Version}"
+                "org.apache.logging.log4j:log4j-core:2.17.0"
 
         runtime "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}",
                 "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
