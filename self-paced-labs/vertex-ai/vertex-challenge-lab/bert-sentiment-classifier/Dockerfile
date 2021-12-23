@@ -1,6 +1,6 @@
 # Specifies base image and tag.
 # https://cloud.google.com/vertex-ai/docs/training/pre-built-containers
-FROM us-docker.pkg.dev/vertex-ai/training/tf-cpu.2-5:latest
+FROM us-docker.pkg.dev/vertex-ai/training/tf-cpu.2-6:latest
 
 # Sets the container working directory.
 WORKDIR /root

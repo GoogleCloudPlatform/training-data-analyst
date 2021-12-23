@@ -1,0 +1,3 @@
+tfx==1.4.0
+kfp==1.8.1
+google-cloud-aiplatform==1.7.1

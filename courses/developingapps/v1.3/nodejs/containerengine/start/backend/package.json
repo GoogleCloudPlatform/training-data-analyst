@@ -1,0 +1,21 @@
+{
+  "name": "quite-interesting-quiz-backend",
+  "version": "1.0.0",
+  "description": "Score and save feedback",
+  "repository": "UNKNOWN",
+  "private": true,
+  "scripts": {
+    "start": "node ./worker.js"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@google-cloud/language": "^4.3.1",
+    "@google-cloud/pubsub": "^2.18.1",
+    "@google-cloud/spanner": "^5.15.2",
+    "lodash": "~4.17.21",
+    "nconf": "~0.11.3"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  }
+}
