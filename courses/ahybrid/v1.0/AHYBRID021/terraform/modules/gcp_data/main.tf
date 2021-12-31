@@ -15,7 +15,7 @@ output "latest_version" {
 }
 
 # Enable services in newly created GCP Project.
-resource "google_project_service" "gcp_services" {
+resource "google_project_service" "project" {
   count   = length(var.gcp_service_list)
   project = google_project.demo_project.project_id
   service = var.gcp_service_list[count.index]

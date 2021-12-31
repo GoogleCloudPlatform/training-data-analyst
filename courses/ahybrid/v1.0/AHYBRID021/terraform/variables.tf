@@ -122,12 +122,16 @@ variable "cluster_version" {
 
 }
 
-
-
-
-
-
-
-
-
-
+variable "gcp_service_list" {
+  description = "List of GCP service to be enabled for a project."
+  type        = list(string)
+  default     = [
+    "gkemulticloud.googleapis.com",
+    "gkeconnect.googleapis.com",
+    "connectgateway.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
+    "anthos.googleapis.com",
+    "logging.googleapis.com",
+    "monitoring.googleapis.com"
+  ]
+}
