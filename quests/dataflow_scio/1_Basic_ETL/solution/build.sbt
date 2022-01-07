@@ -12,10 +12,6 @@ val dependencies = Seq(
   "org.slf4j" % "slf4j-simple" % "1.7.30"
 )
 
-packMain := Map("MyPipeline" -> "scio.mypackage.pipeline.MyPipeline",
-  "BatchUserTraffic" -> "scio.mypackage.pipeline.BatchUserTraffic",
-  "BatchMinuteTraffic" -> "scio.mypackage.pipeline.BatchMinuteTraffic")
-
 lazy val root: Project = project
   .in(file("."))
   .settings(
@@ -28,5 +24,5 @@ lazy val root: Project = project
       "-feature",
       "-unchecked",
       "-language:higherKinds"),
-    libraryDependencies ++=  dependencies,
+    libraryDependencies ++=  dependencies
   ).enablePlugins(PackPlugin)

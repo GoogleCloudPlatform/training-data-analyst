@@ -10,16 +10,16 @@
 #                       Scala
 #########################################################
 # sbt
-project/project/
-project/target/
-target/
+3_Batch_Analytics/project/project/
+3_Batch_Analytics/project/target/
+3_Batch_Analytics/target/
 
 # bloop and metals
 .bloop
 .bsp
 
 # metals
-project/metals.sbt
+3_Batch_Analytics/project/metals.sbt
 .metals
 
 # vs code
@@ -64,7 +64,7 @@ Thumbs.db
 #########################################################
 #                      Maven
 #########################################################
-target
+3_Batch_Analytics/target
 
 
 #########################################################

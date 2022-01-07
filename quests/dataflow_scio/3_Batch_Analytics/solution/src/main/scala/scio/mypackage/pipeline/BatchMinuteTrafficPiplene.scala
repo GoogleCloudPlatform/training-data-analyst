@@ -29,15 +29,13 @@ import org.joda.time.{Duration, Instant}
 import org.slf4j.LoggerFactory
 import org.apache.beam.sdk.values.Row
 
-trait LabOptions4 extends PipelineOptions {
+trait BatchMinuteTrafficOptions extends PipelineOptions {
 
   @Description("Input file or file pattern. E.g: gs://bucket/prefix/*.json")
-  @Default.String("gs://ns-data-sandbox/*.json")
   def getInputFiles(): String
   def setInputFiles(value: String): Unit
 
   @Description("Output BigQuery table name in the form of <ProjectId>:<DatasetId>.<Tablename>")
-  @Default.String("ns-data-sandbox:eventlogs.minute_traffic")
   def getOutputTableSpec(): String
   def setOutputTableSpec(value: String): Unit
 }
@@ -57,7 +55,7 @@ object BatchMinuteTraffic {
     val pipelineOptions = PipelineOptionsFactory
       .fromArgs(cmdlineArgs: _*)
       .withValidation
-      .as(classOf[LabOptions4])
+      .as(classOf[BatchMinuteTrafficOptions])
 
     implicit val rowCoder: Coder[Row] = Coder.beam[Row](RowCoder.of(pageViewsSchema))
     val sc = ScioContext(pipelineOptions)

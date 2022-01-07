@@ -28,16 +28,14 @@ import org.apache.beam.sdk.transforms.DoFn.{ProcessElement, Setup}
 import org.slf4j.LoggerFactory
 import scala.jdk.CollectionConverters._
 
-trait LabOptions extends PipelineOptions {
+trait MyPipelineOptions extends PipelineOptions {
 
   @Description("Input file or file pattern. E.g: gs://bucket/prefix/*.json")
-  @Default.String("gs://ns-data-sandbox/*.json")
   def getInputFiles(): String
   def setInputFiles(value: String): Unit
 
 
   @Description("Output BigQuery table name in the form of <ProjectId>:<DatasetId>.<Tablename>")
-  @Default.String("ns-data-sandbox:eventlogs.CommonLog")
   def getOutputTableSpec(): String
   def setOutputTableSpec(value: String): Unit
 
@@ -66,7 +64,7 @@ object MyPipeline {
     val pipelineOptions = PipelineOptionsFactory
       .fromArgs(cmdlineArgs: _*)
       .withValidation
-      .as(classOf[LabOptions])
+      .as(classOf[MyPipelineOptions])
 
     val sc = ScioContext(pipelineOptions)
 
@@ -78,7 +76,7 @@ object MyPipeline {
     writeUsingCustomOutput(commonLogRecords, pipelineOptions)
     sc.run()
   }
-  def writeUsingCustomOutput(commonLogRecords: SCollection[CommonLog], pipelineOptions: LabOptions): Unit = {
+  def writeUsingCustomOutput(commonLogRecords: SCollection[CommonLog], pipelineOptions: MyPipelineOptions): Unit = {
     val tableSchema = new TableSchema().setFields(
       List(
         new TableFieldSchema().setName("user_id").setType("STRING"),

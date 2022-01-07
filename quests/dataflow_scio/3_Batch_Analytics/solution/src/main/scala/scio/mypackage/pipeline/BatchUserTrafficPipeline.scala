@@ -18,28 +18,45 @@ package scio.mypackage.pipeline
 
 import com.google.api.services.bigquery.model.{TableFieldSchema, TableSchema}
 import com.spotify.scio.bigquery._
+import com.google.gson.Gson
 import com.spotify.scio.ScioContext
 import com.spotify.scio.values.SCollection
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO
 import org.apache.beam.sdk.options.{Default, Description, PipelineOptions, PipelineOptionsFactory}
 import org.apache.beam.sdk.options.ValueProvider.StaticValueProvider
 import org.apache.beam.sdk.transforms.{Count, ParDo}
+import org.apache.beam.sdk.transforms.{DoFn}
+import org.apache.beam.sdk.transforms.DoFn.{ProcessElement, Setup}
 import org.slf4j.LoggerFactory
 
 import scala.jdk.CollectionConverters._
 import scala.util.Random
 
-trait LabOptions2 extends PipelineOptions {
+trait BatchUserTrafficOptions extends PipelineOptions {
 
   @Description("Input file or file pattern. E.g: gs://bucket/prefix/*.json")
-  @Default.String("gs://ns-data-sandbox/*.json")
   def getInputFiles(): String
   def setInputFiles(value: String): Unit
 
   @Description("Output BigQuery table name in the form of <ProjectId>:<DatasetId>.<Tablename>")
-  @Default.String("ns-data-sandbox:eventlogs.user_traffic")
   def getOutputTableSpec(): String
   def setOutputTableSpec(value: String): Unit
+}
+
+case class CommonLog(user_id: String, ip: String, lat: Double, lng: Double, timestamp: String, http_request: String, user_agent: String, http_response: Long, num_bytes:Long)
+
+case class JsonToCommonLog() extends DoFn[String, CommonLog] {
+  var gson: Gson = _
+
+  @Setup
+  def setup(): Unit = {
+    gson = new Gson
+  }
+  @ProcessElement
+  def processElement(c: ProcessContext): Unit = {
+    val commonLog: CommonLog = gson.fromJson(c.element(), classOf[CommonLog])
+    c.output(commonLog)
+  }
 }
 
 class UserTraffic(var page_views: Int, var total_bytes: Long, var max_num_bytes: Long, var min_num_bytes: Long)
@@ -69,7 +86,7 @@ object BatchUserTraffic {
     val pipelineOptions = PipelineOptionsFactory
       .fromArgs(cmdlineArgs: _*)
       .withValidation
-      .as(classOf[LabOptions2])
+      .as(classOf[BatchUserTrafficOptions])
 
     val sc = ScioContext(pipelineOptions)
 
@@ -90,7 +107,7 @@ object BatchUserTraffic {
     sc.run()
   }
 
-  def writeUsingCustomOutput(userTrafficByUser: SCollection[(String, UserTraffic)], pipelineOptions: LabOptions2): Unit = {
+  def writeUsingCustomOutput(userTrafficByUser: SCollection[(String, UserTraffic)], pipelineOptions: BatchUserTrafficOptions): Unit = {
     val tableSchema = new TableSchema().setFields(
       List(
         new TableFieldSchema().setName("user_id").setType("STRING"),
