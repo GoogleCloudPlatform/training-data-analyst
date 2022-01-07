@@ -10,6 +10,11 @@
 #                       Scala
 #########################################################
 # sbt
+
+1_Basic_ETL/project/project/
+1_Basic_ETL/project/target/
+1_Basic_ETL/target/
+
 3_Batch_Analytics/project/project/
 3_Batch_Analytics/project/target/
 3_Batch_Analytics/target/
