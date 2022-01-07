@@ -11,13 +11,13 @@
 #########################################################
 # sbt
 
-1_Basic_ETL/project/project/
-1_Basic_ETL/project/target/
-1_Basic_ETL/target/
+1_Basic_ETL/solution/project/project/
+1_Basic_ETL/solution/project/target/
+1_Basic_ETL/solution/target/
 
-3_Batch_Analytics/project/project/
-3_Batch_Analytics/project/target/
-3_Batch_Analytics/target/
+3_Batch_Analytics/solution/project/project/
+3_Batch_Analytics/solution/project/target/
+3_Batch_Analytics/solution/target/
 
 # bloop and metals
 .bloop
