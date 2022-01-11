@@ -104,6 +104,7 @@ object BatchUserTraffic {
         sequenceFn,combineFn)
 
     writeUsingCustomOutput(userTrafficByUser, pipelineOptions)
+
     sc.run()
   }
 

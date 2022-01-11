@@ -56,21 +56,62 @@ object BatchUserTraffic {
     // Create the pipeline
     val sc = ScioContext(pipelineOptions)
 
-    /*
-      * Steps:
-      * 1) Read something
-      * 2) Transform something
-      * 3) Write something
-      */
-    val useridBytesPair = sc
+    //Step1: Read events
+    val read_event =  sc
       .withName("Read events")
       .textFile(pipelineOptions.getInputFiles())
-      .withName("ParseJson")
+
+    //Step2: Transform to common log
+    val transformed_event = read_event.withName("ParseJson")
       .applyTransform(ParDo.of(JsonToCommonLog()))
 
-    writeUsingCustomOutput()
+    //Step3: Aggregate num_bytes by user_id
+    val useridBytesPair = transformed_event.withName("Get num_bytes by user id")
+      .map(e => (e.user_id, e.num_bytes))
+
+    // Step4: TODO: Aggregate traffic by user using combine functionality
+    // val userTrafficByUser: SCollection[(String, UserTraffic)]
+
+    // Step5: Write output to BigQuery
+    writeUsingCustomOutput(userTrafficByUser, pipelineOptions)
 
     // Runs the pipeline to completion with the specified options.
     sc.run()
+  }
+
+  def writeUsingCustomOutput(userTrafficByUser: SCollection[(String, UserTraffic)], pipelineOptions: BatchUserTrafficOptions): Unit = {
+    val tableSchema = new TableSchema().setFields(
+      List(
+        new TableFieldSchema().setName("user_id").setType("STRING"),
+        new TableFieldSchema().setName("page_views").setType("INTEGER"),
+        new TableFieldSchema().setName("total_bytes").setType("INT64"),
+        new TableFieldSchema().setName("max_num_bytes").setType("INT64"),
+        new TableFieldSchema().setName("min_num_bytes").setType("INT64"),
+      ).asJava
+    )
+
+    // Convert to TableRows
+    val userTrafficRows: SCollection[TableRow] = userTrafficByUser
+      .withName("Convert to tablerows")
+      .map {
+        case (userid: String, userTraffic: UserTraffic) =>
+          new TableRow()
+            .set("user_id", userid)
+            .set("page_views", userTraffic.page_views)
+            .set("total_bytes", userTraffic.total_bytes)
+            .set("max_num_bytes", userTraffic.max_num_bytes)
+            .set("min_num_bytes", userTraffic.min_num_bytes)
+      }
+
+    userTrafficRows
+      .saveAsCustomOutput(
+        "Write UserTraffic To BigQuery",
+        BigQueryIO
+          .writeTableRows()
+          .to(pipelineOptions.getOutputTableSpec())
+          .withCustomGcsTempLocation(StaticValueProvider.of(pipelineOptions.getTempLocation))
+          .withSchema(tableSchema)
+          .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
+          .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED))
   }
 }

@@ -79,22 +79,23 @@ object BatchMinuteTraffic {
     // Create the pipeline
     val sc = ScioContext(pipelineOptions)
 
-    /*
-        * Steps:
-        * 1) Read something
-        * 2) Transform something
-        * 3) Write something
-        */
+    //Step1: Read events
+    val read_event =  sc
+      .withName("Read events")
+      .textFile(pipelineOptions.getInputFiles())
 
-    val windowedRecordCount =
-      sc
-        .withName("Read events")
-        .textFile(pipelineOptions.getInputFiles())
-        .withName("ParseJson")
-        .applyTransform(ParDo.of(JsonToCommonLog()))
+    //Step2: Transform to common log
+    val transformed_event = read_event.withName("ParseJson")
+      .applyTransform(ParDo.of(JsonToCommonLog()))
 
+    //Step3: TODO: Calculate record count for each window with fixed duration of 1 Minute
 
-    windowedRecordCount
+    /* Step4: TODO: Transform windowed record count into PageView Beam Row
+    with schema containing page_views and window start time as fields */
+    // val pageViewsByWindow: SCollection[Row]
+
+    // Step5: Write output to BigQuery
+    pageViewsByWindow
       .saveAsCustomOutput(
         "Write output To BigQuery",
         BigQueryIO

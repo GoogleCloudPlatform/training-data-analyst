@@ -55,8 +55,6 @@ object MyPipeline {
     // Create the pipeline
     val sc = ScioContext(pipelineOptions)
 
-    //TODO: Add static input and output strings
-
     /*
      * Steps:
      * 1) Read something

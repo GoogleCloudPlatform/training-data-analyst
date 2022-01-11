@@ -15,7 +15,7 @@ val dependencies = Seq(
 lazy val root: Project = project
   .in(file("."))
   .settings(
-    name := "ScioLabs",
+    name := "BasicETL-Solution",
     description := "Lab Tutorials",
     version := "0.1.0-SNAPSHOT",
     scalaVersion := "2.12.12",

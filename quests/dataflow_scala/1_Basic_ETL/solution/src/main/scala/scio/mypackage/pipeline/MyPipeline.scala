@@ -68,14 +68,20 @@ object MyPipeline {
 
     val sc = ScioContext(pipelineOptions)
 
-    val commonLogRecords: SCollection[CommonLog] = sc.withName("Read events")
+    // Step1: Read event
+    val read_event = sc.withName("Read events")
       .textFile(pipelineOptions.getInputFiles())
-      .withName("Convert to CommonLog")
+
+    // Step2: Transform to CommonLog
+    val commonLogRecords: SCollection[CommonLog] = read_event.withName("Convert to CommonLog")
       .applyTransform(ParDo.of(JsonToCommonLog()))
 
+    // Step3: Write output to BigQuery
     writeUsingCustomOutput(commonLogRecords, pipelineOptions)
+
     sc.run()
   }
+
   def writeUsingCustomOutput(commonLogRecords: SCollection[CommonLog], pipelineOptions: MyPipelineOptions): Unit = {
     val tableSchema = new TableSchema().setFields(
       List(
