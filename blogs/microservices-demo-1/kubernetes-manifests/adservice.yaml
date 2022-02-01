@@ -25,15 +25,22 @@ spec:
       labels:
         app: adservice
     spec:
+      serviceAccountName: default
       terminationGracePeriodSeconds: 5
       containers:
       - name: server
-        image: gcr.io/accl-19-dev/adservice:accl-demo
+        image: adservice
         ports:
         - containerPort: 9555
         env:
         - name: PORT
           value: "9555"
+        - name: DISABLE_STATS
+          value: "1"
+        - name: DISABLE_TRACING
+          value: "1"
+        # - name: JAEGER_SERVICE_ADDR
+        #   value: "jaeger-collector:14268"
         resources:
           requests:
             cpu: 200m
@@ -43,12 +50,12 @@ spec:
             memory: 300Mi
         readinessProbe:
           initialDelaySeconds: 20
-          periodSeconds: 5
+          periodSeconds: 15
           exec:
             command: ["/bin/grpc_health_probe", "-addr=:9555"]
         livenessProbe:
           initialDelaySeconds: 20
-          periodSeconds: 5
+          periodSeconds: 15
           exec:
             command: ["/bin/grpc_health_probe", "-addr=:9555"]
 ---
