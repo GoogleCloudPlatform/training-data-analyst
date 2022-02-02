@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import random
-from locust import HttpLocust, TaskSet
+from locust import HttpUser, TaskSet, between
 
 products = [
     '0PUK6V6EV0',
@@ -60,7 +60,7 @@ def checkout(l):
         'country': 'United States',
         'credit_card_number': '4432-8015-6152-0454',
         'credit_card_expiration_month': '1',
-        'credit_card_expiration_year': '2019',
+        'credit_card_expiration_year': '2039',
         'credit_card_cvv': '672',
     })
 
@@ -76,7 +76,6 @@ class UserBehavior(TaskSet):
         viewCart: 3,
         checkout: 1}
 
-class WebsiteUser(HttpLocust):
-    task_set = UserBehavior
-    min_wait = 1000
-    max_wait = 10000
+class WebsiteUser(HttpUser):
+    tasks = [UserBehavior]
+    wait_time = between(1, 10)

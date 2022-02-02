@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,28 +24,36 @@ spec:
     metadata:
       labels:
         app: loadgenerator
+      annotations:
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
     spec:
+      serviceAccountName: default
       terminationGracePeriodSeconds: 5
       restartPolicy: Always
       initContainers:
-      - name: wait-frontend
-        image: alpine:3.6
-        command: ['sh', '-c', 'set -x;  apk add --no-cache curl; 
-          until timeout -t 2 curl -f "http://${FRONTEND_ADDR}"; do 
-            echo "waiting for http://${FRONTEND_ADDR}"; 
-            sleep 20;
-          done;']
+      - command:
+        - /bin/sh
+        - -exc
+        - |
+          echo "Init container pinging frontend: ${FRONTEND_ADDR}..."
+          STATUSCODE=$(wget --server-response http://${FRONTEND_ADDR} 2>&1 | awk '/^  HTTP/{print $2}')
+          if test $STATUSCODE -ne 200; then
+              echo "Error: Could not reach frontend - Status code: ${STATUSCODE}"
+              exit 1
+          fi
+        name: frontend-check
+        image: busybox:latest
         env:
         - name: FRONTEND_ADDR
           value: "frontend:80"
       containers:
       - name: main
-        image: gcr.io/accl-19-dev/loadgenerator:accl-demo
+        image: loadgenerator
         env:
         - name: FRONTEND_ADDR
           value: "frontend:80"
         - name: USERS
-          value: "5"
+          value: "10"
         resources:
           requests:
             cpu: 300m

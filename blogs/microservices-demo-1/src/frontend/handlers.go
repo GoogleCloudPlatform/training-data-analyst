@@ -19,11 +19,14 @@ import (
 	"fmt"
 	"html/template"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
+	"cloud.google.com/go/compute/metadata"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -32,12 +35,22 @@ import (
 	"github.com/GoogleCloudPlatform/microservices-demo/src/frontend/money"
 )
 
+type platformDetails struct {
+	css      string
+	provider string
+}
+
 var (
-	templates = template.Must(template.New("").
-		Funcs(template.FuncMap{
-			"renderMoney": renderMoney,
+	isCymbalBrand = "true" == strings.ToLower(os.Getenv("CYMBAL_BRANDING"))
+	templates     = template.Must(template.New("").
+			Funcs(template.FuncMap{
+			"renderMoney":        renderMoney,
+			"renderCurrencyLogo": renderCurrencyLogo,
 		}).ParseGlob("templates/*.html"))
+	plat platformDetails
 )
+
+var validEnvs = []string{"local", "gcp", "azure", "aws", "onprem", "alibaba"}
 
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
@@ -72,17 +85,62 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		ps[i] = productView{p, price}
 	}
 
+	// Set ENV_PLATFORM (default to local if not set; use env var if set; otherwise detect GCP, which overrides env)_
+	var env = os.Getenv("ENV_PLATFORM")
+	// Only override from env variable if set + valid env
+	if env == "" || stringinSlice(validEnvs, env) == false {
+		fmt.Println("env platform is either empty or invalid")
+		env = "local"
+	}
+	// Autodetect GCP
+	addrs, err := net.LookupHost("metadata.google.internal.")
+	if err == nil && len(addrs) >= 0 {
+		log.Debugf("Detected Google metadata server: %v, setting ENV_PLATFORM to GCP.", addrs)
+		env = "gcp"
+	}
+
+	log.Debugf("ENV_PLATFORM is: %s", env)
+	plat = platformDetails{}
+	plat.setPlatformDetails(strings.ToLower(env))
+
 	if err := templates.ExecuteTemplate(w, "home", map[string]interface{}{
-		"session_id":    sessionID(r),
-		"request_id":    r.Context().Value(ctxKeyRequestID{}),
-		"user_currency": currentCurrency(r),
-		"currencies":    currencies,
-		"products":      ps,
-		"cart_size":     len(cart),
-		"banner_color":  os.Getenv("BANNER_COLOR"), // illustrates canary deployments
-		"ad":            fe.chooseAd(r.Context(), []string{}, log),
+		"session_id":        sessionID(r),
+		"request_id":        r.Context().Value(ctxKeyRequestID{}),
+		"user_currency":     currentCurrency(r),
+		"show_currency":     true,
+		"currencies":        currencies,
+		"products":          ps,
+		"cart_size":         cartSize(cart),
+		"banner_color":      os.Getenv("BANNER_COLOR"), // illustrates canary deployments
+		"ad":                fe.chooseAd(r.Context(), []string{}, log),
+		"platform_css":      plat.css,
+		"platform_name":     plat.provider,
+		"is_cymbal_brand":   isCymbalBrand,
+		"deploymentDetails": getDeploymentDetails(r),
 	}); err != nil {
 		log.Error(err)
+	}
+}
+
+func (plat *platformDetails) setPlatformDetails(env string) {
+	if env == "aws" {
+		plat.provider = "AWS"
+		plat.css = "aws-platform"
+	} else if env == "onprem" {
+		plat.provider = "On-Premises"
+		plat.css = "onprem-platform"
+	} else if env == "azure" {
+		plat.provider = "Azure"
+		plat.css = "azure-platform"
+	} else if env == "gcp" {
+		plat.provider = "Google Cloud"
+		plat.css = "gcp-platform"
+	} else if env == "alibaba" {
+		plat.provider = "Alibaba Cloud"
+		plat.css = "alibaba-platform"
+	} else {
+		plat.provider = "local"
+		plat.css = "local"
 	}
 }
 
@@ -131,14 +189,19 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	}{p, price}
 
 	if err := templates.ExecuteTemplate(w, "product", map[string]interface{}{
-		"session_id":      sessionID(r),
-		"request_id":      r.Context().Value(ctxKeyRequestID{}),
-		"ad":              fe.chooseAd(r.Context(), p.Categories, log),
-		"user_currency":   currentCurrency(r),
-		"currencies":      currencies,
-		"product":         product,
-		"recommendations": recommendations,
-		"cart_size":       len(cart),
+		"session_id":        sessionID(r),
+		"request_id":        r.Context().Value(ctxKeyRequestID{}),
+		"ad":                fe.chooseAd(r.Context(), p.Categories, log),
+		"user_currency":     currentCurrency(r),
+		"show_currency":     true,
+		"currencies":        currencies,
+		"product":           product,
+		"recommendations":   recommendations,
+		"cart_size":         cartSize(cart),
+		"platform_css":      plat.css,
+		"platform_name":     plat.provider,
+		"is_cymbal_brand":   isCymbalBrand,
+		"deploymentDetails": getDeploymentDetails(r),
 	}); err != nil {
 		log.Println(err)
 	}
@@ -193,18 +256,12 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve cart"), http.StatusInternalServerError)
 		return
 	}
-	
-	loopCount := 0
-	recommendations, err := fe.getRecommendations(r.Context(), sessionID(r), cartIDs(cart))	
-	for len(recommendations) <= 4 {
-		if loopCount > 5 { break } //only attempt 3 times to get more results
-		recommendations, err = fe.getRecommendations(r.Context(), sessionID(r), cartIDs(cart))	
-		if err != nil {
-			renderHTTPError(log, r, w, errors.Wrap(err, "failed to get product recommendations"), http.StatusInternalServerError)
-			return
-		}
-		loopCount++
-	}	
+
+	recommendations, err := fe.getRecommendations(r.Context(), sessionID(r), cartIDs(cart))
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "failed to get product recommendations"), http.StatusInternalServerError)
+		return
+	}
 
 	shippingCost, err := fe.getShippingQuote(r.Context(), cart, currentCurrency(r))
 	if err != nil {
@@ -239,19 +296,24 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 		totalPrice = money.Must(money.Sum(totalPrice, multPrice))
 	}
 	totalPrice = money.Must(money.Sum(totalPrice, *shippingCost))
-
 	year := time.Now().Year()
+
 	if err := templates.ExecuteTemplate(w, "cart", map[string]interface{}{
-		"session_id":       sessionID(r),
-		"request_id":       r.Context().Value(ctxKeyRequestID{}),
-		"user_currency":    currentCurrency(r),
-		"currencies":       currencies,
-		"recommendations":  recommendations,
-		"cart_size":        len(cart),
-		"shipping_cost":    shippingCost,
-		"total_cost":       totalPrice,
-		"items":            items,
-		"expiration_years": []int{year, year + 1, year + 2, year + 3, year + 4},
+		"session_id":        sessionID(r),
+		"request_id":        r.Context().Value(ctxKeyRequestID{}),
+		"user_currency":     currentCurrency(r),
+		"currencies":        currencies,
+		"recommendations":   recommendations,
+		"cart_size":         cartSize(cart),
+		"shipping_cost":     shippingCost,
+		"show_currency":     true,
+		"total_cost":        totalPrice,
+		"items":             items,
+		"expiration_years":  []int{year, year + 1, year + 2, year + 3, year + 4},
+		"platform_css":      plat.css,
+		"platform_name":     plat.provider,
+		"is_cymbal_brand":   isCymbalBrand,
+		"deploymentDetails": getDeploymentDetails(r),
 	}); err != nil {
 		log.Println(err)
 	}
@@ -302,16 +364,29 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 
 	totalPaid := *order.GetOrder().GetShippingCost()
 	for _, v := range order.GetOrder().GetItems() {
-		totalPaid = money.Must(money.Sum(totalPaid, *v.GetCost()))
+		multPrice := money.MultiplySlow(*v.GetCost(), uint32(v.GetItem().GetQuantity()))
+		totalPaid = money.Must(money.Sum(totalPaid, multPrice))
+	}
+
+	currencies, err := fe.getCurrencies(r.Context())
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve currencies"), http.StatusInternalServerError)
+		return
 	}
 
 	if err := templates.ExecuteTemplate(w, "order", map[string]interface{}{
-		"session_id":      sessionID(r),
-		"request_id":      r.Context().Value(ctxKeyRequestID{}),
-		"user_currency":   currentCurrency(r),
-		"order":           order.GetOrder(),
-		"total_paid":      &totalPaid,
-		"recommendations": recommendations,
+		"session_id":        sessionID(r),
+		"request_id":        r.Context().Value(ctxKeyRequestID{}),
+		"user_currency":     currentCurrency(r),
+		"show_currency":     false,
+		"currencies":        currencies,
+		"order":             order.GetOrder(),
+		"total_paid":        &totalPaid,
+		"recommendations":   recommendations,
+		"platform_css":      plat.css,
+		"platform_name":     plat.provider,
+		"is_cymbal_brand":   isCymbalBrand,
+		"deploymentDetails": getDeploymentDetails(r),
 	}); err != nil {
 		log.Println(err)
 	}
@@ -366,12 +441,17 @@ func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWri
 	errMsg := fmt.Sprintf("%+v", err)
 
 	w.WriteHeader(code)
-	templates.ExecuteTemplate(w, "error", map[string]interface{}{
-		"session_id":  sessionID(r),
-		"request_id":  r.Context().Value(ctxKeyRequestID{}),
-		"error":       errMsg,
-		"status_code": code,
-		"status":      http.StatusText(code)})
+
+	if templateErr := templates.ExecuteTemplate(w, "error", map[string]interface{}{
+		"session_id":        sessionID(r),
+		"request_id":        r.Context().Value(ctxKeyRequestID{}),
+		"error":             errMsg,
+		"status_code":       code,
+		"status":            http.StatusText(code),
+		"deploymentDetails": getDeploymentDetails(r),
+	}); templateErr != nil {
+		log.Println(templateErr)
+	}
 }
 
 func currentCurrency(r *http.Request) string {
@@ -398,6 +478,75 @@ func cartIDs(c []*pb.CartItem) []string {
 	return out
 }
 
+// get total # of items in cart
+func cartSize(c []*pb.CartItem) int {
+	cartSize := 0
+	for _, item := range c {
+		cartSize += int(item.GetQuantity())
+	}
+	return cartSize
+}
+
 func renderMoney(money pb.Money) string {
-	return fmt.Sprintf("%s %d.%02d", money.GetCurrencyCode(), money.GetUnits(), money.GetNanos()/10000000)
+	currencyLogo := renderCurrencyLogo(money.GetCurrencyCode())
+	return fmt.Sprintf("%s%d.%02d", currencyLogo, money.GetUnits(), money.GetNanos()/10000000)
+}
+
+func renderCurrencyLogo(currencyCode string) string {
+	logos := map[string]string{
+		"USD": "$",
+		"CAD": "$",
+		"JPY": "¥",
+		"EUR": "€",
+		"TRY": "₺",
+		"GBP": "£",
+	}
+
+	logo := "$" //default
+	if val, ok := logos[currencyCode]; ok {
+		logo = val
+	}
+	return logo
+}
+
+func stringinSlice(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
+
+func getDeploymentDetails(httpRequest *http.Request) map[string]string {
+	var deploymentDetailsMap = make(map[string]string)
+	var metaServerClient = metadata.NewClient(&http.Client{})
+	var log = httpRequest.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
+	podHostname, err := os.Hostname()
+	if err != nil {
+		log.Error("Failed to fetch the hostname for the Pod", err)
+	}
+
+	podCluster, err := metaServerClient.InstanceAttributeValue("cluster-name")
+	if err != nil {
+		log.Error("Failed to fetch the name of the cluster in which the pod is running", err)
+	}
+
+	podZone, err := metaServerClient.Zone()
+	if err != nil {
+		log.Error("Failed to fetch the Zone of the node where the pod is scheduled", err)
+	}
+
+	deploymentDetailsMap["HOSTNAME"] = podHostname
+	deploymentDetailsMap["CLUSTERNAME"] = podCluster
+	deploymentDetailsMap["ZONE"] = podZone
+
+	log.WithFields(logrus.Fields{
+		"cluster":  podCluster,
+		"zone":     podZone,
+		"hostname": podHostname,
+	}).Debug("Fetched pod details")
+
+	return deploymentDetailsMap
 }
