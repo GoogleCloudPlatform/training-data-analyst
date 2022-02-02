@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/profiler"
+	"contrib.go.opencensus.io/exporter/jaeger"
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -68,8 +69,19 @@ type checkoutService struct {
 }
 
 func main() {
-	go initTracing()
-	go initProfiling("checkoutservice", "1.0.0")
+	if os.Getenv("DISABLE_TRACING") == "" {
+		log.Info("Tracing enabled.")
+		go initTracing()
+	} else {
+		log.Info("Tracing disabled.")
+	}
+
+	if os.Getenv("DISABLE_PROFILER") == "" {
+		log.Info("Profiling enabled.")
+		go initProfiling("checkoutservice", "1.0.0")
+	} else {
+		log.Info("Profiling disabled.")
+	}
 
 	port := listenPort
 	if os.Getenv("PORT") != "" {
@@ -90,12 +102,42 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	srv := grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}))
+
+	var srv *grpc.Server
+	if os.Getenv("DISABLE_STATS") == "" {
+		log.Info("Stats enabled.")
+		srv = grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}))
+	} else {
+		log.Info("Stats disabled.")
+		srv = grpc.NewServer()
+	}
 	pb.RegisterCheckoutServiceServer(srv, svc)
 	healthpb.RegisterHealthServer(srv, svc)
 	log.Infof("starting to listen on tcp: %q", lis.Addr().String())
 	err = srv.Serve(lis)
 	log.Fatal(err)
+}
+
+func initJaegerTracing() {
+	svcAddr := os.Getenv("JAEGER_SERVICE_ADDR")
+	if svcAddr == "" {
+		log.Info("jaeger initialization disabled.")
+		return
+	}
+
+	// Register the Jaeger exporter to be able to retrieve
+	// the collected spans.
+	exporter, err := jaeger.NewExporter(jaeger.Options{
+		Endpoint: fmt.Sprintf("http://%s", svcAddr),
+		Process: jaeger.Process{
+			ServiceName: "checkoutservice",
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	trace.RegisterExporter(exporter)
+	log.Info("jaeger initialization completed.")
 }
 
 func initStats(exporter *stackdriver.Exporter) {
@@ -108,7 +150,7 @@ func initStats(exporter *stackdriver.Exporter) {
 	}
 }
 
-func initTracing() {
+func initStackdriverTracing() {
 	// TODO(ahmetb) this method is duplicated in other microservices using Go
 	// since they are not sharing packages.
 	for i := 1; i <= 3; i++ {
@@ -117,18 +159,22 @@ func initTracing() {
 			log.Infof("failed to initialize stackdriver exporter: %+v", err)
 		} else {
 			trace.RegisterExporter(exporter)
-			trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
-			log.Info("registered stackdriver tracing")
+			log.Info("registered Stackdriver tracing")
 
 			// Register the views to collect server stats.
 			initStats(exporter)
 			return
 		}
 		d := time.Second * 10 * time.Duration(i)
-		log.Infof("sleeping %v to retry initializing stackdriver exporter", d)
+		log.Infof("sleeping %v to retry initializing Stackdriver exporter", d)
 		time.Sleep(d)
 	}
-	log.Warn("could not initialize stackdriver exporter after retrying, giving up")
+	log.Warn("could not initialize Stackdriver exporter after retrying, giving up")
+}
+
+func initTracing() {
+	initJaegerTracing()
+	initStackdriverTracing()
 }
 
 func initProfiling(service, version string) {
@@ -143,14 +189,14 @@ func initProfiling(service, version string) {
 		}); err != nil {
 			log.Warnf("failed to start profiler: %+v", err)
 		} else {
-			log.Info("started stackdriver profiler")
+			log.Info("started Stackdriver profiler")
 			return
 		}
 		d := time.Second * 10 * time.Duration(i)
-		log.Infof("sleeping %v to retry initializing stackdriver profiler", d)
+		log.Infof("sleeping %v to retry initializing Stackdriver profiler", d)
 		time.Sleep(d)
 	}
-	log.Warn("could not initialize stackdriver profiler after retrying, giving up")
+	log.Warn("could not initialize Stackdriver profiler after retrying, giving up")
 }
 
 func mustMapEnv(target *string, envKey string) {
@@ -163,6 +209,10 @@ func mustMapEnv(target *string, envKey string) {
 
 func (cs *checkoutService) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
 	return &healthpb.HealthCheckResponse{Status: healthpb.HealthCheckResponse_SERVING}, nil
+}
+
+func (cs *checkoutService) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
+	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
 func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
@@ -183,7 +233,8 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 		Nanos: 0}
 	total = money.Must(money.Sum(total, *prep.shippingCostLocalized))
 	for _, it := range prep.orderItems {
-		total = money.Must(money.Sum(total, *it.Cost))
+		multPrice := money.MultiplySlow(*it.Cost, uint32(it.GetItem().GetQuantity()))
+		total = money.Must(money.Sum(total, multPrice))
 	}
 
 	txID, err := cs.chargeCard(ctx, &total, req.CreditCard)
