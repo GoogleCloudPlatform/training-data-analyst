@@ -1,0 +1,2 @@
+model_checkpoint_path: "babyweight"
+all_model_checkpoint_paths: "babyweight"
