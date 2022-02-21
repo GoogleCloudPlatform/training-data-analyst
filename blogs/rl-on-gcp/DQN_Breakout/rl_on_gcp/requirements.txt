@@ -34,7 +34,7 @@ scipy==1.1.0
 six==1.11.0
 subprocess32==3.5.2
 tensorboard==1.10.0
-tensorflow==1.10.1
+tensorflow==2.5.3
 termcolor==1.1.0
 trainer==1.0
 urllib3==1.23
