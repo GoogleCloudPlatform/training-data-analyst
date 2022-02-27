@@ -10,6 +10,18 @@ variable "gcp_project_id" {
   default     = "Enter Project ID"
 }
 
+variable "access_key" {
+  description = "Enter the AWS access key."
+  type        = string
+  default     = "Enter AWS access key"
+}
+
+variable "secret_key" {
+  description = "Enter the AWS secret key."
+  type        = string
+  default     = "Enter AWS secret key"
+}
+
 # This step sets up the default RBAC policy in your cluster for a Google 
 # user so you can login after cluster creation
 variable "admin_user" {
