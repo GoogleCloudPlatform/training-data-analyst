@@ -111,7 +111,7 @@ def run():
         | 'BatchOver10s' >> beam.WindowInto(beam.window.FixedWindows(120),
                                             trigger=AfterProcessingTime(120),
                                             accumulation_mode=AccumulationMode.DISCARDING)
-        | 'WriteUnparsedToGCS' >> fileio.WriteToFiles(output_path,
+        | 'WriteUnparsedToGCS' >> beam.fileio.WriteToFiles(output_path,
                                                       shards=1,
                                                       max_writers_per_bundle=0)
         )
