@@ -13,5 +13,4 @@ In this project, our team set up Cloud Shell as our development environment, the
 Using GitHub to clone and work on the code of a quiz application to intermix into Cloud Store.
 
 ## Methodology ⚙️
-The a cloned is for teaching and demonstration purposes. The HTML template (adapted from W3Schools) can be used as a base for your own project, replacing the API key with yours, and using your creativity to design your own project.
-
+Cloned GitHub with python code for the purpose of creating a base quiz application to be altered to be used at a later time; which would implement images, and video.
