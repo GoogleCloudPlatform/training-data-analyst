@@ -1,2 +1,6 @@
-# gbp-group-13-snd-storing-images
-Labs and demos for courses for GCP Training (http://cloud.google.com/training).
+# Team SND: Storing Images and Video in the Cloud
+
+## Authors 📝
+- [Nicholas Samuels](https://github.com/nssamuels1)
+- [Aiysha Mustapha](https://github.com/LadyMustapha)
+- [Angel Fernandez](https://github.com/Avixph)
