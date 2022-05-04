@@ -18,7 +18,7 @@ SELECT
   title,
   SUM(views) AS views
 FROM
-  `bigquery-samples.wikipedia_benchmark.Wiki10B`
+  `cloud-training-demos.wikipedia_benchmark.Wiki10B`
 WHERE
   title LIKE '%Google%'
 GROUP BY
@@ -28,25 +28,23 @@ ORDER BY
   views DESC;
 ```
 
-5. Point out the processing time (should be around 12 seconds)
+5. Point out the processing time (should be around 10 seconds)
 
-6. Point out the results of the Query showing the main “Google” wikipedia page has been viewed over 9 Billion times
+6. Lastly, click on the query Explanation button to show how many input and output rows. 
 
-7. Lastly, click on the query Explanation button to show how many input and output rows. 
-
-Poll the class: What do the 10 Billion input rows signify? What about the resulting 200K+ output? The 10 Billion rows correspond to the count of Wikipedia pages and the 200K+ final result is the count of pages that contained the word “Google” somewhere in the title. 
+Poll the class: What do the 10 Billion input rows signify? What about the resulting 100K+ output? The 10 Billion rows correspond to the count of Wikipedia pages and the 100K+ final result is the count of pages that contained the word “Google” somewhere in the title. 
 
 Poll the class: Do you think the query will run faster, slower, or depends on the resources if we re-ran it right now?
 
 
-8. Re-Run the Query (cache enabled)
+7. Re-Run the Query (cache enabled)
 
 The same query executed much faster as it is now pulling from query cache. We’ll discuss this more in the Performance section of the course. 
 
 Last Poll: Do you think it matters that we spelled Google with a capital “G” when matching against title? Is SQL case sensitive? In the LIKE operator, yes! 
 
 
-9. Optional: Let's run on 100 Billion rows now and see the peformance
+8. Optional: Let's run on 100 Billion rows now and see the peformance
 
 ```sql
 SELECT
@@ -54,7 +52,7 @@ SELECT
   title,
   SUM(views) AS views
 FROM
-  `bigquery-samples.wikipedia_benchmark.Wiki100B`
+  `cloud-training-demos.wikipedia_benchmark.Wiki100B`
 WHERE
   title LIKE '%Google%'
 GROUP BY
