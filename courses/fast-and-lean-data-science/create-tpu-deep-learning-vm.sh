@@ -33,7 +33,7 @@ create_vm() # params: machine_name, machine_type, tfnightly, version
     if [ "$3" != 0 ]; # if tf-nighty requested
     then
         # since DLVM move to conda, system pip does not work for installing tf-nightly anymore
-        extra_install="./opt/conda/bin/pip install tf-nightly; ./opt/conda/bin/pip install keras-nightly; ./opt/conda/bin/pip install behave";
+        extra_install="./opt/conda/bin/pip install tf-nightly-cpu; ./opt/conda/bin/pip install keras-nightly; ./opt/conda/bin/pip install behave";
         maj_min_version $DEFAULT_TF_VERSION # result in variable "maj_min_version". No sub-minor TF versions in DLVM images.
         vm_version=$maj_min_version
         version_msg="tf-nightly (2.x)";
