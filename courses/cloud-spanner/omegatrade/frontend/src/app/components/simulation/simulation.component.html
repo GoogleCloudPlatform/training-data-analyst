@@ -1,0 +1,119 @@
+<app-header></app-header>
+<app-sidebar></app-sidebar>
+<div class="spinner" *ngIf="loader">
+  <mat-spinner></mat-spinner>
+</div>
+<main class="simulation">
+  <div class="container-fluid mt-20">
+    <div class="row">
+      <div class="col-6 simulate-section">
+        <span class="simulate-title">
+          Simulate Data
+        </span>
+      </div>
+      <div class="col-6 table-options">
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid mt-20">
+    <mat-card>
+      <form class="simulation-form" [formGroup]="simulateForm" #formDirective="ngForm"  (submit)="simulate(formDirective)">
+        <div class="row">
+          <div class="col-3 ">
+            <mat-form-field appearance="standard" (click)="checkCompany()">
+              <mat-label>Select Company</mat-label>
+              <mat-select #mySelect formControlName="companyId" id="companyId">
+                <mat-option *ngFor="let company of companies" [disabled]="company.disable"
+                  [value]="company.companyId">{{ company.companyName }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="col-3 ">
+            <mat-form-field appearance="standard">
+              <mat-label>Select Interval</mat-label>
+              <mat-select formControlName="timeInterval" id="timeInterval" [disabled]="!simulateForm.get('companyId').value">
+                <mat-option *ngFor="let time of interval" [value]="time">{{ time }}</mat-option>
+              </mat-select>
+              <mat-hint>In seconds</mat-hint>
+            </mat-form-field>
+          </div>
+          <div class="col-3 ">
+            <mat-form-field appearance="standard">
+              <mat-label>Number of Records</mat-label>
+              <mat-select formControlName="data" id="data" [disabled]="!simulateForm.get('companyId').value">
+                <mat-option *ngFor="let record of noOfRecords" [value]="record">{{ record }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="col-1 mat-actions ">
+            <button type="submit" class="start-simulate-btn" matTooltip="Start Simulation" mat-stroked-button
+              [disabled]="!simulateForm.get('companyId').value || !simulateForm.get('timeInterval').value || !simulateForm.get('data').value">Simulate</button>
+          </div>
+
+        </div>
+      </form>
+    </mat-card>
+  </div>
+
+  <div class="container-fluid mt-20">
+    <div class="row">
+      <div class="col-6 simulate-list-section">
+        <span class="simulate-list-title">
+          Manage Simulations
+        </span>
+      </div>
+      <div class="col-6 table-options">
+        <mat-form-field>
+          <input matInput [(ngModel)]="searchInput" (ngModelChange)="applyFilter()" placeholder="Search">
+        </mat-form-field>
+      </div>
+    </div>
+    <div class="row mt-10">
+      <div class="col-12">
+        <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="companyName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Company Name </th>
+            <td mat-cell *matCellDef="let simulation"> {{simulation.companyName}} </td>
+          </ng-container>
+
+          <!-- shortcode Column -->
+          <ng-container matColumnDef="companyShortCode">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Short Code </th>
+            <td mat-cell *matCellDef="let simulation"> {{simulation.companyShortCode}} </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Simulation Status </th>
+            <td mat-cell *matCellDef="let simulation"> {{simulation.status}} </td>
+          </ng-container>
+
+          <ng-container matColumnDef="action">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Action</th>
+            <td mat-cell *matCellDef="let row" class="action-button">
+              <a href="javascript:void(0)" class="dashboard-redirect-btn" matTooltip="view simulation" [routerLink]="['/dashboard']" [queryParams]="{companyId: row.companyId}" ><i class="material-icons">visibility</i></a>
+              <a href="javascript:void(0)" class="delete-simulation-btn" matTooltip="delete simulation" 
+                (click)="deleteSimulation(row)"><i class="material-icons">delete</i></a>
+              <a href="javascript:void(0)" class="stop stop-simulation-btn" matTooltip="Pause simulation" *ngIf="row.status =='PROCESSING'"
+                (click)="updateSimulation(row.sId,row.companyId,'STOPPED')">
+                <mat-icon aria-hidden="false" aria-label="Start Simulation">pause_circle_filled</mat-icon>
+              </a>
+              <a href="javascript:void(0)" class="start start-simulation-btn" matTooltip="start simulation" *ngIf="row.status =='STOPPED'"
+                (click)="updateSimulation(row.sId,row.companyId,'PROCESSING')">
+                <mat-icon aria-hidden="false" aria-label="Start Simulation">play_circle</mat-icon>
+              </a>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+        <div class="no-data-section" *ngIf="dataSource && dataSource.data.length === 0">
+          <span>No Simulation found.</span>
+        </div>
+        <mat-paginator [pageSizeOptions]="[10, 5, 3]" showFirstLastButtons></mat-paginator>
+      </div>
+    </div>
+  </div>
+</main>

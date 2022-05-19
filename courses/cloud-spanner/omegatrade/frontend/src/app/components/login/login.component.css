@@ -1,0 +1,100 @@
+.main {
+    height: 100vh;
+    display: grid;
+}
+
+.login-outer-block {
+    margin: auto;
+    background: white;
+    width: 500px;
+    height: 600px;
+}
+
+.sign-in-title {
+    margin-top: 70px;
+}
+
+.sign-in-title h1 {
+    font-size: 45px;
+    color: #333;
+    line-height: 63px;
+    font-weight: 200;
+    text-align: center;
+}
+
+.sign-in-with-google-block {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.sign-in-with-google-block a {
+    width: 390px;
+}
+
+.sign-in-with-google-block a img {
+    margin-right: 5px;
+    float: left;
+    display: block;
+    margin-top: 3px;
+}
+
+.hr-wrapper {
+    display: flex;
+    padding: 0px 20px;
+}
+
+.input-placeholder .custom-hr {
+    width: 100%;
+    height: 13px;
+    border-bottom: 1px solid #dedede;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.hr-text {
+    background: #fff;
+    padding: 0 10px;
+    color: #333;
+    font-weight: 100;
+}
+
+.hr-wrapper {
+    margin-top: 10px;
+}
+
+.login-form {
+    padding: 0px 40px;
+}
+
+.login-form .form-group {
+    margin: 20px 0px;
+}
+
+.login-form .form-control {
+    border: 1px solid #dedede;
+}
+
+.sign-up-btn {
+    color: #333333c2;
+    font-weight: 100;
+}
+
+.login-btn {
+    width: 100%;
+    color: #fff;
+    background-color: #009cfc;
+    border-color: #009cfc;
+}
+
+input::placeholder {
+    color: #333333c2;
+    font-weight: 100;
+}
+
+.oauth-btn {
+    text-transform:none
+}
+
+.google-logo{
+    margin-right:5px;
+}

@@ -1,0 +1,26 @@
+[{
+    "sId": "1f15c33b-cdfc-4cc0-b649-822d42bd113b",
+    "companyId": "f115eff6-0a3c-4390-9b4f-19276b560fae",
+    "status": "COMPLETED",
+    "createdAt": "2021-07-03T10:49:38.612219000Z"
+}, {
+    "sId": "ca422ac5-ea24-4479-a71c-07a95bcd4231",
+    "companyId": "0a24c698-4743-4261-a666-6c32e9777160",
+    "status": "COMPLETED",
+    "createdAt": "2021-07-03T10:49:34.414516000Z"
+}, {
+    "sId": "094bad34-7c3a-4195-8057-c5034bba5f18",
+    "companyId": "bb2420c3-9d7c-4e23-bb12-0405a24485b6",
+    "status": "COMPLETED",
+    "createdAt": "2021-07-03T10:42:10.687003000Z"
+}, {
+    "sId": "51828634-903e-417f-87d3-7a573421f0e3",
+    "companyId": "b9a9678d-4f88-4b13-83b9-78a0e4af7a1f",
+    "status": "COMPLETED",
+    "createdAt": "2021-07-03T10:42:20.042566000Z"
+}, {
+    "sId": "ff24576a-9d90-4663-b8a1-b6f8bfc1fefc",
+    "companyId": "6be1ccea-7a36-4c56-9376-9e9f26176c07",
+    "status": "COMPLETED",
+    "createdAt": "2021-07-03T10:42:06.532993000Z"
+}]

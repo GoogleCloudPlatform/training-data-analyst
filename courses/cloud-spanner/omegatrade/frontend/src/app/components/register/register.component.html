@@ -1,0 +1,67 @@
+<div class="spinner" *ngIf="loader">
+  <mat-spinner></mat-spinner>
+</div>
+<div class="main">
+  <div class="login-outer-block">
+    <div class="container">
+      <div class="row">
+        <div class="col-12 sign-in-title">
+          <h1>
+            Sign up
+          </h1>
+        </div>
+      </div>
+      <div *ngIf="enableOAuth">
+        <div class="row sign-in-with-google-block">
+          <div class="col-md-12">
+            <a class="btn btn-outline-dark oauth-btn" (click)="signUpWithGoogle()" href="javascript:void(0)" role="button">
+              <img width="20px" class="google-logo" alt="Google sign-in" src="assets/images/g-logo.webp" />
+              Sign up with Google
+            </a>
+          </div>
+        </div>
+        <div class="row hr-wrapper">
+          <div class="col-12">
+            <div class="input-placeholder col-center">
+              <div class="hr-wrapper">
+                <div class="custom-hr">
+                  <span class="hr-text">or</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <form class="login-form" [formGroup]="signUpForm" (submit)="signUp()">
+            <div class="form-group">
+              <input type="email" formControlName="businessEmail" id="businessEmail" class="form-control"
+                placeholder="Business email">
+              <control-messages [control]="signUpForm.get('businessEmail')"></control-messages>
+            </div>
+            <div class="form-group mt-10">
+              <input type="text" formControlName="fullName" id="fullName" class="form-control" placeholder="Full Name">
+              <control-messages [control]="signUpForm.get('fullName')"></control-messages>
+            </div>
+            <div class="form-group mt-10">
+              <input type="password" formControlName="password" id="password" class="form-control"
+                placeholder="Password">
+              <control-messages [control]="signUpForm.get('password')"></control-messages>
+            </div>
+            <div class="form-group mt-10">
+              <input type="password" formControlName="confirmPassword" id="confirmPassword" class="form-control"
+                placeholder="Confirm your Password">
+              <control-messages [control]="signUpForm.get('confirmPassword')"></control-messages>
+            </div>
+            <div class="error-message" *ngIf="signUpForm.hasError('passwordNotMatch')">Passwords do not match</div>
+            <div class="text-right">
+              <button type="submit" [disabled]="!signUpForm.valid" class="btn btn-primary w100 login-btn">Sign
+                up</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+<div class="header header-fixed">
+    <div class="header-inner">
+        <div class="logo-section">
+                <a href="javascript:void(0)"><img class="logo" src="assets/images/omega-trade.png" alt=""></a>
+        </div>
+        <div class="profile-pic" *ngIf="this.user">
+            <div mat-icon-button [matMenuTriggerFor]="menu">
+                <img *ngIf="user.photoUrl" [src]="this.user.photoUrl" alt="">
+                <span *ngIf="!user.photoUrl" class="material-icons" style="font-size: 40px;padding-right: 10px;cursor:pointer">account_circle</span>
+            </div>
+              <mat-menu #menu="matMenu">
+                <span mat-menu-item>
+                  <mat-icon>email</mat-icon>
+                  <span>{{ user.businessEmail }}</span>
+                </span>
+                <span mat-menu-item >
+                  <mat-icon>account_circle</mat-icon>
+                  <span>{{ user.fullName }}</span>
+                </span>
+                <span mat-menu-item >
+                  <mat-icon>lock</mat-icon>
+                  <span (click)="changePassword()">change password</span>
+                </span>
+                <span mat-menu-item (click)="logOut()">
+                  <mat-icon>logout</mat-icon>
+                  <span>logout</span>
+                </span>
+              </mat-menu>
+              
+        </div>
+    </div>
+</div>

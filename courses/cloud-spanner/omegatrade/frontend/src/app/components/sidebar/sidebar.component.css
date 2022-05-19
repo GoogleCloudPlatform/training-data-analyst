@@ -1,0 +1,24 @@
+.side-bar-fixed {
+    position: fixed;
+    z-index: 1019;
+    width: 190px;
+}
+.side-bar-inner ul li {
+    list-style: none;
+    color: white;
+}
+.side-bar-inner ul li a {
+    color: white;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 8px 5px;
+    display: block;
+    text-align: left;
+}
+.side-bar-inner ul {
+    padding-left: 0px;
+}
+.side-bar-inner ul li a:hover {
+    background: #42a9d86b;
+    text-decoration: none;
+}
