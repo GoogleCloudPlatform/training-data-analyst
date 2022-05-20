@@ -1,0 +1,30 @@
+table {
+    width: 100%;
+}
+th.mat-sort-header-sorted {
+  color: black;
+}
+.table-options{
+  text-align: right;
+}
+.table-options mat-form-field{
+  display: inline-block;
+  margin-right: 25px;
+}
+.table-options button{
+  display: inline-block;
+}
+.add-company-btn{
+  background: #3ea6e4;
+}
+.edit-company-btn{
+  color: #3ea6e4;
+}
+.delete-company-btn{
+  color: #d23733;
+}
+.no-data-card{
+  text-align: center;
+  padding: 20px 0px 5px 0px;
+  background: white;
+}

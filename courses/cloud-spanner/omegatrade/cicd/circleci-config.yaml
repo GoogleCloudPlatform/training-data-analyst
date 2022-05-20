@@ -1,0 +1,86 @@
+# update GCP_PROJECT_ID with your Google Cloud Platform Project ID
+
+version: 2
+jobs:
+  dockerize_deploy_dev:
+    docker:
+      - image: google/cloud-sdk 
+    environment:
+      - GCP_PROJECT_ID: "enter-your-GCP-project-ID"
+      - WORKDIR: "omegatrade-app/backend/"
+    steps:
+      - checkout
+      - run: 
+          name: Setup Google Cloud SDK
+          command: |
+            apt-get install -qq -y gettext
+            echo $GCLOUD_KEY_JSON > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
+            gcloud --quiet config set project ${GCP_PROJECT_ID}
+      - setup_remote_docker
+      - run: 
+          name: Docker build and push
+          command: |
+            gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://gcr.io
+            cd ${WORKDIR} && docker build -t gcr.io/${GCP_PROJECT_ID}/omega-trade/dev/backend:${CIRCLE_SHA1} -f dockerfile.local.emulator .
+            docker push gcr.io/${GCP_PROJECT_ID}/omega-trade/dev/backend:${CIRCLE_SHA1}
+      - run: 
+          name: Deploy to Cloud Run
+          command: |
+            gcloud run deploy omegatrade-backend-dev-ci \
+            --region us-west1 \
+            --image gcr.io/${GCP_PROJECT_ID}/omega-trade/dev/backend:${CIRCLE_SHA1} \
+            --platform managed \
+            --allow-unauthenticated \
+            --project ${GCP_PROJECT_ID} \
+            --port 9020
+
+  dockerize_deploy_prod:
+    docker:
+      - image: google/cloud-sdk 
+    environment:
+      - WORKDIR: "omegatrade-app/backend/"
+    steps:
+      - checkout
+      - run: 
+          name: Setup Google Cloud SDK
+          command: |
+            apt-get install -qq -y gettext
+            echo $GCLOUD_KEY_JSON > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
+            gcloud --quiet config set project ${GCP_PROJECT_ID}
+      - setup_remote_docker
+      - run: 
+          name: Docker build and push
+          command: |
+            gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://gcr.io
+            cd ${WORKDIR} && docker build -t gcr.io/${GCP_PROJECT_ID}/omega-trade/prod/backend:${CIRCLE_SHA1} -f dockerfile.prod .
+            docker push gcr.io/${GCP_PROJECT_ID}/omega-trade/prod/backend:${CIRCLE_SHA1}
+      - run: 
+          name: Deploy to Cloud Run
+          command: |
+            gcloud run deploy omegatrade-backend-prod-ci \
+            --region us-west1 \
+            --image gcr.io/${GCP_PROJECT_ID}/omega-trade/prod/backend:${CIRCLE_SHA1} \
+            --platform managed \
+            --allow-unauthenticated \
+            --project ${GCP_PROJECT_ID} \
+            --port 9020 \
+            --set-env-vars=PROJECTID=${GCP_PROJECT_ID} \
+            --set-env-vars=INSTANCE=original_spanner_id \
+            --set-env-vars=DATABASE=original_spanner_database \
+            --set-env-vars=JWT_KEY=w54p3Y?4dj%8Xqa2jjVC84narhe5Pk \
+            --set-env-vars=EXPIRE_IN=2d
+
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - dockerize_deploy_dev:
+          filters:
+            branches:
+              only: main
+      - dockerize_deploy_prod:
+          filters:
+            branches:
+              only: prod

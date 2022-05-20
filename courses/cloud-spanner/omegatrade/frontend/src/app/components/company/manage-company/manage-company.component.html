@@ -1,0 +1,58 @@
+<app-header></app-header>
+<app-sidebar></app-sidebar>
+<div class="spinner" *ngIf="loader">
+  <mat-spinner></mat-spinner>
+</div>
+<main>
+  <div class="container-fluid mt-20">
+    <div class="row">
+      <div class="col-6" style="margin: auto;">
+        <span style="font-size: 18px;">
+          Company List
+        </span>
+      </div>
+      <div class="col-6 table-options">
+        <mat-form-field>
+          <input matInput [(ngModel)]="searchInput" (ngModelChange)="applyFilter()" placeholder="Search">
+        </mat-form-field>
+        <button mat-flat-button color="primary" class="add-company-btn" (click)="openCompanyDialog()">Add
+          Company</button>
+      </div>
+    </div>
+    <div class="row mt-10">
+      <div class="col-12">
+        <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="companyName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Company Name </th>
+            <td mat-cell *matCellDef="let element"> {{element.companyName}} </td>
+          </ng-container>
+
+          <!-- shortcode Column -->
+          <ng-container matColumnDef="companyShortCode">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Short Code</th>
+            <td mat-cell *matCellDef="let element"> {{element.companyShortCode}} </td>
+          </ng-container>
+
+          <ng-container matColumnDef="action">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Action</th>
+            <td mat-cell *matCellDef="let row" style="padding:5px;">
+              <a href="javascript:void(0)" class="edit-company-btn" (click)="openCompanyDialog(row)"
+                title="Edit Company"><i class="material-icons">edit</i></a>&nbsp;
+              <a href="javascript:void(0)" class="delete-company-btn" title="Delete" (click)="deleteCompany(row)"><i
+                  class="material-icons">delete</i></a>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+        <div *ngIf="dataSource && dataSource.data.length === 0" class="no-data-card">
+          <span>No company found, please create a company by clicking on <b>Add company</b>.</span>
+        </div>
+        <mat-paginator [pageSizeOptions]="[10, 5, 3]" showFirstLastButtons></mat-paginator>
+      </div>
+    </div>
+  </div>
+</main>

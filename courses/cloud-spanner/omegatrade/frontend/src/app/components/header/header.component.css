@@ -1,0 +1,15 @@
+.header{height: 50px;position: sticky;top: 0;z-index: 1029;background: white;}
+.header-inner{padding-top: 3px;padding-left: 5px;padding-right: 5px;}
+.logo-section, .profile-pic{
+    display: inline-block;
+}
+.profile-pic{
+    float: right;
+    margin-right: 20px;
+}
+.profile-pic img{
+    width: 30px;
+    border-radius: 50%;
+    margin-top: 5px;
+    cursor: pointer;
+}

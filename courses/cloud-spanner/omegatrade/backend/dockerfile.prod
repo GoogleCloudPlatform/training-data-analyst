@@ -1,0 +1,7 @@
+FROM node:10.16.3
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN mkdir logs && chmod 777 logs
+RUN npm install
+COPY . ./
+CMD [ "npm", "start" ]
