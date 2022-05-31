@@ -10,7 +10,7 @@ spec:
     spec:
       containers:
       - name: pi
-        image: perl
+        image: perl:5.34
         command: ["perl"]
         args: ["-Mbignum=bpi", "-wle", "print bpi(2000)"]
       # Do not restart containers after they exit
