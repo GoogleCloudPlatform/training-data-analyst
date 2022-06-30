@@ -26,4 +26,17 @@ mkdir asm_output
   --option legacy-default-ingressgateway \
   --ca mesh_ca
 
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+data:
+  mesh: |-
+    defaultConfig:
+      tracing:
+        stackdriver:{}
+kind: ConfigMap
+metadata:
+  name: istio-asm-managed
+  namespace: istio-system
+EOF
+
 kubectl label namespace default istio-injection=enabled --overwrite
