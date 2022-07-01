@@ -4,7 +4,7 @@
 # Uses legacy default ingress gateway for compatibility with older labs
 
 # v.1.13.4
-# curl https://storage.googleapis.com/csm-artifacts/asm/asmcli_1.13 > asmcli
+curl https://storage.googleapis.com/csm-artifacts/asm/asmcli_1.13 > asmcli
 chmod +x asmcli
 
 mkdir asm_output
