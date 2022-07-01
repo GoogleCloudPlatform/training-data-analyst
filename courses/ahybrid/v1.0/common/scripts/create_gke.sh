@@ -26,7 +26,8 @@ gcloud beta container clusters create ${C1_NAME} \
     --machine-type=n1-standard-4 \
     --num-nodes=${C1_NODES} \
     --workload-pool=${WORKLOAD_POOL} \
-    --enable-stackdriver-kubernetes \
+    --logging=SYSTEM,WORKLOAD \
+    --monitoring=SYSTEM,WORKLOAD \
     --metadata disable-legacy-endpoints=true \
     --labels mesh_id=${MESH_ID} \
     --addons HorizontalPodAutoscaling,HttpLoadBalancing \
