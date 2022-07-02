@@ -1,14 +1,15 @@
-# curl https://storage.googleapis.com/csm-artifacts/asm/install_asm_1.9 > install_asm
+# curl https://storage.googleapis.com/csm-artifacts/asm/asmcli_1.13 > asmcli
 
-chmod +x ../common/scripts/install_asm
+chmod +x ../common/scripts/asmcli
 
-../common/scripts/install_asm \
+../common/scripts/asmcli \
 --project_id $PROJECT_ID \
 --cluster_name $C1_NAME \
 --cluster_location $C1_ZONE \
---mode install \
---enable_gcp_apis \
+--fleet_id $PROJECT_ID \
+--output_dir . \
 --enable_all \
+--ca mesh_ca \
 --custom_overlay $LAB_DIR/training-data-analyst/courses/ahybrid/v1.0/common/scripts/tracing.yaml
 
 kubectl label namespace default \
