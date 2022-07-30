@@ -130,8 +130,8 @@ public class BatchMinuteTrafficSQLPipeline {
                 //.apply("WriteToBQ",
                 //        BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
                 //                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
-                //                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
-
+                //                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED))
+        ;
         LOG.info("Building pipeline...");
 
         return pipeline.run();
