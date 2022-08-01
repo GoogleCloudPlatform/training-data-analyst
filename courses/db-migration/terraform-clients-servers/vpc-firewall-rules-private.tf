@@ -7,7 +7,7 @@ resource "google_compute_firewall" "private-allow-ssh" {
     ports    = ["22"]
   }
   source_ranges = [
-    "${var.subnet_cidr_public}"
+     "35.235.240.0/20"
   ]
   target_tags = ["allow-ssh"] 
 }
