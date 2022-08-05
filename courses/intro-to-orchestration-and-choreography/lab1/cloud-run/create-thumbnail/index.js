@@ -1,0 +1,89 @@
+// Copyright 2022 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+const express = require('express');
+const bodyParser = require('body-parser');
+const im = require('imagemagick');
+const Promise = require("bluebird");
+const path = require('path');
+const {Storage} = require('@google-cloud/storage');
+const storage = new Storage();
+const Firestore = require('@google-cloud/firestore');
+
+const app = express();
+
+const sourceDir = '/tmp/source';
+const destinationDir = '/tmp/destination';
+const destinationBucketName = process.env.DESTINATION_BUCKET;
+const thumbnailDimension = 400;
+const firestoreCollectionName = 'pictures';
+
+// POST /
+// {
+//   gcsImageUri = "gs://{sourceBucketName}/{fileName}"
+// }
+app.post('/', async (req, res) => {
+    try {
+        console.log(`Request body: ${JSON.stringify(req.body)}`);
+
+        const gcsImageUri = req.body.gcsImageUri;
+
+        // gs://BUCKET/NAME
+        const [sourceBucketName, fileName] = gcsImageUri.substr(5).split('/');
+        console.log(`sourceBucket: ${sourceBucketName}`);
+        console.log(`fileName: '${fileName}`);
+
+        const sourceBucket = storage.bucket(sourceBucketName);
+        const destinationBucket = storage.bucket(destinationBucketName);
+
+        const originalFile = path.resolve(sourceDir, fileName);
+        const thumbFile = path.resolve(destinationDir, fileName);
+
+        await sourceBucket.file(fileName).download({
+            destination: originalFile
+        });
+        console.log(`image downloaded: ${originalFile}`);
+
+        const resizeCrop = Promise.promisify(im.crop);
+        await resizeCrop({
+                srcPath: originalFile,
+                dstPath: thumbFile,
+                width: thumbnailDimension,
+                height: thumbnailDimension
+        });
+        console.log(`thumbnail created: ${thumbFile}`);
+
+        await destinationBucket.upload(thumbFile);
+        console.log(`uploaded thumbnail to bucket ${destinationBucketName}`);
+
+        const pictureStore = new Firestore().collection(firestoreCollectionName);
+        const doc = pictureStore.doc(fileName);
+        await doc.set({
+            thumbnail: true
+        }, {merge: true});
+        console.log(`updated Firestore doc for ${fileName}`);
+
+        res.status(204).send(`${fileName} processed`);
+    } catch (err) {
+        console.log(`Error creating the thumbnail: ${err}`);
+        console.error(err);
+        res.status(500).send(err);
+    }
+});
+
+const PORT = process.env.PORT || 8080;
+
+app.listen(PORT, () => {
+    if (!destinationBucketName) throw new Error("DESTINATION_BUCKET environment variable not set");
+    console.log(`Started create-thumbnail service on port ${PORT}`);
+});
