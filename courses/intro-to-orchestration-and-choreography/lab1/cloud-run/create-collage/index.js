@@ -22,14 +22,15 @@ const Firestore = require('@google-cloud/firestore');
 const app = express();
 
 const maxImages = 4;
-const thumbnailBucketName = process.env.THUMBNAIL_BUCKET;
+const generatedImagesBucketName = process.env.GENERATED_IMAGES_BUCKET;
+const firestoreCollectionName = 'images';
 
 app.get('/', async (req, res) => {
     try {
         console.log('Collage request');
 
         const thumbnailFiles = [];
-        const imageStore = new Firestore().collection('images');
+        const imageStore = new Firestore().collection(firestoreCollectionName);
         const snapshot = await imageStore
             .where('thumbnail', '==', true)
             .orderBy('created', 'desc')
@@ -44,7 +45,7 @@ app.get('/', async (req, res) => {
             });
             console.log(`Image files: ${JSON.stringify(thumbnailFiles)}`);
 
-            const thumbBucket = new Storage().bucket(thumbnailBucketName);
+            const thumbBucket = new Storage().bucket(generatedImagesBucketName);
 
             await Promise.all(thumbnailFiles.map(async fileName => {
                 const filePath = path.resolve('/tmp', fileName);
@@ -67,7 +68,7 @@ app.get('/', async (req, res) => {
             console.log("Created local collage picture");
 
             await thumbBucket.upload(collagePath);
-            console.log(`Uploaded collage to bucket ${thumbnailBucketName}`);
+            console.log(`Uploaded collage to bucket ${generatedImagesBucketName}`);
 
             res.status(204).send("Collage created.");
         }
@@ -81,6 +82,6 @@ app.get('/', async (req, res) => {
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-    if (!thumbnailBucketName) throw new Error("THUMBNAIL_BUCKET environment variable not set");
+    if (!generatedImagesBucketName) throw new Error("GENERATED_IMAGES_BUCKET environment variable not set");
     console.log(`Started create-collage service on port ${PORT}`);
 });

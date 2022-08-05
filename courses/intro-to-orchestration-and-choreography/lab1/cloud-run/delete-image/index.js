@@ -20,7 +20,7 @@ const {toStorageObjectData} = require('@google/events/cloud/storage/v1/StorageOb
 const app = express();
 app.use(express.json());
 
-const thumbnailBucketName = process.env.THUMBNAIL_BUCKET;
+const generatedImagesBucketName = process.env.GENERATED_IMAGES_BUCKET;
 const firestoreCollectionName = 'images';
 
 app.post('/', async (req, res) => {
@@ -36,11 +36,11 @@ app.post('/', async (req, res) => {
 
         // Delete from thumbnails
         try {
-            await new Storage().bucket(thumbnailBucketName).file(objectName).delete();
-            console.log(`Deleted '${objectName}' from bucket '${thumbnailBucketName}'.`);
+            await new Storage().bucket(generatedImagesBucketName).file(objectName).delete();
+            console.log(`Deleted '${objectName}' from bucket '${generatedImagesBucketName}'.`);
         }
         catch(err) {
-            console.log(`Failed to delete '${objectName}' from bucket '${thumbnailBucketName}': ${err}.`);
+            console.log(`Failed to delete '${objectName}' from bucket '${generatedImagesBucketName}': ${err}.`);
         }
 
         // Delete from Firestore
@@ -65,6 +65,6 @@ app.post('/', async (req, res) => {
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-    if (!thumbnailBucketName) throw new Error("THUMBNAIL_BUCKET environment variable not set");
+    if (!generatedImagesBucketName) throw new Error("GENERATED_IMAGES_BUCKET environment variable not set");
     console.log(`Started service on port ${PORT}`);
 });

@@ -24,9 +24,9 @@ const app = express();
 
 const sourceDir = '/tmp/source';
 const destinationDir = '/tmp/destination';
-const destinationBucketName = process.env.DESTINATION_BUCKET;
+const generatedImagesBucketName = process.env.GENERATED_IMAGES_BUCKET;
 const thumbnailDimension = 400;
-const firestoreCollectionName = 'pictures';
+const firestoreCollectionName = 'images';
 
 // POST /
 // {
@@ -44,7 +44,7 @@ app.post('/', async (req, res) => {
         console.log(`fileName: '${fileName}`);
 
         const sourceBucket = storage.bucket(sourceBucketName);
-        const destinationBucket = storage.bucket(destinationBucketName);
+        const destinationBucket = storage.bucket(generatedImagesBucketName);
 
         const originalFile = path.resolve(sourceDir, fileName);
         const thumbFile = path.resolve(destinationDir, fileName);
@@ -64,7 +64,7 @@ app.post('/', async (req, res) => {
         console.log(`thumbnail created: ${thumbFile}`);
 
         await destinationBucket.upload(thumbFile);
-        console.log(`uploaded thumbnail to bucket ${destinationBucketName}`);
+        console.log(`uploaded thumbnail to bucket ${generatedImagesBucketName}`);
 
         const pictureStore = new Firestore().collection(firestoreCollectionName);
         const doc = pictureStore.doc(fileName);
@@ -84,6 +84,6 @@ app.post('/', async (req, res) => {
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-    if (!destinationBucketName) throw new Error("DESTINATION_BUCKET environment variable not set");
+    if (!generatedImagesBucketName) throw new Error("GENERATED_IMAGES_BUCKET environment variable not set");
     console.log(`Started create-thumbnail service on port ${PORT}`);
 });
