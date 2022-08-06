@@ -76,25 +76,23 @@ main:
                 timestampValue: ${imageMetadata.body.created}
         result: storeMetadataResponse
     - getThumbnailService:
-      call: googleapis.run.v1.namespaces.services.get
-      args:
-        name: ${"namespaces/" + projectId + "/services/" + thumbnailServiceName}
-        location: thumbnailServiceLocation
-      result: thumbnailServiceInfo
+        call: googleapis.run.v1.namespaces.services.get
+        args:
+          name: ${"namespaces/" + projectId + "/services/" + thumbnailServiceName}
+          location: thumbnailServiceLocation
+        result: thumbnailServiceInfo
     - queueThumbnail:
-      call: googleapis.cloudtasks.v2.projects.locations.queues.tasks.create
-      args:
-        parent: ${queue.name}
-        body:
-          task:
-            name: ${queue.name + "/tasks/" + task_id}
-            scheduleTime: ${schedule_time}
-            httpRequest:
-              url: thumbNailServiceInfo.uri
-              httpMethod: "POST"
-              body:
-                gcsImageUri: ${gsUri}
-      result: task
+        call: googleapis.cloudtasks.v2.projects.locations.queues.tasks.create
+        args:
+          parent: ${thumbnailQueueName}
+          body:
+            task:
+              httpRequest:
+                url: thumbNailServiceInfo.uri
+                httpMethod: "POST"
+                body:
+                  gcsImageUri: ${gsUri}
+        result: task
     - completed:
         return:
           imageAnalysisResponse: ${imageAnalysisResponse.body}

@@ -66,8 +66,8 @@ app.post('/', async (req, res) => {
         await destinationBucket.upload(thumbFile);
         console.log(`uploaded thumbnail to bucket ${generatedImagesBucketName}`);
 
-        const pictureStore = new Firestore().collection(firestoreCollectionName);
-        const doc = pictureStore.doc(fileName);
+        const imageStore = new Firestore().collection(firestoreCollectionName);
+        const doc = imageStore.doc(fileName);
         await doc.set({
             thumbnail: true
         }, {merge: true});

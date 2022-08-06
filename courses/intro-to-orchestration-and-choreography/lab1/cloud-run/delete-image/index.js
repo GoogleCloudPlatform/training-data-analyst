@@ -45,8 +45,8 @@ app.post('/', async (req, res) => {
 
         // Delete from Firestore
         try {
-            const pictureStore = new Firestore().collection(firestoreCollectionName);
-            const docRef = pictureStore.doc(objectName);
+            const imageStore = new Firestore().collection(firestoreCollectionName);
+            const docRef = imageStore.doc(objectName);
             await docRef.delete();
 
             console.log(`Deleted '${objectName}' from Firestore collection '${firestoreCollectionName}'`);
