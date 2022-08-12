@@ -1,0 +1,121 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+main:
+  params: [input]
+  steps:
+    - init:
+        assign:
+          - fileName: ${input.data.name}
+          - bucket: ${input.data.bucket}
+          - gsUri: ${"gs://" + bucket + "/" + fileName}
+          - projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+          - extractMetadataFunctionRegion: us-central1
+          - extractMetadataFunctionName: extract-image-metadata
+          - thumbnailQueueId: thumbnail-task-queue
+          - thumbnailQueueLocation: us-central1
+          - thumbnailQueueName: ${"projects/" + projectId + "/locations/" + thumbnailQueueLocation + "/queues/" + thumbnailQueueId}
+          - thumbnailServiceLocation: us-central1
+          - thumbnailServiceName: create-thumbnail
+          - thumbnailRequestBody: '${"{\"gcsImageUri\": \"" + gsUri + "\"}"}'
+          - thumbnailCallingServiceAccount: ${"workflows-sa@" + projectId + ".iam.gserviceaccount.com"}
+    - imageAnalysisCall:
+        call: http.post
+        args:
+          url: https://vision.googleapis.com/v1/images:annotate
+          headers:
+            Content-Type: application/json
+          auth:
+            type: OAuth2
+          body:
+            requests:
+            - image:
+                source:
+                  gcsImageUri: ${gsUri}
+              features:
+              - type: SAFE_SEARCH_DETECTION
+              - type: LABEL_DETECTION
+              - type: DOCUMENT_TEXT_DETECTION
+        result: imageAnalysisResponse
+    - logImageAnalysisResponse:
+        call: sys.log
+        args:
+          text: ${"imageAnalysisResponse=" + json.encode_to_string(imageAnalysisResponse)}
+          severity: INFO
+    - extractImageMetadata:
+        call: http.post
+        args:
+          url: ${"https://" + extractMetadataFunctionRegion + "-" + projectId + ".cloudfunctions.net/" + extractMetadataFunctionName}
+          auth:
+            type: OIDC
+          body: ${imageAnalysisResponse.body}
+        result: imageMetadata
+    - logImageMetadata:
+        call: sys.log
+        args:
+          text: ${"imageMetadata=" + json.encode_to_string(imageMetadata.body)}
+          severity: INFO
+    - checkSafety:
+        switch:
+          - condition: ${imageMetadata.body.safe == true}
+            next: storeMetadata
+        next: end
+    - storeMetadata:
+        call: http.request
+        args:
+          url: ${"https://firestore.googleapis.com/v1/projects/" + projectId + "/databases/(default)/documents/images/" + fileName + "?updateMask.fieldPaths=labels&updateMask.fieldPaths=text&updateMask.fieldPaths=created"}
+          auth:
+            type: OAuth2
+          method: PATCH
+          body:
+            name: ${"projects/" + projectId + "/databases/(default)/documents/images/" + fileName}
+            fields:
+              labels:
+                arrayValue:
+                  values: ${imageMetadata.body.labels}
+              text:
+                stringValue: ${imageMetadata.body.text}
+              created:
+                timestampValue: ${imageMetadata.body.created}
+        result: storeMetadataResponse
+    - getThumbnailService:
+        call: googleapis.run.v2.projects.locations.services.get
+        args:
+          name: ${"projects/" + projectId + "/locations/" + thumbnailServiceLocation + "/services/" + thumbnailServiceName}
+        result: thumbnailServiceInfo
+    - queueThumbnail:
+        call: googleapis.cloudtasks.v2.projects.locations.queues.tasks.create
+        args:
+          parent: ${thumbnailQueueName}
+          body:
+            task:
+              httpRequest:
+                url: ${thumbnailServiceInfo.uri}
+                httpMethod: POST
+                headers:
+                  Content-Type: application/json
+                # body must be Base64-encoded string, text.encode converts string to bytes
+                body: "${base64.encode(text.encode(thumbnailRequestBody))}"
+                oidcToken:
+                  serviceAccountEmail: ${thumbnailCallingServiceAccount}
+                  audience: ${thumbnailServiceInfo.uri}
+        result: task
+    - completed:
+        return:
+          imageAnalysisResponse: ${imageAnalysisResponse.body}
+          imageMetadata: ${imageMetadata.body}
+          storeMetadataResponse: ${storeMetadataResponse.body}
+          thumbnailServiceInfo: ${thumbnailServiceInfo}
+          task: ${task}
+          thumbnailCallingServiceAccount: ${thumbnailCallingServiceAccount}
+          thumbnailRequestBody: ${thumbnailRequestBody}
