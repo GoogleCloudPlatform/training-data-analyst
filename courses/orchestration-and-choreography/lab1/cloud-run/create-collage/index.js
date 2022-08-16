@@ -26,8 +26,9 @@ const generatedImagesBucketName = process.env.GENERATED_IMAGES_BUCKET;
 
 const maxImages = 4;
 const firestoreCollectionName = 'images';
+const collageFileName = 'collage.png';
 
-app.get('/', async (req, res) => {
+app.post('/', async (req, res) => {
     try {
         console.log('Collage request');
 
@@ -64,7 +65,7 @@ app.get('/', async (req, res) => {
             }));
             console.log('Downloaded all thumbnails');
 
-            const collagePath = path.resolve('/tmp', 'collage.png');
+            const collagePath = path.resolve('/tmp', collageFileName);
 
             const thumbnailPaths = thumbnailFiles.map(f => path.resolve('/tmp', f));
 
@@ -77,8 +78,13 @@ app.get('/', async (req, res) => {
                 collagePath]);
             console.log("Created local collage picture");
 
-            // upload to bucket
-            await thumbBucket.upload(collagePath);
+            // upload to bucket, turn caching off so latest collage is always shown
+            await thumbBucket.upload(collagePath, {
+                destination: collageFileName,
+                metadata: {
+                    cacheControl: 'public, max-age=0'
+                }
+            });
             console.log(`Uploaded collage to bucket ${generatedImagesBucketName}`);
 
             res.status(204).send("Collage created.");
