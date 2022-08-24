@@ -1,0 +1,18 @@
+{
+	"name": "delete_image",
+	"version": "0.0.1",
+	"main": "index.js",
+	"scripts": {
+	  "start": "node index.js"
+	},
+	"engines": {
+	  "node": ">=16.0.0"
+	},
+	"dependencies": {
+	  "express": "^4.18.1",
+	  "cloudevents": "^6.0.2",
+	  "@google/events": "^5.4.0",
+	  "@google-cloud/firestore": "^6.0.0",
+	  "@google-cloud/storage": "^6.3.0"
+	}
+}
