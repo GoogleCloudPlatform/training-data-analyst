@@ -12,14 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 main:
-  params: [input]
+  # event contains the CloudEvents event
+  params: [event]
   steps:
+    - logEvent:
+        # log the event that was sent to the workflow
+        call: sys.log
+        args:
+          text: ${"event=" + json.encode_to_string(event)}
+          severity: INFO
     - init:
+        # initialize variables
         assign:
-          - fileName: ${input.data.name}
-          - bucket: ${input.data.bucket}
+          - fileName: ${event.data.name}
+          - bucket: ${event.data.bucket}
           - gsUri: ${"gs://" + bucket + "/" + fileName}
           - projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+          - workflowExecutionId: ${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}
           - extractMetadataFunctionRegion: us-central1
           - extractMetadataFunctionName: extract-image-metadata
           - thumbnailQueueId: thumbnail-task-queue
@@ -30,6 +39,7 @@ main:
           - thumbnailRequestBody: '${"{\"gcsImageUri\": \"" + gsUri + "\"}"}'
           - thumbnailCallingServiceAccount: ${"workflows-sa@" + projectId + ".iam.gserviceaccount.com"}
     - imageAnalysisCall:
+        # call the Vision API
         call: http.post
         args:
           url: https://vision.googleapis.com/v1/images:annotate
@@ -48,11 +58,13 @@ main:
               - type: DOCUMENT_TEXT_DETECTION
         result: imageAnalysisResponse
     - logImageAnalysisResponse:
+        # log the response from Cloud Vision
         call: sys.log
         args:
           text: ${"imageAnalysisResponse=" + json.encode_to_string(imageAnalysisResponse)}
           severity: INFO
     - extractImageMetadata:
+        # send the Cloud Vision response to the extract function
         call: http.post
         args:
           url: ${"https://" + extractMetadataFunctionRegion + "-" + projectId + ".cloudfunctions.net/" + extractMetadataFunctionName}
@@ -61,16 +73,20 @@ main:
           body: ${imageAnalysisResponse.body}
         result: imageMetadata
     - logImageMetadata:
+        # log the function response
         call: sys.log
         args:
           text: ${"imageMetadata=" + json.encode_to_string(imageMetadata.body)}
           severity: INFO
     - checkSafety:
+        # abort if Cloud Vision determined that the image is unsafe
         switch:
           - condition: ${imageMetadata.body.safe == true}
+            # image is safe, continue
             next: storeMetadata
         next: end
     - storeMetadata:
+        # call the Firestore API to store the metadata, using the filename as the ID
         call: http.request
         args:
           url: ${"https://firestore.googleapis.com/v1/projects/" + projectId + "/databases/(default)/documents/images/" + fileName + "?updateMask.fieldPaths=labels&updateMask.fieldPaths=text&updateMask.fieldPaths=created"}
@@ -88,12 +104,26 @@ main:
               created:
                 timestampValue: ${imageMetadata.body.created}
         result: storeMetadataResponse
+    - logFirestoreResponse:
+        # log the response from the Firestore API call
+        call: sys.log
+        args:
+          text: ${"storeMetadataResponse=" + json.encode_to_string(storeMetadataResponse.body)}
+          severity: INFO
     - getThumbnailService:
+        # call the Cloud Run connector to retrieve the service URL for the thumbnail service
         call: googleapis.run.v2.projects.locations.services.get
         args:
           name: ${"projects/" + projectId + "/locations/" + thumbnailServiceLocation + "/services/" + thumbnailServiceName}
         result: thumbnailServiceInfo
+    - logGetServiceResponse:
+        # log the response from the connector
+        call: sys.log
+        args:
+          text: ${"thumbnailServiceInfo=" + json.encode_to_string(thumbnailServiceInfo)}
+          severity: INFO
     - queueThumbnail:
+        # call the Cloud Tasks connector to create a task to be handled by the Cloud Run service
         call: googleapis.cloudtasks.v2.projects.locations.queues.tasks.create
         args:
           parent: ${thumbnailQueueName}
@@ -110,12 +140,11 @@ main:
                   serviceAccountEmail: ${thumbnailCallingServiceAccount}
                   audience: ${thumbnailServiceInfo.uri}
         result: task
+    - logTaskResponse:
+        # log the response from creating the task
+        call: sys.log
+        args:
+          text: ${"task=" + json.encode_to_string(task)}
+          severity: INFO
     - completed:
-        return:
-          imageAnalysisResponse: ${imageAnalysisResponse.body}
-          imageMetadata: ${imageMetadata.body}
-          storeMetadataResponse: ${storeMetadataResponse.body}
-          thumbnailServiceInfo: ${thumbnailServiceInfo}
-          task: ${task}
-          thumbnailCallingServiceAccount: ${thumbnailCallingServiceAccount}
-          thumbnailRequestBody: ${thumbnailRequestBody}
+        return: ${workflowExecutionId}
