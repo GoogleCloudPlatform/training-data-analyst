@@ -1,0 +1,50 @@
+.start {
+    color: #3ea6e4;
+}
+.stop {
+    color: #d1302b;
+}
+.mat-actions {
+    margin: auto 0;
+}
+.mat-actions mat-icon {
+    font-size: 35px;
+    padding: 10px;
+}
+table {
+    width: 100%;
+}
+.simulate-list-title , .simulate-title{
+    font-size: 18px
+}
+.simulate-list-section , .simulate-section{
+    margin: auto;    
+}
+th.mat-sort-header-sorted {
+    color: black;
+}
+.table-options {
+    text-align: right;
+}
+.table-options mat-form-field {
+    display: inline-block;
+    margin-right: 25px;
+}
+.table-options button {
+    display: inline-block;
+}
+.start-simulate-btn:not([disabled]) {
+    background: #3ea6e4;
+    color: #ffffff;
+}
+.action-buttons{
+    padding:5px;
+}
+.delete-simulation-btn, .start-simulation-btn, .stop-simulation-btn{
+    padding-left: 10px;
+}
+.no-data-section{
+    background: white !important;
+    padding: 20px 0px 5px 0px;
+    text-align: center  ;
+}

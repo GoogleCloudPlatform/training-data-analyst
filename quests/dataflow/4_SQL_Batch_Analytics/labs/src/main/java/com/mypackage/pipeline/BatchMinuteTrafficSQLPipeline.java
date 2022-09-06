@@ -126,12 +126,12 @@ public class BatchMinuteTrafficSQLPipeline {
                 // TODO: Add JODA Timestamp field to Row, Write Windowing SQL transform
 
 
-
-                .apply("WriteToBQ",
-                        BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
-                                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
-                                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
-
+                // TODO: Uncomment BigQueryIO Sink
+                //.apply("WriteToBQ",
+                //        BigQueryIO.<Row>write().to(options.getTableName()).useBeamSchema()
+                //                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
+                //                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED))
+        ;
         LOG.info("Building pipeline...");
 
         return pipeline.run();

@@ -1,0 +1,21 @@
+FROM google/cloud-sdk:slim
+
+RUN apt-get install -y google-cloud-sdk google-cloud-sdk-spanner-emulator
+RUN curl --silent --location https://deb.nodesource.com/setup_12.x | bash -
+RUN apt-get update && apt-get install -y curl
+RUN apt-get install -y \
+  nodejs
+RUN echo "Node: " && node -v
+RUN echo "NPM: " && npm -v
+ENV SPANNER_EMULATOR_HOST="localhost:9010"
+RUN echo $SPANNER_EMULATOR_HOST
+
+COPY ./start_spanner.bash start_spanner.bash
+COPY ./package.json package.json 
+COPY ./seed-data.js seed-data.js
+COPY . ./
+
+RUN chmod u+x ./start_spanner.bash ./seed-data.js ./package.json
+RUN node -v && npm -v
+RUN npm install
+CMD ./start_spanner.bash

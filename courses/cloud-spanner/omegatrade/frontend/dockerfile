@@ -1,0 +1,10 @@
+FROM node:16.15
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install -g @angular/cli --loglevel=error
+RUN npm cache clean --force --loglevel=error
+RUN npm install --loglevel=error
+COPY . ./
+RUN npm run build
+EXPOSE 8080
+CMD [ "node", "server.js" ]

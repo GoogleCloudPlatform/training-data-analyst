@@ -3,8 +3,8 @@
 # please configure your login, project region and zone first by running gcloud init
 # region us-central1 zone us-central1-b usually have TPUs available
 
-DEFAULT_TF_VERSION="2.7" # WARNING: for TF 2.3, the DLVM release is tf2-2-3-cpu but contains TF 2.3.1
-IMAGE_FAMILY_PATTERN="tf2-2-x-cpu"
+DEFAULT_TF_VERSION="2.9.1" # WARNING: for TF 2.3, the DLVM release is tf2-2-3-cpu but contains TF 2.3.1
+IMAGE_FAMILY_PATTERN="tf-2-x-cpu"
 
 usage()
 {
@@ -12,7 +12,7 @@ usage()
     echo "The default machine type is n1-standard-8."
     echo "The default TPU type is v2-8."
     echo "The default Tensorflow version is $DEFAULT_TF_VERSION."
-    echo "Supported Tensorflow versions are 2.1, 2.1.4, 2.2, 2.2.3, 2.3, 2.3.4, 2.4.0 to 2.4.4, 2.5.0 to 2.5.2, 2.6.0, 2.7.0  and nightly."
+    echo "Supported Tensorflow versions are 2.1, 2.1.4, 2.2, 2.2.3, 2.3, 2.3.4, 2.4.0 to 2.4.4, 2.5.0 to 2.5.2, 2.6.0, 2.7.0, 2.7.1, 2.7.3, 2.8.0, 2.8.2, 2.9.1  and nightly."
     echo "You can use \"--version nightly\" or \"--nightly\" to obtain a nightly version of Tensorflow on the VM and TPU."
     echo "Please run \"gcloud init\" befor this script to set your default zone."
     echo "Example:"
@@ -33,8 +33,7 @@ create_vm() # params: machine_name, machine_type, tfnightly, version
     if [ "$3" != 0 ]; # if tf-nighty requested
     then
         # since DLVM move to conda, system pip does not work for installing tf-nightly anymore
-	# since keras moved to a separate repository, you must uninstall keras ans TensorFlow before installing tf-nightly
-        extra_install="./opt/conda/bin/pip uninstall -y keras tensorflow; ./opt/conda/bin/pip install tf-nightly; ./opt/conda/bin/pip install behave";
+        extra_install="./opt/conda/bin/pip install tf-nightly-cpu; ./opt/conda/bin/pip install keras-nightly; ./opt/conda/bin/pip install behave";
         maj_min_version $DEFAULT_TF_VERSION # result in variable "maj_min_version". No sub-minor TF versions in DLVM images.
         vm_version=$maj_min_version
         version_msg="tf-nightly (2.x)";

@@ -1,0 +1,26 @@
+[{
+    "companyId": "6be1ccea-7a36-4c56-9376-9e9f26176c07",
+    "companyName": "Acme Corp",
+    "companyShortCode": "ACM",
+    "created_at": "2021-07-03T10:39:51.402504000Z"
+}, {
+    "companyId": "bb2420c3-9d7c-4e23-bb12-0405a24485b6",
+    "companyName": "Foo Enterprises",
+    "companyShortCode": "FOO",
+    "created_at": "2021-07-03T10:40:36.228500000Z"
+}, {
+    "companyId": "0a24c698-4743-4261-a666-6c32e9777160",
+    "companyName": "Bar Industries",
+    "companyShortCode": "BAR",
+    "created_at": "2021-07-03T10:39:26.820620000Z"
+}, {
+    "companyId": "b9a9678d-4f88-4b13-83b9-78a0e4af7a1f",
+    "companyName": "Baz Ltd",
+    "companyShortCode": "BAZ",
+    "created_at": "2021-07-03T10:41:48.880233000Z"
+}, {
+    "companyId": "f115eff6-0a3c-4390-9b4f-19276b560fae",
+    "companyName": "Foobar Inc",
+    "companyShortCode": "FOB",
+    "created_at": "2021-07-03T10:40:12.311480000Z"
+}]
