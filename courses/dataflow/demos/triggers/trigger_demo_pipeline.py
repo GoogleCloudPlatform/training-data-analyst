@@ -32,7 +32,7 @@ def parse_json(element):
 class GetTimestampFn(beam.DoFn):
     def process(self, element, window=beam.DoFn.WindowParam):
         window_start = window.start.to_utc_datetime().strftime("%Y-%m-%dT%H:%M:%S")
-        output = {'page_views': element, 'timestamp': window_start}
+        output = {'taxi_events': element, 'timestamp': window_start}
         yield output
 
 def run():
