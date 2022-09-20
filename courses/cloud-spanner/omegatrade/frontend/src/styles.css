@@ -1,0 +1,53 @@
+@import '~@angular/material/prebuilt-themes/indigo-pink.css';
+@import 'https://fonts.googleapis.com/css?family=Dosis:400,600';
+
+/* You can add global styles to this file, and also import other style files */
+body{background: #eee;}
+.mt-10{margin-top: 10px;}
+.mt-20{margin-top: 20px;}
+control-messages {color: red;font-size: 11px;margin-top: 2px;display: block;}
+main{overflow: hidden;margin-left: 200px;padding-right: 10px;}
+.side-bar{height: calc(100vh);background-color: #3a4248;}
+.side-bar-inner{padding: 20px 5px;}
+a.router-link-active {background: #20a8d8;}
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+.cdk-overlay-container {z-index: 9999 !important;}
+.form-control:focus{box-shadow: none;}
+.spinner 
+{
+    margin: 0px;
+    padding: 0px;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    background: #b9b9b924 0% 0% no-repeat padding-box;
+    z-index: 3000;
+}
+mat-spinner
+{
+  position: absolute;
+  top: 44%;
+  left: 46%;
+  z-index: 999999;
+}
+.green-snackbar {
+  background-color: #3ea6e4;
+  color: white;
+}
+.green-snackbar button {
+  background-color: #3ea6e4;
+  color: white;
+  border: none;
+}
+.red-snackbar {
+  background: #d1302b;
+  color: white;
+}
+.red-snackbar button {
+  background-color: #d1302b;
+  color: white !important;
+  border: none;
+}

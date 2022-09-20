@@ -1,0 +1,152 @@
+pipeline {
+    agent {
+    kubernetes {
+      defaultContainer 'jnlp'
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+      run: jnlp
+spec:
+  containers:
+  - name: git
+    image: gcr.io/cloud-builders/git
+    command:
+    - cat
+    tty: true
+  - name: python-382
+    image: registry.hub.docker.com/library/python:3.8.2
+    command:
+    - cat
+    tty: true
+  - name: busybox
+    image: busybox
+    command:
+    - cat
+    tty: true
+  - name: gcloud
+    image: google/cloud-sdk:latest
+    command:
+    - cat
+    tty: true   
+    volumeMounts:
+      - name: kaniko-secret
+        mountPath: /secret
+    env:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /secret/kaniko-secret.json         
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command:
+    - /busybox/cat
+    tty: true
+    volumeMounts:
+      - name: kaniko-secret
+        mountPath: /secret
+    env:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /secret/kaniko-secret.json
+  volumes:
+    - name: kaniko-secret
+      secret:
+        secretName: kaniko-secret
+  imagePullSecrets:
+  - name: jenkins-image-pull-secret      
+
+"""
+   }
+}
+    environment {
+        GCP_PROJECT_ID = "searce-academy"
+        JenkinsDockerGCRSecret = credentials('jenkins-docker-gcr-secret')
+    }
+    stages {
+        stage ('git clone - main') {
+            when {
+                branch 'main'
+            }
+            steps{
+                container('git'){
+
+                    git branch: 'main',
+                        credentialsId: 'Rohan-Github-Account-Credentials',
+                        url: 'https://github.com/searceinc/spanner-terraform-example.git'
+                }
+            }
+        }
+
+        stage ('git clone - prod') {
+            when {
+                branch 'prod'
+            }
+            steps{
+                container('git'){
+                    git branch: 'prod',
+                        credentialsId: 'Rohan-Github-Account-Credentials',
+                        url: 'https://github.com/searceinc/spanner-terraform-example.git'
+                }
+            }
+        }
+
+        stage ('building docker image - main') {
+            when {
+                branch 'main'
+            }
+            steps {
+                dir ('omegatrade-app/backend') {
+                    container(name: 'kaniko', shell: '/busybox/sh') {
+                        sh 'pwd'
+                        sh """
+                        #!/busybox/sh 
+                        /kaniko/executor --dockerfile dockerfile.local.emulator --context `pwd`/ --verbosity debug --insecure --skip-tls-verify --destination gcr.io/${GCP_PROJECT_ID}/omega-trade/dev/backend:$BUILD_NUMBER --destination gcr.io/${GCP_PROJECT_ID}/omega-trade/dev/backend:latest
+                        """
+                    }
+                }
+            }
+        }
+
+        stage ('building docker image - prod') {
+            when {
+                branch 'prod'
+            }
+            steps {
+                dir ('omegatrade-app/backend') {
+                    container(name: 'kaniko', shell: '/busybox/sh') {
+                        sh 'pwd'
+                        sh """
+                        #!/busybox/sh 
+                        /kaniko/executor --dockerfile dockerfile.prod --context `pwd`/ --verbosity debug --insecure --skip-tls-verify --destination gcr.io/${GCP_PROJECT_ID}/omega-trade/prod/backend:$BUILD_NUMBER --destination gcr.io/${GCP_PROJECT_ID}/omega-trade/prod/backend:latest
+                        """
+                    }  
+                }
+            }
+        }
+        
+        stage ('deploy to cloud run - main') {
+            when {
+                branch 'main'
+            }
+            steps {
+                container('gcloud'){
+                    sh 'kubectl version'
+                    sh 'gcloud auth activate-service-account --key-file=/secret/kaniko-secret.json'
+                    sh 'gcloud run deploy omegatrade-backend-dev-jenkins --image=gcr.io/${GCP_PROJECT_ID}/omega-trade/dev/backend:$BUILD_NUMBER --platform=managed --region=us-west1 --allow-unauthenticated --project=${GCP_PROJECT_ID} --port 9020'
+                }
+            }
+        }
+
+        stage ('deploy to cloud run - prod') {
+            when {
+                branch 'prod'
+            }
+            steps {
+                container('gcloud'){
+                    sh 'kubectl version'
+                    sh 'gcloud auth activate-service-account --key-file=/secret/kaniko-secret.json'
+                    sh 'gcloud run deploy omegatrade-backend-prod-jenkins --image=gcr.io/${GCP_PROJECT_ID}/omega-trade/prod/backend:$BUILD_NUMBER --platform=managed --region=us-west1 --allow-unauthenticated --project=${GCP_PROJECT_ID} --port 9020 --set-env-vars=PROJECTID=${GCP_PROJECT_ID} --set-env-vars=INSTANCE=spanner_id --set-env-vars=DATABASE=spanner_database --set-env-vars=JWT_SECRET=abc123 --set-env-vars=EXPIRE_IN=2d'
+                }
+            }
+        }
+    }
+}

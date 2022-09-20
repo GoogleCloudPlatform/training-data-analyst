@@ -1,0 +1,29 @@
+<div class="spinner" *ngIf="loader">
+    <mat-spinner></mat-spinner>
+</div>
+<h2 mat-dialog-title>{{ action }} </h2>
+<mat-dialog-content class="mat-typography">
+  <div class="row">
+    <div class="col-md-12">
+      <form class="company-form" [formGroup]="companyForm" (submit)="submitForm()">
+        <div class="form-group">
+          <input formControlName="companyName" id="companyName" type="text" class="form-control"
+            placeholder="Company Name">
+          <control-messages [control]="companyForm.get('companyName')"></control-messages>
+        </div>
+        <div class="form-group mt-10">
+          <input type="text" formControlName="companyShortCode" id="companyShortCode" class="form-control"
+            placeholder="Short Code">
+          <control-messages [control]="companyForm.get('companyShortCode')"></control-messages>
+        </div>
+        <div class="text-right modal-confirm-buttons">
+          <button mat-raised-button mat-dialog-close class="cancel-btn">Cancel</button>
+          <button type="submit" mat-raised-button class="edit-company-btn" color="primary"
+            [disabled]="!companyForm.valid">{{ (data && data.companyId)?'Update':'Save' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</mat-dialog-content>
+  
+  

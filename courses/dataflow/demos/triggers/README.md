@@ -165,14 +165,14 @@ Do we get the same information in the end? For ACCUMULATING with a count, we exp
 
 ```sql
 SELECT
-  SUM(page_views) as event_count, 'discarding' as mode
+  SUM(taxi_events) as event_count, 'discarding' as mode
 FROM
   `dataflow_demos.discarding`
 WHERE
   timestamp = '2021-06-03T21:15:00'
 UNION ALL
 SELECT
-  MAX(page_views) as event_count, 'accumulating' as mode
+  MAX(taxi_events) as event_count, 'accumulating' as mode
 FROM
   `dataflow_demos.accumulating`
 WHERE

@@ -1,0 +1,62 @@
+<div class="spinner" *ngIf="loader">
+  <mat-spinner></mat-spinner>
+</div>
+<div class="main">
+  <div class="login-outer-block">
+    <div class="container">
+      <div class="row">
+        <div class="col-12 sign-in-title">
+          <h1>
+            Sign in
+          </h1>
+        </div>
+      </div>
+      <div *ngIf="enableOAuth">
+        <div class="row sign-in-with-google-block">
+          <div class="col-md-12">
+            <a class="btn btn-outline-dark oauth-btn" (click)="signInWithGoogle()" href="javascript:void(0)" role="button">
+              <img width="20px" class="google-logo" alt="Google sign-in"
+                src="assets/images/g-logo.webp" />
+              Sign in with Google
+            </a>
+          </div>
+        </div>
+        <div class="row hr-wrapper">
+          <div class="col-12">
+            <div class="input-placeholder col-center">
+              <div class="hr-wrapper">
+                <div class="custom-hr">
+                  <span class="hr-text">or</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <form class="login-form" [formGroup]="loginForm" (submit)="login()">
+            <div class="form-group">
+              <input type="email" formControlName="businessEmail" id="businessEmail" class="form-control"
+                placeholder="Business email">
+              <control-messages [control]="loginForm.get('businessEmail')"></control-messages>
+            </div>
+            <div class="form-group mt-10">
+              <input type="password" formControlName="password" id="password" class="form-control" placeholder="Password">
+              <control-messages [control]="loginForm.get('password')"></control-messages>
+            </div>
+            <div class="text-right">
+              <button type="submit" [disabled]="!loginForm.valid" class="btn btn-primary w100 login-btn">Sign
+           in</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center mt-20">
+          <a href="javascript:void(0)" routerLink="/sign-up" class="sign-up-btn">sign up</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
