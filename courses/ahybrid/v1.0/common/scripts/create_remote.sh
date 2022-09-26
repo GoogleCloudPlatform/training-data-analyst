@@ -24,8 +24,6 @@ do
     sleep 3
 done
 
-export KOPS_FEATURE_FLAGS=AlphaAllowGCE
-
 export K8S_VERSION="stable"
 
 echo "Creating the remote cluster..."
@@ -37,7 +35,7 @@ kops create cluster \
 --node-count=$NODE_COUNT \
 --node-size=$NODE_SIZE \
 --admin-access=$INSTANCE_CIDR \
---kubernetes-version=$K8S_VERSION \
+--channel=$K8S_VERSION \
 --yes
 
 for (( c=1; c<=40; c++))
