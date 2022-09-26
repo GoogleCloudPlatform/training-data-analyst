@@ -26,7 +26,7 @@ done
 
 export KOPS_FEATURE_FLAGS=AlphaAllowGCE
 
-export K8S_VERSION="1.20.10"
+export K8S_VERSION="stable"
 
 echo "Creating the remote cluster..."
 kops create cluster \
