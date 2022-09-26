@@ -24,7 +24,7 @@ do
     sleep 3
 done
 
-export K8S_VERSION="1.22.15"
+export K8S_VERSION="1.23.12"
 
 echo "Creating the remote cluster..."
 kops create cluster \
