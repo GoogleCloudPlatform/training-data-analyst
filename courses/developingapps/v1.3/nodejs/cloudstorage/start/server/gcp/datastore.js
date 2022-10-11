@@ -100,7 +100,7 @@ async function createMultiple(...items) {
 
       transaction.commit((err) => {
           if (!err) {
-              console.log("Items saved.")
+              console.log("Entities created.")
           }
       });
   });
