@@ -73,12 +73,18 @@ function create({ quiz, author, title, answer1, answer2, answer3, answer4, corre
 // [END create]
 
 // [START createMultiple]
-async function createMultiple({items}) {
+async function createMultiple(...items) {
+
+  console.log(items);
 
   const transaction = ds.transaction();
 
-  transaction.run((err, transaction) => {
-      for (item in items) {
+  transaction.run((err) => {
+      for (let i = 0; i < items.length; i++) {
+          let item = items[i];
+          console.log(item);
+          console.log(item["id"]);
+          console.log(item.title);
           const key = ds.key([kind, item.id]);
 
           transaction.save({
