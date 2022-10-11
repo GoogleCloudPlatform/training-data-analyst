@@ -15,6 +15,7 @@ const ds_client = require('./datastore');
 
 const questions = [
     {
+        id: 1,
         quiz: 'gcp',
         author: 'Nigel',
         title: 'Which company runs GCP?',
@@ -23,9 +24,10 @@ const questions = [
         answer3: 'IBM',
         answer4: 'Microsoft',
         correctAnswer: 2,
-        imageUrl: '',
+        imageUrl: ''
     },
     {
+        id: 2,
         quiz: 'gcp',
         author: 'Nigel',
         title: 'Which GCP product is NoSQL?',
@@ -34,9 +36,10 @@ const questions = [
         answer3: 'Spanner',
         answer4: 'BigQuery',
         correctAnswer: 2,
-        imageUrl: '',
+        imageUrl: ''
     },
     {
+        id: 3,
         quiz: 'gcp',
         author: 'Nigel',
         title: 'Which GCP product is an Object Store?',
@@ -45,9 +48,10 @@ const questions = [
         answer3: 'Big Table',
         answer4: 'All of the above',
         correctAnswer: 1,
-        imageUrl: '',
+        imageUrl: ''
     },
     {
+        id: 4,
         quiz: 'places',
         author: 'Nigel',
         title: 'What is the capital of France?',
@@ -56,10 +60,9 @@ const questions = [
         answer3: 'Paris',
         answer4: 'Stockholm',
         correctAnswer: 3,
-        imageUrl: '',
+        imageUrl: ''
     },
 ];
 
-questions.forEach(item => {
-    ds_client.create(item);
-});
+ds_client.createMultiple(...questions);
+
