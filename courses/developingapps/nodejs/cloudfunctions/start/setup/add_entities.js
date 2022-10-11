@@ -60,6 +60,4 @@ const questions = [
     },
 ];
 
-questions.forEach(item => {
-    ds_client.create(item);
-});
+ds_client.createMultiple(...questions);
