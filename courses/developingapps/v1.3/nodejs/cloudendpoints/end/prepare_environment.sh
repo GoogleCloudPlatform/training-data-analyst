@@ -22,9 +22,6 @@ gcloud compute instances create endpoint-host --zone us-central1-a --tags http-s
 echo "Creating App Engine app"
 gcloud app create --region "us-central"
 
-echo "Creating Datastore database (Firestore in Datastore mode)"
-gcloud datastore databases create --region "us-central"
-
 echo "Making bucket: gs://$GCLOUD_BUCKET"
 gsutil mb gs://$GCLOUD_BUCKET
 
