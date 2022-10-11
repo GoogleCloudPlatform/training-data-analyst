@@ -10,6 +10,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 'use strict';
 
 const {Datastore} = require('@google-cloud/datastore');
@@ -71,9 +72,45 @@ function create({ quiz, author, title, answer1, answer2, answer3, answer4, corre
 }
 // [END create]
 
+// [START createMultiple]
+async function createMultiple(...items) {
+
+  const transaction = ds.transaction();
+
+  transaction.run((err) => {
+      for (let i = 0; i < items.length; i++) {
+          let item = items[i];
+          const key = ds.key([kind, item.id]);
+
+          transaction.save({
+              key: key,
+              data: [
+                  { name: 'quiz', value: item.quiz },
+                  { name: 'author', value: item.author },
+                  { name: 'title', value: item.title },
+                  { name: 'answer1', value: item.answer1 },
+                  { name: 'answer2', value: item.answer2 },
+                  { name: 'answer3', value: item.answer3 },
+                  { name: 'answer4', value: item.answer4 },
+                  { name: 'correctAnswer', value: item.correctAnswer },
+                  { name: 'imageUrl', value: item.imageUrl },
+              ]
+          });
+      }
+
+      transaction.commit((err) => {
+          if (!err) {
+              console.log("Entities created.")
+          }
+      });
+  });
+}
+// [END createMultiple]
+
 // [START exports]
 module.exports = {
   create,
+  createMultiple,
   list
 };
 // [END exports]

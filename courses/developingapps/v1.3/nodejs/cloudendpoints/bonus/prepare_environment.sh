@@ -21,9 +21,6 @@ gcloud compute firewall-rules create default-allow-http --allow tcp:80 --source-
 echo "Creating App Engine app"
 gcloud app create --region "us-central"
 
-echo "Creating Datastore database (Firestore in Datastore mode)"
-gcloud datastore databases create --region "us-central"
-
 echo "Making bucket: gs://$GCLOUD_BUCKET"
 gsutil mb gs://$GCLOUD_BUCKET
 

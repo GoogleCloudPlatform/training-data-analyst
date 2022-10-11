@@ -14,9 +14,6 @@
 echo "Creating App Engine app"
 gcloud app create --region "us-central"
 
-echo "Creating Datastore database (Firestore in Datastore mode)"
-gcloud datastore databases create --region "us-central"
-
 echo "Making bucket: gs://$DEVSHELL_PROJECT_ID-media"
 gsutil mb gs://$DEVSHELL_PROJECT_ID-media
 
