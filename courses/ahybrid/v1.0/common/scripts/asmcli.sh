@@ -1,7 +1,6 @@
 #!/bin/bash -x
 
 # Anthos Service Mesh setup with asmcli tool
-# Uses legacy default ingress gateway for compatibility with older labs
 
 # v.1.15.2
 curl https://storage.googleapis.com/csm-artifacts/asm/asmcli_1.15 > asmcli
