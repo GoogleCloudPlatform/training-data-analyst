@@ -6,6 +6,7 @@
 curl https://storage.googleapis.com/csm-artifacts/asm/asmcli_1.15 > asmcli
 chmod +x asmcli
 
+
 mkdir asm_output
 
 ./asmcli validate \
