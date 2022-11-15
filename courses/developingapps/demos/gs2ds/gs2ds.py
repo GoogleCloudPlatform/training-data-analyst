@@ -29,7 +29,7 @@ def to_entity(line):
                          'endYear': int(fields[3]),
                          'party': fields[4],
                          'homeState': fields[5],
-                         'dateOfBirth': datetime.strptime(fields[6], '%Y-%m-%d')
+                         'dateOfBirth': fields[6]
                         })
   return entity
 entities = lines | 'To Entity' >> beam.Map(to_entity)

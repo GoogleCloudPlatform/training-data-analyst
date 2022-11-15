@@ -24,9 +24,7 @@ do
     sleep 3
 done
 
-export KOPS_FEATURE_FLAGS=AlphaAllowGCE
-
-export K8S_VERSION="1.20.10"
+export K8S_VERSION="1.23.12"
 
 echo "Creating the remote cluster..."
 kops create cluster \
@@ -78,7 +76,7 @@ gcloud iam service-accounts keys create connect-sa-op-key.json \
 kubectl config view
 
 echo "registering the remote cluster"
-gcloud container hub memberships register ${C2_NAME}-connect \
+gcloud container fleet memberships register ${C2_NAME}-connect \
    --context=$C2_FULLNAME \
    --service-account-key-file=./connect-sa-op-key.json \
    --project=$PROJECT_ID \
