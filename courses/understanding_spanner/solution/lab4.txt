@@ -1,0 +1,4 @@
+gcloud config set project <QWIKLABS_PROJECT_ID>
+gcloud spanner instances create test-spanner-instance --config=regional-us-central1 --description="test-spanner-instance" --processing-units=100
+gcloud spanner databases create orders-db --instance=test-spanner-instance --database-dialect=GOOGLE_STANDARD_SQL --ddl-file=./orders-db-schema.sql
+

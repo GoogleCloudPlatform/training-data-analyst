@@ -1,0 +1,43 @@
+# Build Docker Image and Store in Google Container Registry 
+gcloud builds submit --tag=gcr.io/<project-id-here>/spanner-pets-api:v1.0 .
+
+# Example Command
+gcloud builds submit --tag=gcr.io/roi-spanner/spanner-pets-api:v1.0 .
+
+# Deploy to Cloud Run
+gcloud run deploy spanner-pets-api --image gcr.io/roi-spanner/spanner-pets-api:v1.0 --update-env-vars INSTANCE_ID=spannerdbsrv,DATABASE_ID=pets-db --allow-unauthenticated --region=us-central1
+
+
+### To Test the API from Cloud Shell
+# Get all the pets.
+curl http://localhost:8080/pets
+
+# Get one pet.
+curl http://localhost:8080/pets/<pet-id-here>
+
+# Add Owners and their pets
+curl -X POST --data '{"OwnerName": "Sue", "PetName": "Sparky", "PetType": "Cat", "Breed": "Alley"}'  http://localhost:8080/pets
+curl -X POST --data '{"OwnerName": "Sue", "PetName": "Pickles", "PetType": "Dog", "Breed": "Shepherd"}'  http://localhost:8080/pets
+curl -X POST --data '{"OwnerName": "Doug", "PetName": "Noir", "PetType": "Dog", "Breed": "Schnoodle"}'  http://localhost:8080/pets
+curl -X POST --data '{"OwnerName": "Doug", "PetName": "Bree", "PetType": "Dog", "Breed": "Mutt"}'  http://localhost:8080/pets
+curl -X POST --data '{"OwnerName": "Joey", "PetName": "Felix", "PetType": "Cat", "Breed": "Tabby"}'  http://localhost:8080/pets
+
+# This will delete everything
+curl -X DELETE http://localhost:8080/pets
+
+
+### To Test the API from Cloud Run change "http://localhost:8080" with your Cloud Run URL
+
+# Get all the pets.
+curl https://spanner-pets-api-3ga5oruw5a-uc.a.run.app/pets
+
+# Add Owners and their pets
+curl -X POST --data '{"OwnerName": "Sue", "PetName": "Sparky", "PetType": "Cat", "Breed": "Alley"}'  https://spanner-pets-api-3ga5oruw5a-uc.a.run.app/pets
+curl -X POST --data '{"OwnerName": "Sue", "PetName": "Pickles", "PetType": "Dog", "Breed": "Shepherd"}'  https://spanner-pets-api-3ga5oruw5a-uc.a.run.app/pets
+curl -X POST --data '{"OwnerName": "Doug", "PetName": "Noir", "PetType": "Dog", "Breed": "Schnoodle"}'  https://spanner-pets-api-3ga5oruw5a-uc.a.run.app/pets
+curl -X POST --data '{"OwnerName": "Doug", "PetName": "Bree", "PetType": "Dog", "Breed": "Mutt"}'  https://spanner-pets-api-3ga5oruw5a-uc.a.run.app/pets
+curl -X POST --data '{"OwnerName": "Joey", "PetName": "Felix", "PetType": "Cat", "Breed": "Tabby"}'  https://spanner-pets-api-3ga5oruw5a-uc.a.run.app/pets
+
+# This will delete everything
+curl -X DELETE https://spanner-pets-api-3ga5oruw5a-uc.a.run.app/pets
+
