@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: readiness
-        image: gcr.io/google-samples/hello-app:1.0
+        image: k8s.gcr.io/busybox
         ports:
         - containerPort: 8080
           protocol: TCP

@@ -143,7 +143,7 @@ def run():
   limit_records=''
   if runner == 'DirectRunner':
      limit_records='LIMIT 3000'
-  get_java_query='SELECT content FROM [fh-bigquery:github_extracts.contents_java_2016] {0}'.format(limit_records)
+  get_java_query='SELECT content FROM [cloud-training-demos:github_repos.contents_java] {0}'.format(limit_records)
 
   argv = [
     '--project={0}'.format(project),

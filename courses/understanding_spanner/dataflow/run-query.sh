@@ -1,0 +1,1 @@
+gcloud spanner databases execute-sql pets-db --instance=test-spanner-instance --sql='SELECT o.OwnerName, ARRAY_AGG(STRUCT<string, string, string>(p.PetName, p.PetType, p.Breed)) AS Pets FROM Owners as o JOIN Pets AS p ON o.OwnerID = p.OwnerID GROUP BY o.OwnerName' 
