@@ -17,7 +17,6 @@ echo "Creating the gke cluster..."
 gcloud beta container clusters create ${C1_NAME} \
     --zone ${C1_ZONE} \
     --no-enable-basic-auth \
-    --cluster-version 1.23.12-gke.1600 \
     --enable-autoupgrade \
     --max-surge-upgrade 1 \
     --max-unavailable-upgrade 0 \
