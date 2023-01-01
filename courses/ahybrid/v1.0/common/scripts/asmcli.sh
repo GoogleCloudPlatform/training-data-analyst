@@ -3,8 +3,8 @@
 # Anthos Service Mesh setup with asmcli tool
 # Uses legacy default ingress gateway for compatibility with older labs
 
-# v.1.13.4
-curl https://storage.googleapis.com/csm-artifacts/asm/asmcli_1.13 > asmcli
+# v.1.15
+curl https://storage.googleapis.com/csm-artifacts/asm/asmcli_1.15 > asmcli
 chmod +x asmcli
 
 mkdir asm_output
@@ -23,7 +23,6 @@ mkdir asm_output
   --fleet_id $PROJECT_ID \
   --output_dir ./asm_output \
   --enable_all \
-  --option legacy-default-ingressgateway \
   --ca mesh_ca
 
 cat <<EOF | kubectl apply -f -
