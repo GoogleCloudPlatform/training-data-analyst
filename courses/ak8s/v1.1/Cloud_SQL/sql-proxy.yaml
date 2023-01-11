@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: gcr.io/cloud-marketplace/google/wordpress:5.9
+          image: gcr.io/cloud-marketplace/google/wordpress:latest
           #image: wordpress:5.9
           ports:
             - containerPort: 80
@@ -41,7 +41,7 @@ spec:
         # $PROJECT:$REGION:$INSTANCE
         # [START proxy_container]
         - name: cloudsql-proxy
-          image: gcr.io/cloudsql-docker/gce-proxy:1.11
+          image: gcr.io/cloudsql-docker/gce-proxy:latest
           command: ["/cloud_sql_proxy",
                     "-instances=<INSTANCE_CONNECTION_NAME>=tcp:3306",
                     "-credential_file=/secrets/cloudsql/key.json"]
