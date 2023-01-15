@@ -41,7 +41,7 @@ spec:
         # $PROJECT:$REGION:$INSTANCE
         # [START proxy_container]
         - name: cloudsql-proxy
-          image: gcr.io/cloudsql-docker/gce-proxy:1.11
+          image: gcr.io/cloudsql-docker/gce-proxy:latest
           command: ["/cloud_sql_proxy",
                     "-instances=<INSTANCE_CONNECTION_NAME>=tcp:3306",
                     "-credential_file=/secrets/cloudsql/key.json"]
