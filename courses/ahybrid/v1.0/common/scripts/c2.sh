@@ -19,7 +19,7 @@ gcloud beta container clusters create ${C1_NAME} \
     --num-nodes=${C1_NODES} \
     --workload-pool=${WORKLOAD_POOL} \
     --logging=SYSTEM,WORKLOAD \
-    --monitoring=SYSTEM,WORKLOAD \
+    --monitoring=SYSTEM \
     --subnetwork=default \
     --labels mesh_id=${MESH_ID} \
     --release-channel "regular"

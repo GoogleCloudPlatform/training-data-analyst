@@ -64,7 +64,7 @@ public class JavaProjectsThatNeedHelp {
 		MyOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(MyOptions.class);
 		Pipeline p = Pipeline.create(options);
 
-		String javaQuery = "SELECT content FROM [fh-bigquery:github_extracts.contents_java_2016]";
+		String javaQuery = "SELECT content FROM [cloud-training-demos:github_repos.contents_java]";
 		PCollection<String[]> javaContent = p.apply("GetJava", BigQueryIO.read().fromQuery(javaQuery)) //
 				.apply("ToLines", ParDo.of(new DoFn<TableRow, String[]>() {
 					@ProcessElement

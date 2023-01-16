@@ -27,7 +27,7 @@ gcloud beta container clusters create ${C1_NAME} \
     --num-nodes=${C1_NODES} \
     --workload-pool=${WORKLOAD_POOL} \
     --logging=SYSTEM,WORKLOAD \
-    --monitoring=SYSTEM,WORKLOAD \
+    --monitoring=SYSTEM \
     --metadata disable-legacy-endpoints=true \
     --labels mesh_id=${MESH_ID} \
     --addons HorizontalPodAutoscaling,HttpLoadBalancing \
