@@ -76,11 +76,22 @@ gcloud iam service-accounts keys create connect-sa-op-key.json \
 kubectl config view
 
 echo "registering the remote cluster"
-gcloud container fleet memberships register ${C2_NAME}-connect \
+for (( i=1; i<=4; i++))
+do
+  res=$(gcloud container fleet memberships register ${C2_NAME}-connect \
    --context=$C2_FULLNAME \
    --service-account-key-file=./connect-sa-op-key.json \
    --project=$PROJECT_ID \
-   --kubeconfig $KF
+   --kubeconfig $KF 2>&1)
+  g1=$(echo $res | grep "PERMISSION_DENIED: hub default service account does not have access to the GKE cluster project for")
+  g2=$(echo $res | grep -c "PERMISSION_DENIED: hub default service account does not have access to the GKE cluster project for")
+  if [[ "$g2" == "0" ]]; then
+    echo "Cluster registered!"
+    break;
+  fi
+    echo "Permissions problem, waiting and retrying"
+    sleep 60
+done
 
 echo "creating a clusterrolebinding"
 export KSA=remote-admin-sa
