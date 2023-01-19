@@ -29,5 +29,4 @@ if __name__ == "__main__":
     parser.add_argument("--updated_table_name", help="Updated table for the dataplex")
 
     args = parser.parse_args()
-
     main(args.zone, args.tablename, args.updated_table_name)
