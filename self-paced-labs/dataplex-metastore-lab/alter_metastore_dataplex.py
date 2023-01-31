@@ -13,7 +13,8 @@ def main(zone, tablename, updated_table_name):
 
     #Rename
     print(f"ALTER TABLE {zone}.{tablename} RENAME TO {zone}.{updated_table_name}")
-    spark.sql("ALTER TABLE raw_zones.covid_india_data RENAME TO raw_zones.covid_india").show()
+    sql_statment="ALTER TABLE {}.{} RENAME TO {}.{}".format(zone, tablename,zone, updated_table_name)
+    spark.sql(sql_statment).show()
     print("Table renamed")
 
 
