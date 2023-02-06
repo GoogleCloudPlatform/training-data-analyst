@@ -13,9 +13,10 @@ def main(zone, tablename, updated_table_name):
 
     #Rename
     print(f"ALTER TABLE {zone}.{tablename} RENAME TO {zone}.{updated_table_name}")
-    sql_statment="ALTER TABLE {}.{} RENAME TO {}.{}".format(zone, tablename,zone, updated_table_name)
+    sql_statment="ALTER TABLE {} RENAME TO {}".format(tablename, updated_table_name)
     spark.sql(sql_statment).show()
     print("Table renamed")
+    spark.sql(f"SHOW TABLES IN {zone}").show()
 
 
 if __name__ == "__main__":
