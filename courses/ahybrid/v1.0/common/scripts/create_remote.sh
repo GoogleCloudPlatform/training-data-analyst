@@ -82,6 +82,13 @@ gcloud container fleet memberships register ${C2_NAME}-connect \
    --project=$PROJECT_ID \
    --kubeconfig $KF
 
+sleep 60
+gcloud container fleet memberships register ${C2_NAME}-connect \
+   --context=$C2_FULLNAME \
+   --service-account-key-file=./connect-sa-op-key.json \
+   --project=$PROJECT_ID \
+   --kubeconfig $KF
+
 echo "creating a clusterrolebinding"
 export KSA=remote-admin-sa
 kubectl create serviceaccount $KSA
