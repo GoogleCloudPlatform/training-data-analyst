@@ -14,7 +14,7 @@ This example demonstrates a bare bones Looker extension using Javascript.
 2. Navigate (`cd`) to the `custom-extension` directory on your system
 
    ```
-   cd self-paced-labs/custom-extension
+   cd training-data-analyst/self-paced-labs/custom-extension
    ```
 
 3. Install the dependencies with [Yarn](https://yarnpkg.com/).
