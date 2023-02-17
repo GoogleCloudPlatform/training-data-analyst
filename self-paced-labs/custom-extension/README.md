@@ -8,13 +8,13 @@ This example demonstrates a bare bones Looker extension using Javascript.
 
    ```
    # cd ~/ Optional, your user directory is usually a good place to git clone to.
-   git clone https://github.com/darshan-ggl/looker.git
+   git clone https://github.com/GoogleCloudPlatform/training-data-analyst.git
    ```
 
 2. Navigate (`cd`) to the `custom-extension` directory on your system
 
    ```
-   cd looker/custom-extension
+   cd self-paced-labs/custom-extension
    ```
 
 3. Install the dependencies with [Yarn](https://yarnpkg.com/).
