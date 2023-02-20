@@ -45,8 +45,8 @@ const DASH_FILTER = 'Country Name'
 // Request to Looker API to fetch filter values (see Looker API documentation for 'run_inline_query')
 const FILTER_REQUEST = {
   model: 'covid_model',
-  view: 'covid_test_explore',
-  fields: ['covid_test_explore.country_name'], //Make sure we only put one field in this array
+  view: 'covid_test',
+  fields: ['covid_test.country_name'], //Make sure we only put one field in this array
   limit: 100
 }
 
