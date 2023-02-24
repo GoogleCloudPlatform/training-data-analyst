@@ -17,6 +17,8 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
+// When used as a destination for Eventarc running in Cloud Run,
+// the sent event HTTP request will be logged.
 app.post('/', async (req, res) => {
   console.log("EVENT RECEIVED");
   console.log("HEADERS (EXCEPT AUTH):");
