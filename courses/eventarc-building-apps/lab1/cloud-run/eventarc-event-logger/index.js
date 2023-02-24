@@ -20,7 +20,7 @@ app.use(express.json());
 app.post('/', async (req, res) => {
   console.log("EVENT RECEIVED");
   console.log("HEADERS (EXCEPT AUTH):");
-  delete req.headers.Authorization; // do not log auth header
+  delete req.headers.authorization; // do not log auth header
   console.log(JSON.stringify(req.headers));
   console.log("BODY:");
   console.log(JSON.stringify(req.body));
