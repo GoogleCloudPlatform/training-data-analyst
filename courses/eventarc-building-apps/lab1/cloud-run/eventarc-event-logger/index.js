@@ -20,7 +20,11 @@ app.use(express.json());
 // When used as a destination for Eventarc running in Cloud Run,
 // the sent event HTTP request will be logged.
 app.post('/', async (req, res) => {
-  console.log("EVENT RECEIVED");
+  // safely retrieve event type
+  var eventType = "ce-type header not found"
+  try { eventType = req.headers["ce-type"]; } catch(e) {}
+
+  console.log("EVENT RECEIVED (%s)", eventType);
   console.log("HEADERS (EXCEPT AUTH):");
   delete req.headers.authorization; // do not log auth header
   console.log(JSON.stringify(req.headers));
