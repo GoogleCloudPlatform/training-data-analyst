@@ -1,3 +1,7 @@
+tensorflow>=2.11.0
+pyarrow==6.0.1
+httplib2>=0.20.4
+grpcio-status>=1.38.1
 google-cloud-aiplatform[tensorboard]==1.2.0
 six==1.15.0
 wget==3.2
