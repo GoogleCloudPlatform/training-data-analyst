@@ -1,0 +1,21 @@
+{
+  "label": "Weather",
+  "category_label": "Models",
+  "branding": {
+    "image_uri": "https://marketplace-api.looker.com/block-icons/weather.png",
+    "tagline": "Explore weather trends from public data sets."
+  },
+
+  "constants": {
+    "CONNECTION_NAME": {
+      "label": "Connection Name",
+       "value_constraint": "connection"
+    }
+  },
+  "models": [
+    {
+      "name": "bigquery.gsod",
+      "connection_constant": "CONNECTION_NAME"
+    }
+  ]
+}
