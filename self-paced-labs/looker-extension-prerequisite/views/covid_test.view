@@ -1,0 +1,36 @@
+view: covid_test {
+  derived_table: {
+    sql: SELECT date, country_name, new_confirmed, new_deceased FROM `$PROJECT.sample_public_dataset.covid19_open_data`
+      ;;
+  }
+
+  measure: count {
+    type: count
+    drill_fields: [detail*]
+  }
+
+  dimension: date {
+    type: date
+    datatype: date
+    sql: ${TABLE}.date ;;
+  }
+
+  dimension: country_name {
+    type: string
+    sql: ${TABLE}.country_name ;;
+  }
+
+  dimension: new_confirmed {
+    type: number
+    sql: ${TABLE}.new_confirmed ;;
+  }
+
+  dimension: new_deceased {
+    type: number
+    sql: ${TABLE}.new_deceased ;;
+  }
+
+  set: detail {
+    fields: [date, country_name, new_confirmed, new_deceased]
+  }
+}
