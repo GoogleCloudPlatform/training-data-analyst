@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: monolith
+  labels:
+    app: monolith
+spec:
+  containers:
+    - name: monolith
+      image: kelseyhightower/monolith:1.0.0
+      args:
+        - "-http=0.0.0.0:80"
+        - "-health=0.0.0.0:81"
+        - "-secret=secret"
+      ports:
+        - name: http
+          containerPort: 80
+        - name: health
+          containerPort: 81
+      resources:
+        limits:
+          cpu: 0.2
+          memory: "10Mi"
