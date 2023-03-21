@@ -4,7 +4,7 @@ This example demonstrates a bare bones Looker extension using Javascript.
 
 ## Getting Started for Development
 
-1. Clone the Looker extension examples repo.
+1. Clone the repo.
 
    ```
    # cd ~/ Optional, your user directory is usually a good place to git clone to.
