@@ -8,6 +8,14 @@ then
 else
   kubectl label namespace prod istio-injection=enabled --overwrite
 fi
+
+# Install the App
 kubectl apply -n prod -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/kubernetes-manifests.yaml
-kubectl apply -n prod -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/istio-manifests.yaml
 kubectl patch -n prod deployments/productcatalogservice -p '{"spec":{"template":{"metadata":{"labels":{"version":"v1"}}}}}'
+
+# Install the ingress Gateway:
+git clone https://github.com/GoogleCloudPlatform/anthos-service-mesh-packages
+kubectl apply -n prod -f anthos-service-mesh-packages/samples/gateways/istio-ingressgateway
+
+# Configure the Gateway:
+kubectl apply -n prod -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/istio-manifests.yaml
