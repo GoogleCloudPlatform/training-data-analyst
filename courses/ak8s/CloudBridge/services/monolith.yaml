@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: "monolith"
+spec:
+  selector:
+    app: "monolith"
+    secure: "enabled"
+  ports:
+    - protocol: "TCP"
+      port: 443
+      targetPort: 443
+      nodePort: 31000
+  type: NodePort

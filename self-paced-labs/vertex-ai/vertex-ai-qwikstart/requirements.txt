@@ -1,4 +1,10 @@
-google-cloud-aiplatform[tensorboard]==1.2.0
+tensorflow>=2.11.0
+pyarrow==6.0.1
+httplib2>=0.20.4
+grpcio-status>=1.38.1
+google-api-python-client>=1.8.0
+apache-beam>=2.28.0
+google-cloud-aiplatform[tensorboard]>=1.8.0
 six==1.15.0
 wget==3.2
 xlrd==2.0.1

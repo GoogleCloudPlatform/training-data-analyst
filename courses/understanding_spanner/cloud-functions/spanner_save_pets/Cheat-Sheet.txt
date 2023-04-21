@@ -1,0 +1,8 @@
+
+gcloud pubsub topics create new-pet-topic
+
+gcloud functions deploy spanner_save_pets --runtime python310 --trigger-topic=new-pet-topic --region=us-central1 --quiet
+
+
+# Message format
+{"OwnerName": "Jean", "PetName": "Sally", "PetType": "Frog", "Breed": "Green"}

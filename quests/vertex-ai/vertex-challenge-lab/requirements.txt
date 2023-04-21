@@ -1,5 +1,12 @@
-google-cloud-aiplatform==1.8.0
-tensorflow-text==2.6.0
-tf-models-official==2.6.0
-kfp==1.8.9
-google_cloud_pipeline_components==0.2.0
+google-cloud-aiplatform==1.22.0
+tensorflow-text==2.11.0
+tf-models-official==2.11.3
+kfp==1.8.19
+google_cloud_pipeline_components==1.0.39
+google-api-core==2.11.0
+googleapis-common-protos==1.58.0
+grpcio-status==1.47.0
+google-cloud-storage==2.7.0
+google-cloud-resource-manager==1.8.1
+google-cloud-bigquery==3.4.2
+google-cloud-notebooks==1.6.1

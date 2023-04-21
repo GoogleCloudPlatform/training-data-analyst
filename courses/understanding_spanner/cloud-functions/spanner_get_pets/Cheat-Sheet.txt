@@ -1,0 +1,39 @@
+# Make sure Cloud Build service is enabled
+gcloud services enable cloudbuild.googleapis.com
+
+# To create the Schema file
+cat > ./pets-db-schema.sql << ENDOFFILE
+CREATE TABLE Owners (
+     OwnerID STRING(36) NOT NULL, 
+     OwnerName STRING(MAX) NOT NULL
+) PRIMARY KEY (OwnerID);
+
+CREATE TABLE Pets (
+    OwnerID STRING(36) NOT NULL, 
+    PetID STRING(MAX) NOT NULL,     
+    PetType STRING(MAX) NOT NULL,
+    PetName STRING(MAX) NOT NULL,
+    Breed STRING(MAX) NOT NULL,
+) PRIMARY KEY (OwnerID,PetID),
+INTERLEAVE IN PARENT Owners ON DELETE CASCADE
+ENDOFFILE
+
+
+# To create the instance and database
+gcloud spanner instances create test-spanner-instance --config=regional-us-central1 --description="test-spanner-instance" --processing-units=100
+
+gcloud spanner databases create pets-db --instance=test-spanner-instance --database-dialect=GOOGLE_STANDARD_SQL --ddl-file=./pets-db-schema.sql
+
+# To add some test records
+owner_uuid=$(cat /proc/sys/kernel/random/uuid)
+
+gcloud spanner rows insert --table=Owners --database=pets-db --instance=test-spanner-instance --data=OwnerID=$owner_uuid,OwnerName=Doug
+
+gcloud spanner rows insert --table=Pets --database=pets-db --instance=test-spanner-instance --data=PetID=$(cat /proc/sys/kernel/random/uuid),OwnerID=$owner_uuid,PetName='Noir',PetType='Dog',Breed='Schnoodle'
+
+gcloud spanner rows insert --table=Pets --database=pets-db --instance=test-spanner-instance --data=PetID=$(cat /proc/sys/kernel/random/uuid),OwnerID=$owner_uuid,PetName='Bree',PetType='Dog',Breed='Mutt'
+
+gcloud spanner rows insert --table=Pets --database=pets-db --instance=test-spanner-instance --data=PetID=$(cat /proc/sys/kernel/random/uuid),OwnerID=$owner_uuid,PetName='Gigi',PetType='Dog',Breed='Retriever'
+
+# To Deploy the Function
+gcloud functions deploy spanner_get_pets --runtime python310 --trigger-http --allow-unauthenticated --region=us-central1 --quiet
