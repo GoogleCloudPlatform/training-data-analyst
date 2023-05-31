@@ -14,13 +14,14 @@ limitations under the License.
 """
 
 import apache_beam as beam
+import os 
 
 def my_grep(line, term):
    if line.startswith(term):
       yield line
 
-PROJECT='cloud-training-demos'
-BUCKET='cloud-training-demos'
+PROJECT=os.environ.get('DEVSHELL_PROJECT_ID')
+BUCKET=os.environ.get('BUCKET')
 
 def run():
    argv = [
