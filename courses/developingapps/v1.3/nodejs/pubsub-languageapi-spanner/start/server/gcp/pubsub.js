@@ -70,7 +70,7 @@ function registerFeedbackNotification(cb) {
 
     // TODO: Trap errors where the subscription already exists 
     // Create a subscription object for worker-subscription if
-    // the subscrioption already exists
+    // the subscription already exists
     // err.code == 6 means subscription already exists 
 
     // END TODO
