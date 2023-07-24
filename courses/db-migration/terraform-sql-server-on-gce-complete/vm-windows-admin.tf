@@ -1,7 +1,7 @@
 # Create VM Windows Admin
 resource "google_compute_instance" "windows-admin" {
   name         = "windows-admin-${random_id.instance_id.hex}"
-  machine_type = "n1-standard-2"
+  machine_type = "e2-standard-2"
   zone         = var.gcp_zone_1
   tags         = ["allow-rdp"]
 

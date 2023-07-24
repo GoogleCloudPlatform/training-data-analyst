@@ -1,7 +1,7 @@
 # Create Windows SLQ Server in Private VPC
 resource "google_compute_instance" "sql-server-windows" {
   name         = "sql-server-windows-${random_id.instance_id.hex}"
-  machine_type = "n1-standard-2"
+  machine_type = "e2-standard-2"
   zone         = var.gcp_zone_1
   tags         = ["allow-rdp", "allow-sql"]
 
