@@ -31,5 +31,4 @@ spec:
       targetPort: 80
       protocol: TCP
   selector:
-    demo: readiness-probe 
-    
+    demo: readiness-probes
