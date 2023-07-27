@@ -32,3 +32,4 @@ spec:
       protocol: TCP
   selector:
     demo: readiness-probe
+    
