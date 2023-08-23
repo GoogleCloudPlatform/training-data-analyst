@@ -20,7 +20,7 @@ ENDOFFILE
 
 
 # To create the instance and database
-gcloud spanner instances create test-spanner-instance --config=regional-us-central1 --description="test-spanner-instance" --processing-units=100
+gcloud spanner instances create test-spanner-instance --config=regional-$REGION --description="test-spanner-instance" --processing-units=100
 
 gcloud spanner databases create pets-db --instance=test-spanner-instance --database-dialect=GOOGLE_STANDARD_SQL --ddl-file=./pets-db-schema.sql
 
@@ -36,4 +36,4 @@ gcloud spanner rows insert --table=Pets --database=pets-db --instance=test-spann
 gcloud spanner rows insert --table=Pets --database=pets-db --instance=test-spanner-instance --data=PetID=$(cat /proc/sys/kernel/random/uuid),OwnerID=$owner_uuid,PetName='Gigi',PetType='Dog',Breed='Retriever'
 
 # To Deploy the Function
-gcloud functions deploy spanner_get_pets --runtime python310 --trigger-http --allow-unauthenticated --region=us-central1 --quiet
+gcloud functions deploy spanner_get_pets --runtime python310 --trigger-http --allow-unauthenticated --region=$REGION --quiet

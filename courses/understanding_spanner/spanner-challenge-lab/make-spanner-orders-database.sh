@@ -1,5 +1,5 @@
 echo "Creating Spanner Instance..."
-gcloud spanner instances create challenge-lab-instance --config=regional-us-central1 --description="challenge-lab-instance" --processing-units=100
+gcloud spanner instances create challenge-lab-instance --config=regional-$1 --description="challenge-lab-instance" --processing-units=100
 
 echo "Creating Spanner Database..."
 gcloud spanner databases create orders-db --instance=challenge-lab-instance --database-dialect=GOOGLE_STANDARD_SQL --ddl-file=./orders-db-schema.sql
