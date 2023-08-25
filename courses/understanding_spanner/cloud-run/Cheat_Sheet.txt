@@ -5,7 +5,7 @@ gcloud builds submit --tag=gcr.io/<project-id-here>/spanner-pets-api:v1.0 .
 gcloud builds submit --tag=gcr.io/roi-spanner/spanner-pets-api:v1.0 .
 
 # Deploy to Cloud Run
-gcloud run deploy spanner-pets-api --image gcr.io/roi-spanner/spanner-pets-api:v1.0 --update-env-vars INSTANCE_ID=spannerdbsrv,DATABASE_ID=pets-db --allow-unauthenticated --region=us-central1
+gcloud run deploy spanner-pets-api --image gcr.io/roi-spanner/spanner-pets-api:v1.0 --update-env-vars INSTANCE_ID=spannerdbsrv,DATABASE_ID=pets-db --allow-unauthenticated --region=$REGION
 
 
 ### To Test the API from Cloud Shell
