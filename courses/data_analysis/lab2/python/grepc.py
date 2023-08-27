@@ -21,6 +21,7 @@ def my_grep(line, term):
 
 PROJECT='cloud-training-demos'
 BUCKET='cloud-training-demos'
+REGION='qwiklabs-provided-region'
 
 def run():
    argv = [
@@ -29,7 +30,8 @@ def run():
       '--save_main_session',
       '--staging_location=gs://{0}/staging/'.format(BUCKET),
       '--temp_location=gs://{0}/staging/'.format(BUCKET),
-      '--region=us-central1',
+      '--region={0}'.format(REGION),
+      '--worker_machine_type=e2-standard-2',
       '--runner=DataflowRunner'
    ]
 
