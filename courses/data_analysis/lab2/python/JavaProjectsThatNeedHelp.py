@@ -125,6 +125,7 @@ def run():
   parser = argparse.ArgumentParser(description='Demonstrate side inputs')
   parser.add_argument('--bucket', required=True, help='Specify Cloud Storage bucket for output')
   parser.add_argument('--project',required=True, help='Specify Google Cloud project')
+  parser.add_argument('--region',required=True, help='Specify Google Cloud region')
   group = parser.add_mutually_exclusive_group(required=True)
   group.add_argument('--DirectRunner',action='store_true')
   group.add_argument('--DataFlowRunner',action='store_true')
@@ -138,6 +139,7 @@ def run():
 
   bucket = opts.bucket
   project = opts.project
+  region = opts.region
 
   #    Limit records if running local, or full data if running on the cloud
   limit_records=''
@@ -149,10 +151,11 @@ def run():
     '--project={0}'.format(project),
     '--job_name=javahelpjob',
     '--save_main_session',
+    '--worker_machine_type=e2-standard-2',
     '--staging_location=gs://{0}/staging/'.format(bucket),
     '--temp_location=gs://{0}/staging/'.format(bucket),
     '--runner={0}'.format(runner),
-    '--region=us-central1',
+    '--region={0}'.format(region),
     '--max_num_workers=5'
     ]
 
