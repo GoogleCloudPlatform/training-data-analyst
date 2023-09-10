@@ -1,4 +1,4 @@
-FROM node:16.15
+FROM node:18
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN mkdir logs && chmod 777 logs
