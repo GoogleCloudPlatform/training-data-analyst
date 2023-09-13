@@ -31,11 +31,6 @@ import tensorflow as tf
 from tensorflow.python.lib.io import file_io
 from tensorflow.contrib.factorization import WALSMatrixFactorization
   
-import os
-import tensorflow as tf
-from tensorflow.python.lib.io import file_io
-from tensorflow.contrib.factorization import WALSMatrixFactorization
-  
 def read_dataset(mode, args):
     def decode_example(protos, vocab_size):
         features = {
