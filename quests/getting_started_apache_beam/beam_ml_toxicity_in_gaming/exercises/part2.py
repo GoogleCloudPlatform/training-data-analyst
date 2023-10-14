@@ -24,6 +24,7 @@ from apache_beam.ml.inference.base import RunInference
 from apache_beam.ml.inference.base import KeyedModelHandler
 import argparse
 
+
 class tag_with_key(beam.DoFn):
     # In this pardo, we key our elements using the attributes of the message
     def process(self, element):
@@ -101,45 +102,27 @@ def run(project_id, gaming_model_location, movie_model_location, pipeline_args):
             | beam.io.WriteToPubSub(topic=output_topic)
         )
 
-        # Step 1: Create the model handler 
         # Load the model into a handler
-        movie_model_handler = KeyedModelHandler(TFModelHandlerTensor(model_uri=movie_model_location,load_model_args={"compile":False}))
+        # TODO: Follow Step 1: Create the model handler
 
-        # Step 2: Submit the input into the model for a result
         # Note that the movie score differ in scoring
         # "negative" would mean negative values
         # "postivie" would mean positive values
         # Use the handler to perform inference
-        movie_inference = (
-            read_from_pubsub 
-            | "Perform movie inference" >> RunInference(movie_model_handler)
-        )
+        # TODO: Follow Step 2: Submit the input into the model for a result
 
-        # Step 3: Join your results together
         # We join up the data so we can compare the values later
-        joined = (
-            ({'gaming': gaming_inference, 'movie': movie_inference})
-            | 'Join' >> beam.CoGroupByKey()
-        )
+        # TODO: Follow Step 3: Join your results together
 
-        # Step 4: Transform your joined results into a string
         # Simple string schema - normally not recommended 
         # For brevity sake, we convert to a single string
         schema = {'fields': [
             {'name': 'data_col', 'type': 'STRING', 'mode': 'NULLABLE'}]}
         
-        # Step 6: Join your results together
         # Write to BigQuery
         # We're converting to the simple string to insert
-        _ = (
-            joined
-            | "Convert to string" >> beam.Map(lambda element: {"data_col":str(element)})
-            | beam.io.gcp.bigquery.WriteToBigQuery(
-                method=beam.io.gcp.bigquery.WriteToBigQuery.Method.STREAMING_INSERTS,
-                table=output_bigquery,
-                schema=schema
-            )
-        )
+        # TODO: Follow Step 4: Transform your joined results into a string
+        # TODO: Follow Step 6: Join your results together
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
