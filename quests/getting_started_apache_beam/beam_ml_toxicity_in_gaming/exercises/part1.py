@@ -24,11 +24,6 @@ from apache_beam.ml.inference.base import RunInference
 from apache_beam.ml.inference.base import KeyedModelHandler
 import argparse
 
-class extendTFModelHandlerTensor (beam.ml.inference.tensorflow_inference.TFModelHandlerTensor):
-    # We currently need to overload the method 
-    # This will be unnecessary when https://github.com/apache/beam/pull/26548 goes live
-    def load_model(self) -> tf.Module:
-        return tf.keras.models.load_model(self._model_uri,compile=False)
 
 class tag_with_key(beam.DoFn):
     # In this pardo, we key our elements using the attributes of the message
