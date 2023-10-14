@@ -72,7 +72,7 @@ def run(project_id, gaming_model_location, movie_model_location, pipeline_args):
         # Load the model into a handler
         # We use KeyedModelHandler here to automatically handle the incoming keys
         # It also returns the key so you can preserve the key and use it after the prediction
-        gaming_model_handler = KeyedModelHandler(extendTFModelHandlerTensor(gaming_model_location))
+        gaming_model_handler = KeyedModelHandler(TFModelHandlerTensor(model_uri=gaming_model_location,load_model_args={"compile":False}))
 
         # Use the handler to perform inference
         # Note that the gaming toxicity score is based on "toxic or not"
