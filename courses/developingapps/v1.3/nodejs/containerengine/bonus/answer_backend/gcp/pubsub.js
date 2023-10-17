@@ -17,18 +17,19 @@ const pubsub = new PubSub({
   projectId: config.get('GCLOUD_PROJECT')
 });
 
+const feedbackTopic = pubsub.topic('feedback');
 const answersTopic = pubsub.topic('answers');
 
-
-function publishAnswer(answer) {
-  const dataBuffer=Buffer.from(JSON.stringify(answer))
-  return answersTopic.publish(dataBuffer);
+function publishFeedback(feedback) {
+  const dataBuffer=Buffer.from(JSON.stringify(feedback))
+  return feedbackTopic.publish(dataBuffer);
 }
+
 
 function registerFeedbackNotification(cb) {
 
   feedbackTopic.createSubscription('feedback-subscription', { autoAck: true }, (err, feedbackSubscription) => {
-    
+
     if (err && err.code == 6) {
       // subscription already exists
       console.log("Feedback subscription already exists");
@@ -37,7 +38,7 @@ function registerFeedbackNotification(cb) {
 
     feedbackSubscription.get().then(results => {
         const subscription    = results[0];
-        
+
         subscription.on('message', message => {
             cb(message.data);
         });
@@ -51,10 +52,41 @@ function registerFeedbackNotification(cb) {
 
 }
 
+function publishAnswer(answer) {
+  const dataBuffer=Buffer.from(JSON.stringify(answer))
+  return answersTopic.publish(dataBuffer);
+}
+
+function registerAnswerNotification(cb) {
+
+  answersTopic.createSubscription('answer-subscription', { autoAck: true }, (err, answersSubscription) => {
+
+    if (err && err.code == 6) {
+        // subscription already exists
+        console.log("Answer subscription already exists");
+        answersSubscription = answersTopic.subscription('answer-subscription')
+    }
+
+
+    answersSubscription.get().then(results => {
+        const subscription    = results[0];
+
+        subscription.on('message', message => {
+            cb(message.data);
+        });
+
+        subscription.on('error', err => {
+            console.error(err);
+        });
+    }).catch(error => { console.log("Error getting answer subscription", error)});
+
+  });
+}
 // [START exports]
 module.exports = {
-  publishAnswer,  
+  publishAnswer,
+  publishFeedback,
+  registerFeedbackNotification,
   registerAnswerNotification
 };
 // [END exports]
-
