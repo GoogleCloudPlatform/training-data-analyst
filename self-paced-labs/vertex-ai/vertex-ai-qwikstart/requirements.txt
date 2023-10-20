@@ -9,3 +9,5 @@ six==1.15.0
 wget==3.2
 xlrd==2.0.1
 openpyxl==3.0.7
+pydot==1.4.2
+graphviz==0.20.1
