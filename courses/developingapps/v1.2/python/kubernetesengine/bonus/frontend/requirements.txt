@@ -6,3 +6,4 @@ google-cloud-datastore>=1.4.0
 google-cloud-spanner>=0.30.0
 google-cloud-storage>=1.7.0
 gunicorn>=19.7.1
+urllib3<2.0
