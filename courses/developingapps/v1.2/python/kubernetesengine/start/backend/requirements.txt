@@ -8,3 +8,4 @@ gunicorn>=19.7.1
 grpcio>=1.33.1
 grpcio-gcp>=0.2.2
 grpcio-tools>=1.33.1
+urllib3<2.0
