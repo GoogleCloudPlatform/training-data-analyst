@@ -1,4 +1,4 @@
-tensorflow>=2.6.0
+tensorflow>=2.11.0
 pyarrow==6.0.1
 httplib2>=0.20.4
 grpcio-status>=1.38.1
