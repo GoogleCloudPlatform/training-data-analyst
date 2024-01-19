@@ -29,12 +29,12 @@ main:
           - gsUri: ${"gs://" + bucket + "/" + fileName}
           - projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
           - workflowExecutionId: ${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}
-          - extractMetadataFunctionRegion: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+          - extractMetadataFunctionRegion: ${sys.get_env("GOOGLE_CLOUD_LOCATION")}
           - extractMetadataFunctionName: extract-image-metadata
           - thumbnailQueueId: thumbnail-task-queue
-          - thumbnailQueueLocation: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+          - thumbnailQueueLocation: ${sys.get_env("GOOGLE_CLOUD_LOCATION")}
           - thumbnailQueueName: ${"projects/" + projectId + "/locations/" + thumbnailQueueLocation + "/queues/" + thumbnailQueueId}
-          - thumbnailServiceLocation: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+          - thumbnailServiceLocation: ${sys.get_env("GOOGLE_CLOUD_LOCATION")}
           - thumbnailServiceName: create-thumbnail
           - thumbnailRequestBody: '${"{\"gcsImageUri\": \"" + gsUri + "\"}"}'
           - thumbnailCallingServiceAccount: ${"workflows-sa@" + projectId + ".iam.gserviceaccount.com"}
