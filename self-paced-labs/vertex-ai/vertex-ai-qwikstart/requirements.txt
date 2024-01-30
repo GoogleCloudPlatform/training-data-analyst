@@ -8,4 +8,4 @@ google-cloud-aiplatform[tensorboard]>=1.8.0
 six==1.15.0
 wget==3.2
 xlrd==2.0.1
-openpyxl==3.0.7
+openpyxl==3.0.10
