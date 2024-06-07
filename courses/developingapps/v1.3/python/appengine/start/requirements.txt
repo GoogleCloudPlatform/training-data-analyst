@@ -10,3 +10,4 @@ google-cloud-language>=2.2.0
 grpcio>=1.38.1
 grpcio-gcp>=0.2.2
 grpcio-tools>=1.38.1
+urllib3<2.0
