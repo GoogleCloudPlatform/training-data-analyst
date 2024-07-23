@@ -6,7 +6,8 @@ spec:
   ports:
   - protocol: TCP
     port: 80
-    targetPort: 9376
+  selector:
+    app: MyApp
   type: LoadBalancer
 ---
 
