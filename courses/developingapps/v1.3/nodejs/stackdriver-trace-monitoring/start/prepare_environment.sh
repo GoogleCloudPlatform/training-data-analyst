@@ -45,7 +45,7 @@ gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CR
 echo "Creating Cloud Functions"
 PROJECT_NUMBER="$(gcloud projects describe ${GCLOUD_PROJECT} --format='get(projectNumber)')"
 gcloud projects add-iam-policy-binding ${GCLOUD_PROJECT} \
-    --member=serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com \
+    --member=serviceAccount:${PROJECT_NUMBER}@appspot.gserviceaccount.com \
     --role=roles/artifactregistry.reader
 gcloud functions deploy process-feedback --runtime nodejs20 --trigger-topic feedback --source ./functions/feedback --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
 gcloud functions deploy process-answer --runtime nodejs20 --trigger-topic answers --source ./functions/answer --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
