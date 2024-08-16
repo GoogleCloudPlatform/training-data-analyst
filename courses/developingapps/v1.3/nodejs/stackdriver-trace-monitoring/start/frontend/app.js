@@ -23,10 +23,6 @@ const config = require('./config');
 
 // END TODO
 
-require('@google-cloud/debug-agent').start({
-	allowExpressions: true
-});
-
 const path = require('path');
 const express = require('express');
 const scores = require('./gcp/spanner');

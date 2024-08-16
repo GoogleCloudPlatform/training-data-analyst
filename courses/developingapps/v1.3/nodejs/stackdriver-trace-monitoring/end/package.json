@@ -10,7 +10,6 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@google-cloud/datastore": "~6.6.0",
-    "@google-cloud/debug-agent": "^5.2.8",
     "@google-cloud/error-reporting": "^2.0.4",
     "@google-cloud/language": "^4.3.1",
     "@google-cloud/pubsub": "^2.18.1",

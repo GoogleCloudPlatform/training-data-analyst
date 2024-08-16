@@ -24,11 +24,6 @@ require('@google-cloud/trace-agent').start({
 
 // END TODO
 
-require('@google-cloud/debug-agent').start({
-  allowExpressions: true,
-  projectId: config.get('GCLOUD_PROJECT')
-});
-
 const path = require('path');
 const express = require('express');
 const scores = require('./gcp/spanner');

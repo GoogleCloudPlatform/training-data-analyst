@@ -23,10 +23,11 @@ export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media
 export NODE_ENV=production
 
 echo "Installing dependencies"
-npm install -g npm@8.1.3
+npm install
 npm update
 
 echo "Creating Datastore entities"
+npm install @google-cloud/datastore
 node setup/add_entities.js
 
 echo "Creating Cloud Pub/Sub topics"
@@ -40,11 +41,11 @@ gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CR
 echo "Enabling Cloud Functions API"
 gcloud services enable cloudfunctions.googleapis.com
 echo "Enabling Stackdriver Trace API"
-gcloud services enable cloudtrace.googleapis.com 
+gcloud services enable cloudtrace.googleapis.com
 
 echo "Creating Cloud Functions"
-gcloud functions deploy process-feedback --runtime nodejs14 --trigger-topic feedback --source ./functions/feedback --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
-gcloud functions deploy process-answer --runtime nodejs14 --trigger-topic answers --source ./functions/answer --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+gcloud functions deploy process-feedback --runtime nodejs20 --trigger-topic feedback --source ./functions/feedback --stage-bucket $GCLOUD_BUCKET --entry-point subscribe --no-gen2
+gcloud functions deploy process-answer --runtime nodejs20 --trigger-topic answers --source ./functions/answer --stage-bucket $GCLOUD_BUCKET --entry-point subscribe --no-gen2
 
 echo "Creating quiz-account Service Account"
 gcloud iam service-accounts create quiz-account --display-name "Quiz Account"
