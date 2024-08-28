@@ -1,0 +1,12 @@
+{
+  "triggerTemplate": {
+    "projectId": "PROJECT",
+    "repoName": "cloudrun-progression",
+    "branchName": "[^(?!.*master)].*"
+  },
+  "name": "branch",
+  "description": "Trigger dev build/deploy for any branch other than master",
+
+  "filename": "branch-cloudbuild.yaml",
+  "serviceAccount": "projects/PROJECT/serviceAccounts/NUMBER-compute@developer.gserviceaccount.com"
+}

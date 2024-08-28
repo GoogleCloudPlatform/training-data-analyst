@@ -1,0 +1,42 @@
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Default Values
+substitutions:
+  _SERVICE_NAME: hello-cloudrun
+  _REGION: us-central1
+
+steps:
+
+  # Route Traffic
+  - id: "route prod traffic"
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    args:
+      - '-c'
+      - |
+          apt-get install -y jq
+          export CANARY=$$(gcloud run services describe hello-cloudrun --platform managed  --region ${_REGION} --format=json | jq --raw-output ".spec.traffic[] | select (.tag==\"canary\")|.revisionName")
+          export PROD=$$(gcloud run services describe hello-cloudrun --platform managed  --region ${_REGION} --format=json | jq --raw-output ".spec.traffic[] | select (.tag==\"prod\")|.revisionName")
+
+
+          echo gcloud beta run services update-traffic  ${_SERVICE_NAME} --update-tags=prod=$${CANARY}  --platform managed  --region ${_REGION}
+          echo gcloud run services update-traffic  ${_SERVICE_NAME} --to-revisions=$${PROD}=100  --platform managed  --region ${_REGION}
+
+          gcloud beta run services update-traffic  ${_SERVICE_NAME} --update-tags=prod=$${CANARY}  --platform managed  --region ${_REGION}
+          export NEW_PROD=$$(gcloud run services describe hello-cloudrun --platform managed  --region ${_REGION} --format=json | jq --raw-output ".spec.traffic[] | select (.tag==\"prod\")|.revisionName")
+          gcloud run services update-traffic  ${_SERVICE_NAME} --to-revisions=$${NEW_PROD}=100  --platform managed  --region ${_REGION}
+
+options:
+  logging: CLOUD_LOGGING_ONLY
