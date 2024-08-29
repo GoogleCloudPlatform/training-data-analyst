@@ -22,10 +22,11 @@ echo "Making bucket: gs://$GCLOUD_BUCKET"
 gsutil mb gs://$GCLOUD_BUCKET
 
 echo "Installing dependencies"
-npm install -g npm@8.1.3
+npm install
 npm update
 
 echo "Creating Datastore entities"
+npm install @google-cloud/datastore
 node setup/add_entities.js
 
 echo "Creating Cloud Pub/Sub topic"
