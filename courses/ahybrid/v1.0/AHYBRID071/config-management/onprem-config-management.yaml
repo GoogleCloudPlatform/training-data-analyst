@@ -6,9 +6,19 @@ metadata:
   namespace: config-management-system
 spec:
   clusterName: onprem.k8s.local
+
+--
+# rootSync
+apiVersion: configsync.gke.io/v1beta1
+kind: RootSync
+metadata:
+  name: root-sync
+  namespace: config-management-system
+spec:
+  sourceType: git
   git:
-    syncRepo: ssh://[qwiklabs-user-email]@source.developers.google.com:2022/p/[qwiklabs-project]/r/anthos_config
-    syncBranch: master
-    secretType: ssh
-    policyDir: "."
-    syncWait: 2
+    repo: ssh://[qwiklabs-user-email]@source.developers.google.com:2022/p/[qwiklabs-project]/r/anthos_config
+    branch: master
+    auth: ssh
+    secretRef:
+      name: git-creds

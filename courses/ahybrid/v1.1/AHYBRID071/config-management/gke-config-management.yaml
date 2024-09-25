@@ -1,8 +1,0 @@
-# config-management.yaml
-apiVersion: configmanagement.gke.io/v1
-kind: ConfigManagement
-metadata:
-  name: config-management
-  namespace: config-management-system
-spec:
-  clusterName: gke
