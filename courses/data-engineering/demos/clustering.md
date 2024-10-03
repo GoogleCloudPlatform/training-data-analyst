@@ -12,7 +12,7 @@ SELECT title, sum(views) AS sumViews
 FROM `fh-bigquery.wikipedia_v2.pageviews_2018`
 WHERE datehour >= "2018-01-01"
 AND wiki IN ("en","en.m")
-AND regexp_contains(title, "G.*o.*o.*g.*")
+AND title LIKE "Goog%"
 GROUP BY title
 ORDER BY sumViews DESC
 ```
@@ -23,6 +23,4 @@ To show the benefit of partitioning, change the date to "2018-07-01" and note th
 * bytes shuffled
 * number of rows ingested in the first stage of the query
 
-Now modify the query to use a clustered version of the dataset by changing the dataset name from "v2" to "v3". Note the ~50% reduction in all the above metrics. BQ can take advantage of clustering even for queries involving LIKE and regular expressions as long as the first letter is fixed. Note that the total bytes processed is less than the validator's number because the validator does not yet take into account clustering, but the user is only billed for the amount actually processed.
-
-We can infer that BQ uses a fairly large block size for clustering. In this case, it's still having to ingest about half the blocks (~1TB), suggesting that titles beginning with A-L may be clustered together, or perhaps A-G and G-L. In this example, the benefit from clustering is therefore not as great as it would be in a larger dataset. It is possible for a query over a clustered petabyte dataset to result in ingest of only a few hundred GB.
+Now modify the query to use a clustered version of the dataset by changing the dataset name from "v2" to "v3". Note the ~50% reduction in all the above metrics. BQ can take advantage of clustering even for queries involving LIKE as long as the first letter is fixed. Note the reduction in total bytes to be processed.
