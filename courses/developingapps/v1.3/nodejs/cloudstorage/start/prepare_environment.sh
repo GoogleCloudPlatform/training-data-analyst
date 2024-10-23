@@ -18,13 +18,14 @@ echo "Exporting GCLOUD_PROJECT"
 export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID
 
 echo "Installing dependencies"
-npm install -g npm@8.1.3
+npm install
 npm update
 
 echo "To exporting Cloud Storage"
 export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media
 
 echo "Creating Datastore entities"
+npm install @google-cloud/datastore
 node setup/add_entities.js
 
 echo "Project ID: $DEVSHELL_PROJECT_ID"
