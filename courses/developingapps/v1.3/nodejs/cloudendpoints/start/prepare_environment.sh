@@ -27,23 +27,23 @@ export PROJECT_NUMBER=$(gcloud projects describe "$GCLOUD_PROJECT" \
 gcloud services disable cloudfunctions.googleapis.com
 gcloud services enable cloudfunctions.googleapis.com
 
-gcloud projects add-iam-policy-binding $GCLOUD_PROJECT \
---member="serviceAccount:$GCLOUD_PROJECT@appspot.gserviceaccount.com" \
---role="roles/artifactregistry.reader"
-gcloud projects add-iam-policy-binding $GCLOUD_PROJECT \
---member="serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
---role="roles/artifactregistry.reader"
+SERVICE_ACCOUNT=$(gcloud storage service-agent --project=$DEVSHELL_PROJECT_ID)
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID \
+  --member serviceAccount:$SERVICE_ACCOUNT \
+  --role roles/pubsub.publisher
 
 nvm install node
 
 echo "Installing dependencies"
-npm install -g npm@8.1.3
+npm install
 npm update
 
 echo "Installing Open API generator"
 npm install -g api2swagger
 
 echo "Creating Datastore entities"
+npm install @google-cloud/datastore
+
 node setup/add_entities.js
 
 echo "Creating Cloud Pub/Sub topic"
@@ -56,6 +56,6 @@ gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CR
 echo "Enabling Cloud Functions API"
 gcloud services enable cloudfunctions.googleapis.com
 echo "Creating Cloud Function"
-gcloud functions deploy process-feedback --runtime nodejs14 --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe
+gcloud functions deploy process-feedback --gen2 --runtime nodejs14 --region us-central1 --trigger-topic feedback --source ./function --stage-bucket $GCLOUD_BUCKET --entry-point subscribe --allow-unauthenticated
 
 echo "Project ID: $DEVSHELL_PROJECT_ID"
