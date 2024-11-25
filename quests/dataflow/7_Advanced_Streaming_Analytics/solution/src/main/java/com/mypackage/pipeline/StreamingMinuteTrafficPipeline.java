@@ -25,12 +25,19 @@ import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.schemas.Schema;
+import org.apache.beam.sdk.schemas.transforms.AddFields;
+import org.apache.beam.sdk.schemas.transforms.Select;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.windowing.*;
+import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
+import org.apache.beam.sdk.transforms.windowing.Window;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.Row;
 import org.apache.beam.sdk.values.*;
+import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
@@ -167,10 +174,10 @@ public class StreamingMinuteTrafficPipeline {
                 // Retrieve parsed messages
                 .get(parsedMessages)
                 .apply("WindowByMinute", Window.<CommonLog>into(FixedWindows.of(Duration.standardSeconds(options.getWindowDuration())))
-                        .withAllowedLateness(
-                        Duration.standardDays(options.getAllowedLateness()))
-                        .triggering(AfterWatermark.pastEndOfWindow()
+                        .triggering(
+                            AfterWatermark.pastEndOfWindow()
                                 .withLateFirings(AfterPane.elementCountAtLeast(1)))
+                        .withAllowedLateness(Duration.standardDays(options.getAllowedLateness()))
                         .accumulatingFiredPanes())
                 // update to Group.globally() after resolved: https://issues.apache.org/jira/browse/BEAM-10297
                 // Only if supports Row output
@@ -195,13 +202,13 @@ public class StreamingMinuteTrafficPipeline {
         transformOut
                 // Retrieve unparsed messages
                 .get(unparsedMessages)
-                .apply("FireEvery10s", Window.<String>configure().triggering(
-                        Repeatedly.forever(
-                        AfterProcessingTime.pastFirstElementInPane()
-                                .plusDelayOf(Duration.standardSeconds(10))))
+                .apply("FireEvery10s", Window.<String>configure()
+                        .triggering(
+                            Repeatedly.forever(
+                                AfterProcessingTime.pastFirstElementInPane()
+                                    .plusDelayOf(Duration.standardSeconds(10))))
                         .discardingFiredPanes())
                 .apply("WriteDeadletterStorage", TextIO.write()
-                        //TODO: change this to actual full parameter
                         .to(options.getDeadletterBucket() + "/deadletter/*")
                         .withWindowedWrites()
                         .withNumShards(10));
