@@ -78,7 +78,7 @@ class TaxiWindowingTest(unittest.TestCase):
 #                              | TaxiCountTransform()
 #                            )
 
-#             assert_that(taxi_counts, equal_to(EXPECTED_RESULTS))
+#             assert_that(taxi_counts, equal_to_per_window(EXPECTED_RESULTS), reify_windows=True) #corrected line.
 
 if __name__ == '__main__':
     with open('testing.out', 'w') as f:
