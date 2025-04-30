@@ -85,7 +85,6 @@ public class BatchUserTrafficSQLPipeline {
         Options options = PipelineOptionsFactory.fromArgs(args)
                 .withValidation()
                 .as(Options.class);
-        options.setPlannerName("org.apache.beam.sdk.extensions.sql.zetasql.ZetaSQLQueryPlanner");
         run(options);
     }
 
