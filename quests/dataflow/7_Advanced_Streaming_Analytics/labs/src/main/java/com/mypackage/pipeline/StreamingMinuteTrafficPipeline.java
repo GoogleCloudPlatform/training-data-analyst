@@ -66,7 +66,6 @@ public class StreamingMinuteTrafficPipeline {
         String getInputTopic();
         void setInputTopic(String inputTopic);
 
-
         @Description("Window allowed lateness, in days")
         Integer getAllowedLateness();
         void setAllowedLateness(Integer allowedLateness);
@@ -74,6 +73,7 @@ public class StreamingMinuteTrafficPipeline {
         @Description("The Cloud Storage bucket used for writing " + "unparseable Pubsub Messages.")
         String getDeadletterBucket();
         void setDeadletterBucket(String deadletterBucket);
+
     }
 
     /**
