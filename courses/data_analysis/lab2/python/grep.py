@@ -14,14 +14,13 @@ limitations under the License.
 """
 
 import apache_beam as beam
-import sys
 
 def my_grep(line, term):
    if line.startswith(term):
       yield line
 
 if __name__ == '__main__':
-   p = beam.Pipeline(argv=sys.argv)
+   p = beam.Pipeline()
    input = '../javahelp/src/main/java/com/google/cloud/training/dataanalyst/javahelp/*.java'
    output_prefix = '/tmp/output'
    searchTerm = 'import'
