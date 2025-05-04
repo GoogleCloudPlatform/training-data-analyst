@@ -43,7 +43,7 @@ gcloud spanner instances create quiz-instance --config=regional-us-central1 --de
 gcloud spanner databases create quiz-database --instance quiz-instance --ddl "CREATE TABLE Feedback ( feedbackId STRING(100) NOT NULL, email STRING(100), quiz STRING(20), feedback STRING(MAX), rating INT64, score FLOAT64, timestamp INT64 ) PRIMARY KEY (feedbackId); CREATE TABLE Answers (answerId STRING(100) NOT NULL, id INT64, email STRING(60), quiz STRING(20), answer INT64, correct INT64, timestamp INT64) PRIMARY KEY (answerId DESC);"
 
 echo "Creating Cloud Functions"
-gcloud functions deploy process-feedback --runtime nodejs20 --trigger-topic feedback --source ./functions/feedback --stage-bucket $GCLOUD_BUCKET --entry-point subscribe --no-gen2
-gcloud functions deploy process-answer --runtime nodejs20 --trigger-topic answers --source ./functions/answer --stage-bucket $GCLOUD_BUCKET --entry-point subscribe --no-gen2
+gcloud functions deploy process-feedback --runtime nodejs20 --trigger-topic feedback --source ./functions/feedback --stage-bucket $GCLOUD_BUCKET --entry-point subscribe --no-gen2 --region $REGION
+gcloud functions deploy process-answer --runtime nodejs20 --trigger-topic answers --source ./functions/answer --stage-bucket $GCLOUD_BUCKET --entry-point subscribe --no-gen2 --region $REGION
 
 echo "Project ID: $GCLOUD_PROJECT"
