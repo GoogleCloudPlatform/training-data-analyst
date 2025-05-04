@@ -14,8 +14,12 @@ git clone https://github.com/GoogleCloudPlatform/training-data-analyst
 ```
 * Go to the directory containing demo files and install python packages we need:
 ```
-cd training-data-analyst/courses/bdml_fundamentals
+cd training-data-analyst/courses/bdml_fundamentals/demos/earthquakevm
 ./install_missing.sh
+```
+* In the terminal, install wget. It will be used on ingestion script
+```
+sudo apt-get -y install wget
 ```
 * Now, ingest data on recent earthquakes from the USGS:
 ```
