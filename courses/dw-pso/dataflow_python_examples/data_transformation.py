@@ -21,6 +21,7 @@ and transforms the date data to match the format BigQuery expects.
 
 from __future__ import absolute_import
 import argparse
+import sys
 import csv
 import logging
 import os
