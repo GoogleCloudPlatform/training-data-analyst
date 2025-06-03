@@ -1,13 +1,15 @@
 # Demo adapted from https://medium.com/@hoffa/400-000-github-repositories-1-billion-files-14-terabytes-of-code-spaces-or-tabs-7cfe0b5dd7fd
 
 # Optional: Uncomment to Explore data tables below or run entire query as-is for tabs vs spaces demo (takes 20 seconds to run)
--- SELECT *
--- FROM `fh-bigquery.github_extracts.contents_top_repos_top_langs`
--- WHERE sample_repo_name = 'GoogleCloudPlatform/training-data-analyst'
+ SELECT *
+ FROM `fh-bigquery.github_extracts.contents_top_repos_top_langs`
+ WHERE sample_repo_name = 'GoogleCloudPlatform/training-data-analyst'
 -- # Output: Real lines of code from our training repo on Github 
 -- # note: above demo extract last updated 2016 
 -- # for full github tables for students to explore later see: https://medium.com/google-cloud/github-on-bigquery-analyze-all-the-code-b3576fd2b150
-
+SELECT *
+ FROM `                       fh-bigquery.github_extracts.contents_top_repos_top_langs_2`
+ WHERE sample_repo_name = 'GoogleCloudPlatform/training-data-analyst'
 -- SELECT
 --   SUM(copies) AS total_files, # 1b
 --   SUM(copies*size) AS total_size_in_bytes # 14 TB of code
@@ -43,8 +45,7 @@ FROM lines_of_code, UNNEST(line) AS flattened_line
 # SELECT * FROM flattened_lines_of_code LIMIT 100;
 
 
-# parse the first character from every line of code
-, parse_first_character AS (
+ parse_first_character AS (
 SELECT 
   SUBSTR(flattened_line,1,1) AS first_character,
   flattened_line,
