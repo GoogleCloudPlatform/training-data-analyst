@@ -8,7 +8,7 @@ from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import GoogleCloudOptions 
 from apache_beam.transforms.combiners import CountCombineFn
 
-# ### functions and classes
+# ## functions and classes ##
 
 class CommonLog (typing.NamedTuple):
     ip: str
