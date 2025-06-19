@@ -58,13 +58,13 @@ def run():
        
        # You need to fix the TODO's. Also, there is a solution-guide in the solution folder.
        # /home/jupyter/training-data-analyst/quests/dataflow_python/3_Batch_Analytics/solution 
-       | 'AddEventTimestamp' >> #TODO: Add timestamps to each element
+       | 'AddEventTimestamp' >> #TODO 1: Add timestamps to each element
        
-       | "WindowByMinute" >> #TODO: Window into one-minute windows or 60 seconds
+       | "WindowByMinute" >> #TODO 2: Window into one-minute windows or 60 seconds
        
-       | "CountPerMinute" >> #TODO: Count events per window
+       | "CountPerMinute" >> #TODO 3: Count events per window
        
-       | "AddWindowTimestamp" >> #TODO: Convert back to a row and add timestamp
+       | "AddWindowTimestamp" >> #TODO 4: Convert back to a row and add timestamp
        
        | 'WriteToBQ' >> beam.io.WriteToBigQuery(
            table_name,
