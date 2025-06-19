@@ -22,11 +22,11 @@ class CommonLog (typing.NamedTuple):
     user_agent: str
 
 class PerUserAggregation(typing.NamedTuple):
-    # TODO: Finish defining class for schema
+    # TODO 1: Finish defining class for schema
 
 
 beam.coders.registry.register_coder(CommonLog, beam.coders.RowCoder)
-# TODO: Register coder for PerUserAggregation
+# TODO 2: Register coder for PerUserAggregation
 
 def parse_json(element):
     row = json.loads(element)
