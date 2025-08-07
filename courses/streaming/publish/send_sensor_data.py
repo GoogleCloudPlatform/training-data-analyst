@@ -89,10 +89,10 @@ if __name__ == '__main__':
    publisher = pubsub.PublisherClient()
    event_type = publisher.topic_path(args.project,TOPIC)
    try:
-      publisher.get_topic(event_type)
+      publisher.get_topic(request={"name": event_type})
       logging.info('Reusing pub/sub topic {}'.format(TOPIC))
    except:
-      publisher.create_topic(event_type)
+      publisher.create_topic(request={"name": event_type})
       logging.info('Creating pub/sub topic {}'.format(TOPIC))
 
    # notify about each line in the input file
