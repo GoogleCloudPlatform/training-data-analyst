@@ -34,6 +34,7 @@ gcloud run deploy ${SERVICE_NAME} \
   --region=${CLOUDRUN_REGION} \
   --no-allow-unauthenticated \
   --service-account=${SVCACCT_EMAIL} \
+  --build-service-account=projects/${GOOGLE_PROJECT_ID}/serviceAccounts/${SVCACCT_EMAIL} \
   --project=${GOOGLE_PROJECT_ID} \
   --quiet \
   --source .
