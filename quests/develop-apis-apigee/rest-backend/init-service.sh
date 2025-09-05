@@ -10,7 +10,7 @@ fi
 export SVCACCT_NAME="simplebank-rest"
 export SVCACCT_EMAIL="${SVCACCT_NAME}@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com"
 export SVCACCT_ROLE="roles/datastore.user"
-#export SVCACCT_ROLE2="roles/cloudbuild.builds.builder"
+export SVCACCT_ROLE2="roles/run.builder"
 
 # create service account for Cloud Run service
 echo "*** creating Cloud Run service account: ${SVCACCT_EMAIL} ***"
@@ -24,8 +24,8 @@ gcloud projects add-iam-policy-binding ${GOOGLE_PROJECT_ID} \
   --member="serviceAccount:${SVCACCT_EMAIL}" \
   --role=${SVCACCT_ROLE}
 
-# add permission to access Cloud Build
-#echo "*** adding role ${SVCACCT_ROLE2} for Cloud Build access ***"
-#gcloud projects add-iam-policy-binding ${GOOGLE_PROJECT_ID} \
-  #--member="serviceAccount:${SVCACCT_EMAIL}" \
-  #--role=${SVCACCT_ROLE2}
+# add permission to access Cloud Run
+echo "*** adding role ${SVCACCT_ROLE2} for Cloud Run access ***"
+gcloud projects add-iam-policy-binding ${GOOGLE_PROJECT_ID} \
+  --member="serviceAccount:${SVCACCT_EMAIL}" \
+  --role=${SVCACCT_ROLE2}
