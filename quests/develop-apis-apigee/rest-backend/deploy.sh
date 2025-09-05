@@ -23,6 +23,7 @@ gcloud artifacts repositories create ${REPOSITORY_NAME} --repository-format=dock
 # build image from code
 echo "*** submit build of service ${SERVICE_NAME} to Cloud Build ***"
 gcloud builds submit --tag ${CLOUDRUN_REGION}-docker.pkg.dev/${GOOGLE_PROJECT_ID}/${REPOSITORY_NAME}/${SERVICE_NAME} \
+  --service-account=${SVCACCT_EMAIL} \
   --project=${GOOGLE_PROJECT_ID}
 
 # deploy service
