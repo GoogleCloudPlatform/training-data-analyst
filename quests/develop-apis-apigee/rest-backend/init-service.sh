@@ -7,9 +7,9 @@ if [[ -z "${GOOGLE_PROJECT_ID}" ]]; then
   exit 1
 fi
 
-SVCACCT_NAME="simplebank-rest"
-SVCACCT_EMAIL="${SVCACCT_NAME}@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com"
-SVCACCT_ROLE="roles/datastore.user"
+export SVCACCT_NAME="simplebank-rest"
+export SVCACCT_EMAIL="${SVCACCT_NAME}@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com"
+export SVCACCT_ROLE="roles/datastore.user"
 
 # create service account for Cloud Run service
 echo "*** creating Cloud Run service account: ${SVCACCT_EMAIL} ***"

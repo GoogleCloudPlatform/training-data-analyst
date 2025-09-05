@@ -12,10 +12,10 @@ if [[ -z "${CLOUDRUN_REGION}" ]]; then
   exit 1
 fi
 
-SERVICE_NAME="simplebank-rest"
-SVCACCT_NAME="simplebank-rest"
-REPOSITORY_NAME="simplebank-rest-repo"
-SVCACCT_EMAIL="${SVCACCT_NAME}@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com"
+export SERVICE_NAME="simplebank-rest"
+export SVCACCT_NAME="simplebank-rest"
+export REPOSITORY_NAME="simplebank-rest-repo"
+export SVCACCT_EMAIL="${SVCACCT_NAME}@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com"
 
 # create artifact registry repo
 gcloud artifacts repositories create ${REPOSITORY_NAME} --repository-format=docker --location=${CLOUDRUN_REGION} --project=${GOOGLE_PROJECT_ID}
