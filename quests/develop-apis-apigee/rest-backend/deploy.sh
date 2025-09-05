@@ -14,16 +14,7 @@ fi
 
 export SERVICE_NAME="simplebank-rest"
 export SVCACCT_NAME="simplebank-rest"
-export REPOSITORY_NAME="simplebank-rest-repo"
 export SVCACCT_EMAIL="${SVCACCT_NAME}@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com"
-
-# create artifact registry repo
-#gcloud artifacts repositories create ${REPOSITORY_NAME} --repository-format=docker --location=${CLOUDRUN_REGION} --project=${GOOGLE_PROJECT_ID}
-
-# build image from code
-#echo "*** submit build of service ${SERVICE_NAME} to Cloud Build ***"
-#gcloud builds submit --tag ${CLOUDRUN_REGION}-docker.pkg.dev/${GOOGLE_PROJECT_ID}/${REPOSITORY_NAME}/${SERVICE_NAME} \
-  #--project=${GOOGLE_PROJECT_ID}
 
 # deploy service
 # NOTE: in a production environment, you would not use max-instances=1
