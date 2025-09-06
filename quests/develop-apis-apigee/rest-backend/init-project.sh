@@ -7,9 +7,9 @@ if [[ -z "${FIRESTORE_LOCATION}" ]]; then
   exit 1
 fi
 
-# enable Cloud Run APIs
-echo "*** enable Cloud Run APIs ***"
-gcloud services enable run.googleapis.com
+# enable APIs
+echo "*** enable Cloud Run, Cloud Build, Artifact Registry, Firestore APIs ***"
+gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com firestore.googleapis.com
 
 # create Firestore in Native mode database
 echo "*** create Firestore database ***"
