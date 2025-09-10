@@ -20,11 +20,25 @@ gcloud iam service-accounts create ${SVCACCT_NAME} \
 
 # add permission to access Firestore
 echo "*** adding role ${SVCACCT_ROLE} for Firestore access ***"
-gcloud projects add-iam-policy-binding ${GOOGLE_PROJECT_ID} \
+
+retries=5
+delay=15
+count=0
+
+until gcloud projects add-iam-policy-binding ${GOOGLE_PROJECT_ID} \
   --member="serviceAccount:${SVCACCT_EMAIL}" \
   --role=${SVCACCT_ROLE}
+do
+  count=$((count+1))
+  if [[ ${count} -ge ${retries} ]]; then
+    echo "Policy binding failed after ${retries} attempts."
+    exit 1
+  fi
+  echo "Policy binding failed, likely due to IAM propagation delay. Retrying in ${delay}s... (${count}/${retries})"
+  sleep ${delay}
+done
 
-# add permission to access Cloud Run
+# add permission to access Cloud Run, second binding should work the first time
 echo "*** adding role ${SVCACCT_ROLE2} for Cloud Run access ***"
 gcloud projects add-iam-policy-binding ${GOOGLE_PROJECT_ID} \
   --member="serviceAccount:${SVCACCT_EMAIL}" \
