@@ -9,7 +9,7 @@ fi
 PROJECT=$1
 BUCKET=$2
 
-gsutil -m rm -rf gs://$BUCKET/landsat/output
+gcloud storage rm --recursive --continue-on-error gs://$BUCKET/landsat/output
 
 python ./dfndvi.py \
     --project=$PROJECT \

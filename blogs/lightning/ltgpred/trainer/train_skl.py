@@ -107,7 +107,7 @@ def save_model(model_tosave, gcspath, name):  # pylint: disable=unused-argument
   model_path = os.path.join(
       gcspath,
       datetime.datetime.now().strftime('export_%Y%m%d_%H%M%S'), filename)
-  subprocess.check_call(['gsutil', 'cp', filename, model_path])
+  subprocess.check_call(['gcloud', 'storage', 'cp', filename, model_path])
   return model_path
 
 
