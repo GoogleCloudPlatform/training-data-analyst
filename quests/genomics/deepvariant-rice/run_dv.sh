@@ -22,8 +22,8 @@ OUTPUT_FILE_NAME=output.vcf
 # Make a unique output bucket
 OUTPUT_BUCKET=gs://${PROJECT_ID}-${PREFIX}-$(date +%s)  # hopefully unique
 REGION=$(echo $ZONE | sed 's/..$//')
-#gsutil mb -c regional -l $REGION $OUTPUT_BUCKET
-gsutil mb $OUTPUT_BUCKET
+#gcloud storage buckets create --default-storage-class=regional --location=$REGION $OUTPUT_BUCKET
+gcloud storage buckets create $OUTPUT_BUCKET
 
 #echo "INPUT_REF=$INPUT_REF"
 #echo "INPUT_BAM=$INPUT_BAM"
@@ -61,4 +61,3 @@ gcloud alpha genomics pipelines run \
 
 echo "Check the status using: "
 echo "   gcloud alpha genomics operations describe  operations/...."
-
