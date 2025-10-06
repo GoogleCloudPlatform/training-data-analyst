@@ -28,7 +28,7 @@
 * In JupyterLab:
   * Open [02_gcs.ipynb](02_gcs.ipynb) in JupyterLab, read the cells, and run them.
   * (OR) Start from the part 1 notebook (above) and:
-    * Replace ```hadoop fs``` by ```gsutil```
+    * Replace ```hadoop fs``` by ```gcloud storage```
     * Replace ```hdfs://``` by ```gs://```
     * Make sure to store output to Google Cloud Storage
     * Run the notebook
@@ -38,7 +38,7 @@
   * Open [03_automate.ipynb](03_automate.ipynb) in JupyterLab, read the cells, and run them.
   * (OR) Start from the part 2 notebook (above) and:
     * Add ```%%writefile``` to the cells to export out a PySpark file
-    * Replace uses of ```gsutil``` within Spark code by Python API
+    * Replace uses of ```gcloud storage``` within Spark code by Python API
     * Test running the created Python file standalone
 * From CloudShell:
   * Use the script [submit_onejob.sh](submit_onejob.sh) to submit the created file ```spark_analysis.py``` to the cluster you have created above.
@@ -55,4 +55,3 @@
 ### Part 5
 * On the same AI Platform Notebooks instance as Part 4, open and run ```05_functions.ipynb```
 * Delete the Notebooks instance
-
