@@ -60,8 +60,8 @@ attack_stats = sqlContext.sql("""
 attack_stats.show()
 ax = attack_stats.toPandas().plot.bar(x='protocol_type', subplots=True, figsize=(10,25))
 ax[0].get_figure().savefig('report.png');
-#!gsutil rm -rf gs://$BUCKET/sparktobq/
-#!gsutil cp report.png gs://$BUCKET/sparktobq/
+#!gcloud storage rm --recursive --continue-on-error gs://$BUCKET/sparktobq/
+#!gcloud storage cp report.png gs://$BUCKET/sparktobq/
 import google.cloud.storage as gcs
 bucket = gcs.Client().get_bucket(BUCKET)
 for blob in bucket.list_blobs(prefix='sparktobq/'):

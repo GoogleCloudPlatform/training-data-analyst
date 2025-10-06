@@ -1,5 +1,5 @@
 #!/bin/bash
 export BUCKET=${BUCKET:=cloud-training-demos-ml}
 echo "Uploading to bucket $BUCKET..."
-gsutil -m cp *.csv gs://$BUCKET/flights/raw
-#gsutil -m acl ch -R -g google.com:R gs://$BUCKET/flights/raw
+gcloud storage cp *.csv gs://$BUCKET/flights/raw
+#gcloud storage objects update --recursive --add-acl-grant=domain-google.com:READER gs://$BUCKET/flights/raw

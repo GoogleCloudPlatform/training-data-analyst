@@ -8,7 +8,7 @@ fi
 BUCKET=$1
 PROJECT=$2
 
-gsutil -m rm -rf gs://$BUCKET/flights/chapter10/output
+gcloud storage rm --recursive --continue-on-error gs://$BUCKET/flights/chapter10/output
 
 cd chapter10
 
