@@ -26,7 +26,7 @@ pip3 install 'kfp>=0.1.31' --upgrade
 
 Upload the utility code to your storage bucket. You can modify this code if needed for a different dataset.
 ```
-gsutil cp utils/taxi_utils.py gs://my-bucket/<path>/
+gcloud storage cp utils/taxi_utils.py gs://my-bucket/<path>/
 ```
 
 If gsutil does not work, try `tensorflow.gfile`:
