@@ -28,7 +28,7 @@ def ensure_local_file(input_file):
     input_path = os.path.join('/tmp/', str(uuid.uuid4()))
     os.makedirs(input_path)
     tmp_input_file = os.path.join(input_path, os.path.basename(input_file))
-    sh.gsutil("cp", "-r", input_file, tmp_input_file)
+    sh.gcloud("storage", "cp", "--recursive", input_file, tmp_input_file)
     return tmp_input_file
   else:
     return input_file
