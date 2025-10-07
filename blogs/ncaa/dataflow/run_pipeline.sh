@@ -18,7 +18,7 @@ gcloud config set project $PROJECT
 gcloud config set compute/region $REGION
 
 # copy in pipeline code
-gsutil cp gs://cloud-training-demos/ncaa/next-bootcamp/pipeline/play_by_play.py play_by_play.py
+gcloud storage cp gs://cloud-training-demos/ncaa/next-bootcamp/pipeline/play_by_play.py play_by_play.py
 
 # inspect the code in the editor
 
