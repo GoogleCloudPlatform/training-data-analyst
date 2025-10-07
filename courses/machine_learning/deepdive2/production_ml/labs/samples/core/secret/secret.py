@@ -35,7 +35,7 @@ implementation:
           gcloud auth activate-service-account --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
       fi
       gcloud auth list
-      gsutil ls "$0"
+      gcloud storage ls "$0"
     - {inputValue: Uri}
 ''')
 

@@ -31,8 +31,8 @@ FROMDIR=gs://${BUCKET}/babyweight/hyperparam/$TRIALID
 OUTDIR=gs://${BUCKET}/babyweight/traintuned
 export PYTHONPATH=${CODEDIR}/babyweight:${PYTHONPATH}
 
-gsutil -m rm -rf ${OUTDIR} || true
-gsutil -m cp -r ${FROMDIR} ${OUTDIR}
+gcloud storage rm --recursive --continue-on-error ${OUTDIR} || true
+gcloud storage cp --recursive ${FROMDIR} ${OUTDIR}
 python -m trainer.task \
   --job-dir=$OUTDIR \
   --bucket=${BUCKET} \
