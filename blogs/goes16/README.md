@@ -58,7 +58,7 @@ See [TBD](this blog post) for details on what the Python code above is doing.
    ```
    Then, you can verify that it exists using:
    ```
-   gsutil ls -l gs://gcp-public-data-goes-16/ABI-L2-MCMIPF/2017/306/21/OR_ABI-L2-MCMIPF-M4_G16_s20173062105222_e20173062110034_c20173062110127.nc
+   gcloud storage ls --long gs://gcp-public-data-goes-16/ABI-L2-MCMIPF/2017/306/21/OR_ABI-L2-MCMIPF-M4_G16_s20173062105222_e20173062110034_c20173062110127.nc
    ```
   * Delete the subscription using [./delete_subscription.sh](./delete_subscription.sh) or by typing in:
   ```
