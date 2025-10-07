@@ -24,8 +24,8 @@
   source /training/training-data-analyst/courses/streaming/env_scripts/project_env.sh
   chmod +x /training/training-data-analyst/courses/streaming/env_scripts/sensor_magic.sh
   chmod +x /training/training-data-analyst/courses/streaming/env_scripts/project_env.sh
-# gsutil cp gs://cloud-training/gcpdei/road-not-taken.txt .
-# gsutil cp gs://cloud-training/gcpdei/sherlock-holmes.txt .
+# gcloud storage cp gs://cloud-training/gcpdei/road-not-taken.txt .
+# gcloud storage cp gs://cloud-training/gcpdei/sherlock-holmes.txt .
 
 # Example of enabling a GCP API
 #
