@@ -50,7 +50,7 @@ def main(argv=None):
     help='Spanner table.')
   known_args, pipeline_args = parser.parse_known_args(argv)
 
-  # 1. & 2. Update PipelineOptions
+  #Update PipelineOptions
   pipeline_options = PipelineOptions(
       pipeline_args,
       pickle_library='dill',
