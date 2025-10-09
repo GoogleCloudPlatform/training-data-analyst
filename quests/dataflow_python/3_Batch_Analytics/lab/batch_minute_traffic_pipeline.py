@@ -30,7 +30,11 @@ def run():
     # Setting up the Beam pipeline options.
     # Note: We are no longer using save_main_session=True because the --setup_file
     # command-line argument is the more robust and explicit way to handle dependencies.
-    options = PipelineOptions()
+    options = PipelineOptions(
+        pickle_library='dill',
+        save_main_session=True
+    )
+    
     google_cloud_options = options.view_as(GoogleCloudOptions)
     google_cloud_options.project = opts.project
     google_cloud_options.region = opts.region
@@ -38,7 +42,7 @@ def run():
     google_cloud_options.temp_location = opts.temp_location
     google_cloud_options.job_name = '{0}{1}'.format('batch-minute-traffic-pipeline-',time.time_ns())
     options.view_as(StandardOptions).runner = opts.runner
-    
+
     input_path = opts.input_path
     table_name = opts.table_name
 
@@ -55,17 +59,17 @@ def run():
 
     (p | 'ReadFromGCS' >> beam.io.ReadFromText(input_path)
        | 'ParseJson' >> beam.Map(parse_json).with_output_types(CommonLog)
-       
+
        # You need to fix the TODO's. Also, there is a solution-guide in the solution folder.
-       # /home/jupyter/training-data-analyst/quests/dataflow_python/3_Batch_Analytics/solution 
+       # /home/jupyter/training-data-analyst/quests/dataflow_python/3_Batch_Analytics/solution
        | 'AddEventTimestamp' >> #TODO 1: Add timestamps to each element
-       
+
        | "WindowByMinute" >> #TODO 2: Window into one-minute windows or 60 seconds
-       
+
        | "CountPerMinute" >> #TODO 3: Count events per window
-       
+
        | "AddWindowTimestamp" >> #TODO 4: Convert back to a row and add timestamp
-       
+
        | 'WriteToBQ' >> beam.io.WriteToBigQuery(
            table_name,
            schema=table_schema,
