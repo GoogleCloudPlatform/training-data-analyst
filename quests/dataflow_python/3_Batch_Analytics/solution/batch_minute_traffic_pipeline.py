@@ -15,7 +15,7 @@ from pipeline_utils import CommonLog, parse_json, add_timestamp, GetTimestampFn
 def run():
     # Command line arguments
     parser = argparse.ArgumentParser(description='Load from Json into BigQuery')
-    parser.add_argument('--project',required=True, help='Specify Google Cloud project')
+    parser.add_argument('--project', required=True, help='Specify Google Cloud project')
     parser.add_argument('--region', required=True, help='Specify Google Cloud region')
     parser.add_argument('--staging_location', required=True, help='Specify Cloud Storage bucket for staging')
     parser.add_argument('--temp_location', required=True, help='Specify Cloud Storage bucket for temp')
@@ -28,17 +28,20 @@ def run():
     opts = parser.parse_args()
 
     # Setting up the Beam pipeline options.
-    # Note: We are no longer using save_main_session=True because the --setup_file
-    # command-line argument is the more robust and explicit way to handle dependencies.
-    options = PipelineOptions()
+    # Update PipelineOptions to include pickle_library='dill' and save_main_session=True
+    options = PipelineOptions(
+        pickle_library='dill',
+        save_main_session=True
+    )
+
     google_cloud_options = options.view_as(GoogleCloudOptions)
     google_cloud_options.project = opts.project
     google_cloud_options.region = opts.region
     google_cloud_options.staging_location = opts.staging_location
     google_cloud_options.temp_location = opts.temp_location
-    google_cloud_options.job_name = '{0}{1}'.format('batch-minute-traffic-pipeline-',time.time_ns())
+    google_cloud_options.job_name = '{0}{1}'.format('batch-minute-traffic-pipeline-', time.time_ns())
     options.view_as(StandardOptions).runner = opts.runner
-    
+
     input_path = opts.input_path
     table_name = opts.table_name
 
@@ -55,7 +58,7 @@ def run():
 
     (p | 'ReadFromGCS' >> beam.io.ReadFromText(input_path)
        | 'ParseJson' >> beam.Map(parse_json).with_output_types(CommonLog)
-       
+
        # =================================================================
        # Task 5: Add timestamps to each element
        # The `add_timestamp` function (defined in pipeline_utils.py) parses the
@@ -63,21 +66,21 @@ def run():
        # as a proper Beam timestamp, which is required for windowing.
        # =================================================================
        | 'AddEventTimestamp' >> beam.Map(add_timestamp)
-       
+
        # =================================================================
        # Task 6: Window into one-minute windows
        # This transform groups elements into fixed-size, non-overlapping windows
        # of 60 seconds (one minute) based on their event timestamps.
        # =================================================================
        | "WindowByMinute" >> beam.WindowInto(beam.window.FixedWindows(60))
-       
+
        # =================================================================
        # Task 7: Count events per window
        # This combiner counts the number of elements within each one-minute window.
        # `.without_defaults()` ensures that no output is generated for empty windows.
-       # =================================s================================
+       # =================================================================
        | "CountPerMinute" >> beam.CombineGlobally(CountCombineFn()).without_defaults()
-       
+
        # =================================================================
        # Task 8: Convert back to a row and add timestamp
        # The `GetTimestampFn` (defined in pipeline_utils.py) takes the integer count
@@ -85,7 +88,7 @@ def run():
        # start time as a string to match the BigQuery schema.
        # =================================================================
        | "AddWindowTimestamp" >> beam.ParDo(GetTimestampFn())
-       
+
        | 'WriteToBQ' >> beam.io.WriteToBigQuery(
            table_name,
            schema=table_schema,
