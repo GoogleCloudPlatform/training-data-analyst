@@ -18,7 +18,7 @@ echo "Creating Datastore/App Engine instance"
 gcloud app create --region "us-central"
 
 echo "Creating bucket: gs://$DEVSHELL_PROJECT_ID-media"
-gsutil mb gs://$DEVSHELL_PROJECT_ID-media
+gcloud storage buckets create gs://$DEVSHELL_PROJECT_ID-media
 
 echo "Exporting GCLOUD_PROJECT and GCLOUD_BUCKET"
 export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID
