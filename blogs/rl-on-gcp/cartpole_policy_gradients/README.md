@@ -35,7 +35,7 @@ BUCKET=gs://YOUR-BUCKET-HERE
 OUTPUT_DIR=gs://YOUR-BUCKET-HERE/rl/
 REGION='us-central1'
 PACKAGE_PATH=$PWD/rl_model_code/trainer
-gsutil rm -r $OUTPUT_DIR
+gcloud storage rm --recursive $OUTPUT_DIR
 echo $OUTPUT_DIR
 gcloud ml-engine jobs submit training $JOBNAME \
   --package-path=$PACKAGE_PATH \
@@ -95,7 +95,7 @@ BUCKET=gs://YOUR-BUCKET-HERE
 OUTPUT_DIR=gs://YOUR-BUCKET-HERE/hp_results
 REGION='us-central1'
 PACKAGE_PATH=$PWD/rl_model_code/trainer
-gsutil rm -r $OUTPUT_DIR
+gcloud storage rm --recursive $OUTPUT_DIR
 echo $OUTPUT_DIR
 gcloud ml-engine jobs submit training $JOBNAME \
   --package-path=$PACKAGE_PATH \
