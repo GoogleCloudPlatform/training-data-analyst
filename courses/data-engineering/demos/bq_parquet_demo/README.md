@@ -6,10 +6,10 @@ Goal: Give a quick introductory demo of querying parquet files saved in Google C
 
 ### Option 1: Preexisting files in public GCS location.
 
-You can copy over preexisting parquet files from the cloud-training GCS bucket. To do so simply run the gsutil command:
+You can copy over preexisting parquet files from the cloud-training GCS bucket. To do so simply run the gcloud storage command:
 
 ```bash
-gsutil -m cp gs://cloud-training/bigquery/taxi* gs://<INSERT_YOUR_BUCKET>/
+gcloud storage cp gs://cloud-training/bigquery/taxi* gs://<INSERT_YOUR_BUCKET>/
 ```
 
 Once the file is present in your GCS bucket, you're ready to go! The rest of the demo script will be written with this file in mind, however, this demo can be adapted for your own data if you wish.
