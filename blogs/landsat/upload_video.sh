@@ -7,7 +7,7 @@ if test $# -lt 1; then
 fi
 
 INDIR=$1
-GCS_IMAGES=$(gsutil ls -r $INDIR | grep TIF)
+GCS_IMAGES=$(gcloud storage ls --recursive $INDIR | grep TIF)
 EEUSER=vlakshmanan
 
 collection=users/$EEUSER/reunionvideo
