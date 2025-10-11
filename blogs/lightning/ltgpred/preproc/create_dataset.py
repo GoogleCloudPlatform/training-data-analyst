@@ -371,7 +371,7 @@ if __name__ == '__main__':
   else:
     print('Launching Dataflow job {} ... hang on'.format(options['job_name']))
     try:
-      subprocess.check_call('gsutil -m rm -r {}'.format(outdir).split())
+      subprocess.check_call('gcloud storage rm --recursive {}'.format(outdir).split())
     except:  # pylint: disable=bare-except
       pass
     options['runner'] = 'DataflowRunner'
