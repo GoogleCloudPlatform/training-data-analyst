@@ -7,5 +7,5 @@ fi
 
 REGION=$1
 
-gsutil -m rm -r gs://cloud-training-demos-ml/flights/pigoutput
+gcloud storage rm --recursive gs://cloud-training-demos-ml/flights/pigoutput
 gcloud dataproc jobs submit pig --cluster ch6cluster --region $REGION --file $*
