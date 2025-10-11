@@ -8,7 +8,7 @@ PROJECT_ID=$(gcloud config get-value project)
 REGION=us-central1
 BUCKET_NAME=${PROJECT_ID}-ml
 
-gsutil mb -l ${REGION} gs://${BUCKET_NAME}
+gcloud storage buckets create --location ${REGION} gs://${BUCKET_NAME}
 
 bq mk -d demos
 
@@ -34,8 +34,8 @@ DAGS_FOLDER=$(gcloud composer environments describe chicago-demo-environment \
 
 tar -cvf trainer.tar chicago_taxifare
 
-gsutil cp ./chicago_taxi_dag.py ${DAGS_FOLDER}/
-gsutil cp ./trainer.tar gs://${BUCKET_NAME}/chicago_taxi/code/
+gcloud storage cp ./chicago_taxi_dag.py ${DAGS_FOLDER}/
+gcloud storage cp ./trainer.tar gs://${BUCKET_NAME}/chicago_taxi/code/
 
 # Copyright 2020 Google Inc. All Rights Reserved.
 #
