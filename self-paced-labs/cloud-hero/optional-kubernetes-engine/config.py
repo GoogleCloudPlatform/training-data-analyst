@@ -78,12 +78,12 @@ MONGO_URI = 'mongodb://user:password@host:27017/database'
 # Typically, you'll name your bucket the same as your project. To create a
 # bucket:
 #
-#   $ gsutil mb gs://<your-bucket-name>
+#   $ gcloud storage buckets create gs://<your-bucket-name>
 #
 # You also need to make sure that the default ACL is set to public-read,
 # otherwise users will not be able to see their upload images:
 #
-#   $ gsutil defacl set public-read gs://<your-bucket-name>
+#   $ gcloud storage buckets update --predefined-default-object-acl=public-read gs://<your-bucket-name>
 #
 # You can adjust the max content length and allow extensions settings to allow
 # larger or more varied file types if desired.
