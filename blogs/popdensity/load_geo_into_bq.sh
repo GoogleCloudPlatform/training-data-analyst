@@ -13,7 +13,7 @@ BUCKET=$2
 FILE=popdensity_geo.json.gz
 GCSFILE=gs://$BUCKET/popdensity/$FILE
 
-gsutil -m cp $FILE $GCSFILE
+gcloud storage cp $FILE $GCSFILE
 
 bq_safe_mk() {
     dataset=$1
