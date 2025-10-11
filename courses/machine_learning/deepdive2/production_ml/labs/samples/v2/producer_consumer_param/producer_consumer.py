@@ -34,7 +34,7 @@ implementation:
     - -c
     - |
       set -e -x
-      echo "$0, this is an output parameter" | gsutil cp - "$1"
+      echo "$0, this is an output parameter" | gcloud storage cp - "$1"
     - {inputValue: input_text}
     - {outputPath: output_value}
 """
