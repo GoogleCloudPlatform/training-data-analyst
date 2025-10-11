@@ -137,7 +137,7 @@ In the case that the model name was included in our list, then we go to this tas
 
 #### `bash_remove_old_saved_model_chicago_taxi_trips_task`
 
-In this task we will use a `BashOperator` to execute a `gsutil` command to remove the old saved model from the staging location. Once again we separated the location where Cloud AI Platform would save the model and where we would upload the model from to Cloud AI Platform for predictions so if something went wrong with the training process we would still have our current model in GCS. The downstreak task is `bash_copy_new_saved_model_chicago_taxi_trips_task`
+In this task we will use a `BashOperator` to execute a `gcloud storage` command to remove the old saved model from the staging location. Once again we separated the location where Cloud AI Platform would save the model and where we would upload the model from to Cloud AI Platform for predictions so if something went wrong with the training process we would still have our current model in GCS. The downstreak task is `bash_copy_new_saved_model_chicago_taxi_trips_task`
 
 #### `bash_copy_new_saved_model_chicago_taxi_trips_task`
 
@@ -240,8 +240,8 @@ The `BigQueryOperator`s are straightforward, note here that the `use_legacy_sql`
 ```python
 bash_remove_old_data_op = BashOperator(
     task_id="bash_remove_old_data_task",
-    bash_command=("if gsutil ls {0}/chicago_taxi/data/{1} 2> /dev/null;"
-                  "then gsutil -m rm -rf {0}/chicago_taxi/data/{1}/*;"
+    bash_command=("if gcloud storage ls {0}/chicago_taxi/data/{1} 2> /dev/null;"
+                  "then gcloud storage rm --recursive --continue-on-error {0}/chicago_taxi/data/{1}/*;"
                   "else true; fi").format(BUCKET, model.replace(".", "_")),
     dag=dag
 )
