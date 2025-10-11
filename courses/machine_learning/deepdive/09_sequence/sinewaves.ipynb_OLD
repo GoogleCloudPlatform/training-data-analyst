@@ -176,8 +176,8 @@
    "outputs": [],
    "source": [
     "%%bash\n",
-    "gsutil -m rm -rf gs://${BUCKET}/sines/*\n",
-    "gsutil -m cp data/sines/*.csv gs://${BUCKET}/sines"
+    "gcloud storage rm --recursive --continue-on-error gs://${BUCKET}/sines/*\n",
+    "gcloud storage cp data/sines/*.csv gs://${BUCKET}/sines"
    ]
   },
   {
@@ -190,7 +190,7 @@
     "for MODEL in linear dnn cnn rnn rnn2 rnnN; do\n",
     "  OUTDIR=gs://${BUCKET}/sinewaves/${MODEL}\n",
     "  JOBNAME=sines_${MODEL}_$(date -u +%y%m%d_%H%M%S)\n",
-    "  gsutil -m rm -rf $OUTDIR\n",
+    "  gcloud storage rm --recursive --continue-on-error $OUTDIR\n",
     "  gcloud ml-engine jobs submit training $JOBNAME \\\n",
     "     --region=$REGION \\\n",
     "     --module-name=sinemodel.task \\\n",
