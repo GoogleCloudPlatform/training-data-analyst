@@ -21,7 +21,7 @@ PROJECT_ID=$(gcloud config get-value project)
 REGION=us-central1
 BUCKET=gs://$PROJECT_ID-df-demo
 
-gsutil mb -l us-central1 $BUCKET
+gcloud storage buckets create --location=us-central1 $BUCKET
 bq mk --location=US dataflow_demos
 ```
 
