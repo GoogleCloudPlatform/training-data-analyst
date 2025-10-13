@@ -38,14 +38,13 @@ if [ OKFLAG==1 ]; then
   sed -i "s/your-bucket/$BUCKET/" *dataprocML.py
 
   # Copy python scripts to the bucket
-  gsutil cp *dataprocML.py gs://$BUCKET/
+  gcloud storage cp *dataprocML.py gs://$BUCKET/
 
   # Copy data to the bucket
-  gsutil cp gs:\/\/cloud-training\/gcpdei\/road* gs:\/\/$BUCKET\/sampledata\/ 
-  gsutil cp gs:\/\/cloud-training\/gcpdei\/time* gs:\/\/$BUCKET\/sampledata\/
+  gcloud storage cp gs:\/\/cloud-training\/gcpdei\/road* gs:\/\/$BUCKET\/sampledata\/ 
+  gcloud storage cp gs:\/\/cloud-training\/gcpdei\/time* gs:\/\/$BUCKET\/sampledata\/
 
 fi
-
 
 
 
