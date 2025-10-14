@@ -31,7 +31,7 @@ bq_safe_mk $BIGQUERY_DATASET
 YAML=vcf_bq.yaml
 PROJECT_ID=$(gcloud config get-value project)
 STAGING_BUCKET=gs://${PROJECT_ID}-${BIGQUERY_DATASET}-$(date +%s)
-gsutil mb $STAGING_BUCKET
+gcloud storage buckets create $STAGING_BUCKET
 echo "Temporary files will be put into in $STAGING_BUCKET"
 
 gcloud alpha genomics pipelines run \
