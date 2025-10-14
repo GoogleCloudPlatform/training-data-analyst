@@ -9,8 +9,8 @@ TRAIN_PATH=$DATA_PATH/taxi-train*
 EVAL_PATH=$DATA_PATH/taxi-valid*
 MODEL_PATH=$TEST_BUCKET/model
 
-gsutil ls $TEST_BUCKET && gsutil -m rm -r $TEST_BUCKET 
-gsutil -m cp $TEST_DATA/* $DATA_PATH
+gcloud storage ls $TEST_BUCKET && gcloud storage rm --recursive $TEST_BUCKET 
+gcloud storage cp $TEST_DATA/* $DATA_PATH
 
 $SCRIPTS_DIR/run.sh \
 --eval_data_path $EVAL_PATH \
@@ -22,4 +22,4 @@ $SCRIPTS_DIR/run.sh \
 --nbuckets 10 \
 --nnsize 32 8
 
-gsutil -m rm -r $TEST_BUCKET
+gcloud storage rm --recursive $TEST_BUCKET
