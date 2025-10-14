@@ -15,8 +15,8 @@
 
 # Example of copying sample data files from a bucket
 #
-# gsutil cp gs://cloud-training/gcpdei/road-not-taken.txt .
-# gsutil cp gs://cloud-training/gcpdei/sherlock-holmes.txt .
+# gcloud storage cp gs://cloud-training/gcpdei/road-not-taken.txt .
+# gcloud storage cp gs://cloud-training/gcpdei/sherlock-holmes.txt .
 
 # Example of enabling a GCP API
 #
