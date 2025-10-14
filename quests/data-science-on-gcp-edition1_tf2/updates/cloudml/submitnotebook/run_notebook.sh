@@ -14,10 +14,9 @@ export LANG=C.UTF-8
 
 mkdir working
 cd working
-gsutil cp $IN_NB_GCS  input.ipynb
-gsutil cp $PARAMS_GCS params.yaml
+gcloud storage cp $IN_NB_GCS  input.ipynb
+gcloud storage cp $PARAMS_GCS params.yaml
 papermill input.ipynb output.ipynb -f params.yaml --log-output
-gsutil cp output.ipynb $OUT_NB_GCS
+gcloud storage cp output.ipynb $OUT_NB_GCS
 cd ..
 rm -rf working
-
