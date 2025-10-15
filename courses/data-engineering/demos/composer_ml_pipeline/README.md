@@ -240,9 +240,7 @@ The `BigQueryOperator`s are straightforward, note here that the `use_legacy_sql`
 ```python
 bash_remove_old_data_op = BashOperator(
     task_id="bash_remove_old_data_task",
-    bash_command=("if gsutil ls {0}/chicago_taxi/data/{1} 2> /dev/null;"
-                  "then gsutil -m rm -rf {0}/chicago_taxi/data/{1}/*;"
-                  "else true; fi").format(BUCKET, model.replace(".", "_")),
+    bash_command=("if gcloud storage ls {0}/chicago_taxi/data/{1} 2> /dev/null;"                  "then gcloud storage rm --recursive --continue-on-error {0}/chicago_taxi/data/{1}/*;"                  "else true; fi").format(BUCKET, model.replace(".", "_")),
     dag=dag
 )
 ```
