@@ -90,7 +90,7 @@ def preprocess_tasks(model, dag, PROJECT_ID, BUCKET, DATA_DIR):
   # BigQuery training data export to GCS
   bash_remove_old_data_op = BashOperator(
     task_id="bash_remove_old_data_{}_task".format(model.replace(".","_")),
-    bash_command="if gsutil ls {0}/taxifare/data/{1} 2> /dev/null; then gsutil -m rm -rf {0}/taxifare/data/{1}/*; else true; fi".format(BUCKET, model.replace(".","_")),
+    bash_command="if gcloud storage ls {0}/taxifare/data/{1} 2> /dev/null; then gcloud storage rm --recursive --continue-on-error {0}/taxifare/data/{1}/*; else true; fi".format(BUCKET, model.replace(".","_")),
     dag=dag
   )
 
