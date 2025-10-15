@@ -861,8 +861,7 @@ resource "google_workbench_instance" "google_workbench" {
 
         # Recursively copy all notebooks from the GCS bucket to the instance
         # The -n flag prevents overwriting existing files, making the script safer to re-run
-        gsutil -m cp -r gs://${google_storage_bucket.notebook_bucket.name}/notebooks/ $${TARGET_DIR}/
-
+        gcloud storage cp --recursive gs://${google_storage_bucket.notebook_bucket.name}/notebooks/ $${TARGET_DIR}/
         # Change the ownership of all downloaded files and directories to the jupyter user
         # This is CRITICAL for the files to be accessible in the JupyterLab UI
         chown -R jupyter:jupyter /home/jupyter
