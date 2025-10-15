@@ -20,7 +20,7 @@ export ZONE="us-west1-b"
 export INSTANCE_TYPE="n1-standard-4"
 
 # copy the inputs to GCS
-gsutil cp $INPUT_NOTEBOOK $INPUT_PARAMS $GCS_OUTPUT_DIR/inputs || exit 1
+gcloud storage cp $INPUT_NOTEBOOK $INPUT_PARAMS $GCS_OUTPUT_DIR/inputs || exit 1
 export GCS_INPUT_NOTEBOOK="$GCS_OUTPUT_DIR/inputs/$(basename $INPUT_NOTEBOOK)"
 export GCS_INPUT_PARAMS="$GCS_OUTPUT_DIR/inputs/$(basename $INPUT_PARAMS)"
 export GCS_OUTPUT_NOTEBOOK="$GCS_OUTPUT_DIR/$(basename $INPUT_NOTEBOOK)"
@@ -45,7 +45,7 @@ gcloud compute instances create $INSTANCE_NAME \
 
 # copy locally
 echo "if you ctrl-C this, you will have to manually copy over the file"
-echo "gsutil cp ${GCS_OUTPUT_NOTEBOOK}  $OUTPUT_NOTEBOOK"
+echo "gcloud storage cp ${GCS_OUTPUT_NOTEBOOK}  $OUTPUT_NOTEBOOK"
 
 while true; do
    proxy=$(gcloud compute instances describe --zone $ZONE $INSTANCE_NAME --format="value(status)"  2> /dev/null | grep -v RUNNING)
@@ -59,4 +59,4 @@ while true; do
    fi
 done
 
-gsutil cp ${GCS_OUTPUT_NOTEBOOK} ${OUTPUT_NOTEBOOK} || exit 1
+gcloud storage cp ${GCS_OUTPUT_NOTEBOOK} ${OUTPUT_NOTEBOOK} || exit 1
