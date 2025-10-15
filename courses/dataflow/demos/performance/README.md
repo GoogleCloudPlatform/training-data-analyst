@@ -21,7 +21,7 @@ PROJECT_ID=$(gcloud config get-value project)
 REGION=us-central1
 BUCKET=gs://$PROJECT_ID-df-demo
 
-gsutil mb -l us-central1 $BUCKET
+gcloud storage buckets create --location us-central1 $BUCKET
 bq mk --location=US dataflow_demos
 ```
 
@@ -68,7 +68,6 @@ Note that PerUserAggregations has two stages. As you may guess by the name we ga
 Finally, if we click on "Execution Details" and go to "Stage workflow" in the "Graph View" dropdown menu, we can see the pipeline graph expressed in stages instead of transforms.
 
 ![Graph of stages](./img/StageGraph.png) 
-
 
 
 
