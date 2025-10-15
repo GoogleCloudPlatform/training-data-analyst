@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-gsutil mb $KOPS_STORE
+gcloud storage buckets create $KOPS_STORE
 
 n=0
 until [ $n -ge 5 ]
 do
-    gsutil ls | grep $KOPS_STORE && break
+    gcloud storage ls | grep $KOPS_STORE && break
     n=$[$n+1]
     sleep 3
 done
@@ -61,7 +61,7 @@ fi
 
 echo "copying the kubeconfig file for later use..."
 kops export kubecfg --name $C2_FULLNAME --state=$KOPS_STORE
-gsutil cp $KF $KOPS_STORE
+gcloud storage cp $KF $KOPS_STORE
 
 echo "creating service account and granting role..."
 gcloud iam service-accounts create connect-sa-op
