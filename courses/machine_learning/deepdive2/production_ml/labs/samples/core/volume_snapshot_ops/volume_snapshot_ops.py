@@ -33,7 +33,7 @@ def volume_snapshotop_sequential(url):
         image="google/cloud-sdk:279.0.0",
         command=["sh", "-c"],
         arguments=["mkdir /data/step1 && "
-                   "gsutil cat %s | gzip -c >/data/step1/file1.gz" % url],
+                   "gcloud storage cat %s | gzip -c >/data/step1/file1.gz" % url],
         pvolumes={"/data": vop.volume}
     )
 
