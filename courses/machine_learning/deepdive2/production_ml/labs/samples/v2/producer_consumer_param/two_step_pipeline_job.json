@@ -66,7 +66,7 @@
             "command": [
               "sh",
               "-c",
-              "set -e -x\necho \"$0, this is an output parameter\" | gsutil cp - \"$1\"\n",
+              "set -e -x\necho \"$0, this is an output parameter\" | gcloud storage cp - \"$1\"\n",
               "{{$.inputs.parameters['text']}}",
               "{{$.outputs.parameters['output_value'].output_file}}"
             ]
