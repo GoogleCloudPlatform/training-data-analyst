@@ -34,10 +34,10 @@ While you wait, you can preview the data we will be loading in on movies and use
 
 ```bash
 # Let's show the first 1000 bytes of Movie data:
-gsutil cat -r 0-1000 'gs://movielens-demo/movies.csv';
+gcloud storage cat --range=0-1000 'gs://movielens-demo/movies.csv';
 
 # Let's show the first 500 bytes of user Ratings data:
-gsutil cat -r 0-500 'gs://movielens-demo/ratings.csv';
+gcloud storage cat --range=0-500 'gs://movielens-demo/ratings.csv';
 ```
 
 Once your instance is created, let's create the `movielens` database:
@@ -292,8 +292,6 @@ __Tip:__ We will __overwrite__ the table every time with the updated data but yo
 Click __Schedule__
 
 Your scheduled query should automatically begin to run and you can monitor it in [Scheduled Queries](https://console.cloud.google.com/bigquery/scheduled-queries)
-
-
 
 
 
