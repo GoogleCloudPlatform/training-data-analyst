@@ -54,7 +54,7 @@ _PREDICTOR_MAIN_CLS = 'ml.dmlc.xgboost4j.scala.example.spark.XGBoostPredictor'
 def delete_directory_from_gcs(dir_path):
   """Delete a GCS dir recursively. Ignore errors."""
   try:
-    subprocess.call(['gsutil', '-m', 'rm', '-r', dir_path])
+    subprocess.call(['gcloud', 'storage', 'rm', '--recursive', dir_path])
   except:
     pass
 
