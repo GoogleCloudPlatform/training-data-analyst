@@ -138,5 +138,5 @@ def save_model(estimator, gcspath, name):
   joblib.dump(estimator, model)
   model_path = os.path.join(gcspath, datetime.datetime.now().strftime(
     'export_%Y%m%d_%H%M%S'), model)
-  subprocess.check_call(['gsutil', 'cp', model, model_path])
+  subprocess.check_call(['gcloud', 'storage', 'cp', model, model_path])
   return model_path
