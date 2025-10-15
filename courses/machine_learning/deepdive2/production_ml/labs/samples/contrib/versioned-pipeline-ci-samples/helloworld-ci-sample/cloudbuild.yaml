@@ -25,9 +25,10 @@ steps:
       ]
     id: "PackagePipeline"
 
-  - name: "gcr.io/cloud-builders/gsutil"
+  - name: "gcr.io/cloud-builders/gcloud"
     args:
       [
+        "storage",
         "cp",
         "/workspace/pipeline.zip",
         "${_GS_BUCKET}/$COMMIT_SHA/pipeline.zip",
