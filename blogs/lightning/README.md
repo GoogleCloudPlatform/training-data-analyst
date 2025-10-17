@@ -30,7 +30,7 @@ LABEL_RADIUS=1
 STRIDE=2 # use 2*label_patch_radius
 LTG_VALID_TIME=5
 OUTDIR=gs://${BUCKET}/lightning/preproc_${LATLONRES}_${TRAIN_RADIUS}_${LABEL_RADIUS}
-gsutil -m rm -rf $OUTDIR
+gcloud storage rm --recursive --continue-on-error $OUTDIR
 
 python -m ltgpred.preproc.create_dataset \
    --outdir=$OUTDIR \
@@ -52,7 +52,7 @@ DATADIR=gs://${BUCKET}/lightning/preproc_${LATLONRES}_${TRAIN_RADIUS}_${LABEL_RA
 for ARCH in convnet; do
   JOBNAME=ltgpred_${ARCH}_$(date -u +%y%m%d_%H%M%S)
   OUTDIR=gs://${BUCKET}/lightning/${ARCH}_trained_gpu
-  gsutil -m rm -rf $OUTDIR
+  gcloud storage rm --recursive --continue-on-error $OUTDIR
   gcloud ml-engine jobs submit training $JOBNAME \
       --module-name trainer.train_cnn --package-path ${PWD}/ltgpred/trainer --job-dir=$OUTDIR \
       --region=${REGION} --scale-tier CUSTOM --config largemachine.yaml \
