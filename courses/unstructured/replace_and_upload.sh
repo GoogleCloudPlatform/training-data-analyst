@@ -23,7 +23,7 @@ gcloud storage cp $TEMP/* gs://$BUCKET/unstructured
 
 # photos ...
 gcloud storage cp photos/* gs://$BUCKET/unstructured/photos
-gcloud storage objects update --add-acl-grant=AllUsers:R gs://$BUCKET/unstructured/photos/*
+gcloud storage objects update --add-acl-grant=entity=allUsers,role=READER gs://$BUCKET/unstructured/photos/*
 
 # this allows you to look at the .py file in a browser
 gcloud storage objects update --content-type="text/plain" gs://$BUCKET/unstructured/*.py
