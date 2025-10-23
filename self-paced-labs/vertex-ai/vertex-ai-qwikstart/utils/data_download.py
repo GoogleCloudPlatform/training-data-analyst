@@ -46,7 +46,8 @@ def download_url2gcs(args):
     #See if file already exists.
     if blob.exists() == False:
         try:
-            os.mkdir(LOCAL_PATH)
+            if not os.path.exists('./data'):
+                os.mkdir('./data')
             logging.info('Downloading xlsx file...')            
             local_xlsx = wget.download(args.URL, out=f"{LOCAL_PATH}/{FILENAME}.xlsx")
             logging.info('Converting xlsx -> csv...')            
