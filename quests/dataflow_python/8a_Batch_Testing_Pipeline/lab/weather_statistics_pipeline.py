@@ -29,7 +29,7 @@ class ConvertTempUnits(beam.DoFn):
     def process(self, row):
         row_dict = row._asdict()
         for field in ('low_temp', 'high_temp'):
-            row_dict[field] = row_dict[field] * 1.8 + 31.0
+            row_dict[field] = row_dict[field] * 1.8 + 32.0
         yield WeatherRecord(**row_dict)
 
 class ConvertToJson(beam.DoFn):
