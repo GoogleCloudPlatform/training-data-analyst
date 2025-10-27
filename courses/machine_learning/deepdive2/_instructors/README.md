@@ -88,16 +88,16 @@ else
 fi    
     
 ## Create GCS bucket if it doesn't exist already...
-exists=$(gsutil ls -d | grep -w gs://${PROJECT}/)
+# TODO: Flag "-d" is not supported in "gcloud storage ls". Manual review required.
+exists=$(gcloud storage ls | grep -w gs://${PROJECT}/)
 
 if [ -n "$exists" ]; then
    echo -e "Bucket exists, let's not recreate it."
     
 else
    echo "Creating a new GCS bucket."
-   gsutil mb -l ${REGION} gs://${PROJECT}
+   gcloud storage buckets create --location=${REGION} gs://${PROJECT}
    echo "\nHere are your current buckets:"
-   gsutil ls
+   gcloud storage ls
 fi
 ```
-
