@@ -11,7 +11,7 @@ The batch pipeline for this demo should be ran in advance for the sake of time. 
 To create an output bucket in Cloud Storage (if needed) and run a word count pipeline from template, you can run the following commands in Cloud Shell
 
 ```bash
-gsutil mb -l us-central1 gs://$DEVSHELL_PROJECT_ID
+gcloud storage buckets create --location us-central1 gs://$DEVSHELL_PROJECT_ID
 gcloud dataflow jobs run word_count_monitoring --gcs-location "gs://dataflow-templates-us-central1/latest/Word_Count" --region us-central1 --parameters inputFile=gs://dataflow-samples/shakespeare/kinglear.txt,output=gs://$DEVSHELL_PROJECT_ID
 ``` 
 
