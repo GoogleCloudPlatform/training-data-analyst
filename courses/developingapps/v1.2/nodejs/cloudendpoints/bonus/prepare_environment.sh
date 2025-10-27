@@ -25,7 +25,7 @@ echo "Creating Datastore database (Firestore in Datastore mode)"
 gcloud datastore databases create --region "us-central"
 
 echo "Making bucket: gs://$GCLOUD_BUCKET"
-gsutil mb gs://$GCLOUD_BUCKET
+gcloud storage buckets create gs://$GCLOUD_BUCKET
 
 echo "Installing dependencies"
 npm install -g npm@6.11.3
