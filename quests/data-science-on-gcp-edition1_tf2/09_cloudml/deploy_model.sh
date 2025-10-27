@@ -16,7 +16,7 @@ REGION=$3
 
 MODEL_NAME=flights
 VERSION_NAME=tf2
-EXPORT_PATH=$(gsutil ls gs://$BUCKET/flights/trained_model/${BEST_MODEL}export | tail -1)
+EXPORT_PATH=$(gcloud storage ls gs://$BUCKET/flights/trained_model/${BEST_MODEL}export | tail -1)
 echo $EXPORT_PATH
 
 if [[ $(gcloud ai-platform models list --format='value(name)' --region=$REGION | grep $MODEL_NAME) ]]; then
