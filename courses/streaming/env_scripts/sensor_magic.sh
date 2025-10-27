@@ -9,7 +9,7 @@
 # Use PIP to install pubsub API
 # sudo pip install -U google-cloud-pubsub
 # Download the data file
-gsutil cp gs://cloud-training-demos/sandiego/sensor_obs2008.csv.gz ~/training-data-analyst/courses/streaming/publish/
+gcloud storage cp gs://cloud-training-demos/sandiego/sensor_obs2008.csv.gz ~/training-data-analyst/courses/streaming/publish/
 # cd to directory
 cd ~/training-data-analyst/courses/streaming/publish/
 # Run sensor simulator
