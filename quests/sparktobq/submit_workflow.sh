@@ -11,7 +11,7 @@ MACHINE_TYPE=n1-standard-4
 CLUSTER=sparktobq
 BUCKET=$1
 
-gsutil cp spark_analysis.py gs://$BUCKET/
+gcloud storage cp spark_analysis.py gs://$BUCKET/
 
 gcloud dataproc --quiet workflow-templates delete $TEMPLATE
 gcloud dataproc --quiet workflow-templates create $TEMPLATE
@@ -19,7 +19,7 @@ gcloud dataproc --quiet workflow-templates create $TEMPLATE
 # the things we need pip-installed on the cluster
 STARTUP_SCRIPT=gs://${BUCKET}/sparktobq/startup_script.sh
 echo "pip install --upgrade --quiet google-compute-engine google-cloud-storage matplotlib" > /tmp/startup_script.sh
-gsutil cp /tmp/startup_script.sh $STARTUP_SCRIPT
+gcloud storage cp /tmp/startup_script.sh $STARTUP_SCRIPT
 
 # create new cluster for job
 gcloud dataproc workflow-templates set-managed-cluster $TEMPLATE \
