@@ -30,7 +30,7 @@ with DAG('hello_world_solution', default_args=default_args) as dag:
   """
 
   # Solution:
-  # gsutil cp count.txt gs://{your-composer-bucket}/dags
+  # gcloud storage cp count.txt gs://{your-composer-bucket}/dags
   with open('/home/airflow/gcs/dags/count.txt') as f:
     number_of_templated_tasks = int(f.read())
     for i in xrange(number_of_templated_tasks):

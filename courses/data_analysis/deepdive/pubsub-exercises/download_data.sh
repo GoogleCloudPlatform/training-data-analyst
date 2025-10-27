@@ -1,2 +1,2 @@
 #!/bin/bash
-gsutil -m cp gs://cloud-training-demos/datasme/pubsub/actions.csv data/actions.csv
+gcloud storage cp gs://cloud-training-demos/datasme/pubsub/actions.csv data/actions.csv

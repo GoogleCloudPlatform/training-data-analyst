@@ -55,4 +55,3 @@
 ### Part 5
 * On the same AI Platform Notebooks instance as Part 4, open and run ```05_functions.ipynb```
 * Delete the Notebooks instance
-
