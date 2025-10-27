@@ -57,7 +57,7 @@ def save_vocab(trainfile, txtcolname, outfilename):
   if trainfile.startswith('gs://'):
     import subprocess
     tmpfile = "vocab.csv"
-    subprocess.check_call("gsutil cp {} {}".format(trainfile, tmpfile).split(" "))
+    subprocess.check_call("gcloud storage cp {} {}".format(trainfile, tmpfile).split(" "))
     filename = tmpfile
   else:
     filename = trainfile
