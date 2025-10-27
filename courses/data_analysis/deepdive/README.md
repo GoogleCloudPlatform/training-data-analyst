@@ -1,7 +1,6 @@
 
-
 1. Download data:
-gsutil -m cp gs://cloud-training-demos/datasme/pubsub/actions.csv pubsub-exercises/data/actions.csv
+gcloud storage cp gs://cloud-training-demos/datasme/pubsub/actions.csv pubsub-exercises/data/actions.csv
 
 2. PubSub exercises:
 https://codelabs.developers.google.com/codelabs/datasme-pubsub-01
