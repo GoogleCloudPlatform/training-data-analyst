@@ -24,7 +24,7 @@ export GCLOUD_BUCKET=$DEVSHELL_PROJECT_ID-media
 export NODE_ENV=production
 
 echo "Making bucket: gs://$GCLOUD_BUCKET"
-gsutil mb gs://$GCLOUD_BUCKET
+gcloud storage buckets create gs://$GCLOUD_BUCKET
 
 echo "Installing dependencies"
 npm install
