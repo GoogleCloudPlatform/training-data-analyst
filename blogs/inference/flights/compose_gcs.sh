@@ -7,7 +7,7 @@ fi
 
 BUCKET=$1
 
-gsutil compose gs://${BUCKET}/flights/json/sharded/flights_data* \
+gcloud storage objects compose gs://${BUCKET}/flights/json/sharded/flights_data* \
                gs://${BUCKET}/flights/json/flights_data.json
 
-gsutil -m rm -rf gs://${BUCKET}/flights/json/sharded/
+gcloud storage rm --recursive --continue-on-error gs://${BUCKET}/flights/json/sharded/
