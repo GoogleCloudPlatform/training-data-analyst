@@ -27,7 +27,7 @@ cd training-data-analyst/courses/bdml_fundamentals
 ```
 * Go to the Storage | Browser in the Cloud Console and create a new bucket
 * Copy the files to the bucket:
-```gsutil cp earthquakes.* gs://[YOURBUCKET]```
+```gcloud storage cp earthquakes.* gs://[YOURBUCKET]```
 * Refresh the Storage | Browser to verify that you have new files in Cloud Storage
 * Edit the bucket permissions and add a new member named ```allUsers``` 
 and give this member Cloud Storage Object Viewer permissions
