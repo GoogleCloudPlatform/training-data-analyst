@@ -38,7 +38,7 @@ cd $today
 wget https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv
 wget https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv
 cd ..
-gsutil cp -r "$today" gs://$BUCKET/covid19/
+gcloud storage cp --recursive "$today" gs://$BUCKET/covid19/
 bq load --source_format=CSV --autodetect --replace \
 	covid19.us_counties \
 	gs://$BUCKET/covid19/"$today"/us-counties.csv
@@ -232,4 +232,3 @@ Even if the dataset were 1 GB in size, the storage and query costs would be triv
 BigQuery's supporting free tools like GeoViz and DataStudio make it very productive for data exploration. BigQuery is productive even for small datasets and grows exponentially more powerful with larger datasets up to hundreds of petabytes. In a future post, we'll look at another powerful exploration tool now in beta, BigQuery Connected Sheets.
 
 _Special thanks to Michael Abel and Lak Lakshmanan for their review and suggestions!_
-

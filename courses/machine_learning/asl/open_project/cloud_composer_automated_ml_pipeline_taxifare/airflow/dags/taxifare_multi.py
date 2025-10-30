@@ -178,7 +178,7 @@ for model in SOURCE_DATASET_TABLE_NAMES:
   # BigQuery training data export to GCS
   bash_remove_old_data_op = BashOperator(
     task_id="bash_remove_old_data_{}_task".format(model.replace(".","_")),
-    bash_command="if gsutil ls {0}/taxifare/data/{1} 2> /dev/null; then gsutil -m rm -rf {0}/taxifare/data/{1}/*; else true; fi".format(BUCKET, model.replace(".","_")),
+    bash_command="if gcloud storage ls {0}/taxifare/data/{1} 2> /dev/null; then gcloud storage rm --recursive --continue-on-error {0}/taxifare/data/{1}/*; else true; fi".format(BUCKET, model.replace(".","_")),
     dag=dag
   )
 
@@ -244,13 +244,13 @@ for model in SOURCE_DATASET_TABLE_NAMES:
 
   bash_remove_old_saved_model_op = BashOperator(
     task_id="bash_remove_old_saved_model_{}_task".format(model.replace(".","_")),
-    bash_command="if gsutil ls {0} 2> /dev/null; then gsutil -m rm -rf {0}/*; else true; fi".format(MODEL_LOCATION + model.replace(".","_")),
+    bash_command="if gcloud storage ls {0} 2> /dev/null; then gcloud storage rm --recursive --continue-on-error {0}/*; else true; fi".format(MODEL_LOCATION + model.replace(".","_")),
     dag=dag
   )
 
   bash_copy_new_saved_model_op = BashOperator(
     task_id="bash_copy_new_saved_model_{}_task".format(model.replace(".","_")),
-    bash_command="gsutil -m rsync -d -r `gsutil ls {0}/export/exporter/ | tail -1` {1}".format(output_dir, MODEL_LOCATION + model.replace(".","_")),
+    bash_command="gcloud storage rsync --delete-unmatched-destination-objects --recursive `gcloud storage ls {0}/export/exporter/ | tail -1` {1}".format(output_dir, MODEL_LOCATION + model.replace(".","_")),
     dag=dag
   )
 
