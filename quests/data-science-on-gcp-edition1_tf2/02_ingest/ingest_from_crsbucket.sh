@@ -9,7 +9,7 @@ BUCKET=$1
 FROM=gs://data-science-on-gcp/flights/raw
 TO=gs://$BUCKET/flights/raw
 
-CMD="gsutil -m cp "
+CMD="gcloud storage cp "
 for MONTH in `seq -w 1 12`; do
   CMD="$CMD ${FROM}/2015${MONTH}.csv"
 done
