@@ -18,7 +18,7 @@ CODEDIR=/babyweight/src/training-data-analyst/courses/machine_learning/deepdive/
 OUTDIR=gs://${BUCKET}/babyweight/hyperparam
 JOBNAME=babyweight_$(date -u +%y%m%d_%H%M%S)
 echo $OUTDIR $REGION $JOBNAME
-gsutil -m rm -rf $OUTDIR
+gcloud storage rm --recursive --continue-on-error $OUTDIR
 gcloud ml-engine jobs submit training $JOBNAME \
   --region=$REGION \
   --module-name=trainer.task \
