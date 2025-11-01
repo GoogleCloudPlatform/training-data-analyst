@@ -11,5 +11,5 @@ export YEAR=2016
 bash ../02_ingest/download.sh
 bash ../02_ingest/zip_to_csv.sh
 bash ../02_ingest/quotes_comma.sh
-gsutil -m cp *.csv gs://$BUCKET/flights2016/raw
+gcloud storage cp *.csv gs://$BUCKET/flights2016/raw
 rm *.csv

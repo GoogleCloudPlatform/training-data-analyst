@@ -10,7 +10,7 @@ FROM=gs://data-science-on-gcp/flights/tzcorr
 TO=gs://$BUCKET/flights/tzcorr
 
 #sharded files
-CMD="gsutil -m cp "
+CMD="gcloud storage cp "
 for SHARD in `seq -w 0 35`; do
   CMD="$CMD ${FROM}/all_flights-000${SHARD}-of-00036"
 done
@@ -19,7 +19,7 @@ echo $CMD
 $CMD
 
 # individual files
-CMD="gsutil -m cp "
+CMD="gcloud storage cp "
 for FILE in airports/airports.csv.gz; do
    CMD="$CMD gs://data-science-on-gcp/flights/$FILE gs://$BUCKET/flights/$FILE"
 done
