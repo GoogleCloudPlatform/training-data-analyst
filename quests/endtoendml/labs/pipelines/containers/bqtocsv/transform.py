@@ -52,7 +52,7 @@ def preprocess(in_test_mode, PROJECT, BUCKET, start_year):
       OUTPUT_DIR = 'gs://{0}/babyweight/preproc/'.format(BUCKET)
       try:
         subprocess.check_call(
-           'gsutil -m rm -r {}'.format(OUTPUT_DIR).split())
+           'gcloud storage rm --recursive {}'.format(OUTPUT_DIR).split())
       except:
         pass
        
