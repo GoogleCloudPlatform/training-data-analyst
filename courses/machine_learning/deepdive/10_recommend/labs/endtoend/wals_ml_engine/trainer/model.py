@@ -320,7 +320,7 @@ def save_model(args, user_map, item_map, row_factor, col_factor):
   np.save(os.path.join(model_dir, 'col'), col_factor)
 
   if gs_model_dir:
-    sh.gsutil('cp', '-r', os.path.join(model_dir, '*'), gs_model_dir)
+    sh.gcloud('storage', 'cp', '--recursive', os.path.join(model_dir, '*'), gs_model_dir)
 
 
 def generate_recommendations(user_idx, user_rated, row_factor, col_factor, k):
@@ -364,4 +364,3 @@ def generate_recommendations(user_idx, user_rated, row_factor, col_factor, k):
   recommended_items.reverse()
 
   return recommended_items
-

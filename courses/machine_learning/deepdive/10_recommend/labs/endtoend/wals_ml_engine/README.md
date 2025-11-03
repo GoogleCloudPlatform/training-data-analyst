@@ -54,7 +54,7 @@ $ ./mltrain.sh local data/u.data
 
 *   Train the model on ML Engine:
 ```
-$ gsutil cp data/u.data gs://mybucket/data/u.data
+$ gcloud storage cp data/u.data gs://mybucket/data/u.data
 $ ./mltrain.sh train gs://mybucket/data/u.data
 
 ```
@@ -64,6 +64,5 @@ $ ./mltrain.sh train gs://mybucket/data/u.data
 $ ./mltrain.sh tune gs://mybucket/data/u.data
 
 ```
-
 
 
