@@ -15,7 +15,7 @@ VERSION_NAME=dnn
 GCS_PROJECT_PATH=gs://$BUCKET/taxifare
 OUTPUT_DIR=$GCS_PROJECT_PATH/model
 PROJECT_ID=$(gcloud config list project --format "value(core.project)")
-EXPORT_PATH=$(gsutil ls $OUTPUT_DIR/export/savedmodel | tail -1)
+EXPORT_PATH=$(gcloud storage ls $OUTPUT_DIR/export/savedmodel | tail -1)
 
 
 if [[ $(gcloud ai-platform models list --format='value(name)' | grep $MODEL_NAME) ]]; then
