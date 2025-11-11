@@ -98,7 +98,7 @@ if __name__ == '__main__':
         output_dir,
         json.loads(
             os.environ.get('TF_CONFIG', '{}')
-        ).get('task', {}).get('trail', '')
+        ).get('task', {}).get('trial', '')
     )
 
     # Run the training job
