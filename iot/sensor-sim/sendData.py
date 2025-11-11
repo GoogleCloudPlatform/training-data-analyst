@@ -2,7 +2,7 @@ import argparse
 import concurrent.futures
 import time
 
-from google.cloud import pubsub_v1
+#from google.cloud import pubsub_v1
 
 def publish_messages(project, topic_name):
     """Publishes multiple messages to a Pub/Sub topic."""
