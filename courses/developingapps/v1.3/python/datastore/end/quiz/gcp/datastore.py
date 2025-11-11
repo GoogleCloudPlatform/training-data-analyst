@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-project_id = os.getenv('GCLOUD_PROJECT')
+project_id = os.getenv('GOOGLE_CLOUD_PROJECT')
 
 from flask import current_app
 from google.cloud import datastore
