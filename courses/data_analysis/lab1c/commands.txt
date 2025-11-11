@@ -18,9 +18,7 @@ FROM
   `bigquery-public-data.github_repos.commits`,
   UNNEST(difference) diff
 WHERE
-  EXTRACT(YEAR
-  FROM
-    author.date)=2016
+  EXTRACT(YEAR FROM TIMESTAMP_SECONDS(author.date.seconds))=2016
 LIMIT 10
 
 
@@ -37,9 +35,7 @@ FROM
   `bigquery-public-data.github_repos.commits`,
   UNNEST(difference) diff
 WHERE
-  EXTRACT(YEAR
-  FROM
-    author.date)=2016
+  EXTRACT(YEAR FROM TIMESTAMP_SECONDS(author.date.seconds))=2016
 LIMIT
   10
 
@@ -59,9 +55,7 @@ WITH
     `bigquery-public-data.github_repos.commits`,
     UNNEST(difference) diff
   WHERE
-    EXTRACT(YEAR
-    FROM
-      author.date)=2016 )
+    EXTRACT(YEAR FROM TIMESTAMP_SECONDS(author.date.seconds))=2016 )
 SELECT
   lang,
   COUNT(path) AS numcommits
@@ -87,10 +81,8 @@ WITH
   commits AS (
   SELECT
     author.email,
-    EXTRACT(DAYOFWEEK
-    FROM
-      author.date) BETWEEN 2
-    AND 6 is_weekday,
+    EXTRACT(DAYOFWEEK FROM TIMESTAMP_SECONDS(author.date.seconds)) 
+    BETWEEN 2 AND 6 is_weekday,
     LOWER(REGEXP_EXTRACT(diff.new_path, r'\.([^\./\(~_ \- #]*)$')) lang,
     diff.new_path AS path,
     author.date
@@ -98,9 +90,7 @@ WITH
     `bigquery-public-data.github_repos.commits`,
     UNNEST(difference) diff
   WHERE
-    EXTRACT(YEAR
-    FROM
-      author.date)=2016)
+    EXTRACT(YEAR FROM TIMESTAMP_SECONDS(author.date.seconds))=2016 )
 SELECT
   lang,
   is_weekday,
@@ -118,4 +108,3 @@ HAVING
   numcommits > 100
 ORDER BY
   numcommits DESC
-
