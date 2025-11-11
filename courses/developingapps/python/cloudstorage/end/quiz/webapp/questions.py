@@ -55,7 +55,7 @@ def save_question(data, image_file):
     # If there isn't, assign an empty string
     
     if image_file:
-        data['imageUrl'] = unicode(upload_file(image_file, True))
+        data['imageUrl'] = upload_file(image_file, True).encode('utf-8')
     else:
         data['imageUrl'] = u''
 
