@@ -8,7 +8,7 @@ cd $today
 wget https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv
 wget https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv
 cd ..
-gsutil cp -r "$today" gs://$BUCKET/covid19/
+gcloud storage cp --recursive "$today" gs://$BUCKET/covid19/
 bq load --source_format=CSV --autodetect --replace \
 	covid19.us_counties \
 	gs://$BUCKET/covid19/"$today"/us-counties.csv

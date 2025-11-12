@@ -47,13 +47,13 @@ def training_tasks(model, dag, PROJECT_ID, BUCKET, DATA_DIR, MODEL_NAME, MODEL_V
 
   bash_remove_old_saved_model_op = BashOperator(
     task_id="bash_remove_old_saved_model_{}_task".format(model.replace(".","_")),
-    bash_command="if gsutil ls {0} 2> /dev/null; then gsutil -m rm -rf {0}/*; else true; fi".format(MODEL_LOCATION + model.replace(".","_")),
+    bash_command="if gcloud storage ls {0} 2> /dev/null; then gcloud storage rm --recursive --continue-on-error {0}/*; else true; fi".format(MODEL_LOCATION + model.replace(".","_")),
     dag=dag
   )
 
   bash_copy_new_saved_model_op = BashOperator(
     task_id="bash_copy_new_saved_model_{}_task".format(model.replace(".","_")),
-    bash_command="gsutil -m rsync -d -r `gsutil ls {0}/export/exporter/ | tail -1` {1}".format(output_dir, MODEL_LOCATION + model.replace(".","_")),
+    bash_command="gcloud storage rsync --delete-unmatched-destination-objects --recursive `gcloud storage ls {0}/export/exporter/ | tail -1` {1}".format(output_dir, MODEL_LOCATION + model.replace(".","_")),
     dag=dag
   )
   
