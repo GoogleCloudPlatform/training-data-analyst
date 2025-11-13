@@ -9,7 +9,7 @@ BUCKET=$1
 
 bq show --format=prettyjson flights.simevents > simevents.json
 
-ONE_FILE=$(gsutil ls gs://${BUCKET}/flights/tzcorr/all_flights-00001*)
+ONE_FILE=$(gcloud storage ls gs://${BUCKET}/flights/tzcorr/all_flights-00001*)
 echo "Creating table definition from $ONE_FILE"
 bq mk --external_table_definition=./tzcorr.json@CSV=$ONE_FILE flights.fedtzcorr
 
