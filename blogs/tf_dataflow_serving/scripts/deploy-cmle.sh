@@ -10,13 +10,13 @@ MODEL_VERSION="v1" # change to your model version
 MODEL_BINARIES=gs://${BUCKET}/models/${MODEL_NAME}
 
 # upload the local SavedModel to GCS
-gsutil -m cp -r model/trained/v1/* gs://${BUCKET}/models/${MODEL_NAME}
+gcloud storage cp --recursive model/trained/v1/* gs://${BUCKET}/models/${MODEL_NAME}
 
 # set the current project
 gcloud config set project ${PROJECT}
 
 # list model files on GCS
-gsutil ls ${MODEL_BINARIES}
+gcloud storage ls ${MODEL_BINARIES}
 
 # deploy model to GCP
 gcloud ml-engine models create ${MODEL_NAME} --regions=${REGION}
