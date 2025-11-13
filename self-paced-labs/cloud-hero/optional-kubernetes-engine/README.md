@@ -36,8 +36,8 @@ Alternatively, you can use make:
 
 The bookshelf application uses [Google Cloud Storage](https://cloud.google.com/storage) to store image files. Create a bucket for your project:
 
-    gsutil mb gs://<your-project-id>
-    gsutil defacl set public-read gs://<your-project-id>
+    gcloud storage buckets create gs://<your-project-id>
+    gcloud storage buckets update gs://<your-project-id> --predefined-default-object-acl=public-read
 
 Alternatively, you can use make:
 
