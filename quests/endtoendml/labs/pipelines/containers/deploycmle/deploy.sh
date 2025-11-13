@@ -5,7 +5,7 @@ if [ "$#" -ne 3 ]; then
     exit
 fi
 
-MODEL_LOCATION=$(gsutil ls $1/export/exporter | tail -1)
+MODEL_LOCATION=$(gcloud storage ls $1/export/exporter | tail -1)
 MODEL_NAME=$2
 MODEL_VERSION=$3
 
