@@ -9,7 +9,7 @@ BUCKET=$1
 FROM=gs://data-science-on-gcp/flights/chapter8/output
 TO=gs://$BUCKET/flights/chapter8/output
 
-CMD="gsutil -m cp "
+CMD="gcloud storage cp "
 for SHARD in `seq -w 0 6`; do
   CMD="$CMD ${FROM}/testFlights-0000${SHARD}-of-00007.csv"
 done

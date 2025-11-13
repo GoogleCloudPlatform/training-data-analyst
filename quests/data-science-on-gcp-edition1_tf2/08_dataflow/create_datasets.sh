@@ -9,7 +9,7 @@ PROJECT=$DEVSHELL_PROJECT_ID
 BUCKET=$1
 MAX_NUM_WORKERS=$2
 
-gsutil -m rm -rf gs://$BUCKET/flights/chapter8
+gcloud storage rm --recursive --continue-on-error gs://$BUCKET/flights/chapter8
 
 cd chapter8
 

@@ -14,7 +14,7 @@ NUM_EXAMPLES=$3
 REGION=us-central1
 
 JOBID=flights_$(date +%Y%m%d_%H%M%S)
-gsutil -m rm -rf gs://$BUCKET/flights/trained_model
+gcloud storage rm --recursive --continue-on-error gs://$BUCKET/flights/trained_model
 
 gcloud ai-platform jobs submit training $JOBID \
    --staging-bucket=gs://$BUCKET  --region=$REGION \
