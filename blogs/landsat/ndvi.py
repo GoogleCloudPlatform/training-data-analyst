@@ -30,7 +30,7 @@ class LandsatReader():
 
    def __enter__(self):
       print 'Getting {0} to {1} '.format(self.gsfile, self.dest)
-      ret = subprocess.check_call(['gsutil', 'cp', self.gsfile, self.dest])
+      ret = subprocess.check_call(['gcloud', 'storage', 'cp', self.gsfile, self.dest])
       if ret == 0:
          dataset = gdal.Open( self.dest, gdal.GA_ReadOnly )
          return dataset
@@ -80,7 +80,8 @@ def computeNdvi(gs_baseurl, outdir, instrument):
      outds = None # close
 
      outfilename = os.path.join(outdir, '{0}_ndvi.TIF'.format(os.path.basename(gs_baseurl)) )
-     ret = subprocess.check_call(['gsutil', 'mv', tmpfilename, outfilename])
+     # Note: gcloud storage mv is not an atomic operation.
+     ret = subprocess.check_call(['gcloud', 'storage', 'mv', tmpfilename, outfilename])
      print 'Wrote {0} ...'.format(outfilename)
 
 if __name__ == '__main__':
