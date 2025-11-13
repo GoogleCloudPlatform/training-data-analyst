@@ -12,7 +12,7 @@ INSTALL=gs://$BUCKET/flights/dataproc/install_on_cluster.sh
 
 # upload install file
 sed "s/CHANGE_TO_USER_NAME/$USER/g" install_on_cluster.sh > /tmp/install_on_cluster.sh
-gsutil cp /tmp/install_on_cluster.sh $INSTALL
+gcloud storage cp /tmp/install_on_cluster.sh $INSTALL
 
 # create cluster
 gcloud dataproc clusters create \
