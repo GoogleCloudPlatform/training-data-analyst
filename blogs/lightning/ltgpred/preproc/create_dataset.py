@@ -371,7 +371,8 @@ if __name__ == '__main__':
   else:
     print('Launching Dataflow job {} ... hang on'.format(options['job_name']))
     try:
-      subprocess.check_call('gsutil -m rm -r {}'.format(outdir).split())
+      # Note: gcloud storage rm performs parallel deletions by default for improved performance. gsutil requires the top-level -m flag to enable this behavior.
+      subprocess.check_call('gcloud storage rm --recursive {}'.format(outdir).split())
     except:  # pylint: disable=bare-except
       pass
     options['runner'] = 'DataflowRunner'
