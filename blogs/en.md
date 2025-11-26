@@ -42,9 +42,9 @@ The Colab Enterprise worksspace consists of five major sections (as shown in the
 ![Colab Runtime](img/colab2.png)
 
 
-## Set up your Qwiklabs environments
+## Set up your lab environments
 
-### Qwiklabs setup
+### Lab setup
 
 ![[/fragments/start-qwiklab]]
 

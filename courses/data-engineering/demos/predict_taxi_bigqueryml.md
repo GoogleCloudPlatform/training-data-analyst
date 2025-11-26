@@ -1,6 +1,6 @@
 # Predict NYC taxi fares using BQML
 
-In this demo, we'll build a model to predict taxifares in NYC using one of BigQuery's public datasets. Note to instructors: you may want to run the CREATE MODEL query before class as it will take up to 10 minutes. Also, BQML DNN regression used here is currently in alpha but should be whitelisted in your Qwiklabs environment.
+In this demo, we'll build a model to predict taxifares in NYC using one of BigQuery's public datasets. Note to instructors: you may want to run the CREATE MODEL query before class as it will take up to 10 minutes. Also, BQML DNN regression used here is currently in alpha but should be allowlisted in your lab environment.
 
 We'll begin by creating a sampled version of the dataset with a few extra columns we
 may need. Sampling will save time during our initial training as well as save cost because BQML model training, like queries, is priced based on the amount of data ingested.

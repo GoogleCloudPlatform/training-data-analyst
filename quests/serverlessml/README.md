@@ -6,7 +6,7 @@ This one day workshop provides a hands-on introduction to designing and building
 
 __Step 1:__ Create an account at https://events.qwiklabs.com/.
 
-__Step 2:__ Fill out the Labs Signup Form using the link your instructor gives you. Enter the email address of your Qwiklabs account.
+__Step 2:__ Fill out the Labs Signup Form using the link your instructor gives you. Enter the email address of your Google Skills account.
 
 __Step 3:__ [Access the Labs and Course PDFs](https://googlecloud.qwiklabs.com/classrooms/in-session)
 
@@ -23,7 +23,7 @@ Tip: Use an __Incognito Window__ for this course to prevent single sign-on issue
 
 ## Coursework: Hands-On Labs
 
-Note: If you are an instructor teaching this class via [Qwiklabs](https://www.qwiklabs.com) you can ignore the Pre-work as the student Qwiklabs will automatically create new GCP accounts and walk them through how to clone this repository. 
+Note: If you are an instructor teaching this class via [Google Skills](https://skills.google) you can ignore the Pre-work as the Google Skills will automatically create new accounts and walk them through how to clone this repository. 
 
 Each folder in this repository represents one lab and will contain:
   * labs/ <-- partially completed ipynbs with TODOs for you to complete
@@ -107,8 +107,8 @@ __7. [Productionize the models](07_caip/)__
 ## Instructor Guide
 ### Troubleshooting tips
 Here are some known issues:
-   * On Qwiklabs, they should not hit End Lab until the end of the day.
-   * On Qwiklabs, links in notebooks to BigQuery tables and datasets sometimes take the user to the wrong Google account (where the dataset/table in question is not visible). A quick workaround in those situations is to navigate to BigQuery from the Google Cloud Console instead.
+   * On Google Skills, they should not hit End Lab until the end of the day.
+   * On Google Skills, links in notebooks to BigQuery tables and datasets sometimes take the user to the wrong Google account (where the dataset/table in question is not visible). A quick workaround in those situations is to navigate to BigQuery from the Google Cloud Console instead.
    * Note that a valid region name is ```us-west1```. A string such as ```us-west1-b``` is a zone. Many gcloud commands will fail with resource unavailable errors if you pass in a zone where the notebook asks for a ```REGION```
 
 ### Timing guide

@@ -5,7 +5,7 @@ Test/Dev setup process for GCP-GKE-Monitor-Test
 
 If you wish to run the container directly in GKE:
 ========================================================================
-Steps to prepare a new GCP project (Qwiklabs) for "gcp-gke-monitor-test"
+Steps to prepare a new GCP project (Google Skills) for "gcp-gke-monitor-test"
 ========================================================================
 
 === Basic GKE Build ===
