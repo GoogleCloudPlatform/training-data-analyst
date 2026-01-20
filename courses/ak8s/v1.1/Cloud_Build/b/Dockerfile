@@ -1,3 +1,3 @@
 FROM alpine
 COPY quickstart.sh /
-CMD ["/quickstart.sh"]
+ENTRYPOINT ["/quickstart.sh"]
