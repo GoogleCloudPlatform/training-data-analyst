@@ -17,7 +17,7 @@ def ensure_dependencies():
 
 import os
 ensure_dependencies()
-# -----------------------------------------------------
+# -------------------------------------------------------
 
 import argparse
 import logging
@@ -95,3 +95,4 @@ def main(argv=None):
 if __name__ == '__main__':
   logging.getLogger().setLevel(logging.INFO)
   main()
+
