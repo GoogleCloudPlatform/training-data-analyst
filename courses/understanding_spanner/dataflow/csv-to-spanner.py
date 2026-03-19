@@ -1,6 +1,27 @@
+import sys
+import subprocess
+import pkg_resources
+
+# --- Environment Setup: Ensure correct dill version ---
+def ensure_dependencies():
+    required = {'dill': '0.3.1.1'}
+    try:
+        dist = pkg_resources.get_distribution("dill")
+        if dist.version != required['dill']:
+            raise pkg_resources.DistributionNotFound
+    except (pkg_resources.DistributionNotFound, pkg_resources.VersionConflict):
+        print(f"Installing correct dill version ({required['dill']})...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", f"dill=={required['dill']}"])
+        # Restart the script to use the newly installed package
+        os.execv(sys.executable, ['python'] + sys.argv)
+
+import os
+ensure_dependencies()
+# -------------------------------------------------------
+
 import argparse
 import logging
-import re, os
+import re
 from typing import NamedTuple, List
 
 import apache_beam as beam
@@ -50,7 +71,7 @@ def main(argv=None):
     help='Spanner table.')
   known_args, pipeline_args = parser.parse_known_args(argv)
 
-  #Update PipelineOptions
+  # Use 'dill' (standard) now that the version is fixed
   pipeline_options = PipelineOptions(
       pipeline_args,
       pickle_library='dill',
@@ -69,8 +90,9 @@ def main(argv=None):
           database_id=known_args.database,
           table=known_args.table)
 
-    pets | beam.Map(print)
+    pets | 'Log output' >> beam.Map(print)
 
 if __name__ == '__main__':
   logging.getLogger().setLevel(logging.INFO)
   main()
+
