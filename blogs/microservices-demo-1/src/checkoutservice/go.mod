@@ -8,7 +8,7 @@ require (
 	contrib.go.opencensus.io/exporter/stackdriver v0.13.10
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.1.2
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.8.3
 	go.opencensus.io v0.23.0
 	golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420
 	google.golang.org/grpc v1.40.0
@@ -33,7 +33,7 @@ require (
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/api v0.61.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
