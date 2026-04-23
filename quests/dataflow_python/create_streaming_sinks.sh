@@ -1,4 +1,4 @@
-#!/bin/#!/usr/bin/env bash
+#!/usr/bin/env bash
 echo "Creating pipeline sinks"
 
 PROJECT_ID=$(gcloud config get-value project)
