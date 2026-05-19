@@ -15,6 +15,7 @@ def run():
     parser.add_argument('--stagingLocation', required=True, help='Specify Cloud Storage bucket for staging')
     parser.add_argument('--tempLocation', required=True, help='Specify Cloud Storage bucket for temp')
     parser.add_argument('--runner', required=True, help='Specify Apache Beam Runner')
+    parser.add_argument('--machine_type', required=False, help='Specify machine type')
 
     opts = parser.parse_args()
 
@@ -26,6 +27,7 @@ def run():
     options.view_as(GoogleCloudOptions).temp_location = opts.tempLocation
     options.view_as(GoogleCloudOptions).job_name = '{0}{1}'.format('my-pipeline-',time.time_ns())
     options.view_as(StandardOptions).runner = opts.runner
+    options.view_as(WorkerOptions).machine_type = opts.machine_type
 
     # TODO: Add static input and output strings
 
