@@ -5,6 +5,7 @@ import apache_beam as beam
 from apache_beam.options.pipeline_options import GoogleCloudOptions
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import StandardOptions
+from apache_beam.options.pipeline_options import WorkerOptions
 from apache_beam.transforms.combiners import CountCombineFn
 
 # Import our custom classes and functions from the utility file.
@@ -24,7 +25,7 @@ def run():
     parser.add_argument('--table_name', required=True, help='BigQuery table name')
     # The --setup_file argument is now expected from the command line.
     parser.add_argument('--setup_file', required=True, help='Path to setup.py file')
-
+    parser.add_argument('--worker_machine_type', default='e2-standard-2')
     opts = parser.parse_args()
 
     # Setting up the Beam pipeline options.
@@ -42,6 +43,8 @@ def run():
     google_cloud_options.temp_location = opts.temp_location
     google_cloud_options.job_name = '{0}{1}'.format('batch-minute-traffic-pipeline-',time.time_ns())
     options.view_as(StandardOptions).runner = opts.runner
+    worker_options = options.view_as(WorkerOptions)
+    worker_options.machine_type = opts.worker_machine_type
 
     input_path = opts.input_path
     table_name = opts.table_name
