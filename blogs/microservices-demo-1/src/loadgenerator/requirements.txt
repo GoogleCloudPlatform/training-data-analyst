@@ -21,7 +21,7 @@ flask==1.1.2
     #   locust
 flask-basicauth==0.2.0
     # via locust
-flask-cors==3.0.10
+flask-cors==5.0.0
     # via locust
 gevent==20.12.1
     # via
@@ -52,9 +52,7 @@ requests==2.27.1
     #   -r requirements.in
     #   locust
 six==1.15.0
-    # via
-    #   flask-cors
-    #   geventhttpclient
+    # via geventhttpclient
 urllib3==1.26.5
     # via
     #   -r requirements.in
@@ -63,9 +61,9 @@ werkzeug==1.0.1
     # via
     #   flask
     #   locust
-zope.event==4.5.0
+zope-event==4.5.0
     # via gevent
-zope.interface==5.1.0
+zope-interface==5.1.0
     # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:
