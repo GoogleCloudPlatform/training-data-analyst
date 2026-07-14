@@ -15,7 +15,7 @@ spec:
       terminationGracePeriodSeconds: 5
       containers:
       - name: server
-        image: gcr.io/google-samples/microservices-demo/recommendationservice:v0.3.4
+        image: gcr.io/google-samples/microservices-demo/recommendationservice:v0.4.1
         ports:
         - containerPort: 8080
         readinessProbe:
