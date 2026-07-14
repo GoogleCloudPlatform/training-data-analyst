@@ -40,4 +40,4 @@ API endpoint for feedback
 @api_blueprint.route('/quizzes/feedback/<quiz_name>', methods=['POST'])
 def feedback_method(quiz_name):
     feedback = request.get_json()
-    return 
+    return feedback
