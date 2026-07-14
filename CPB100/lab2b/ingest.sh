@@ -6,7 +6,7 @@ sudo apt-get install wget
 rm -f earthquakes.csv
 
 # download latest data from USGS
-wget http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.csv -O earthquakes.csv
+wget https://storage.googleapis.com/tcd_repo/data/environmental/earthquakes_toy.csv -O earthquakes.csv
 
 # Copyright 2016 Google Inc.
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
