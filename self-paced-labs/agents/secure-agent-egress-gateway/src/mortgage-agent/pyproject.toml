@@ -1,0 +1,51 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+[project]
+name = "mortgage-agent"
+version = "0.1.0"
+description = "ADK mortgage assistant agent with Agent Gateway MCP connections"
+requires-python = ">=3.12"
+dependencies = [
+    # The [a2a,agent-identity] extras pull a2a-sdk and
+    # google-cloud-iamconnectorcredentials at the versions google-adk's
+    # agent_registry integration requires. Pinned to match the same
+    # version the container installs via deploy_agent.py's requirements.
+    "google-adk[a2a,agent-identity]==1.34.0",
+    # Pinned to a tested range so the operator's pickle blob and the container's
+    # AdkApp import stay class-compatible. agent/otel_setup.py uses the public
+    # path `from vertexai.agent_engines import AdkApp`, which is present in both
+    # 1.149.0 and 1.153.1; the internal `vertexai.agent_engines.templates.adk`
+    # path was already removed by 1.153.1, so an unpinned container deploy
+    # silently broke when PyPI advanced. Keep deploy_agent.py's requirements
+    # list aligned to the same upper bound.
+    "google-cloud-aiplatform>=1.149.0,<1.154.0",
+    "opentelemetry-instrumentation-google-genai",
+    "opentelemetry-instrumentation-grpc",
+    "opentelemetry-instrumentation-fastapi",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.8.0",
+    "ty>=0.0.1a0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
