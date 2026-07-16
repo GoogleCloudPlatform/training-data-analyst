@@ -1,0 +1,47 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: corporate-email
+  labels:
+    component: mcp-server
+    cloud.googleapis.com/location: ${REGION}
+  annotations:
+    run.googleapis.com/ingress: ${MCP_INGRESS}
+spec:
+  template:
+    metadata:
+      labels:
+        run.googleapis.com/startupProbeType: Default
+      annotations:
+        run.googleapis.com/sessionAffinity: "false"
+        autoscaling.knative.dev/minScale: 1
+        autoscaling.knative.dev/maxScale: 3
+        run.googleapis.com/cpu-throttling: "true"
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: mcp-corporate-email@${PROJECT_ID}.iam.gserviceaccount.com
+      containers:
+      - image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/gateway-docker/corporate-email
+        ports:
+        - name: http1
+          containerPort: 8080
+        env:
+        - name: GOOGLE_CLOUD_PROJECT
+          value: ${PROJECT_ID}
+        - name: OTEL_SERVICE_NAME
+          value: corporate-email
+        resources:
+          limits:
+            cpu: 1
+            memory: 512Mi
+        startupProbe:
+          timeoutSeconds: 240
+          periodSeconds: 240
+          failureThreshold: 1
+          tcpSocket:
+            port: 8080
+  traffic:
+  - percent: 100
+    latestRevision: true

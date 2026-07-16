@@ -1,0 +1,82 @@
+# Terraform
+*.tfvars
+!example.tfvars
+*.tfvars.json
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfplan
+tfplan
+terraform/modules/**/.terraform.lock.hcl
+
+# Python
+__pycache__/
+*.pyc
+
+# Go
+bin/
+vendor/
+src/dlp-ext-proc/server
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.iml
+
+# Environment / secrets
+.env
+.env.*
+.envrc
+.creds.json
+docs/.temp-apigee.md
+docs/working-commands.md
+docs/notes.md
+docs/todo.md
+docs/todos.md
+
+# ADK
+.adk/
+
+# Pre-commit
+.pre-commit-cache/
+
+# Skaffold (generated from skaffold.yaml.tmpl)
+skaffold.yaml
+
+# Cloud Run manifests (generated from cloudrun/*.yaml.tmpl)
+cloudrun/*.yaml
+
+# K8s manifests (generated from *.yaml.tmpl by k8s/generate.sh)
+k8s/config.env
+k8s/corporate-email/deployment.yaml
+k8s/corporate-email/kustomization.yaml
+k8s/dlp-ext-proc/deployment.yaml
+k8s/dlp-ext-proc/kustomization.yaml
+k8s/dlp-ext-proc/service-account.yaml
+k8s/gateway-internal/routes.yaml
+k8s/gateway-internal/service-extensions.yaml
+k8s/income-verification-api/deployment.yaml
+k8s/income-verification-api/kustomization.yaml
+k8s/legacy-dms/deployment.yaml
+k8s/legacy-dms/kustomization.yaml
+
+# Direnv
+.direnv/
+.workspaces/
+
+# Codelab
+codelab.md
