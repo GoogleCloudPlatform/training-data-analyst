@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Course Creator - Build a Course in Minutes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="landing-page">
+    <div class="container">
+        <header>
+            <div class="logo">🎓 AI Course Creator</div>
+        </header>
+        <main class="hero-section">
+            <h1>Turn any topic into a complete course.</h1>
+            <p class="subtitle">Just enter a subject, and our team of AI agents will research, fact-check, and write a comprehensive course for you in seconds.</p>
+            
+            <form id="create-form" class="hero-form">
+                <input type="text" id="topic-input" placeholder="What do you want to learn?" autocomplete="off" required>
+                <button type="submit" id="create-button">
+                    <span>Start Building</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                        <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </form>
+
+            <div id="progress-container" class="progress-container hidden">
+                <div class="agent-status">
+                    <div class="status-icon">
+                        <div class="spinner"></div>
+                    </div>
+                    <div id="status-text" class="status-text">Initializing AI squad...</div>
+                </div>
+                <div class="progress-steps">
+                    <div class="step" id="step-researcher">
+                        <div class="step-icon">🔍</div>
+                        <div class="step-label">Researching</div>
+                    </div>
+                    <div class="step" id="step-judge">
+                        <div class="step-icon">⚖️</div>
+                        <div class="step-label">Fact-Checking</div>
+                    </div>
+                    <div class="step" id="step-builder">
+                        <div class="step-icon">✍️</div>
+                        <div class="step-label">Writing</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
