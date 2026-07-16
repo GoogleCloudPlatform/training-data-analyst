@@ -1,7 +1,7 @@
 from google.adk.agents import Agent
 
 
-MODEL = "gemini-3-flash-preview"
+MODEL = "gemini-3.5-flash"
 
 # TODO: Define the Content Builder Agent
 # This agent should take approved research and format it into a course module.
