@@ -1,0 +1,101 @@
+[project]
+name = "course-creation-agent"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Your Name", email = "your@email.com"},
+]
+dependencies = [
+    "google-adk>=1.27.4,<2.0.0",
+    "opentelemetry-exporter-gcp-trace==1.11.0",
+    "google-cloud-logging==3.13.0",
+    "google-cloud-aiplatform[evaluation]==1.132.0",
+    "fastapi==0.124.*",
+    "uvicorn==0.40.0",
+    "psycopg2-binary==2.9.*",
+    "a2a-sdk==0.3.*",
+]
+
+requires-python = ">=3.10,<3.14"
+
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4,<9.0.0",
+    "pytest-asyncio>=0.23.8,<1.0.0",
+    "nest-asyncio>=1.6.0,<2.0.0",
+]
+
+[project.optional-dependencies]
+
+jupyter = [
+    "jupyter>=1.0.0,<2.0.0",
+]
+lint = [
+    "ruff>=0.4.6,<1.0.0",
+    "mypy>=1.15.0,<2.0.0",
+    "codespell>=2.2.0,<3.0.0",
+    "types-pyyaml>=6.0.12.20240917,<7.0.0",
+    "types-requests>=2.32.0.20240914,<3.0.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "C",  # flake8-comprehensions
+    "B",   # flake8-bugbear
+    "UP", # pyupgrade
+    "RUF", # ruff specific rules
+]
+ignore = ["E501", "C901", "B006"] # ignore line too long, too complex
+
+[tool.ruff.lint.isort]
+known-first-party = ["frontend"]
+
+[tool.mypy]
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+disallow_subclassing_any = true
+warn_incomplete_stub = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+follow_imports = "silent"
+ignore_missing_imports = true
+explicit_package_bases = true
+disable_error_code = ["misc", "no-untyped-call", "no-any-return"]
+
+exclude = [".venv"]
+
+[tool.codespell]
+ignore-words-list = "rouge"
+skip = "./locust_env/*,uv.lock,.venv,./frontend,**/*.ipynb"
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[tool.pytest.ini_options]
+pythonpath = "."
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.hatch.build.targets.wheel]
+packages = ["frontend"]
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
+
