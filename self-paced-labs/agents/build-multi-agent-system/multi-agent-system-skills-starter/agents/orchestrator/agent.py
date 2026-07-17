@@ -44,6 +44,7 @@ CONTENT_BUILDER_URL = os.environ.get(
 
 # Connect to Researcher (Port 8001)
 researcher = RemoteA2aAgent(
+    name="researcher",
     agent_card=RESEARCHER_URL,
     httpx_client=create_authenticated_client(RESEARCHER_URL),
     after_agent_callback=create_save_output_callback("research_findings"),
@@ -51,10 +52,12 @@ researcher = RemoteA2aAgent(
 
 # TODO 1: Define remote connection to the Judge Agent (Port 8002)
 # Attach create_save_output_callback("judge_feedback") and create_authenticated_client(JUDGE_URL).
+# Make sure to set name="judge".
 judge = None
 
 # Connect to Content Builder (Port 8003)
 content_builder = RemoteA2aAgent(
+    name="content_builder",
     agent_card=CONTENT_BUILDER_URL,
     httpx_client=create_authenticated_client(CONTENT_BUILDER_URL),
 )
