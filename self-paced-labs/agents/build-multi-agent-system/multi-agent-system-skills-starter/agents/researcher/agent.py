@@ -10,11 +10,11 @@ MODEL = os.environ.get("MODEL", "gemini-3.5-flash")
 skill_dir = pathlib.Path(__file__).parent / "skills"
 researcher_skill = load_skill_from_dir(skill_dir)
 
-# TODO: Wrap the skill in a SkillToolset
-# researcher_toolset = ...
+# Wrap the local skill in a SkillToolset
+researcher_toolset = SkillToolset(skills=[researcher_skill])
 
-# TODO: Define the researcher agent using the Agent class
-# Pass the researcher_toolset into the tools list and configure the agent's name.
+# TODO: Define the researcher agent using the Agent class.
+# Pass the researcher_toolset in the tools list and set name to "researcher".
 researcher = None
 
 root_agent = researcher

@@ -6,8 +6,22 @@ from pydantic import BaseModel, Field
 
 MODEL = "gemini-3.5-flash"
 
-# TODO: Define the JudgeFeedback schema
-# It should extend BaseModel and define 'status' ("pass" or "fail") and 'feedback'.
+# TODO 1: Define the JudgeFeedback schema class extending BaseModel
+# Ensure it defines status (Literal["pass", "fail"]) and feedback (str) fields.
 
-# TODO: Define the Judge Agent
-# The judge should accept research findings, evaluate them, and output the JudgeFeedback schema.
+
+# TODO 2: Complete the judge Agent definition below
+# Set the output_schema and disallow transfer behaviors to prevent the agent from delegation.
+judge = Agent(
+    name="judge",
+    model=MODEL,
+    instruction="""
+    You are a strict editor.
+    Evaluate the 'research_findings' against the user's original request.
+    If the findings are missing key info, return status='fail'.
+    If they are comprehensive, return status='pass'.
+    """,
+    # Add output_schema and disallow transfer properties here
+)
+
+root_agent = judge

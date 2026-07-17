@@ -1,51 +1,66 @@
 #!/bin/bash
 
-# Kill any existing processes on these ports
-echo "Stopping any existing processes on ports 8000-8004..."
-lsof -ti:8000,8001,8002,8003,8004 | xargs kill -9 2>/dev/null
+# Create a clean directory for local agent runtime configuration
+# This prevents the local agent loader from scanning sibling folders as agents
+mkdir -p local_run
 
-# Set common environment variables for local development
-export GOOGLE_CLOUD_PROJECT=$(gcloud config get-value project)
-export GOOGLE_CLOUD_LOCATION="global"
-export GOOGLE_GENAI_USE_VERTEXAI="True" # Use Gemini API locally
-export GOOGLE_API_KEY="<your-key-here>" # Use if not using Vertex AI
+# Safe cleanup of ports 8080, 8001-8004
+echo "Stopping any existing processes on ports 8080, 8001-8004..."
+for port in 8080 8001 8002 8003 8004; do
+  pid=$(lsof -t -i:$port 2>/dev/null)
+  if [ ! -z "$pid" ]; then
+    kill -9 $pid 2>/dev/null
+  fi
+done
+
+# TODO 1: Set the GOOGLE_CLOUD_PROJECT environment variable using a gcloud command
+# Tip: Use $(gcloud config get-value project) to retrieve your active Qwiklabs project
+export GOOGLE_CLOUD_PROJECT=YOUR_GCLOUD_COMMAND_HERE
+
+# TODO 2: Set the GOOGLE_CLOUD_LOCATION environment variable to your assigned regional boundary variable
+export GOOGLE_CLOUD_LOCATION=YOUR_REGION_VARIABLE_HERE
+
+export GOOGLE_GENAI_USE_VERTEXAI="True" 
 
 echo "Starting Researcher Agent on port 8001..."
 pushd agents/researcher
-uv run adk_app.py --host 0.0.0.0 --port 8001 --a2a . &
+uv run adk_app.py --host 0.0.0.0 --port 8001 --a2a ../../local_run &
 RESEARCHER_PID=$!
 popd
 
 echo "Starting Judge Agent on port 8002..."
 pushd agents/judge
-uv run adk_app.py --host 0.0.0.0 --port 8002 --a2a . &
+uv run adk_app.py --host 0.0.0.0 --port 8002 --a2a ../../local_run &
 JUDGE_PID=$!
 popd
 
 echo "Starting Content Builder Agent on port 8003..."
 pushd agents/content_builder
-uv run adk_app.py --host 0.0.0.0 --port 8003 --a2a . &
+uv run adk_app.py --host 0.0.0.0 --port 8003 --a2a ../../local_run &
 CONTENT_BUILDER_PID=$!
 popd
 
+# TODO 3: Configure remote connection URLs for the local agents
+# These variables match the environment variables expected by the orchestrator agent.
+# Specify the correct localhost endpoints pointing to the ports defined above.
 export RESEARCHER_AGENT_CARD_URL=http://localhost:8001/a2a/agent/.well-known/agent-card.json
-export JUDGE_AGENT_CARD_URL=http://localhost:8002/a2a/agent/.well-known/agent-card.json
-export CONTENT_BUILDER_AGENT_CARD_URL=http://localhost:8003/a2a/agent/.well-known/agent-card.json
+export JUDGE_AGENT_CARD_URL=YOUR_LOCAL_JUDGE_URL
+export CONTENT_BUILDER_AGENT_CARD_URL=YOUR_LOCAL_CONTENT_BUILDER_URL
 
 echo "Starting Orchestrator Agent on port 8004..."
 pushd agents/orchestrator
-uv run adk_app.py --host 0.0.0.0 --port 8004 . &
+uv run adk_app.py --host 0.0.0.0 --port 8004 ../../local_run &
 ORCHESTRATOR_PID=$!
 popd
 
 # Wait a bit for them to start up
 sleep 5
 
-echo "Starting Orchestrator Agent on port 8000..."
+echo "Starting Frontend App on port 8080..."
 pushd app
 export AGENT_SERVER_URL=http://localhost:8004
 
-uv run uvicorn main:app --host 0.0.0.0 --port 8000 &
+uv run uvicorn main:app --host 0.0.0.0 --port 8080 &
 BACKEND_PID=$!
 popd
 
@@ -54,10 +69,10 @@ echo "Researcher: http://localhost:8001"
 echo "Judge: http://localhost:8002"
 echo "Content Builder: http://localhost:8003"
 echo "Orchestrator: http://localhost:8004"
-echo "App Server (Frontend): http://localhost:8000"
+echo "App Server (Frontend): http://localhost:8080"
 echo ""
 echo "Press Ctrl+C to stop all agents."
 
 # Wait for all processes
-trap "kill $RESEARCHER_PID $JUDGE_PID $CONTENT_BUILDER_PID $ORCHESTRATOR_PID $BACKEND_PID; exit" INT
+trap "kill $RESEARCHER_PID $JUDGE_PID $CONTENT_BUILDER_PID $ORCHESTRATOR_PID $BACKEND_PID 2>/dev/null; rm -rf local_run; exit" INT
 wait
