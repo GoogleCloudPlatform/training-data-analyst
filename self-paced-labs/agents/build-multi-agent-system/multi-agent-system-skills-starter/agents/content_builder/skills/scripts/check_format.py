@@ -1,7 +1,8 @@
-# TODO: Implement the check_format function.
-# 1. It must read a string input (representing the generated course text).
-# 2. It must verify if the text starts with a level 1 heading ('# ') and contains at least one level 2 heading ('## ').
-# 3. Return a status dictionary or message indicating success or failure.
-
 def check_format(text: str) -> dict:
+    # Perform basic heading checks
+    has_h1 = text.strip().startswith("# ")
+    has_h2 = "## " in text
+    
+    # TODO: Return a dictionary with "success" (bool) and "message" (str) keys.
+    # Return success=True if both headings exist, otherwise return success=False with a message explaining what is missing.
     pass

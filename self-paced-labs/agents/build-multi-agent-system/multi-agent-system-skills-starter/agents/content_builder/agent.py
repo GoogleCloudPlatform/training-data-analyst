@@ -10,11 +10,11 @@ MODEL = os.environ.get("MODEL", "gemini-3.5-flash")
 skill_dir = pathlib.Path(__file__).parent / "skills"
 content_builder_skill = load_skill_from_dir(skill_dir)
 
-# TODO: Wrap the skill in a SkillToolset
-# content_builder_toolset = ...
+# Wrap the local skill in a SkillToolset
+content_builder_toolset = SkillToolset(skills=[content_builder_skill])
 
 # TODO: Define the content_builder agent using the Agent class.
-# Pass the content_builder_toolset into the tools list and set name="content_builder".
+# Pass the content_builder_toolset in the tools list and set name to "content_builder".
 content_builder = None
 
 root_agent = content_builder
