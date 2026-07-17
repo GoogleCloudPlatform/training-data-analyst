@@ -44,6 +44,7 @@ CONTENT_BUILDER_URL = os.environ.get(
 
 # Connect to Researcher (Port 8001)
 researcher = RemoteA2aAgent(
+    "researcher",
     agent_card=RESEARCHER_URL,
     httpx_client=create_authenticated_client(RESEARCHER_URL),
     after_agent_callback=create_save_output_callback("research_findings"),
@@ -51,10 +52,12 @@ researcher = RemoteA2aAgent(
 
 # TODO 1: Define remote connection to the Judge Agent (Port 8002)
 # Attach create_save_output_callback("judge_feedback") and create_authenticated_client(JUDGE_URL).
+# Make sure to set "judge" positionally as the first argument.
 judge = None
 
 # Connect to Content Builder (Port 8003)
 content_builder = RemoteA2aAgent(
+    "content_builder",
     agent_card=CONTENT_BUILDER_URL,
     httpx_client=create_authenticated_client(CONTENT_BUILDER_URL),
 )
@@ -84,9 +87,7 @@ escalation_checker = EscalationChecker()
 
 # --- Orchestration ---
 
-# TODO 3: Construct the orchestration loop and sequential pipeline agents.
-# 1. Define 'research_loop' as a LoopAgent cycling: researcher -> judge -> escalation_checker. Set max_iterations to 3.
-# 2. Define 'root_agent' as a SequentialAgent running 'research_loop' followed by 'content_builder'.
-research_loop = None
-root_agent = None
+# TODO 3: Construct the orchestration loop and sequential pipeline agents (replacing the placeholders below).
+# research_loop = None
+# root_agent = None
 

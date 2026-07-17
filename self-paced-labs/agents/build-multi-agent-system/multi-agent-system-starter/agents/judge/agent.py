@@ -1,13 +1,17 @@
+import os
 from typing import Literal
-from google.adk.agents import Agent
-from google.adk.apps.app import App
 from pydantic import BaseModel, Field
+from google.adk.agents import Agent
+
+MODEL = os.environ.get("MODEL", "gemini-3.5-flash")
+
+# TODO 1: Define the JudgeFeedback schema extending BaseModel.
+# It should contain two required fields: status (Literal["pass", "fail"]) and feedback (str).
 
 
-MODEL = "gemini-3.5-flash"
+# TODO 2: Define the judge agent using the Agent class (replacing the placeholder below).
+# Attach the output_schema and set disallow_transfer_to_parent and disallow_transfer_to_peers to True.
+# Make sure to set name="judge".
+# judge = None
 
-# TODO: Define the JudgeFeedback schema
-# It should extend BaseModel and define 'status' ("pass" or "fail") and 'feedback'.
-
-# TODO: Define the Judge Agent
-# The judge should accept research findings, evaluate them, and output the JudgeFeedback schema.
+root_agent = judge

@@ -31,23 +31,62 @@ def create_save_output_callback(key: str):
                     return
     return callback
 
-# --- Remote Agents ---
+# Remote Agent Addresses
+RESEARCHER_URL = os.environ.get(
+    "RESEARCHER_AGENT_CARD_URL", "http://localhost:8001/a2a/agent/.well-known/agent-card.json"
+)
+JUDGE_URL = os.environ.get(
+    "JUDGE_AGENT_CARD_URL", "http://localhost:8002/a2a/agent/.well-known/agent-card.json"
+)
+CONTENT_BUILDER_URL = os.environ.get(
+    "CONTENT_BUILDER_AGENT_CARD_URL", "http://localhost:8003/a2a/agent/.well-known/agent-card.json"
+)
 
-# TODO: Define connections to remote agents
-# Connect to Researcher, Judge, and Content Builder using RemoteA2aAgent.
-# Remember to use the environment variables for URLs (or localhost defaults).
+# Connect to Researcher (Port 8001)
+researcher = RemoteA2aAgent(
+    "researcher",
+    agent_card=RESEARCHER_URL,
+    httpx_client=create_authenticated_client(RESEARCHER_URL),
+    after_agent_callback=create_save_output_callback("research_findings"),
+)
+
+# TODO 1: Define remote connection to the Judge Agent (Port 8002)
+# Attach create_save_output_callback("judge_feedback") and create_authenticated_client(JUDGE_URL).
+# Make sure to set "judge" positionally as the first argument.
+# judge = None
+
+# Connect to Content Builder (Port 8003)
+content_builder = RemoteA2aAgent(
+    "content_builder",
+    agent_card=CONTENT_BUILDER_URL,
+    httpx_client=create_authenticated_client(CONTENT_BUILDER_URL),
+)
 
 # --- Escalation Checker ---
 
-# TODO: Define EscalationChecker
-# This agent should check the status of the judge's feedback.
-# If status is "pass", it should escalate (break the loop).
+class EscalationChecker(BaseAgent):
+    name = "escalation_checker"
+    description = "Escalates workflow when judge passes findings."
+
+    async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
+        feedback = ctx.session.state.get("judge_feedback")
+        print(f"[EscalationChecker] Feedback: {feedback}")
+
+        is_pass = False
+        if isinstance(feedback, dict) and feedback.get("status") == "pass":
+            is_pass = True
+        elif isinstance(feedback, str) and '"status": "pass"' in feedback:
+            is_pass = True
+
+        # TODO 2: Complete the escalation logic below.
+        # If is_pass is True, yield an Event with EventActions(escalate=True) to break the loop.
+        # Otherwise, yield a default empty Event.
+        pass
+
+escalation_checker = EscalationChecker()
 
 # --- Orchestration ---
 
-# TODO: Define the Research Loop
-# Use LoopAgent to cycle through Researcher -> Judge -> EscalationChecker.
-
-# TODO: Define the Root Agent (Pipeline)
-# Use SequentialAgent to run the Research Loop followed by the Content Builder.
-
+# TODO 3: Construct the orchestration loop and sequential pipeline agents (replacing the placeholders below).
+# research_loop = None
+# root_agent = None
