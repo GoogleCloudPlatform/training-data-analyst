@@ -84,9 +84,7 @@ escalation_checker = EscalationChecker()
 
 # --- Orchestration ---
 
-# TODO 3: Construct the orchestration loop and sequential pipeline agents.
-# 1. Define 'research_loop' as a LoopAgent cycling: researcher -> judge -> escalation_checker. Set max_iterations to 3.
-# 2. Define 'root_agent' as a SequentialAgent running 'research_loop' followed by 'content_builder'.
-research_loop = None
-root_agent = None
+# TODO 3: Construct the orchestration loop and sequential pipeline agents (replacing the placeholders below).
+# research_loop = None
+# root_agent = None
 
