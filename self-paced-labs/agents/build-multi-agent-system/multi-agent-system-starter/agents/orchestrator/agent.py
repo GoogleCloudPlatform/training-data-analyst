@@ -65,8 +65,8 @@ content_builder = RemoteA2aAgent(
 # --- Escalation Checker ---
 
 class EscalationChecker(BaseAgent):
-    name = "escalation_checker"
-    description = "Escalates workflow when judge passes findings."
+    name: str = "escalation_checker"
+    description: str = "Escalates workflow when judge passes findings."
 
     async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
         feedback = ctx.session.state.get("judge_feedback")
