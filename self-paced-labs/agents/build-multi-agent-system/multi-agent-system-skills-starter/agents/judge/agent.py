@@ -1,10 +1,11 @@
+import os
 from typing import Literal
 from google.adk.agents import Agent
 from google.adk.apps.app import App
 from pydantic import BaseModel, Field
 
 
-MODEL = "gemini-3.5-flash"
+MODEL = os.environ.get("MODEL", "gemini-2.5-flash")
 
 # TODO 1: Define the JudgeFeedback schema class extending BaseModel
 # Ensure it defines status (Literal["pass", "fail"]) and feedback (str) fields.
