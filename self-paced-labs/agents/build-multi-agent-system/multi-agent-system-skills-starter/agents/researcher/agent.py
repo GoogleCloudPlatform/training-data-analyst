@@ -14,6 +14,6 @@ researcher_skill = load_skill_from_dir(skill_dir)
 researcher_toolset = SkillToolset(skills=[researcher_skill])
 
 # TODO: Define the researcher agent using the Agent class (replacing the placeholder below).
-# researcher = None
+researcher = None
 
 root_agent = researcher
