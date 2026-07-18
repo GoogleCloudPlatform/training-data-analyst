@@ -5,7 +5,7 @@ from google.adk.apps.app import App
 from pydantic import BaseModel, Field
 
 
-MODEL = os.environ.get("MODEL", "gemini-1.5-flash")
+MODEL = os.environ.get("MODEL", "gemini-2.5-flash")
 
 # TODO 1: Define the JudgeFeedback schema class extending BaseModel
 # Ensure it defines status (Literal["pass", "fail"]) and feedback (str) fields.

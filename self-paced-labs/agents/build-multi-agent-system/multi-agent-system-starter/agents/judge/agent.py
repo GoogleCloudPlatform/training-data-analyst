@@ -3,7 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from google.adk.agents import Agent
 
-MODEL = os.environ.get("MODEL", "gemini-1.5-flash")
+MODEL = os.environ.get("MODEL", "gemini-2.5-flash")
 
 # TODO 1: Define the JudgeFeedback schema extending BaseModel.
 # It should contain two required fields: status (Literal["pass", "fail"]) and feedback (str).
