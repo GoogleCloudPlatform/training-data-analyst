@@ -649,7 +649,7 @@ resource "google_project_iam_member" "agent-iam-binding" {
   project = var.project_id
   # TODO: Grant the correct role
   role    = "FILL_ME_IN"
-  member  = format("principal://agents.global.org-%s/agents/mortgage-assistant", coalesce(var.organization_id, data.google_project.project.org_id, "123456789012"))
+  member  = format("principal://agents.global.org-%s.system.id.goog/agents/mortgage-assistant", coalesce(var.organization_id, data.google_project.project.org_id, "123456789012"))
 }
 
 # TODO: Grant the correct role to allow the gateway service extensions SA to call Model Armor
