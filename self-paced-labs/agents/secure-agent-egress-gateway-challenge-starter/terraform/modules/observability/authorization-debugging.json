@@ -1,0 +1,224 @@
+{
+  "displayName": "Agent Platform: Authorization Debugging",
+  "dashboardFilters": [
+    {
+      "filterType": "VALUE_ONLY",
+      "labelKey": "",
+      "templateVariable": "agent_identity",
+      "timeSeriesQuery": {
+        "opsAnalyticsQuery": {
+          "savedQueryId": "",
+          "sql": "SELECT REGEXP_EXTRACT(proto_payload.audit_log.authentication_info.principal_subject, r'([^/]+)$') AS reasoning_engine_id FROM `PROJECT_ID.global._Default._AllLogs` WHERE proto_payload.audit_log.service_name = 'iap.googleapis.com' AND proto_payload.audit_log.authentication_info.principal_subject LIKE '%/reasoningEngines/%' GROUP BY reasoning_engine_id"
+        },
+        "outputFullDuration": false,
+        "unitOverride": ""
+      },
+      "valueType": "STRING"
+    },
+    {
+      "filterType": "VALUE_ONLY",
+      "labelKey": "",
+      "templateVariable": "gateway",
+      "timeSeriesQuery": {
+        "opsAnalyticsQuery": {
+          "savedQueryId": "",
+          "sql": "SELECT REGEXP_EXTRACT(JSON_VALUE(resource.labels.gateway_name), r'([^/]+)$') AS gateway_name FROM `PROJECT_ID.global._Default._AllLogs` WHERE resource.type = 'networkservices.googleapis.com/Gateway' AND JSON_VALUE(resource.labels.gateway_name) IS NOT NULL GROUP BY gateway_name"
+        },
+        "outputFullDuration": false,
+        "unitOverride": ""
+      },
+      "valueType": "STRING"
+    },
+    {
+      "filterType": "VALUE_ONLY",
+      "labelKey": "",
+      "templateVariable": "region",
+      "timeSeriesQuery": {
+        "opsAnalyticsQuery": {
+          "savedQueryId": "",
+          "sql": "SELECT JSON_VALUE(resource.labels.location) AS location FROM `PROJECT_ID.global._Default._AllLogs` WHERE resource.type = 'networkservices.googleapis.com/Gateway' AND JSON_VALUE(resource.labels.location) IS NOT NULL GROUP BY location"
+        },
+        "outputFullDuration": false,
+        "unitOverride": ""
+      },
+      "valueType": "STRING"
+    },
+    {
+      "filterType": "VALUE_ONLY",
+      "labelKey": "",
+      "templateVariable": "destination",
+      "timeSeriesQuery": {
+        "opsAnalyticsQuery": {
+          "savedQueryId": "",
+          "sql": "SELECT JSON_VALUE(json_payload.tlsSniHostname) AS host FROM `PROJECT_ID.global._Default._AllLogs` WHERE resource.type = 'networkservices.googleapis.com/Gateway' AND JSON_VALUE(json_payload.tlsSniHostname) IS NOT NULL GROUP BY host"
+        },
+        "outputFullDuration": false,
+        "unitOverride": ""
+      },
+      "valueType": "STRING"
+    }
+  ],
+  "description": "",
+  "labels": {},
+  "mosaicLayout": {
+    "columns": 48,
+    "tiles": [
+      {
+        "height": 16,
+        "width": 24,
+        "widget": {
+          "title": "Agent ➔ Endpoint (403 Denials)",
+          "id": "",
+          "timeSeriesTable": {
+            "columnSettings": [],
+            "dataSets": [
+              {
+                "tableTemplate": "",
+                "timeSeriesQuery": {
+                  "opsAnalyticsQuery": {
+                    "savedQueryId": "",
+                    "sql": "WITH iap_logs AS ( SELECT proto_payload.audit_log.request_metadata.request_attributes.host AS host, REGEXP_EXTRACT(proto_payload.audit_log.authentication_info.principal_subject, r'([^/]+)$') AS reasoning_engine_id, REGEXP_EXTRACT(auth.resource, r'agentRegistry/((?:endpoints|mcpServers|agents)/[^/]+)') AS short_resource, IFNULL(auth.granted, FALSE) AS iap_is_authorized, JSON_VALUE(proto_payload.audit_log.metadata, '$.dryRun') = 'true' AS iap_dry_run, COUNT(*) AS iap_log_count FROM `PROJECT_ID.global._Default._AllLogs`, UNNEST(proto_payload.audit_log.authorization_info) AS auth WHERE proto_payload.audit_log.service_name = \"iap.googleapis.com\" AND proto_payload.audit_log.request_metadata.request_attributes.host IS NOT NULL GROUP BY 1, 2, 3, 4, 5 ), gw_logs AS ( SELECT JSON_VALUE(json_payload.tlsSniHostname) AS host, REGEXP_EXTRACT(JSON_VALUE(resource.labels.gateway_name), r'([^/]+)$') AS gateway_name, JSON_VALUE(resource.labels.location) AS location, REGEXP_EXTRACT(JSON_VALUE(json_payload.agentGatewayInfo.agentRegistryResource), r'((?:endpoints|mcpServers|agents)/[^/]+)') AS short_resource, JSON_VALUE(json_payload.authzPolicyInfo.result) = 'ALLOWED' AS gw_is_authorized, COUNT(*) AS gw_log_count FROM `PROJECT_ID.global._Default._AllLogs` WHERE resource.type = \"networkservices.googleapis.com/Gateway\" AND JSON_VALUE(json_payload.tlsSniHostname) IS NOT NULL AND http_request.request_method != 'CONNECT' GROUP BY 1, 2, 3, 4, 5 ), joined_logs AS ( SELECT COALESCE(i.host, g.host) AS host, i.reasoning_engine_id, g.gateway_name, g.location, COALESCE(i.short_resource, g.short_resource) AS short_resource, i.iap_is_authorized, g.gw_is_authorized, i.iap_dry_run, IFNULL(i.iap_log_count, 0) AS iap_log_count, IFNULL(g.gw_log_count, 0) AS gw_log_count FROM iap_logs i FULL OUTER JOIN gw_logs g ON i.host = g.host AND IFNULL(i.short_resource, '') = IFNULL(g.short_resource, '') ) SELECT reasoning_engine_id AS Agent, short_resource AS Endpoint, host, gw_is_authorized, iap_is_authorized, (iap_log_count + gw_log_count) AS Denied_Count FROM joined_logs WHERE short_resource LIKE 'endpoints/%' AND (iap_is_authorized = FALSE OR gw_is_authorized = FALSE) AND IF(@agent_identity = \"*\", TRUE, reasoning_engine_id = @agent_identity) AND IF(@gateway = \"*\", TRUE, gateway_name = @gateway) AND IF(@region = \"*\", TRUE, location = @region) AND IF(@destination = \"*\", TRUE, host = @destination) ORDER BY Denied_Count DESC"
+                  },
+                  "outputFullDuration": false,
+                  "unitOverride": ""
+                }
+              }
+            ],
+            "displayColumnType": false,
+            "metricVisualization": "NUMBER"
+          }
+        }
+      },
+      {
+        "xPos": 24,
+        "height": 16,
+        "width": 24,
+        "widget": {
+          "title": "Agent ➔ MCP Server (403 Denials)",
+          "id": "",
+          "timeSeriesTable": {
+            "columnSettings": [],
+            "dataSets": [
+              {
+                "tableTemplate": "",
+                "timeSeriesQuery": {
+                  "opsAnalyticsQuery": {
+                    "savedQueryId": "",
+                    "sql": "WITH iap_logs AS ( SELECT proto_payload.audit_log.request_metadata.request_attributes.host AS host, REGEXP_EXTRACT(proto_payload.audit_log.authentication_info.principal_subject, r'([^/]+)$') AS reasoning_engine_id, REGEXP_EXTRACT(auth.resource, r'agentRegistry/((?:endpoints|mcpServers|agents)/[^/]+)') AS short_resource, IFNULL(auth.granted, FALSE) AS iap_is_authorized, JSON_VALUE(proto_payload.audit_log.metadata, '$.dryRun') = 'true' AS iap_dry_run, COUNT(*) AS iap_log_count FROM `PROJECT_ID.global._Default._AllLogs`, UNNEST(proto_payload.audit_log.authorization_info) AS auth WHERE proto_payload.audit_log.service_name = \"iap.googleapis.com\" AND proto_payload.audit_log.request_metadata.request_attributes.host IS NOT NULL GROUP BY 1, 2, 3, 4, 5 ), gw_logs AS ( SELECT JSON_VALUE(json_payload.tlsSniHostname) AS host, REGEXP_EXTRACT(JSON_VALUE(resource.labels.gateway_name), r'([^/]+)$') AS gateway_name, JSON_VALUE(resource.labels.location) AS location, REGEXP_EXTRACT(JSON_VALUE(json_payload.agentGatewayInfo.agentRegistryResource), r'((?:endpoints|mcpServers|agents)/[^/]+)') AS short_resource, JSON_VALUE(json_payload.authzPolicyInfo.result) = 'ALLOWED' AS gw_is_authorized, COUNT(*) AS gw_log_count FROM `PROJECT_ID.global._Default._AllLogs` WHERE resource.type = \"networkservices.googleapis.com/Gateway\" AND JSON_VALUE(json_payload.tlsSniHostname) IS NOT NULL AND http_request.request_method != 'CONNECT' GROUP BY 1, 2, 3, 4, 5 ), joined_logs AS ( SELECT COALESCE(i.host, g.host) AS host, i.reasoning_engine_id, g.gateway_name, g.location, COALESCE(i.short_resource, g.short_resource) AS short_resource, i.iap_is_authorized, g.gw_is_authorized, i.iap_dry_run, IFNULL(i.iap_log_count, 0) AS iap_log_count, IFNULL(g.gw_log_count, 0) AS gw_log_count FROM iap_logs i FULL OUTER JOIN gw_logs g ON i.host = g.host AND IFNULL(i.short_resource, '') = IFNULL(g.short_resource, '') ) SELECT reasoning_engine_id AS Agent, short_resource AS MCP_Server, host, gw_is_authorized, iap_is_authorized, (iap_log_count + gw_log_count) AS Denied_Count FROM joined_logs WHERE short_resource LIKE 'mcpServers/%' AND (iap_is_authorized = FALSE OR gw_is_authorized = FALSE) AND IF(@agent_identity = \"*\", TRUE, reasoning_engine_id = @agent_identity) AND IF(@gateway = \"*\", TRUE, gateway_name = @gateway) AND IF(@region = \"*\", TRUE, location = @region) AND IF(@destination = \"*\", TRUE, host = @destination) ORDER BY Denied_Count DESC"
+                  },
+                  "outputFullDuration": false,
+                  "unitOverride": ""
+                }
+              }
+            ],
+            "displayColumnType": false,
+            "metricVisualization": "NUMBER"
+          }
+        }
+      },
+      {
+        "yPos": 16,
+        "height": 16,
+        "width": 24,
+        "widget": {
+          "title": "Agent ➔ Agent (403 Denials)",
+          "id": "",
+          "timeSeriesTable": {
+            "columnSettings": [],
+            "dataSets": [
+              {
+                "tableTemplate": "",
+                "timeSeriesQuery": {
+                  "opsAnalyticsQuery": {
+                    "savedQueryId": "",
+                    "sql": "WITH iap_logs AS ( SELECT proto_payload.audit_log.request_metadata.request_attributes.host AS host, REGEXP_EXTRACT(proto_payload.audit_log.authentication_info.principal_subject, r'([^/]+)$') AS reasoning_engine_id, REGEXP_EXTRACT(auth.resource, r'agentRegistry/((?:endpoints|mcpServers|agents)/[^/]+)') AS short_resource, IFNULL(auth.granted, FALSE) AS iap_is_authorized, JSON_VALUE(proto_payload.audit_log.metadata, '$.dryRun') = 'true' AS iap_dry_run, COUNT(*) AS iap_log_count FROM `PROJECT_ID.global._Default._AllLogs`, UNNEST(proto_payload.audit_log.authorization_info) AS auth WHERE proto_payload.audit_log.service_name = \"iap.googleapis.com\" AND proto_payload.audit_log.request_metadata.request_attributes.host IS NOT NULL GROUP BY 1, 2, 3, 4, 5 ), gw_logs AS ( SELECT JSON_VALUE(json_payload.tlsSniHostname) AS host, REGEXP_EXTRACT(JSON_VALUE(resource.labels.gateway_name), r'([^/]+)$') AS gateway_name, JSON_VALUE(resource.labels.location) AS location, REGEXP_EXTRACT(JSON_VALUE(json_payload.agentGatewayInfo.agentRegistryResource), r'((?:endpoints|mcpServers|agents)/[^/]+)') AS short_resource, JSON_VALUE(json_payload.authzPolicyInfo.result) = 'ALLOWED' AS gw_is_authorized, COUNT(*) AS gw_log_count FROM `PROJECT_ID.global._Default._AllLogs` WHERE resource.type = \"networkservices.googleapis.com/Gateway\" AND JSON_VALUE(json_payload.tlsSniHostname) IS NOT NULL AND http_request.request_method != 'CONNECT' GROUP BY 1, 2, 3, 4, 5 ), joined_logs AS ( SELECT COALESCE(i.host, g.host) AS host, i.reasoning_engine_id, g.gateway_name, g.location, COALESCE(i.short_resource, g.short_resource) AS short_resource, i.iap_is_authorized, g.gw_is_authorized, i.iap_dry_run, IFNULL(i.iap_log_count, 0) AS iap_log_count, IFNULL(g.gw_log_count, 0) AS gw_log_count FROM iap_logs i FULL OUTER JOIN gw_logs g ON i.host = g.host AND IFNULL(i.short_resource, '') = IFNULL(g.short_resource, '') ) SELECT reasoning_engine_id AS Agent, short_resource AS Target_Agent, host, gw_is_authorized, iap_is_authorized, (iap_log_count + gw_log_count) AS Denied_Count FROM joined_logs WHERE short_resource LIKE 'agents/%' AND (iap_is_authorized = FALSE OR gw_is_authorized = FALSE) AND IF(@agent_identity = \"*\", TRUE, reasoning_engine_id = @agent_identity) AND IF(@gateway = \"*\", TRUE, gateway_name = @gateway) AND IF(@region = \"*\", TRUE, location = @region) AND IF(@destination = \"*\", TRUE, host = @destination) ORDER BY Denied_Count DESC"
+                  },
+                  "outputFullDuration": false,
+                  "unitOverride": ""
+                }
+              }
+            ],
+            "displayColumnType": false,
+            "metricVisualization": "NUMBER"
+          }
+        }
+      },
+      {
+        "yPos": 16,
+        "xPos": 24,
+        "height": 16,
+        "width": 24,
+        "widget": {
+          "title": "Unregistered Outbound Blocks (e.g. GitHub/PyPI)",
+          "id": "",
+          "timeSeriesTable": {
+            "columnSettings": [],
+            "dataSets": [
+              {
+                "tableTemplate": "",
+                "timeSeriesQuery": {
+                  "opsAnalyticsQuery": {
+                    "savedQueryId": "",
+                    "sql": "WITH iap_logs AS ( SELECT proto_payload.audit_log.request_metadata.request_attributes.host AS host, REGEXP_EXTRACT(proto_payload.audit_log.authentication_info.principal_subject, r'([^/]+)$') AS reasoning_engine_id, REGEXP_EXTRACT(auth.resource, r'agentRegistry/((?:endpoints|mcpServers|agents)/[^/]+)') AS short_resource, IFNULL(auth.granted, FALSE) AS iap_is_authorized, JSON_VALUE(proto_payload.audit_log.metadata, '$.dryRun') = 'true' AS iap_dry_run, COUNT(*) AS iap_log_count FROM `PROJECT_ID.global._Default._AllLogs`, UNNEST(proto_payload.audit_log.authorization_info) AS auth WHERE proto_payload.audit_log.service_name = \"iap.googleapis.com\" AND proto_payload.audit_log.request_metadata.request_attributes.host IS NOT NULL GROUP BY 1, 2, 3, 4, 5 ), gw_logs AS ( SELECT JSON_VALUE(json_payload.tlsSniHostname) AS host, REGEXP_EXTRACT(JSON_VALUE(resource.labels.gateway_name), r'([^/]+)$') AS gateway_name, JSON_VALUE(resource.labels.location) AS location, REGEXP_EXTRACT(JSON_VALUE(json_payload.agentGatewayInfo.agentRegistryResource), r'((?:endpoints|mcpServers|agents)/[^/]+)') AS short_resource, JSON_VALUE(json_payload.authzPolicyInfo.result) = 'ALLOWED' AS gw_is_authorized, COUNT(*) AS gw_log_count FROM `PROJECT_ID.global._Default._AllLogs` WHERE resource.type = \"networkservices.googleapis.com/Gateway\" AND JSON_VALUE(json_payload.tlsSniHostname) IS NOT NULL AND http_request.request_method != 'CONNECT' GROUP BY 1, 2, 3, 4, 5 ), joined_logs AS ( SELECT COALESCE(i.host, g.host) AS host, i.reasoning_engine_id, g.gateway_name, g.location, COALESCE(i.short_resource, g.short_resource) AS short_resource, i.iap_is_authorized, g.gw_is_authorized, i.iap_dry_run, IFNULL(i.iap_log_count, 0) AS iap_log_count, IFNULL(g.gw_log_count, 0) AS gw_log_count FROM iap_logs i FULL OUTER JOIN gw_logs g ON i.host = g.host AND IFNULL(i.short_resource, '') = IFNULL(g.short_resource, '') ) SELECT reasoning_engine_id AS Agent, host AS Unregistered_Destination, gw_log_count AS Blocked_Count FROM joined_logs WHERE short_resource IS NULL AND gw_is_authorized = FALSE AND IF(@agent_identity = \"*\", TRUE, reasoning_engine_id = @agent_identity) AND IF(@gateway = \"*\", TRUE, gateway_name = @gateway) AND IF(@region = \"*\", TRUE, location = @region) AND IF(@destination = \"*\", TRUE, host = @destination) ORDER BY Blocked_Count DESC"
+                  },
+                  "outputFullDuration": false,
+                  "unitOverride": ""
+                }
+              }
+            ],
+            "displayColumnType": false,
+            "metricVisualization": "NUMBER"
+          }
+        }
+      },
+      {
+        "yPos": 32,
+        "height": 22,
+        "width": 48,
+        "widget": {
+          "title": "Traffic Overview & IAP Enforcement Mode",
+          "timeSeriesTable": {
+            "columnSettings": [],
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "opsAnalyticsQuery": {
+                    "sql": "WITH iap_logs AS ( SELECT proto_payload.audit_log.request_metadata.request_attributes.host AS host, REGEXP_EXTRACT(proto_payload.audit_log.authentication_info.principal_subject, r'([^/]+)$') AS reasoning_engine_id, REGEXP_EXTRACT(auth.resource, r'agentRegistry/((?:endpoints|mcpServers|agents)/[^/]+)') AS short_resource, IFNULL(auth.granted, FALSE) AS iap_is_authorized, JSON_VALUE(proto_payload.audit_log.metadata, '$.dryRun') = 'true' AS iap_dry_run, COUNT(*) AS iap_log_count FROM `PROJECT_ID.global._Default._AllLogs`, UNNEST(proto_payload.audit_log.authorization_info) AS auth WHERE proto_payload.audit_log.service_name = \"iap.googleapis.com\" AND proto_payload.audit_log.request_metadata.request_attributes.host IS NOT NULL GROUP BY 1, 2, 3, 4, 5 ), gw_logs AS ( SELECT JSON_VALUE(json_payload.tlsSniHostname) AS host, REGEXP_EXTRACT(JSON_VALUE(resource.labels.gateway_name), r'([^/]+)$') AS gateway_name, JSON_VALUE(resource.labels.location) AS location, REGEXP_EXTRACT(JSON_VALUE(json_payload.agentGatewayInfo.agentRegistryResource), r'((?:endpoints|mcpServers|agents)/[^/]+)') AS short_resource, JSON_VALUE(json_payload.authzPolicyInfo.result) = 'ALLOWED' AS gw_is_authorized, COUNT(*) AS gw_log_count FROM `PROJECT_ID.global._Default._AllLogs` WHERE resource.type = \"networkservices.googleapis.com/Gateway\" AND JSON_VALUE(json_payload.tlsSniHostname) IS NOT NULL AND http_request.request_method != 'CONNECT' GROUP BY 1, 2, 3, 4, 5 ), joined_logs AS ( SELECT COALESCE(i.host, g.host) AS host, i.reasoning_engine_id, g.gateway_name, g.location, COALESCE(i.short_resource, g.short_resource) AS short_resource, i.iap_is_authorized, g.gw_is_authorized, i.iap_dry_run, IFNULL(i.iap_log_count, 0) AS iap_log_count, IFNULL(g.gw_log_count, 0) AS gw_log_count FROM iap_logs i FULL OUTER JOIN gw_logs g ON i.host = g.host AND IFNULL(i.short_resource, '') = IFNULL(g.short_resource, '') ) SELECT host, reasoning_engine_id, gateway_name, short_resource, gw_is_authorized, iap_is_authorized, iap_dry_run, iap_log_count, gw_log_count FROM joined_logs WHERE IF(@agent_identity = \"*\", TRUE, reasoning_engine_id = @agent_identity) AND IF(@gateway = \"*\", TRUE, gateway_name = @gateway) AND IF(@region = \"*\", TRUE, location = @region) AND IF(@destination = \"*\", TRUE, host = @destination) ORDER BY (iap_log_count + gw_log_count) DESC"
+                  }
+                }
+              }
+            ],
+            "metricVisualization": "NUMBER"
+          }
+        }
+      },
+      {
+        "yPos": 54,
+        "height": 16,
+        "width": 48,
+        "widget": {
+          "title": "Baseline GCP API IAM Denials (Cloud Audit Logs)",
+          "id": "",
+          "timeSeriesTable": {
+            "columnSettings": [],
+            "dataSets": [
+              {
+                "tableTemplate": "",
+                "timeSeriesQuery": {
+                  "opsAnalyticsQuery": {
+                    "savedQueryId": "",
+                    "sql": "SELECT REGEXP_EXTRACT(proto_payload.audit_log.authentication_info.principal_subject, r'([^/]+)$') AS reasoning_engine_id, proto_payload.audit_log.service_name, proto_payload.audit_log.method_name, auth.permission, COUNT(*) AS log_count FROM `PROJECT_ID.global._Default._AllLogs`, UNNEST(proto_payload.audit_log.authorization_info) AS auth WHERE log_name LIKE '%cloudaudit.googleapis.com%' AND IFNULL(auth.granted, false) = false AND proto_payload.audit_log.authentication_info.principal_subject LIKE '%/reasoningEngines/%' AND IF(@agent_identity = \"*\", TRUE, REGEXP_EXTRACT(proto_payload.audit_log.authentication_info.principal_subject, r'([^/]+)$') = @agent_identity) GROUP BY 1, 2, 3, 4 ORDER BY log_count DESC"
+                  },
+                  "outputFullDuration": false,
+                  "unitOverride": ""
+                }
+              }
+            ],
+            "displayColumnType": false,
+            "metricVisualization": "NUMBER"
+          }
+        }
+      }
+    ]
+  }
+}

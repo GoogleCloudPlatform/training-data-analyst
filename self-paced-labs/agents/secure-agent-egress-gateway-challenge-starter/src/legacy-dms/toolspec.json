@@ -1,0 +1,59 @@
+{
+  "server": {
+    "name": "legacy-dms",
+    "description": "Legacy Document Management System for retrieving applicant documents."
+  },
+  "tools": [
+    {
+      "name": "search_documents",
+      "description": "Search the document management system for applicant documents.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "applicant_last_name": {
+            "type": "string",
+            "description": "Last name of the applicant to search for."
+          },
+          "document_type": {
+            "type": "string",
+            "description": "Type of document (e.g. 'tax_return', 'pay_stub', 'bank_statement')."
+          },
+          "years": {
+            "type": "integer",
+            "description": "Number of years of documents to retrieve (default 2).",
+            "default": 2
+          }
+        },
+        "required": ["applicant_last_name", "document_type"]
+      },
+      "annotations": {
+        "title": "Search Documents",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_document",
+      "description": "Retrieve a full document from the document management system by ID.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "description": "The unique document identifier (e.g. 'DOC-2024-SM-1040')."
+          }
+        },
+        "required": ["document_id"]
+      },
+      "annotations": {
+        "title": "Get Document",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}
