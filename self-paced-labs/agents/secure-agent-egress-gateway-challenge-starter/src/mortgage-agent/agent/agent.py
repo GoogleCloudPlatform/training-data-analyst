@@ -532,5 +532,7 @@ def _build_agent():
 root_agent = _build_agent()
 
 if __name__ == "__main__":
-    print("Starting mortgage assistant agent...")
-    root_agent.run_live()
+    from google.adk.cli import main
+    import sys
+    sys.argv = ["adk", "run", "."]
+    sys.exit(main())
