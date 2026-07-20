@@ -24,7 +24,7 @@ from google.adk.agents.llm_agent import Agent
 from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
 
-from . import tools
+import tools
 
 logger = logging.getLogger(__name__)
 
@@ -530,3 +530,7 @@ def _build_agent():
 
 
 root_agent = _build_agent()
+
+if __name__ == "__main__":
+    print("Starting mortgage assistant agent...")
+    root_agent.run_live()
