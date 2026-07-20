@@ -34,6 +34,10 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+data "external" "org_id" {
+  program = ["bash", "-c", "if command -v gcloud >/dev/null 2>&1; then gcloud projects get-ancestors ${var.project_id} --format='json' 2>/dev/null | jq -c '.[] | select(.type==\"organization\")' | jq -s -c 'if length > 0 then {org_id: .[0].id} else {org_id: \"123456789012\"} end'; else echo '{\"org_id\": \"123456789012\"}'; fi"]
+}
+
 locals {
   # MCP private zone domain only exists when the master flag is on AND the
   # operator has supplied a zone. Used by anything that needs the LB-fronted
@@ -649,7 +653,7 @@ resource "google_project_iam_member" "agent-iam-binding" {
   project = var.project_id
   # TODO: Grant the correct role
   role    = "FILL_ME_IN"
-  member  = format("principal://agents.global.org-%s.system.id.goog/agents/mortgage-assistant", coalesce(var.organization_id, data.google_project.project.org_id, "123456789012"))
+  member  = format("principal://agents.global.org-%s.system.id.goog/agents/mortgage-assistant", coalesce(var.organization_id, data.external.org_id.result.org_id))
 }
 
 # TODO: Grant the correct role to allow the gateway service extensions SA to call Model Armor
