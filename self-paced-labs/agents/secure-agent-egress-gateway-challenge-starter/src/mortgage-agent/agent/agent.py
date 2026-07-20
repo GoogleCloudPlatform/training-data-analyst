@@ -517,7 +517,7 @@ def _build_agent():
     instruction = _INSTRUCTION_TEMPLATE.format(mcp_services_doc=_render_mcp_services_doc())
 
     return _PickleSafeAgent(
-        model=os.environ.get("MODEL_NAME", "gemini-2.5-flash"),
+        model=os.environ.get("MODEL_NAME", "gemini-3.5-flash"),
         name="mortgage_assistant_agent",
         description=(
             "A mortgage underwriting assistant that connects to legacy document management, "
