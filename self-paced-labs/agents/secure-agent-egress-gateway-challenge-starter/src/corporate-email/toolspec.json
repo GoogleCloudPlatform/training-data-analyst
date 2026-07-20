@@ -1,0 +1,58 @@
+{
+  "server": {
+    "name": "corporate-email",
+    "description": "Corporate email system for sending and managing emails."
+  },
+  "tools": [
+    {
+      "name": "send_email",
+      "description": "Send an email through the corporate email system.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "description": "Recipient email address."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line."
+          },
+          "body": {
+            "type": "string",
+            "description": "Email body content."
+          }
+        },
+        "required": ["to", "subject", "body"]
+      },
+      "annotations": {
+        "title": "Send Email",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "read_email",
+      "description": "Read emails from the corporate inbox. This is a read-only operation.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "email_id": {
+            "type": "string",
+            "description": "Optional email ID to fetch a specific email. If not provided, returns all emails in the inbox."
+          }
+        },
+        "required": []
+      },
+      "annotations": {
+        "title": "Read Email",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}
