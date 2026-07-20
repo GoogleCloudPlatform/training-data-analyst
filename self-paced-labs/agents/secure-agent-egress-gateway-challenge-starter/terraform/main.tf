@@ -587,6 +587,7 @@ resource "google_network_services_agent_gateway" "agent-egress-gateway" {
   }
 }
 
+/*
 # Task 3: Deploy Model Armor Guardrails
 # TODO: Define a google_model_armor_template named "agent-safety-template".
 # Enable prompt injection filtering (ENABLED).
@@ -638,7 +639,9 @@ resource "google_network_security_authz_policy" "model-armor-policy" {
     }
   }
 }
+*/
 
+/*
 # Task 4: Configure Agentic IAM and Auth Manager
 # TODO: Grant the correct role to the Agent Principal URN.
 # Bind the custom agent role `roles/aiplatform.user` to the mortgage-assistant principal.
@@ -688,3 +691,4 @@ resource "google_network_security_authz_policy" "iap-policy" {
     }
   }
 }
+*/
