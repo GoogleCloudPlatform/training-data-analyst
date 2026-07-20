@@ -30,6 +30,10 @@
 # Derived values controlled by `enable_cloud_run_private_networking`. Folded
 # into a `locals` block so the gating logic lives in one place rather than
 # scattered across every consumer.
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
 locals {
   # MCP private zone domain only exists when the master flag is on AND the
   # operator has supplied a zone. Used by anything that needs the LB-fronted
@@ -642,7 +646,7 @@ resource "google_project_iam_member" "agent-iam-binding" {
   project = var.project_id
   # TODO: Grant the correct role
   role    = "FILL_ME_IN"
-  member  = format("principal://agents.global.org-%s/agents/mortgage-assistant", var.organization_id)
+  member  = format("principal://agents.global.org-%s/agents/mortgage-assistant", coalesce(var.organization_id, data.google_project.project.org_id, "123456789012"))
 }
 
 # TODO: Grant the correct role to allow the gateway service extensions SA to call Model Armor
