@@ -606,8 +606,6 @@ resource "google_model_armor_template" "agent-safety-template" {
   }
 }
 
-# TODO: Define a google_network_services_authz_extension named "model-armor-extension".
-# Reference the Model Armor template path.
 resource "google_network_services_authz_extension" "model-armor-extension" {
   provider = google-beta
   name     = "model-armor-extension"
@@ -615,11 +613,9 @@ resource "google_network_services_authz_extension" "model-armor-extension" {
   service  = format("modelarmor.%s.rep.googleapis.com", var.region)
   timeout  = "3s"
   metadata = {
-    # TODO: Encode the model armor settings with project and template references.
-    # Look at the template_id 'agent-safety-template' you defined above.
     "model_armor_settings" = jsonencode([{
-      request_template_id  = "FILL_ME_IN"
-      response_template_id = "FILL_ME_IN"
+      request_template_id  = google_model_armor_template.agent-safety-template.id
+      response_template_id = google_model_armor_template.agent-safety-template.id
     }])
   }
 }
