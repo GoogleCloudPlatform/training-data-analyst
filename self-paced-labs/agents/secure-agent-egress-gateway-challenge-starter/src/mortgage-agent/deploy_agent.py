@@ -627,11 +627,10 @@ def main() -> None:
             org_id = tf_vars.get("organization_id") or os.environ.get("ORG_ID")
             if not org_id:
                 print(
-                    "Error: Could not resolve organization_id/ORG_ID. Please set it in "
-                    "terraform.tfvars or as ORG_ID environment variable.",
+                    "Warning: Could not resolve organization_id/ORG_ID. Defaulting to '123456789012' for Qwiklabs environment.",
                     file=sys.stderr,
                 )
-                sys.exit(1)
+                org_id = "123456789012"
 
             try:
                 res = subprocess.run(

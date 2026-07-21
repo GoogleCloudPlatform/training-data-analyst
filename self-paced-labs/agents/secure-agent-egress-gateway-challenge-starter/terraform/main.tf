@@ -648,12 +648,12 @@ resource "google_network_security_authz_policy" "model-armor-policy" {
 /*
 # Task 4: Configure Agentic IAM and Auth Manager
 # TODO: Grant the correct role to the Agent Principal URN.
-# Bind the custom agent role `roles/aiplatform.user` to the mortgage-assistant principal.
+# Bind the custom agent role `roles/aiplatform.user` to the Agent Engine project principal.
 resource "google_project_iam_member" "agent-iam-binding" {
   project = var.project_id
   # TODO: Grant the correct role
   role    = "FILL_ME_IN"
-  member  = format("principal://agents.global.org-%s.system.id.goog/agents/mortgage-assistant", coalesce(var.organization_id, data.external.org_id.result.org_id))
+  member  = format("principalSet://agents.global.org-%s.system.id.goog/attribute.platformContainer/aiplatform/projects/%s", coalesce(var.organization_id, data.external.org_id.result.org_id), module.foundation.project_number)
 }
 
 # TODO: Grant the correct role to allow the gateway service extensions SA to call Model Armor
