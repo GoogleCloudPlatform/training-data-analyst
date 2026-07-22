@@ -53,8 +53,11 @@ uv run adk_app.py --host 0.0.0.0 --port 8004 ../../local_run/orchestrator &
 ORCHESTRATOR_PID=$!
 popd
 
-# Wait a bit for them to start up
-sleep 5
+# Wait a bit for them to start up and perform their startup cleanup
+sleep 3
+# Re-create the empty agent folders to satisfy the ADK AgentLoader check during requests
+mkdir -p local_run/researcher/agent local_run/judge/agent local_run/content_builder/agent local_run/orchestrator/agent
+sleep 2
 
 echo "Starting Frontend App on port 8080..."
 pushd app
