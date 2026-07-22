@@ -27,6 +27,14 @@
 
 # Provider configuration lives in providers.tf.
 
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+data "external" "org_id" {
+  program = ["bash", "-c", "if command -v gcloud >/dev/null 2>&1; then gcloud projects get-ancestors ${var.project_id} --format='json' 2>/dev/null | jq -c '.[] | select(.type==\"organization\")' | jq -s -c 'if length > 0 then {org_id: .[0].id} else {org_id: \"123456789012\"} end'; else echo '{\"org_id\": \"123456789012\"}'; fi"]
+}
+
 # Derived values controlled by `enable_cloud_run_private_networking`. Folded
 # into a `locals` block so the gating logic lives in one place rather than
 # scattered across every consumer.
@@ -649,7 +657,7 @@ resource "google_project_iam_member" "agent-iam-binding" {
   project = var.project_id
   # TODO: Grant the correct role
   role    = "FILL_ME_IN"
-  member  = format("principalSet://agents.global.org-%s.system.id.goog/attribute.platformContainer/aiplatform/projects/%s", coalesce(var.organization_id, data.external.org_id.result.org_id), module.foundation.project_number)
+  member  = format("principal://agents.global.org-%s.system.id.goog/agents/mortgage-assistant", coalesce(var.organization_id, data.external.org_id.result.org_id, "123456789012"))
 }
 
 # TODO: Grant the correct role to allow the gateway service extensions SA to call Model Armor
