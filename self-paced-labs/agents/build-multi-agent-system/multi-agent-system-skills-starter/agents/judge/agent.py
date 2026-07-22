@@ -8,7 +8,13 @@ from pydantic import BaseModel, Field
 MODEL = os.environ.get("MODEL", "gemini-2.5-flash")
 
 # TODO 1: Define the JudgeFeedback schema class extending BaseModel
-# Ensure it defines status (Literal["pass", "fail"]) and feedback (str) fields.
+class JudgeFeedback(BaseModel):
+    status: Literal["pass", "fail"] = Field(
+        description="Whether the research is sufficient ('pass') or needs more work ('fail')."
+    )
+    feedback: str = Field(
+        description="Detailed feedback on what is missing. If 'pass', a brief confirmation."
+    )
 
 
 # TODO 2: Complete the judge Agent definition below
@@ -22,7 +28,9 @@ judge = Agent(
     If the findings are missing key info, return status='fail'.
     If they are comprehensive, return status='pass'.
     """,
-    # Add output_schema and disallow transfer properties here
+    output_schema=None,                # TODO: Replace None with the feedback schema class
+    disallow_transfer_to_parent=False, # TODO: Set to True to prevent parent delegation
+    disallow_transfer_to_peers=False,  # TODO: Set to True to prevent peer delegation
 )
 
 root_agent = judge
