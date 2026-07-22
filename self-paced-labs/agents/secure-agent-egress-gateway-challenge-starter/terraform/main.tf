@@ -38,6 +38,14 @@ data "external" "org_id" {
 # Derived values controlled by `enable_cloud_run_private_networking`. Folded
 # into a `locals` block so the gating logic lives in one place rather than
 # scattered across every consumer.
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+data "external" "org_id" {
+  program = ["bash", "-c", "if command -v gcloud >/dev/null 2>&1; then gcloud projects get-ancestors ${var.project_id} --format='json' 2>/dev/null | jq -c '.[] | select(.type==\"organization\")' | jq -s -c 'if length > 0 then {org_id: .[0].id} else {org_id: \"123456789012\"} end'; else echo '{\"org_id\": \"123456789012\"}'; fi"]
+}
+
 locals {
   # MCP private zone domain only exists when the master flag is on AND the
   # operator has supplied a zone. Used by anything that needs the LB-fronted
@@ -591,6 +599,7 @@ resource "google_network_services_agent_gateway" "agent-egress-gateway" {
   }
 }
 
+/*
 # Task 3: Deploy Model Armor Guardrails
 # TODO: Define a google_model_armor_template named "agent-safety-template".
 # Enable prompt injection filtering (ENABLED).
@@ -638,10 +647,12 @@ resource "google_network_security_authz_policy" "model-armor-policy" {
     }
   }
 }
+*/
 
+/*
 # Task 4: Configure Agentic IAM and Auth Manager
 # TODO: Grant the correct role to the Agent Principal URN.
-# Bind the custom agent role `roles/aiplatform.user` to the mortgage-assistant principal.
+# Bind the custom agent role `roles/aiplatform.user` to the Agent Engine project principal.
 resource "google_project_iam_member" "agent-iam-binding" {
   project = var.project_id
   # TODO: Grant the correct role
@@ -688,3 +699,4 @@ resource "google_network_security_authz_policy" "iap-policy" {
     }
   }
 }
+*/
