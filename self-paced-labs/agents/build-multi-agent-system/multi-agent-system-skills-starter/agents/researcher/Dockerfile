@@ -30,4 +30,4 @@ ENV HOST 0.0.0.0
 EXPOSE $PORT
 
 # Run ADK API Server
-CMD ["python3", "adk_app.py", "--host", "0.0.0.0", "--trace_to_cloud", "--a2a"]
+CMD mkdir -p /tmp/agent && python3 adk_app.py /tmp --host 0.0.0.0 --trace_to_cloud --a2a
