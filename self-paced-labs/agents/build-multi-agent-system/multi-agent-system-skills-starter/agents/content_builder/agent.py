@@ -13,7 +13,11 @@ content_builder_skill = load_skill_from_dir(skill_dir)
 # Wrap the local skill in a SkillToolset
 content_builder_toolset = SkillToolset(skills=[content_builder_skill])
 
-# TODO: Define the content_builder agent using the Agent class (replacing the placeholder below).
-# content_builder = None
+# TODO: Complete the content_builder agent definition below by passing the loaded skill toolset
+content_builder = Agent(
+    name="content_builder",
+    model=MODEL,
+    tools=[None], # TODO: Replace None with content_builder_toolset
+)
 
 root_agent = content_builder

@@ -13,7 +13,11 @@ researcher_skill = load_skill_from_dir(skill_dir)
 # Wrap the local skill in a SkillToolset
 researcher_toolset = SkillToolset(skills=[researcher_skill])
 
-# TODO: Define the researcher agent using the Agent class (replacing the placeholder below).
-# researcher = None
+# TODO: Complete the researcher Agent definition below by passing the loaded skill toolset
+researcher = Agent(
+    name="researcher",
+    model=MODEL,
+    tools=[None], # TODO: Replace None with researcher_toolset
+)
 
 root_agent = researcher

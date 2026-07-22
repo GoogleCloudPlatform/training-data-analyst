@@ -50,10 +50,14 @@ researcher = RemoteA2aAgent(
     after_agent_callback=create_save_output_callback("research_findings"),
 )
 
-# TODO 1: Define remote connection to the Judge Agent (Port 8002)
-# Attach create_save_output_callback("judge_feedback") and create_authenticated_client(JUDGE_URL).
-# Make sure to set "judge" positionally as the first argument.
-judge = None
+# TODO 1: Complete the remote connection to the Judge Agent (Port 8002) below
+# Pass create_save_output_callback("judge_feedback") to the after_agent_callback parameter.
+judge = RemoteA2aAgent(
+    "judge",
+    agent_card=JUDGE_URL,
+    httpx_client=create_authenticated_client(JUDGE_URL),
+    after_agent_callback=None, # TODO: Replace None with the save output callback
+)
 
 # Connect to Content Builder (Port 8003)
 content_builder = RemoteA2aAgent(
@@ -79,15 +83,24 @@ class EscalationChecker(BaseAgent):
             is_pass = True
 
         # TODO 2: Complete the escalation logic below.
-        # If is_pass is True, yield an Event with EventActions(escalate=True) to break the loop.
-        # Otherwise, yield a default empty Event.
-        pass
+        if is_pass:
+            yield Event(author=self.name, actions=None) # TODO: Replace None with EventActions escalating the workflow
+        else:
+            yield Event(author=self.name)
 
 escalation_checker = EscalationChecker()
 
 # --- Orchestration ---
 
-# TODO 3: Construct the orchestration loop and sequential pipeline agents (replacing the placeholders below).
-# research_loop = None
-# root_agent = None
+# TODO 3: Construct the orchestration loop and sequential pipeline agents below.
+research_loop = LoopAgent(
+    name="research_loop",
+    sub_agents=[None], # TODO: Add research, judge, and escalation checker agents
+    max_iterations=3,
+)
+
+root_agent = SequentialAgent(
+    name="course_creation_pipeline",
+    sub_agents=[None], # TODO: Add LoopAgent followed by ContentBuilder agent
+)
 

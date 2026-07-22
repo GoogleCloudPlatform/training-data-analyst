@@ -6,6 +6,6 @@ MODEL = os.environ.get("MODEL", "gemini-2.5-flash")
 
 # TODO: Define the researcher agent using the Agent class (replacing the placeholder below).
 # Make sure to set name="researcher", pass google_search in the tools list, and write appropriate instructions.
-# researcher = None
+researcher = None
 
 root_agent = researcher
