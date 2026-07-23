@@ -15,10 +15,10 @@ done
 
 # TODO 1: Set the GOOGLE_CLOUD_PROJECT environment variable using a gcloud command
 # Tip: Use $(gcloud config get-value project) to retrieve your active Qwiklabs project
-export GOOGLE_CLOUD_PROJECT="FILL_ME_IN"
+export GOOGLE_CLOUD_PROJECT="YOUR_GCLOUD_COMMAND_HERE"
 
 # TODO 2: Set the GOOGLE_CLOUD_LOCATION environment variable to your assigned regional boundary variable
-export GOOGLE_CLOUD_LOCATION="FILL_ME_IN"
+export GOOGLE_CLOUD_LOCATION="YOUR_REGION_VARIABLE_HERE"
 
 export GOOGLE_GENAI_USE_VERTEXAI="True" 
 
@@ -44,8 +44,8 @@ popd
 # These variables match the environment variables expected by the orchestrator agent.
 # Specify the correct localhost endpoints pointing to the ports defined above.
 export RESEARCHER_AGENT_CARD_URL=http://localhost:8001/a2a/agent/.well-known/agent-card.json
-export JUDGE_AGENT_CARD_URL="FILL_ME_IN"
-export CONTENT_BUILDER_AGENT_CARD_URL="FILL_ME_IN"
+export JUDGE_AGENT_CARD_URL="YOUR_LOCAL_JUDGE_URL"
+export CONTENT_BUILDER_AGENT_CARD_URL="YOUR_LOCAL_CONTENT_BUILDER_URL"
 
 echo "Starting Orchestrator Agent on port 8004..."
 pushd agents/orchestrator
