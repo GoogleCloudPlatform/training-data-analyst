@@ -31,7 +31,7 @@ geventhttpclient==1.4.4
     # via locust
 greenlet==0.4.17
     # via gevent
-idna==2.10
+idna==3.7
     # via requests
 itsdangerous==1.1.0
     # via flask
@@ -63,9 +63,9 @@ werkzeug==1.0.1
     # via
     #   flask
     #   locust
-zope.event==4.5.0
+zope-event==4.5.0
     # via gevent
-zope.interface==5.1.0
+zope-interface==5.1.0
     # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:
