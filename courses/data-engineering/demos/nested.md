@@ -10,9 +10,9 @@ SELECT
   block_id, 
   MAX(i.input_sequence_number) AS max_seq_number,
   COUNT(t.transaction_id) as num_transactions_in_block
-FROM `cloud-training-demos.bitcoin_blockchain.blocks` AS b
+FROM `bigquery-public-data.bitcoin_blockchain.blocks` AS b
   -- Join on the separate table which stores transaction info
-  JOIN `cloud-training-demos.bitcoin_blockchain.transactions` AS t USING(block_id)
+  JOIN `bigquery-public-data.bitcoin_blockchain.transactions` AS t USING(block_id)
   , t.inputs as i 
 GROUP BY block_id;
 ```
@@ -26,7 +26,7 @@ SELECT
   block_id, 
   MAX(i.input_sequence_number) AS max_seq_number,
   COUNT(t.transaction_id) as num_transactions_in_block
-FROM `cloud-training-demos.bitcoin_blockchain.blocks` AS b
+FROM `bigquery-public-data.bitcoin_blockchain.blocks` AS b
   -- Use the nested STRUCT within BLOCKS table for transactions instead of a separate JOIN
   , b.transactions AS t
   , t.inputs as i
@@ -56,7 +56,7 @@ SELECT DISTINCT
   t.transaction_id,
   t.outputs.output_satoshis AS satoshi_value,
   t.outputs.output_satoshis * 0.00000001 AS btc_value
-FROM `cloud-training-demos.bitcoin_blockchain.blocks` AS b
+FROM `bigquery-public-data.bitcoin_blockchain.blocks` AS b
   , b.transactions AS t 
   , t.inputs as i
 ORDER BY btc_value DESC
@@ -81,7 +81,7 @@ SELECT DISTINCT
   t.transaction_id,
   t_outputs.output_satoshis AS satoshi_value,
   t_outputs.output_satoshis * 0.00000001 AS btc_value
-FROM `cloud-training-demos.bitcoin_blockchain.blocks` AS b
+FROM `bigquery-public-data.bitcoin_blockchain.blocks` AS b
   , b.transactions AS t 
   , t.inputs as i
   , UNNEST(t.outputs) AS t_outputs
@@ -97,7 +97,7 @@ Recall that a single block in the chain can have many confirmed transactions. Le
 
 ```sql
 SELECT * 
-FROM `cloud-training-demos.bitcoin_blockchain.blocks` 
+FROM `bigquery-public-data.bitcoin_blockchain.blocks` 
 WHERE block_id = '00000000000000fb62bbadc0a9dcda556925b2d0c1ad8634253ac2e83ab8382f';
 ```
 
