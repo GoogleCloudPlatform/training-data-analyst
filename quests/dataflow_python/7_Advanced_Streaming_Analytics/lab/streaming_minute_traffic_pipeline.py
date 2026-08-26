@@ -2,7 +2,6 @@ import argparse
 import time
 import logging
 import json
-import typing
 from datetime import datetime
 import apache_beam as beam
 from apache_beam.io import fileio
@@ -13,21 +12,9 @@ from apache_beam.transforms.trigger import AfterWatermark, AfterCount, AfterProc
 from apache_beam.transforms.trigger import AccumulationMode
 from apache_beam.transforms.combiners import CountCombineFn
 from apache_beam.runners import DataflowRunner, DirectRunner
+from model import CommonLog
 
 # ### functions and classes
-
-class CommonLog(typing.NamedTuple):
-    ip: str
-    user_id: str
-    lat: float
-    lng: float
-    timestamp: str
-    http_request: str
-    http_response: int
-    num_bytes: int
-    user_agent: str
-
-beam.coders.registry.register_coder(CommonLog, beam.coders.RowCoder)
 
 class ConvertToCommonLogFn(beam.DoFn):
   def process(self, element):
@@ -36,7 +23,7 @@ class ConvertToCommonLogFn(beam.DoFn):
         yield #TODO: TaggedOutput with tag 'parsed_row' and output CommonLog
     except:
         element = element.decode('utf-8')
-        yield #TODO: TaggedOutput with tag 'unparsed_row' and output CommonLog
+        yield #TODO: TaggedOutput with tag 'unparsed_row' and output element
 
 
 class GetTimestampFn(beam.DoFn):
