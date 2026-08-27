@@ -21,7 +21,7 @@
     "multer": "^1.3.0",
     "nconf": "~0.8.4",
     "prompt": "~1.0.0",
-    "pug": "2.0.0-rc.2"
+    "pug": "3.0.3"
   },
   "devDependencies": {
     "nodejs-repo-tools": "git+https://git@github.com/GoogleCloudPlatform/nodejs-repo-tools.git"
