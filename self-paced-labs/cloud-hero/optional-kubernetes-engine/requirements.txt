@@ -9,7 +9,7 @@ mock==2.0.0
 Flask-SQLAlchemy==2.3.2
 PyMySQL==0.9.2
 Flask-PyMongo==2.3.0
-PyMongo==3.7.2
+PyMongo==4.6.3
 six==1.11.0
 requests[security]==2.21.0
 honcho==1.0.1
