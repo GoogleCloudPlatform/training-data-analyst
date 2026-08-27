@@ -26,8 +26,8 @@ FROM
   # features
   (SELECT
     fullVisitorId,
-    IFNULL(totals.bounces, 0) AS bounces,
-    IFNULL(totals.timeOnSite, 0) AS time_on_site
+    IFNULL(totals.bounces, 1) AS bounces,
+    IFNULL(totals.timeOnSite, 1) AS time_on_site
   FROM
     `data-to-insights.ecommerce.web_analytics`
   WHERE
@@ -51,7 +51,29 @@ to learn whether or not a visitor buys? Why or why not?
 Let's add our SQL code to create the model:
 
 */  
+CREATE OR REPLACE MODEL `ecommerce.classification_model2`
+OPTIONS
+(
+  model_type='xd_logistic_reg'
+  labels= ['will_buy']
+  )
+  AS
+  SELECT
+  * EXCEPT(fullVisitorId)
+FROM
 
+  # features
+  (SELECT
+    fullVisitorId,
+    IFNULL(totals.bounces, 0) AS bounces,
+    IFNULL(totals.timeOnSite, 0) AS time_on_site
+  FROM
+    `data-to-insights.ecommerce.web_analytics`
+  WHERE
+    totals.newVisits = 1
+    AND date BETWEEN '20160801' AND '20170430') # train on first 9 months
+
+  
 CREATE OR REPLACE MODEL `ecommerce.classification_model`
 OPTIONS
 (
