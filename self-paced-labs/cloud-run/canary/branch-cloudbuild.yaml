@@ -15,7 +15,7 @@
 # Default Values
 substitutions:
   _SERVICE_NAME: hello-cloudrun
-  _REGION: us-central1
+  _REGION: europe-west1
 
 steps:
 
