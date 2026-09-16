@@ -102,8 +102,10 @@ public class MyPipeline {
     public static PipelineResult run(Options options) {
 
         // Create the pipeline
-        Pipeline pipeline = Pipeline.create(options);
         options.setJobName("my-pipeline-" + System.currentTimeMillis());
+        options.setTempLocation("gs://<YOUR-PROJECT-ID>/temp");
+        Pipeline pipeline = Pipeline.create(options);
+        
 
 
         // Static input and output
