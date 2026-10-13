@@ -13,21 +13,8 @@ from apache_beam.transforms.trigger import AfterWatermark, AfterCount, AfterProc
 from apache_beam.transforms.trigger import AccumulationMode
 from apache_beam.transforms.combiners import CountCombineFn
 from apache_beam.runners import DataflowRunner, DirectRunner
+from model import CommonLog
 
-# ### functions and classes
-
-class CommonLog(typing.NamedTuple):
-    ip: str
-    user_id: str
-    lat: float
-    lng: float
-    timestamp: str
-    http_request: str
-    http_response: int
-    num_bytes: int
-    user_agent: str
-
-beam.coders.registry.register_coder(CommonLog, beam.coders.RowCoder)
 
 class ConvertToCommonLogFn(beam.DoFn):
   def process(self, element):
