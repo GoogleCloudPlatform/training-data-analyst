@@ -25,6 +25,8 @@ resources:
         - theia
     metadata:
       items:
+      - key: block-project-ssh-keys
+        value: "true"
       - key: startup-script
         value: |
           #! /bin/bash
@@ -93,7 +95,9 @@ resources:
   type: compute.v1.firewall
   properties:
     network: global/networks/default
-    sourceRanges: ["0.0.0.0/0"]
+    # Restrict ingress to Google Cloud Identity-Aware Proxy (IAP) TCP forwarding
+    # range (35.235.240.0/20) to prevent unauthenticated internet access (CWE-306).
+    sourceRanges: ["35.235.240.0/20"]
     targetTags: [theia]
     allowed:
     - IPProtocol: TCP
@@ -101,3 +105,5 @@ resources:
 outputs:
 - name: ide-url
   value: http://$(ref.theia-java-dataflow.networkInterfaces[0].accessConfigs[0].natIP):3000/#/home/project/training-data-analyst/quests/dataflow/
+- name: iap-tunnel-command
+  value: gcloud compute start-iap-tunnel $(ref.theia-java-dataflow.name) 3000 --local-host-port=3000 --zone={{ properties["zone"] }}
